@@ -130,7 +130,7 @@ require_once __DIR__ . '/../includes/sidebar_waka.php';
 <div class="card shadow mb-4">
     <div class="card-header py-3 d-flex justify-content-between align-items-center">
         <h6 class="m-0 font-weight-bold text-primary">Hasil Data Jurnal</h6>
-        <a href="export_pdf.php?<?= http_build_query($filter_params) ?>" class="btn btn-danger" target="_blank"><i class="fa fa-file-pdf"></i> Ekspor ke PDF</a>
+        <a href="export_csv.php?<?= http_build_query($filter_params) ?>" class="btn btn-success" target="_blank"><i class="fa fa-file-excel"></i> Ekspor ke CSV</a>
     </div>
     <div class="card-body">
         <div class="table-responsive">
