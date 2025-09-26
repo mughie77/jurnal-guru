@@ -46,10 +46,6 @@ require_once __DIR__ . '/../config/database.php';
             z-index: 1030;
         }
 
-        .sidebar.toggled {
-            margin-left: -260px;
-        }
-
         .sidebar .nav-link {
             color: #adb5bd;
             padding: 0.75rem 1rem;
@@ -84,7 +80,11 @@ require_once __DIR__ . '/../config/database.php';
             transition: margin-left 0.3s;
         }
 
-        .main-content.toggled {
+        /* Toggle Styles */
+        body.sidebar-toggled .sidebar {
+            margin-left: -260px;
+        }
+        body.sidebar-toggled .main-content {
             margin-left: 0;
         }
 
@@ -122,10 +122,10 @@ require_once __DIR__ . '/../config/database.php';
         @media (max-width: 768px) {
             .sidebar {
                 left: -260px; /* Hidden by default */
-            }
-            .sidebar.toggled {
-                left: 0;
                 margin-left: 0;
+            }
+            body.sidebar-toggled .sidebar {
+                left: 0;
             }
             .main-content {
                 margin-left: 0 !important;

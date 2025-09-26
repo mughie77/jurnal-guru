@@ -38,6 +38,18 @@ require_once __DIR__ . '/../includes/header.php';
 .guru-welcome .profile-pic {
     font-size: 2.5rem;
 }
+.logout-btn {
+    color: #6a63e8;
+    background-color: #fff;
+    border-radius: 20px;
+    padding: 0.5rem 1rem;
+    text-decoration: none;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+.logout-btn:hover {
+    background-color: #f0f0f0;
+}
 .menu-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -68,16 +80,19 @@ require_once __DIR__ . '/../includes/header.php';
 }
 </style>
 
-<div class="guru-dashboard-container">
-    <div class="guru-welcome">
-        <div>
-            <h2>Selamat Datang,</h2>
-            <p class="lead mb-0"><?= htmlspecialchars($_SESSION['nama_lengkap']) ?>!</p>
+<div class="main-content">
+    <div class="guru-dashboard-container">
+        <div class="guru-welcome">
+            <div>
+                <h2>Selamat Datang,</h2>
+                <p class="lead mb-0"><?= htmlspecialchars($_SESSION['nama_lengkap']) ?>!</p>
+            </div>
+            <div>
+                <a href="<?= BASE_URL ?>logout.php" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
         </div>
-        <div class="profile-pic">
-            <i class="fa fa-user-circle"></i>
-        </div>
-    </div>
 
     <div class="menu-grid">
         <a href="<?= BASE_URL ?>guru/isi_jurnal.php" class="menu-card">
