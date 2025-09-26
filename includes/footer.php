@@ -24,5 +24,17 @@
     <!-- Custom scripts for all pages-->
     <script src="<?= BASE_URL ?>assets/js/script.js"></script>
 
+    <!-- Sidebar Toggle Script -->
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', function (event) {
+                event.preventDefault();
+                document.body.classList.toggle('sidebar-toggled');
+            });
+        }
+    });
+    </script>
 </body>
 </html>

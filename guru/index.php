@@ -11,89 +11,103 @@ require_once __DIR__ . '/../includes/header.php';
 ?>
 
 <style>
-/* Override sidebar style untuk dashboard guru */
+/* Override default layout for this specific page */
 .main-content {
-    margin-left: 0;
+    margin-left: 0; /* Remove sidebar margin */
+    padding: 0;
+    background-color: #6a63e8; /* Background color from image */
+    min-height: 100vh;
+}
+.navbar {
+    display: none; /* Hide top navbar on this page */
+}
+.guru-dashboard-container {
     padding: 2rem;
+    color: #fff;
 }
-.guru-dashboard .card-menu {
-    text-decoration: none;
-    color: #212529;
-    transition: transform 0.2s, box-shadow 0.2s;
-    border-radius: 1rem;
-    overflow: hidden;
+.guru-welcome {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 3rem;
 }
-.guru-dashboard .card-menu:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 1rem 2rem rgba(0,0,0,0.15);
-}
-.guru-dashboard .card-icon {
-    font-size: 5rem;
-    color: #0d6efd;
-    transition: color 0.3s;
-}
-.guru-dashboard .card-menu:hover .card-icon {
-    color: #0a58ca;
-}
-.guru-dashboard .card-title {
+.guru-welcome h2 {
     font-weight: 600;
+    margin: 0;
 }
-.guru-dashboard .card-text {
-    color: #6c757d;
+.guru-welcome .profile-pic {
+    font-size: 2.5rem;
+}
+.menu-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+}
+.menu-card {
+    background-color: #fff;
+    border-radius: 1rem;
+    padding: 2rem;
+    text-align: center;
+    text-decoration: none;
+    color: #333;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.menu-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 35px rgba(0, 0, 0, 0.15);
+}
+.menu-card .icon {
+    font-size: 4rem;
+    color: #6a63e8;
+    margin-bottom: 1rem;
+}
+.menu-card h5 {
+    font-weight: 600;
+    margin: 0;
 }
 </style>
 
-<div class="container-fluid guru-dashboard">
-    <!-- Page Heading -->
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Dashboard Guru</h1>
-    </div>
-
-    <div class="card shadow mb-4">
-        <div class="card-body">
-            <h5 class="card-title">Selamat Datang, <?= htmlspecialchars($_SESSION['nama_lengkap']) ?>!</h5>
-            <p class="card-text">Silakan pilih menu di bawah ini untuk mulai mengelola jurnal mengajar Anda.</p>
+<div class="guru-dashboard-container">
+    <div class="guru-welcome">
+        <div>
+            <h2>Selamat Datang,</h2>
+            <p class="lead mb-0"><?= htmlspecialchars($_SESSION['nama_lengkap']) ?>!</p>
+        </div>
+        <div class="profile-pic">
+            <i class="fa fa-user-circle"></i>
         </div>
     </div>
 
-    <div class="row justify-content-center mt-5">
-        <!-- Menu Isi Jurnal Baru -->
-        <div class="col-xl-4 col-md-6 mb-4">
-            <a href="<?= BASE_URL ?>guru/isi_jurnal.php" class="card-menu">
-                <div class="card border-left-primary shadow h-100 py-4">
-                    <div class="card-body text-center">
-                        <div class="mb-3">
-                            <i class="fas fa-edit card-icon"></i>
-                        </div>
-                        <h5 class="card-title">Isi Jurnal Baru</h5>
-                        <p class="card-text">Lengkapi jurnal mengajar harian Anda di sini.</p>
-                    </div>
-                </div>
-            </a>
-        </div>
-
-        <!-- Menu Riwayat Jurnal -->
-        <div class="col-xl-4 col-md-6 mb-4">
-            <a href="<?= BASE_URL ?>guru/riwayat.php" class="card-menu">
-                <div class="card border-left-success shadow h-100 py-4">
-                    <div class="card-body text-center">
-                        <div class="mb-3">
-                            <i class="fas fa-history card-icon"></i>
-                        </div>
-                        <h5 class="card-title">Riwayat Jurnal Saya</h5>
-                        <p class="card-text">Lihat dan kelola semua jurnal yang pernah Anda isi.</p>
-                    </div>
-                </div>
-            </a>
-        </div>
+    <div class="menu-grid">
+        <a href="<?= BASE_URL ?>guru/isi_jurnal.php" class="menu-card">
+            <div class="icon">
+                <i class="fas fa-edit"></i>
+            </div>
+            <h5>Isi Jurnal</h5>
+        </a>
+        <a href="<?= BASE_URL ?>guru/riwayat.php" class="menu-card">
+            <div class="icon">
+                <i class="fas fa-history"></i>
+            </div>
+            <h5>Riwayat Jurnal</h5>
+        </a>
     </div>
 </div>
 
 <?php
-// Footer disesuaikan agar tidak ada duplikasi
-// Karena header sudah termasuk wrapper, kita tutup di sini
+// Custom footer for this page to avoid duplicating elements
 ?>
-</div> <!-- Menutup .main-content atau container-fluid dari header -->
-<?php
-require_once __DIR__ . '/../includes/footer.php';
-?>
+</div> <!-- End of .main-content -->
+</div> <!-- End of #content -->
+</div><!-- End of #content-wrapper -->
+</div><!-- End of #wrapper -->
+
+<!-- Bootstrap 5 Bundle with Popper -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Custom scripts for all pages-->
+<script src="<?= BASE_URL ?>assets/js/script.js"></script>
+
+</body>
+</html>

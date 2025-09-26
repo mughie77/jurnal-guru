@@ -42,6 +42,12 @@ require_once __DIR__ . '/../config/database.php';
             padding: 1rem;
             background-color: #212529; /* Dark */
             color: #fff;
+            transition: all 0.3s;
+            z-index: 1030;
+        }
+
+        .sidebar.toggled {
+            margin-left: -260px;
         }
 
         .sidebar .nav-link {
@@ -75,6 +81,11 @@ require_once __DIR__ . '/../config/database.php';
         .main-content {
             margin-left: 260px;
             padding: 2rem;
+            transition: margin-left 0.3s;
+        }
+
+        .main-content.toggled {
+            margin-left: 0;
         }
 
         /* Card styling for Guru Dashboard */
@@ -100,15 +111,24 @@ require_once __DIR__ . '/../config/database.php';
             box-shadow: 0 0.25rem 0.75rem rgba(0,0,0,0.05);
         }
 
+        #sidebarToggle {
+            background: none;
+            border: none;
+            color: #6c757d;
+            font-size: 1.25rem;
+        }
+
         /* Responsive adjustments */
         @media (max-width: 768px) {
             .sidebar {
-                position: static;
-                width: 100%;
-                height: auto;
+                left: -260px; /* Hidden by default */
+            }
+            .sidebar.toggled {
+                left: 0;
+                margin-left: 0;
             }
             .main-content {
-                margin-left: 0;
+                margin-left: 0 !important;
             }
         }
     </style>
@@ -120,6 +140,9 @@ require_once __DIR__ . '/../config/database.php';
             <div id="content">
                 <!-- Konten utama akan dimulai di sini -->
                 <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+                    <button id="sidebarToggle" class="btn btn-link">
+                        <i class="fa fa-bars"></i>
+                    </button>
                     <ul class="navbar-nav ms-auto">
                         <li class="nav-item dropdown no-arrow">
                             <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"

@@ -70,18 +70,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 }
 
-// Ambil data mapel, filter berdasarkan tahun pelajaran aktif jika ada
-$query = "SELECT DISTINCT mata_pelajaran.*
-          FROM mata_pelajaran";
-
-// Jika ada tahun pelajaran yang aktif, hanya tampilkan mapel yang punya jurnal di tahun itu
-if ($active_tahun_id) {
-    $query .= " JOIN jurnal ON mata_pelajaran.id = jurnal.mapel_id
-                WHERE jurnal.tahun_pelajaran_id = $active_tahun_id";
-}
-
-$query .= " ORDER BY mata_pelajaran.nama_mapel ASC";
-$result = mysqli_query($conn, $query);
+// Ambil semua data mapel
+$result = mysqli_query($conn, "SELECT * FROM mata_pelajaran ORDER BY nama_mapel ASC");
 
 require_once __DIR__ . '/../includes/header.php';
 require_once __DIR__ . '/../includes/sidebar_admin.php';
@@ -188,11 +178,11 @@ require_once __DIR__ . '/../includes/sidebar_admin.php';
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label">Nama Mata Pelajaran</label>
-                        <input type="text" class="form-control" name="nama_mapel" placeholder="Contoh: Matematika" required>
+                        <input type="text" class="form-control" id="nama_mapel_tambah" name="nama_mapel" placeholder="Contoh: Matematika" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Kode Mapel</label>
-                        <input type="text" class="form-control" name="kode_mapel" placeholder="Contoh: MTK-X" required>
+                        <input type="text" class="form-control" id="kode_mapel_tambah" name="kode_mapel" placeholder="Contoh: MTK-X" required>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -203,6 +193,44 @@ require_once __DIR__ . '/../includes/sidebar_admin.php';
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const namaMapelInput = document.getElementById('nama_mapel_tambah');
+    const kodeMapelInput = document.getElementById('kode_mapel_tambah');
+    let kodeMapelManuallyEdited = false;
+
+    // Tandai bahwa kode mapel diedit manual
+    kodeMapelInput.addEventListener('input', function() {
+        kodeMapelManuallyEdited = true;
+    });
+
+    // Generate kode mapel otomatis
+    namaMapelInput.addEventListener('input', function() {
+        if (!kodeMapelManuallyEdited) {
+            let namaMapel = this.value;
+            let kode = '';
+
+            // Ambil 3 huruf pertama dari nama mapel
+            kode = namaMapel.substring(0, 3).toUpperCase();
+
+            // Tambahkan 3 angka acak untuk keunikan
+            const randomNum = Math.floor(100 + Math.random() * 900);
+            kode += `-${randomNum}`;
+
+            kodeMapelInput.value = kode;
+        }
+    });
+
+    // Reset flag saat modal ditutup
+    const tambahModal = document.getElementById('tambahModal');
+    tambahModal.addEventListener('hidden.bs.modal', function () {
+        kodeMapelManuallyEdited = false;
+        namaMapelInput.value = '';
+        kodeMapelInput.value = '';
+    });
+});
+</script>
 
 <?php
 require_once __DIR__ . '/../includes/footer.php';
