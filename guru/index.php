@@ -15,28 +15,29 @@ require_once __DIR__ . '/../includes/header.php';
 .main-content {
     margin-left: 0; /* Remove sidebar margin */
     padding: 0;
-    background-color: #6a63e8; /* Background color from image */
-    min-height: 100vh;
+    background-color: #f8f9fa; /* Default background */
 }
 .navbar {
     display: none; /* Hide top navbar on this page */
 }
+.guru-header {
+    background-color: #6a63e8; /* Purple background */
+    color: #fff;
+    padding: 2rem;
+    border-bottom-left-radius: 1.5rem;
+    border-bottom-right-radius: 1.5rem;
+}
 .guru-dashboard-container {
     padding: 2rem;
-    color: #fff;
 }
 .guru-welcome {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 3rem;
 }
 .guru-welcome h2 {
     font-weight: 600;
     margin: 0;
-}
-.guru-welcome .profile-pic {
-    font-size: 2.5rem;
 }
 .logout-btn {
     color: #6a63e8;
@@ -81,7 +82,7 @@ require_once __DIR__ . '/../includes/header.php';
 </style>
 
 <div class="main-content">
-    <div class="guru-dashboard-container">
+    <div class="guru-header">
         <div class="guru-welcome">
             <div>
                 <h2>Selamat Datang,</h2>
@@ -93,8 +94,10 @@ require_once __DIR__ . '/../includes/header.php';
                 </a>
             </div>
         </div>
+    </div>
 
-    <div class="menu-grid">
+    <div class="guru-dashboard-container">
+        <div class="menu-grid">
         <a href="<?= BASE_URL ?>guru/isi_jurnal.php" class="menu-card">
             <div class="icon">
                 <i class="fas fa-edit"></i>
