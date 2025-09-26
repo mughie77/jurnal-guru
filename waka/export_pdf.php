@@ -64,9 +64,9 @@ class PDF extends FPDF
     // Page header
     function Header()
     {
-        $this->SetFont('Arial','B',14);
+        $this->SetFont('Helvetica','B',14);
         $this->Cell(0,10,'Laporan Jurnal Mengajar',0,1,'C');
-        $this->SetFont('Arial','',9);
+        $this->SetFont('Helvetica','',9);
         if(!empty($this->filter_info_text)){
             $this->Cell(0,5,'Filter: ' . $this->filter_info_text,0,1,'C');
         }
@@ -77,7 +77,7 @@ class PDF extends FPDF
     function Footer()
     {
         $this->SetY(-15);
-        $this->SetFont('Arial','I',8);
+        $this->SetFont('Helvetica','I',8);
         $this->Cell(0,10,'Halaman '.$this->PageNo().'/{nb}',0,0,'C');
     }
 
@@ -134,7 +134,7 @@ $pdf = new PDF('L','mm','A4'); // L untuk Landscape
 $pdf->setFilterInfo(implode(', ', $filter_info));
 $pdf->AliasNbPages();
 $pdf->AddPage();
-$pdf->SetFont('Arial','',10);
+$pdf->SetFont('Helvetica','',10);
 
 // Header Tabel
 $header = array('Tanggal', 'Nama Guru', 'Mapel', 'Kelas', 'Jam Ke-', 'Absensi', 'Materi', 'Keterangan');
