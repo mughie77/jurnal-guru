@@ -64,7 +64,7 @@ class PDF extends FPDF
     // Page header
     function Header()
     {
-        $this->SetFont('Helvetica','B',14);
+        $this->SetFont('Helvetica','',14);
         $this->Cell(0,10,'Laporan Jurnal Mengajar',0,1,'C');
         $this->SetFont('Helvetica','',9);
         if(!empty($this->filter_info_text)){
@@ -77,7 +77,7 @@ class PDF extends FPDF
     function Footer()
     {
         $this->SetY(-15);
-        $this->SetFont('Helvetica','I',8);
+        $this->SetFont('Helvetica','',8);
         $this->Cell(0,10,'Halaman '.$this->PageNo().'/{nb}',0,0,'C');
     }
 
@@ -89,7 +89,7 @@ class PDF extends FPDF
         $this->SetTextColor(0);
         $this->SetDrawColor(128,0,0);
         $this->SetLineWidth(.3);
-        $this->SetFont('','B');
+        $this->SetFont('','');
 
         // Header
         $w = array(20, 40, 35, 20, 20, 25, 60, 55); // Lebar kolom, total 275 untuk landscape A4
