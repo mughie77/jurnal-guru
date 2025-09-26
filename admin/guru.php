@@ -42,10 +42,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $stmt_guru = mysqli_prepare($conn, "INSERT INTO guru (user_id, nip, alamat, no_telp) VALUES (?, ?, ?, ?)");
                 mysqli_stmt_bind_param($stmt_guru, "isss", $user_id, $nip, $alamat, $no_telp);
                 mysqli_stmt_execute($stmt_guru);
+                $guru_id = mysqli_insert_id($conn);
+
+                // 3. Insert ke tabel guru_mapel
+                if (!empty($_POST['mapel_ids'])) {
+                    $stmt_mapel = mysqli_prepare($conn, "INSERT INTO guru_mapel (guru_id, mapel_id) VALUES (?, ?)");
+                    foreach ($_POST['mapel_ids'] as $mapel_id) {
+                        mysqli_stmt_bind_param($stmt_mapel, "ii", $guru_id, $mapel_id);
+                        mysqli_stmt_execute($stmt_mapel);
+                    }
+                }
 
                 // Commit transaksi
                 mysqli_commit($conn);
-                $message = "Guru berhasil ditambahkan! Akun user juga telah dibuat.";
+                $message = "Guru berhasil ditambahkan! Akun user dan penugasan mapel juga telah dibuat.";
                 $message_type = 'success';
             } catch (mysqli_sql_exception $exception) {
                 mysqli_rollback($conn);
@@ -56,15 +66,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
     // Aksi: Edit Guru
     elseif (isset($_POST['edit'])) {
-        $id = $_POST['id']; // guru.id
+        $guru_id = $_POST['id']; // guru.id
         $user_id = $_POST['user_id'];
         $nama_lengkap = mysqli_real_escape_string($conn, $_POST['nama_lengkap']);
         $nip = mysqli_real_escape_string($conn, $_POST['nip']);
         $alamat = mysqli_real_escape_string($conn, $_POST['alamat']);
         $no_telp = mysqli_real_escape_string($conn, $_POST['no_telp']);
+        $mapel_ids = $_POST['mapel_ids'] ?? [];
 
         // Cek NIP duplikat (kecuali untuk guru saat ini)
-        $check_nip = mysqli_query($conn, "SELECT nip FROM guru WHERE nip = '$nip' AND id != $id");
+        $check_nip = mysqli_query($conn, "SELECT nip FROM guru WHERE nip = '$nip' AND id != $guru_id");
         if (mysqli_num_rows($check_nip) > 0) {
             $message = "Gagal: NIP sudah digunakan oleh guru lain.";
             $message_type = 'error';
@@ -78,8 +89,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
                 // 2. Update tabel guru
                 $stmt_guru = mysqli_prepare($conn, "UPDATE guru SET nip = ?, alamat = ?, no_telp = ? WHERE id = ?");
-                mysqli_stmt_bind_param($stmt_guru, "sssi", $nip, $alamat, $no_telp, $id);
+                mysqli_stmt_bind_param($stmt_guru, "sssi", $nip, $alamat, $no_telp, $guru_id);
                 mysqli_stmt_execute($stmt_guru);
+
+                // 3. Update tabel guru_mapel (hapus lama, insert baru)
+                mysqli_query($conn, "DELETE FROM guru_mapel WHERE guru_id = $guru_id");
+                if (!empty($mapel_ids)) {
+                    $stmt_mapel = mysqli_prepare($conn, "INSERT INTO guru_mapel (guru_id, mapel_id) VALUES (?, ?)");
+                    foreach ($mapel_ids as $mapel_id) {
+                        mysqli_stmt_bind_param($stmt_mapel, "ii", $guru_id, $mapel_id);
+                        mysqli_stmt_execute($stmt_mapel);
+                    }
+                }
 
                 mysqli_commit($conn);
                 $message = "Data guru berhasil diperbarui!";
@@ -114,8 +135,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 }
 
+// Ambil data mapel untuk dropdown
+$mapel_list = mysqli_query($conn, "SELECT id, nama_mapel FROM mata_pelajaran ORDER BY nama_mapel ASC");
+
 // Ambil semua data guru
-$result = mysqli_query($conn, "SELECT guru.*, users.nama_lengkap FROM guru JOIN users ON guru.user_id = users.id ORDER BY users.nama_lengkap ASC");
+$query = "SELECT guru.*, users.nama_lengkap,
+          GROUP_CONCAT(mata_pelajaran.nama_mapel SEPARATOR ', ') as mapel_diampu
+          FROM guru
+          JOIN users ON guru.user_id = users.id
+          LEFT JOIN guru_mapel ON guru.id = guru_mapel.guru_id
+          LEFT JOIN mata_pelajaran ON guru_mapel.mapel_id = mata_pelajaran.id
+          GROUP BY guru.id
+          ORDER BY users.nama_lengkap ASC";
+$result = mysqli_query($conn, $query);
 
 require_once __DIR__ . '/../includes/header.php';
 require_once __DIR__ . '/../includes/sidebar_admin.php';
@@ -148,8 +180,7 @@ require_once __DIR__ . '/../includes/sidebar_admin.php';
                     <tr>
                         <th>NIP</th>
                         <th>Nama Lengkap</th>
-                        <th>Alamat</th>
-                        <th>No. Telp</th>
+                        <th>Mapel yang Diampu</th>
                         <th>Aksi</th>
                     </tr>
                 </thead>
@@ -158,8 +189,7 @@ require_once __DIR__ . '/../includes/sidebar_admin.php';
                     <tr>
                         <td><?= htmlspecialchars($row['nip']) ?></td>
                         <td><?= htmlspecialchars($row['nama_lengkap']) ?></td>
-                        <td><?= htmlspecialchars($row['alamat']) ?></td>
-                        <td><?= htmlspecialchars($row['no_telp']) ?></td>
+                        <td><?= htmlspecialchars($row['mapel_diampu'] ?? 'Belum ada') ?></td>
                         <td>
                             <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#editModal-<?= $row['id'] ?>"><i class="fa fa-edit"></i></button>
                             <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#hapusModal-<?= $row['id'] ?>"><i class="fa fa-trash"></i></button>
@@ -168,7 +198,7 @@ require_once __DIR__ . '/../includes/sidebar_admin.php';
 
                     <!-- Modal Edit -->
                     <div class="modal fade" id="editModal-<?= $row['id'] ?>" tabindex="-1" aria-hidden="true">
-                        <div class="modal-dialog">
+                        <div class="modal-dialog modal-lg">
                             <div class="modal-content">
                                 <form action="" method="POST">
                                     <div class="modal-header"><h5 class="modal-title">Edit Guru</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
@@ -190,6 +220,27 @@ require_once __DIR__ . '/../includes/sidebar_admin.php';
                                         <div class="mb-3">
                                             <label class="form-label">No. Telp</label>
                                             <input type="text" class="form-control" name="no_telp" value="<?= htmlspecialchars($row['no_telp']) ?>">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Mata Pelajaran yang Diampu</label>
+                                            <select name="mapel_ids[]" class="form-select" multiple style="height: 150px;">
+                                                <?php
+                                                // Ambil mapel yang sudah diampu guru ini
+                                                $guru_id_edit = $row['id'];
+                                                $assigned_mapel_q = mysqli_query($conn, "SELECT mapel_id FROM guru_mapel WHERE guru_id = $guru_id_edit");
+                                                $assigned_mapel_ids = [];
+                                                while($am = mysqli_fetch_assoc($assigned_mapel_q)) {
+                                                    $assigned_mapel_ids[] = $am['mapel_id'];
+                                                }
+
+                                                mysqli_data_seek($mapel_list, 0); // Reset pointer
+                                                while($mapel = mysqli_fetch_assoc($mapel_list)):
+                                                    $selected = in_array($mapel['id'], $assigned_mapel_ids) ? 'selected' : '';
+                                                ?>
+                                                    <option value="<?= $mapel['id'] ?>" <?= $selected ?>><?= htmlspecialchars($mapel['nama_mapel']) ?></option>
+                                                <?php endwhile; ?>
+                                            </select>
+                                            <small class="form-text text-muted">Tahan Ctrl (atau Cmd di Mac) untuk memilih lebih dari satu.</small>
                                         </div>
                                     </div>
                                     <div class="modal-footer">
@@ -230,7 +281,7 @@ require_once __DIR__ . '/../includes/sidebar_admin.php';
 
 <!-- Modal Tambah -->
 <div class="modal fade" id="tambahModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <form action="" method="POST">
                 <div class="modal-header"><h5 class="modal-title">Tambah Guru Baru</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
@@ -251,6 +302,18 @@ require_once __DIR__ . '/../includes/sidebar_admin.php';
                     <div class="mb-3">
                         <label class="form-label">No. Telp</label>
                         <input type="text" class="form-control" name="no_telp">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Mata Pelajaran yang Diampu</label>
+                        <select name="mapel_ids[]" class="form-select" multiple style="height: 150px;">
+                            <?php
+                            mysqli_data_seek($mapel_list, 0); // Reset pointer
+                            while($mapel = mysqli_fetch_assoc($mapel_list)):
+                            ?>
+                                <option value="<?= $mapel['id'] ?>"><?= htmlspecialchars($mapel['nama_mapel']) ?></option>
+                            <?php endwhile; ?>
+                        </select>
+                        <small class="form-text text-muted">Tahan Ctrl (atau Cmd di Mac) untuk memilih lebih dari satu.</small>
                     </div>
                 </div>
                 <div class="modal-footer">

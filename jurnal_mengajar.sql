@@ -44,6 +44,20 @@ CREATE TABLE `guru` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `guru_mapel`
+--
+CREATE TABLE `guru_mapel` (
+  `guru_id` int(11) NOT NULL,
+  `mapel_id` int(11) NOT NULL,
+  PRIMARY KEY (`guru_id`,`mapel_id`),
+  KEY `mapel_id` (`mapel_id`),
+  CONSTRAINT `guru_mapel_ibfk_1` FOREIGN KEY (`guru_id`) REFERENCES `guru` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `guru_mapel_ibfk_2` FOREIGN KEY (`mapel_id`) REFERENCES `mata_pelajaran` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `mata_pelajaran`
 --
 CREATE TABLE `mata_pelajaran` (

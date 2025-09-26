@@ -26,7 +26,13 @@ if(mysqli_num_rows($tahun_aktif_result) == 0) {
 $tahun_pelajaran_id = mysqli_fetch_assoc($tahun_aktif_result)['id'];
 
 // Ambil data untuk dropdown
-$mapels = mysqli_query($conn, "SELECT id, nama_mapel FROM mata_pelajaran ORDER BY nama_mapel");
+// HANYA mapel yang diampu oleh guru yang login
+$mapels_query = "SELECT mp.id, mp.nama_mapel
+                 FROM mata_pelajaran mp
+                 JOIN guru_mapel gm ON mp.id = gm.mapel_id
+                 WHERE gm.guru_id = $guru_id
+                 ORDER BY mp.nama_mapel";
+$mapels = mysqli_query($conn, $mapels_query);
 $kelases = mysqli_query($conn, "SELECT id, nama_kelas FROM kelas ORDER BY nama_kelas");
 
 // Proses form jika disubmit
