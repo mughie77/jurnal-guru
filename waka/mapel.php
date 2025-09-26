@@ -7,8 +7,18 @@ authorize_role(['waka', 'admin']);
 
 $page_title = "Data Mata Pelajaran";
 
-// Ambil semua data mata pelajaran
-$result = mysqli_query($conn, "SELECT * FROM mata_pelajaran ORDER BY nama_mapel ASC");
+// Ambil data mapel, filter berdasarkan tahun pelajaran aktif jika ada
+$query = "SELECT DISTINCT mata_pelajaran.*
+          FROM mata_pelajaran";
+
+// Jika ada tahun pelajaran yang aktif, hanya tampilkan mapel yang punya jurnal di tahun itu
+if ($active_tahun_id) {
+    $query .= " JOIN jurnal ON mata_pelajaran.id = jurnal.mapel_id
+                WHERE jurnal.tahun_pelajaran_id = $active_tahun_id";
+}
+
+$query .= " ORDER BY mata_pelajaran.nama_mapel ASC";
+$result = mysqli_query($conn, $query);
 
 require_once __DIR__ . '/../includes/header.php';
 require_once __DIR__ . '/../includes/sidebar_waka.php';

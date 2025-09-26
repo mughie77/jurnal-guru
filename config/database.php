@@ -20,4 +20,17 @@ define('BASE_URL', 'https://localhost/jurnal-mengajar/');
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
+
+// --- Fungsi Helper untuk Tahun Pelajaran Aktif ---
+function get_active_tahun_pelajaran_id($conn) {
+    $query = "SELECT id FROM tahun_pelajaran WHERE status = 'aktif' LIMIT 1";
+    $result = mysqli_query($conn, $query);
+    if ($row = mysqli_fetch_assoc($result)) {
+        return (int)$row['id'];
+    }
+    return null; // Mengembalikan null jika tidak ada yang aktif
+}
+
+// Ambil dan simpan ID tahun pelajaran aktif dalam variabel global
+$active_tahun_id = get_active_tahun_pelajaran_id($conn);
 ?>

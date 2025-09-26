@@ -37,9 +37,22 @@ if (!empty($_GET['kelas_id'])) {
     $where_clauses[] = "jurnal.kelas_id = " . (int)$_GET['kelas_id'];
     $filter_params['kelas_id'] = $_GET['kelas_id'];
 }
-if (!empty($_GET['tahun_id'])) {
-    $where_clauses[] = "jurnal.tahun_pelajaran_id = " . (int)$_GET['tahun_id'];
-    $filter_params['tahun_id'] = $_GET['tahun_id'];
+// Filter tahun pelajaran: default ke tahun aktif jika tidak ada yang dipilih
+$selected_tahun_id = $_GET['tahun_id'] ?? null;
+
+if ($selected_tahun_id === null && $active_tahun_id) {
+    // Default ke tahun aktif pada tampilan awal
+    $where_clauses[] = "jurnal.tahun_pelajaran_id = " . $active_tahun_id;
+    $filter_params['tahun_id'] = $active_tahun_id;
+    $selected_for_dropdown = $active_tahun_id;
+} elseif (!empty($selected_tahun_id)) {
+    // Jika tahun spesifik dipilih
+    $where_clauses[] = "jurnal.tahun_pelajaran_id = " . (int)$selected_tahun_id;
+    $filter_params['tahun_id'] = $selected_tahun_id;
+    $selected_for_dropdown = (int)$selected_tahun_id;
+} else {
+    // Jika "Semua Tahun" dipilih (tahun_id adalah string kosong)
+    $selected_for_dropdown = '';
 }
 
 $sql = "SELECT jurnal.*, users.nama_lengkap, mata_pelajaran.nama_mapel, kelas.nama_kelas, tahun_pelajaran.tahun
@@ -113,7 +126,7 @@ require_once __DIR__ . '/../includes/sidebar_waka.php';
                     <select name="tahun_id" id="tahun_id" class="form-select">
                         <option value="">Semua Tahun</option>
                         <?php mysqli_data_seek($tahuns, 0); while($t = mysqli_fetch_assoc($tahuns)): ?>
-                            <option value="<?= $t['id'] ?>" <?= (($_GET['tahun_id'] ?? '') == $t['id']) ? 'selected' : '' ?>><?= htmlspecialchars($t['tahun']) ?></option>
+                            <option value="<?= $t['id'] ?>" <?= ($selected_for_dropdown == $t['id']) ? 'selected' : '' ?>><?= htmlspecialchars($t['tahun']) ?></option>
                         <?php endwhile; ?>
                     </select>
                 </div>

@@ -72,12 +72,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 }
 
-// Ambil semua data kelas untuk ditampilkan, join dengan guru dan users untuk nama wali kelas
-$query = "SELECT kelas.id, kelas.nama_kelas, kelas.jumlah_siswa_L, kelas.jumlah_siswa_P, users.nama_lengkap as nama_wali_kelas
+// Ambil data kelas, filter berdasarkan tahun pelajaran aktif jika ada
+$query = "SELECT DISTINCT kelas.id, kelas.nama_kelas, kelas.jumlah_siswa_L, kelas.jumlah_siswa_P, users.nama_lengkap as nama_wali_kelas
           FROM kelas
           LEFT JOIN guru ON kelas.wali_kelas_id = guru.id
-          LEFT JOIN users ON guru.user_id = users.id
-          ORDER BY kelas.nama_kelas ASC";
+          LEFT JOIN users ON guru.user_id = users.id";
+
+// Jika ada tahun pelajaran yang aktif, hanya tampilkan kelas yang punya jurnal di tahun itu
+if ($active_tahun_id) {
+    $query .= " JOIN jurnal ON kelas.id = jurnal.kelas_id
+                WHERE jurnal.tahun_pelajaran_id = $active_tahun_id";
+}
+
+$query .= " ORDER BY kelas.nama_kelas ASC";
 $result = mysqli_query($conn, $query);
 
 require_once __DIR__ . '/../includes/header.php';

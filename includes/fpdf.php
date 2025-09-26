@@ -21,7 +21,6 @@ protected $compress;           // compression flag
 protected $k;                  // scale factor (number of points in user unit)
 protected $DefOrientation;     // default orientation
 protected $CurOrientation;     // current orientation
-protected $CurRotation;        // current rotation
 protected $StdPageSizes;       // standard page sizes
 protected $DefPageSize;        // default page size
 protected $CurPageSize;        // current page size
@@ -1832,15 +1831,6 @@ protected function _putstreamobject($s)
 	$this->_put('<< /Length '.strlen($s).' >>');
 	$this->_putstream($s);
 	$this->_put('endobj');
-}
-
-protected function _out($s)
-{
-	// Add a line to the document
-	if($this->state==2)
-		$this->pages[$this->page] .= $s."\n";
-	else
-		$this->buffer .= $s."\n";
 }
 }
 ?>

@@ -17,6 +17,12 @@ $guru_id = mysqli_fetch_assoc($guru_result)['id'];
 
 // Logika Filter
 $where_clause = "jurnal.guru_id = $guru_id";
+
+// Tambahkan filter berdasarkan tahun pelajaran aktif
+if ($active_tahun_id) {
+    $where_clause .= " AND jurnal.tahun_pelajaran_id = " . $active_tahun_id;
+}
+
 if (!empty($_GET['tanggal'])) {
     $tanggal_filter = mysqli_real_escape_string($conn, $_GET['tanggal']);
     $where_clause .= " AND jurnal.tanggal = '$tanggal_filter'";
