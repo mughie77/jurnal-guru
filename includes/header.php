@@ -120,15 +120,16 @@ require_once __DIR__ . '/../config/database.php';
 
         /* Responsive adjustments */
         @media (max-width: 768px) {
-            .sidebar {
-                left: -260px; /* Hidden by default */
+            .main-content {
                 margin-left: 0;
+            }
+            .sidebar {
+                left: -260px;
+                margin-left: 0; /* Reset margin for mobile */
             }
             body.sidebar-toggled .sidebar {
                 left: 0;
-            }
-            .main-content {
-                margin-left: 0 !important;
+                margin-left: 0; /* Ensure margin is 0 when toggled */
             }
         }
     </style>

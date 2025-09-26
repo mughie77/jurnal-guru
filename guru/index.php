@@ -14,7 +14,6 @@ require_once __DIR__ . '/../includes/header.php';
 /* Override default layout for this specific page */
 .main-content {
     margin-left: 0; /* Remove sidebar margin */
-    padding: 0;
     background-color: #f8f9fa; /* Default background */
 }
 .navbar {
@@ -114,18 +113,5 @@ require_once __DIR__ . '/../includes/header.php';
 </div>
 
 <?php
-// Custom footer for this page to avoid duplicating elements
+require_once __DIR__ . '/../includes/footer.php';
 ?>
-</div> <!-- End of .main-content -->
-</div> <!-- End of #content -->
-</div><!-- End of #content-wrapper -->
-</div><!-- End of #wrapper -->
-
-<!-- Bootstrap 5 Bundle with Popper -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-<!-- Custom scripts for all pages-->
-<script src="<?= BASE_URL ?>assets/js/script.js"></script>
-
-</body>
-</html>

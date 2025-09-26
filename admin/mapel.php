@@ -194,44 +194,6 @@ require_once __DIR__ . '/../includes/sidebar_admin.php';
     </div>
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const namaMapelInput = document.getElementById('nama_mapel_tambah');
-    const kodeMapelInput = document.getElementById('kode_mapel_tambah');
-    let kodeMapelManuallyEdited = false;
-
-    // Tandai bahwa kode mapel diedit manual
-    kodeMapelInput.addEventListener('input', function() {
-        kodeMapelManuallyEdited = true;
-    });
-
-    // Generate kode mapel otomatis
-    namaMapelInput.addEventListener('input', function() {
-        if (!kodeMapelManuallyEdited) {
-            let namaMapel = this.value;
-            let kode = '';
-
-            // Ambil 3 huruf pertama dari nama mapel
-            kode = namaMapel.substring(0, 3).toUpperCase();
-
-            // Tambahkan 3 angka acak untuk keunikan
-            const randomNum = Math.floor(100 + Math.random() * 900);
-            kode += `-${randomNum}`;
-
-            kodeMapelInput.value = kode;
-        }
-    });
-
-    // Reset flag saat modal ditutup
-    const tambahModal = document.getElementById('tambahModal');
-    tambahModal.addEventListener('hidden.bs.modal', function () {
-        kodeMapelManuallyEdited = false;
-        namaMapelInput.value = '';
-        kodeMapelInput.value = '';
-    });
-});
-</script>
-
 <?php
 require_once __DIR__ . '/../includes/footer.php';
 ?>
