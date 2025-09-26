@@ -142,6 +142,7 @@ require_once __DIR__ . '/../includes/sidebar_admin.php';
                         <th>Kelas</th>
                         <th>Jam Ke-</th>
                         <th>Materi</th>
+                        <th>Absensi (H/S/I/A)</th>
                         <th>Keterangan</th>
                     </tr>
                 </thead>
@@ -155,12 +156,13 @@ require_once __DIR__ . '/../includes/sidebar_admin.php';
                             <td><?= htmlspecialchars($row['nama_kelas']) ?></td>
                             <td><?= htmlspecialchars($row['jam_ke']) ?></td>
                             <td><?= nl2br(htmlspecialchars($row['materi'])) ?></td>
+                            <td><?= "{$row['jml_hadir']}/{$row['jml_sakit']}/{$row['jml_izin']}/{$row['jml_alfa']}" ?></td>
                             <td><?= nl2br(htmlspecialchars($row['keterangan'])) ?></td>
                         </tr>
                         <?php endwhile; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="7" class="text-center">Tidak ada data jurnal yang ditemukan.</td>
+                            <td colspan="8" class="text-center">Tidak ada data jurnal yang ditemukan.</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>

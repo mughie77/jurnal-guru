@@ -19,8 +19,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (isset($_POST['tambah'])) {
         $nama_kelas = mysqli_real_escape_string($conn, $_POST['nama_kelas']);
         $wali_kelas_id = !empty($_POST['wali_kelas_id']) ? $_POST['wali_kelas_id'] : 'NULL';
+        $jumlah_siswa_L = (int)$_POST['jumlah_siswa_L'];
+        $jumlah_siswa_P = (int)$_POST['jumlah_siswa_P'];
 
-        $query = "INSERT INTO kelas (nama_kelas, wali_kelas_id) VALUES ('$nama_kelas', $wali_kelas_id)";
+        $query = "INSERT INTO kelas (nama_kelas, wali_kelas_id, jumlah_siswa_L, jumlah_siswa_P) VALUES ('$nama_kelas', $wali_kelas_id, $jumlah_siswa_L, $jumlah_siswa_P)";
         if (mysqli_query($conn, $query)) {
             $message = "Kelas berhasil ditambahkan!";
             $message_type = 'success';
@@ -34,8 +36,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $id = $_POST['id'];
         $nama_kelas = mysqli_real_escape_string($conn, $_POST['nama_kelas']);
         $wali_kelas_id = !empty($_POST['wali_kelas_id']) ? $_POST['wali_kelas_id'] : 'NULL';
+        $jumlah_siswa_L = (int)$_POST['jumlah_siswa_L'];
+        $jumlah_siswa_P = (int)$_POST['jumlah_siswa_P'];
 
-        $query = "UPDATE kelas SET nama_kelas = '$nama_kelas', wali_kelas_id = $wali_kelas_id WHERE id = $id";
+        $query = "UPDATE kelas SET nama_kelas = '$nama_kelas', wali_kelas_id = $wali_kelas_id, jumlah_siswa_L = $jumlah_siswa_L, jumlah_siswa_P = $jumlah_siswa_P WHERE id = $id";
         if (mysqli_query($conn, $query)) {
             $message = "Kelas berhasil diperbarui!";
             $message_type = 'success';
@@ -69,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 }
 
 // Ambil semua data kelas untuk ditampilkan, join dengan guru dan users untuk nama wali kelas
-$query = "SELECT kelas.id, kelas.nama_kelas, users.nama_lengkap as nama_wali_kelas
+$query = "SELECT kelas.id, kelas.nama_kelas, kelas.jumlah_siswa_L, kelas.jumlah_siswa_P, users.nama_lengkap as nama_wali_kelas
           FROM kelas
           LEFT JOIN guru ON kelas.wali_kelas_id = guru.id
           LEFT JOIN users ON guru.user_id = users.id
@@ -111,6 +115,7 @@ require_once __DIR__ . '/../includes/sidebar_admin.php';
                     <tr>
                         <th>Nama Kelas</th>
                         <th>Wali Kelas</th>
+                        <th>Jumlah Siswa (L/P/Total)</th>
                         <th>Aksi</th>
                     </tr>
                 </thead>
@@ -119,6 +124,7 @@ require_once __DIR__ . '/../includes/sidebar_admin.php';
                     <tr>
                         <td><?= htmlspecialchars($row['nama_kelas']) ?></td>
                         <td><?= htmlspecialchars($row['nama_wali_kelas'] ?? 'Belum Diatur') ?></td>
+                        <td><?= $row['jumlah_siswa_L'] ?> / <?= $row['jumlah_siswa_P'] ?> / <strong><?= $row['jumlah_siswa_L'] + $row['jumlah_siswa_P'] ?></strong></td>
                         <td>
                             <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#editModal-<?= $row['id'] ?>" title="Edit">
                                 <i class="fa fa-edit"></i>
@@ -143,6 +149,16 @@ require_once __DIR__ . '/../includes/sidebar_admin.php';
                                         <div class="mb-3">
                                             <label class="form-label">Nama Kelas</label>
                                             <input type="text" class="form-control" name="nama_kelas" value="<?= htmlspecialchars($row['nama_kelas']) ?>" required>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Jumlah Siswa Laki-laki</label>
+                                                <input type="number" class="form-control" name="jumlah_siswa_L" value="<?= $row['jumlah_siswa_L'] ?>" required>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Jumlah Siswa Perempuan</label>
+                                                <input type="number" class="form-control" name="jumlah_siswa_P" value="<?= $row['jumlah_siswa_P'] ?>" required>
+                                            </div>
                                         </div>
                                         <div class="mb-3">
                                             <label class="form-label">Wali Kelas (Opsional)</label>
@@ -211,6 +227,16 @@ require_once __DIR__ . '/../includes/sidebar_admin.php';
                     <div class="mb-3">
                         <label class="form-label">Nama Kelas</label>
                         <input type="text" class="form-control" name="nama_kelas" placeholder="Contoh: X IPA 1" required>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Jumlah Siswa Laki-laki</label>
+                            <input type="number" class="form-control" name="jumlah_siswa_L" value="0" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Jumlah Siswa Perempuan</label>
+                            <input type="number" class="form-control" name="jumlah_siswa_P" value="0" required>
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Wali Kelas (Opsional)</label>

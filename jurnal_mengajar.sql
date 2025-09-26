@@ -76,6 +76,8 @@ CREATE TABLE `kelas` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `nama_kelas` varchar(50) NOT NULL,
   `wali_kelas_id` int(11) DEFAULT NULL,
+  `jumlah_siswa_L` int(11) NOT NULL DEFAULT 0,
+  `jumlah_siswa_P` int(11) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
   UNIQUE KEY `nama_kelas` (`nama_kelas`),
   KEY `wali_kelas_id` (`wali_kelas_id`),

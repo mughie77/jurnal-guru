@@ -8,7 +8,7 @@ authorize_role(['waka', 'admin']);
 $page_title = "Data Kelas";
 
 // Ambil semua data kelas, join dengan guru dan users untuk nama wali kelas
-$query = "SELECT kelas.id, kelas.nama_kelas, users.nama_lengkap as nama_wali_kelas
+$query = "SELECT kelas.id, kelas.nama_kelas, kelas.jumlah_siswa_L, kelas.jumlah_siswa_P, users.nama_lengkap as nama_wali_kelas
           FROM kelas
           LEFT JOIN guru ON kelas.wali_kelas_id = guru.id
           LEFT JOIN users ON guru.user_id = users.id
@@ -32,6 +32,7 @@ require_once __DIR__ . '/../includes/sidebar_waka.php';
                     <tr>
                         <th>Nama Kelas</th>
                         <th>Wali Kelas</th>
+                        <th>Jumlah Siswa (L/P/Total)</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -40,11 +41,12 @@ require_once __DIR__ . '/../includes/sidebar_waka.php';
                         <tr>
                             <td><?= htmlspecialchars($row['nama_kelas']) ?></td>
                             <td><?= htmlspecialchars($row['nama_wali_kelas'] ?? 'Belum Diatur') ?></td>
+                            <td><?= $row['jumlah_siswa_L'] ?> / <?= $row['jumlah_siswa_P'] ?> / <strong><?= $row['jumlah_siswa_L'] + $row['jumlah_siswa_P'] ?></strong></td>
                         </tr>
                         <?php endwhile; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="2" class="text-center">Belum ada data kelas.</td>
+                            <td colspan="3" class="text-center">Belum ada data kelas.</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>

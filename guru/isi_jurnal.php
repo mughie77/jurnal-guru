@@ -133,8 +133,8 @@ require_once __DIR__ . '/../includes/header.php';
                 <p class="font-weight-bold">Kehadiran Siswa</p>
                 <div class="row">
                     <div class="col-md-3 mb-3">
-                        <label for="jml_hadir" class="form-label">Jumlah Hadir <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control" id="jml_hadir" name="jml_hadir" value="0" min="0" required>
+                        <label for="jml_hadir" class="form-label">Jumlah Hadir (Otomatis)</label>
+                        <input type="number" class="form-control" id="jml_hadir" name="jml_hadir" value="0" min="0" required readonly>
                     </div>
                     <div class="col-md-3 mb-3">
                         <label for="jml_sakit" class="form-label">Sakit</label>
@@ -160,6 +160,50 @@ require_once __DIR__ . '/../includes/header.php';
 </div>
 
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const kelasSelect = document.getElementById('kelas_id');
+    const hadirInput = document.getElementById('jml_hadir');
+    const sakitInput = document.getElementById('jml_sakit');
+    const izinInput = document.getElementById('jml_izin');
+    const alfaInput = document.getElementById('jml_alfa');
+
+    let totalSiswa = 0;
+
+    const calculateHadir = () => {
+        const sakit = parseInt(sakitInput.value) || 0;
+        const izin = parseInt(izinInput.value) || 0;
+        const alfa = parseInt(alfaInput.value) || 0;
+        const tidakHadir = sakit + izin + alfa;
+        const hadir = totalSiswa - tidakHadir;
+        hadirInput.value = Math.max(0, hadir); // Pastikan tidak negatif
+    };
+
+    kelasSelect.addEventListener('change', function() {
+        const kelasId = this.value;
+        if (kelasId) {
+            fetch(`<?= BASE_URL ?>api/get_jumlah_siswa.php?kelas_id=${kelasId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.total_siswa !== undefined) {
+                        totalSiswa = data.total_siswa;
+                        calculateHadir();
+                    }
+                })
+                .catch(error => console.error('Error fetching student count:', error));
+        } else {
+            totalSiswa = 0;
+            calculateHadir();
+        }
+    });
+
+    [sakitInput, izinInput, alfaInput].forEach(input => {
+        input.addEventListener('input', calculateHadir);
+    });
+});
+</script>
+
 <?php
 require_once __DIR__ . '/../includes/footer.php';
 ?>

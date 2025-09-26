@@ -92,7 +92,7 @@ class PDF extends FPDF
         $this->SetFont('','B');
 
         // Header
-        $w = array(20, 45, 40, 20, 20, 65, 65); // Lebar kolom, total 275 untuk landscape A4
+        $w = array(20, 40, 35, 20, 20, 25, 60, 55); // Lebar kolom, total 275 untuk landscape A4
         for($i=0;$i<count($header);$i++)
             $this->Cell($w[$i],7,$header[$i],1,0,'C',true);
         $this->Ln();
@@ -111,15 +111,16 @@ class PDF extends FPDF
             $this->Cell($w[2],6,$row['nama_mapel'],'LR',0,'L',$fill);
             $this->Cell($w[3],6,$row['nama_kelas'],'LR',0,'C',$fill);
             $this->Cell($w[4],6,$row['jam_ke'],'LR',0,'C',$fill);
+            $this->Cell($w[5],6,"{$row['jml_hadir']}/{$row['jml_sakit']}/{$row['jml_izin']}/{$row['jml_alfa']}",'LR',0,'C',$fill);
 
             // Simpan posisi Y
             $y = $this->GetY();
             $x = $this->GetX();
 
             // MultiCell untuk materi dan keterangan agar bisa wrap
-            $this->MultiCell($w[5],6,$row['materi'],'LR','L',$fill);
-            $this->SetXY($x + $w[5], $y); // Pindah posisi ke kolom berikutnya
-            $this->MultiCell($w[6],6,$row['keterangan'],'LR','L',$fill);
+            $this->MultiCell($w[6],6,$row['materi'],'LR','L',$fill);
+            $this->SetXY($x + $w[6], $y); // Pindah posisi ke kolom berikutnya
+            $this->MultiCell($w[7],6,$row['keterangan'],'LR','L',$fill);
 
             $fill = !$fill;
         }
@@ -136,7 +137,7 @@ $pdf->AddPage();
 $pdf->SetFont('Arial','',10);
 
 // Header Tabel
-$header = array('Tanggal', 'Nama Guru', 'Mata Pelajaran', 'Kelas', 'Jam Ke-', 'Materi Pembahasan', 'Keterangan');
+$header = array('Tanggal', 'Nama Guru', 'Mapel', 'Kelas', 'Jam Ke-', 'Absensi', 'Materi', 'Keterangan');
 
 // Buat tabel
 $pdf->FancyTable($header, $result);
