@@ -128,3 +128,41 @@ CREATE TABLE `jurnal` (
   CONSTRAINT `jurnal_ibfk_3` FOREIGN KEY (`kelas_id`) REFERENCES `kelas` (`id`) ON DELETE RESTRICT,
   CONSTRAINT `jurnal_ibfk_4` FOREIGN KEY (`tahun_pelajaran_id`) REFERENCES `tahun_pelajaran` (`id`) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `siswa`
+--
+CREATE TABLE `siswa` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `nama_siswa` varchar(255) NOT NULL,
+  `nis` varchar(50) NOT NULL,
+  `nisn` varchar(50) NOT NULL,
+  `kelas_id` int(11) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `nis` (`nis`),
+  UNIQUE KEY `nisn` (`nisn`),
+  KEY `kelas_id` (`kelas_id`),
+  CONSTRAINT `siswa_ibfk_1` FOREIGN KEY (`kelas_id`) REFERENCES `kelas` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `absensi`
+--
+CREATE TABLE `absensi` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `siswa_id` int(11) NOT NULL,
+  `tanggal` date NOT NULL,
+  `status` enum('Hadir','Sakit','Izin','Tanpa Keterangan') NOT NULL,
+  `jam_masuk` time DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `siswa_tanggal` (`siswa_id`,`tanggal`),
+  KEY `siswa_id` (`siswa_id`),
+  CONSTRAINT `absensi_ibfk_1` FOREIGN KEY (`siswa_id`) REFERENCES `siswa` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
