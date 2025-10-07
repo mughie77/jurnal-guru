@@ -129,7 +129,10 @@ require_once __DIR__ . '/../includes/sidebar_admin.php';
 <div class="card shadow mb-4">
     <div class="card-header py-3 d-flex justify-content-between align-items-center">
         <h6 class="m-0 font-weight-bold text-primary">Hasil Data Jurnal</h6>
-        <a href="export_pdf.php?<?= http_build_query($filter_params) ?>" class="btn btn-danger" target="_blank"><i class="fa fa-file-pdf"></i> Ekspor ke PDF</a>
+        <div>
+            <a href="export_jurnal_csv.php?<?= http_build_query($filter_params) ?>" class="btn btn-success"><i class="fa fa-file-csv"></i> Ekspor ke CSV</a>
+            <a href="export_pdf.php?<?= http_build_query($filter_params) ?>" class="btn btn-danger ms-2" target="_blank"><i class="fa fa-file-pdf"></i> Ekspor ke PDF</a>
+        </div>
     </div>
     <div class="card-body">
         <div class="table-responsive">
