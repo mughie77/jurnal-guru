@@ -23,8 +23,8 @@ if (isset($_SESSION['user_id'])) {
     }
     exit();
 } else {
-    // Jika belum login, arahkan ke halaman login
-    header('Location: ' . BASE_URL . 'login.php');
+    // Jika belum login, arahkan ke halaman absensi sebagai default
+    header('Location: ' . BASE_URL . 'absen.php');
     exit();
 }
 ?>
