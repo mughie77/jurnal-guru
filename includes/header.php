@@ -42,6 +42,7 @@ require_once __DIR__ . '/../config/database.php';
             padding: 1rem;
             background-color: #212529; /* Dark */
             color: #fff;
+            overflow-y: auto;
         }
 
         .sidebar .nav-link {
@@ -106,9 +107,15 @@ require_once __DIR__ . '/../config/database.php';
                 position: static;
                 width: 100%;
                 height: auto;
+                max-height: 50vh; /* Batasi tinggi sidebar di mobile */
             }
             .main-content {
                 margin-left: 0;
+                padding: 1rem; /* Kurangi padding di mobile */
+            }
+            .navbar {
+                /* Pastikan navbar tidak tumpang tindih */
+                position: static;
             }
         }
     </style>

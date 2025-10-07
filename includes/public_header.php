@@ -25,6 +25,14 @@
             justify-content: center;
             align-items: center;
             height: 100%;
+            padding: 1rem;
+        }
+
+        @media (max-width: 576px) {
+            .container-fluid {
+                align-items: flex-start;
+                padding-top: 2rem;
+            }
         }
     </style>
 </head>
