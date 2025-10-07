@@ -9,10 +9,24 @@ $page_title = "Manajemen Absensi";
 $message = '';
 $message_type = '';
 
-// Ambil data siswa dan kelas untuk dropdown
-$siswa_list_query = "SELECT siswa.id, siswa.nama_siswa, kelas.nama_kelas FROM siswa JOIN kelas ON siswa.kelas_id = kelas.id ORDER BY siswa.nama_siswa ASC";
+// Ambil tahun pelajaran aktif
+$active_year_query = mysqli_query($conn, "SELECT id FROM tahun_pelajaran WHERE status = 'aktif'");
+$active_year = mysqli_fetch_assoc($active_year_query);
+$active_year_id = $active_year ? $active_year['id'] : null;
+
+// Ambil data siswa yang terdaftar di tahun ajaran aktif untuk dropdown
+$siswa_list_query = "
+    SELECT s.id, s.nama_siswa, k.nama_kelas
+    FROM siswa s
+    JOIN siswa_kelas sk ON s.id = sk.siswa_id
+    JOIN kelas k ON sk.kelas_id = k.id
+    WHERE sk.tahun_pelajaran_id = " . ($active_year_id ?? 0) . "
+    ORDER BY s.nama_siswa ASC
+";
 $siswa_list_result = mysqli_query($conn, $siswa_list_query);
 
+
+// Ambil data kelas untuk dropdown filter
 $kelas_list_query = "SELECT id, nama_kelas FROM kelas ORDER BY nama_kelas ASC";
 $kelas_list_result = mysqli_query($conn, $kelas_list_query);
 
@@ -45,17 +59,26 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['tambah_manual'])) {
 $filter_tanggal = $_GET['tanggal'] ?? date('Y-m-d');
 $filter_kelas_id = $_GET['kelas_id'] ?? '';
 
-$query = "SELECT absensi.id, siswa.nama_siswa, kelas.nama_kelas, absensi.tanggal, absensi.status, absensi.jam_masuk
-          FROM absensi
-          JOIN siswa ON absensi.siswa_id = siswa.id
-          JOIN kelas ON siswa.kelas_id = kelas.id
-          WHERE absensi.tanggal = '$filter_tanggal'";
+$query = "
+    SELECT
+        a.id,
+        s.nama_siswa,
+        k.nama_kelas,
+        a.tanggal,
+        a.status,
+        a.jam_masuk
+    FROM absensi a
+    JOIN siswa s ON a.siswa_id = s.id
+    LEFT JOIN siswa_kelas sk ON s.id = sk.siswa_id AND sk.tahun_pelajaran_id = " . ($active_year_id ?? 0) . "
+    LEFT JOIN kelas k ON sk.kelas_id = k.id
+    WHERE a.tanggal = '$filter_tanggal'
+";
 
 if (!empty($filter_kelas_id)) {
-    $query .= " AND siswa.kelas_id = " . (int)$filter_kelas_id;
+    $query .= " AND k.id = " . (int)$filter_kelas_id;
 }
 
-$query .= " ORDER BY kelas.nama_kelas, siswa.nama_siswa ASC";
+$query .= " ORDER BY k.nama_kelas, s.nama_siswa ASC";
 $result = mysqli_query($conn, $query);
 
 require_once __DIR__ . '/../includes/header.php';
@@ -78,13 +101,14 @@ require_once __DIR__ . '/../includes/sidebar_admin.php';
 
 <!-- Tombol dan Filter -->
 <div class="d-flex justify-content-between mb-3">
-    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#tambahModal">
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#tambahModal" <?= !$active_year_id ? 'disabled' : '' ?>>
         <i class="fa fa-plus"></i> Input Absensi Manual
     </button>
     <form action="" method="GET" class="d-flex">
         <input type="date" name="tanggal" class="form-control me-2" value="<?= htmlspecialchars($filter_tanggal) ?>">
         <select name="kelas_id" class="form-select me-2">
             <option value="">Semua Kelas</option>
+            <?php mysqli_data_seek($kelas_list_result, 0); ?>
             <?php while ($kelas = mysqli_fetch_assoc($kelas_list_result)): ?>
                 <option value="<?= $kelas['id'] ?>" <?= ($filter_kelas_id == $kelas['id']) ? 'selected' : '' ?>>
                     <?= htmlspecialchars($kelas['nama_kelas']) ?>
@@ -95,6 +119,11 @@ require_once __DIR__ . '/../includes/sidebar_admin.php';
     </form>
 </div>
 
+<?php if (!$active_year_id): ?>
+    <div class="alert alert-warning">
+        Tidak ada tahun pelajaran yang aktif. Fitur absensi memerlukan tahun pelajaran aktif untuk menentukan kelas siswa.
+    </div>
+<?php endif; ?>
 
 <!-- Tabel Data -->
 <div class="card shadow mb-4">
@@ -107,17 +136,17 @@ require_once __DIR__ . '/../includes/sidebar_admin.php';
                 <thead>
                     <tr>
                         <th>Nama Siswa</th>
-                        <th>Kelas</th>
+                        <th>Kelas (Tahun Aktif)</th>
                         <th>Status</th>
                         <th>Jam Masuk</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <?php if(mysqli_num_rows($result) > 0): ?>
+                    <?php if($active_year_id && mysqli_num_rows($result) > 0): ?>
                         <?php while ($row = mysqli_fetch_assoc($result)): ?>
                         <tr>
                             <td><?= htmlspecialchars($row['nama_siswa']) ?></td>
-                            <td><?= htmlspecialchars($row['nama_kelas']) ?></td>
+                            <td><?= htmlspecialchars($row['nama_kelas'] ?? '<i>Tidak Terdaftar</i>') ?></td>
                             <td>
                                 <?php
                                 $status_class = '';
@@ -155,7 +184,7 @@ require_once __DIR__ . '/../includes/sidebar_admin.php';
             <form action="" method="POST">
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Siswa</label>
+                        <label class="form-label">Siswa (Tahun Ajaran Aktif)</label>
                         <select class="form-select" name="siswa_id" required>
                             <option value="">-- Pilih Siswa --</option>
                             <?php mysqli_data_seek($siswa_list_result, 0); ?>

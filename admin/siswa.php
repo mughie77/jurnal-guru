@@ -9,10 +9,6 @@ $page_title = "Manajemen Siswa";
 $message = '';
 $message_type = '';
 
-// Ambil data kelas untuk dropdown
-$kelas_list_query = "SELECT id, nama_kelas FROM kelas ORDER BY nama_kelas ASC";
-$kelas_list_result = mysqli_query($conn, $kelas_list_query);
-
 // Proses Aksi (Tambah, Edit, Hapus)
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Aksi: Tambah Siswa
@@ -20,9 +16,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $nama_siswa = mysqli_real_escape_string($conn, $_POST['nama_siswa']);
         $nis = mysqli_real_escape_string($conn, $_POST['nis']);
         $nisn = mysqli_real_escape_string($conn, $_POST['nisn']);
-        $kelas_id = (int)$_POST['kelas_id'];
+        $jenis_kelamin = mysqli_real_escape_string($conn, $_POST['jenis_kelamin']);
 
-        $query = "INSERT INTO siswa (nama_siswa, nis, nisn, kelas_id) VALUES ('$nama_siswa', '$nis', '$nisn', $kelas_id)";
+        $query = "INSERT INTO siswa (nama_siswa, nis, nisn, jenis_kelamin) VALUES ('$nama_siswa', '$nis', '$nisn', '$jenis_kelamin')";
         if (mysqli_query($conn, $query)) {
             $message = "Siswa berhasil ditambahkan!";
             $message_type = 'success';
@@ -37,9 +33,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $nama_siswa = mysqli_real_escape_string($conn, $_POST['nama_siswa']);
         $nis = mysqli_real_escape_string($conn, $_POST['nis']);
         $nisn = mysqli_real_escape_string($conn, $_POST['nisn']);
-        $kelas_id = (int)$_POST['kelas_id'];
+        $jenis_kelamin = mysqli_real_escape_string($conn, $_POST['jenis_kelamin']);
 
-        $query = "UPDATE siswa SET nama_siswa = '$nama_siswa', nis = '$nis', nisn = '$nisn', kelas_id = $kelas_id WHERE id = $id";
+        $query = "UPDATE siswa SET nama_siswa = '$nama_siswa', nis = '$nis', nisn = '$nisn', jenis_kelamin = '$jenis_kelamin' WHERE id = $id";
         if (mysqli_query($conn, $query)) {
             $message = "Data siswa berhasil diperbarui!";
             $message_type = 'success';
@@ -51,6 +47,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Aksi: Hapus Siswa
     elseif (isset($_POST['hapus'])) {
         $id = (int)$_POST['id'];
+        // Hapus juga dari absensi dan pendaftaran kelas
+        mysqli_query($conn, "DELETE FROM absensi WHERE siswa_id = $id");
+        mysqli_query($conn, "DELETE FROM siswa_kelas WHERE siswa_id = $id");
         $query = "DELETE FROM siswa WHERE id = $id";
         if (mysqli_query($conn, $query)) {
             $message = "Siswa berhasil dihapus!";
@@ -63,17 +62,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 }
 
 // Ambil semua data siswa untuk ditampilkan
-$query = "SELECT siswa.id, siswa.nama_siswa, siswa.nis, siswa.nisn, kelas.nama_kelas
-          FROM siswa
-          JOIN kelas ON siswa.kelas_id = kelas.id
-          ORDER BY kelas.nama_kelas, siswa.nama_siswa ASC";
+$query = "SELECT id, nama_siswa, nis, nisn, jenis_kelamin FROM siswa ORDER BY nama_siswa ASC";
 $result = mysqli_query($conn, $query);
 
 require_once __DIR__ . '/../includes/header.php';
 require_once __DIR__ . '/../includes/sidebar_admin.php';
 ?>
 
-<h1 class="h3 mb-4 text-gray-800">Manajemen Siswa</h1>
+<h1 class="h3 mb-4 text-gray-800">Manajemen Siswa (Master)</h1>
 
 <?php if ($message): ?>
 <script>
@@ -95,7 +91,7 @@ require_once __DIR__ . '/../includes/sidebar_admin.php';
 <!-- Tabel Data -->
 <div class="card shadow mb-4">
     <div class="card-header py-3">
-        <h6 class="m-0 font-weight-bold text-primary">Daftar Siswa</h6>
+        <h6 class="m-0 font-weight-bold text-primary">Daftar Induk Siswa</h6>
     </div>
     <div class="card-body">
         <div class="table-responsive">
@@ -105,7 +101,7 @@ require_once __DIR__ . '/../includes/sidebar_admin.php';
                         <th>Nama Siswa</th>
                         <th>NIS</th>
                         <th>NISN</th>
-                        <th>Kelas</th>
+                        <th>L/P</th>
                         <th>Aksi</th>
                     </tr>
                 </thead>
@@ -115,7 +111,7 @@ require_once __DIR__ . '/../includes/sidebar_admin.php';
                         <td><?= htmlspecialchars($row['nama_siswa']) ?></td>
                         <td><?= htmlspecialchars($row['nis']) ?></td>
                         <td><?= htmlspecialchars($row['nisn']) ?></td>
-                        <td><?= htmlspecialchars($row['nama_kelas']) ?></td>
+                        <td><?= htmlspecialchars($row['jenis_kelamin']) ?></td>
                         <td>
                             <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#editModal-<?= $row['id'] ?>" title="Edit">
                                 <i class="fa fa-edit"></i>
@@ -150,17 +146,10 @@ require_once __DIR__ . '/../includes/sidebar_admin.php';
                                             <input type="text" class="form-control" name="nisn" value="<?= htmlspecialchars($row['nisn']) ?>" required>
                                         </div>
                                         <div class="mb-3">
-                                            <label class="form-label">Kelas</label>
-                                            <select class="form-select" name="kelas_id" required>
-                                                <option value="">-- Pilih Kelas --</option>
-                                                <?php
-                                                $kelas_edit_query = "SELECT id, nama_kelas FROM kelas ORDER BY nama_kelas ASC";
-                                                $kelas_edit_result = mysqli_query($conn, $kelas_edit_query);
-                                                while($kelas = mysqli_fetch_assoc($kelas_edit_result)) {
-                                                    $selected = ($kelas['id'] == $row['kelas_id']) ? 'selected' : '';
-                                                    echo "<option value='{$kelas['id']}' $selected>" . htmlspecialchars($kelas['nama_kelas']) . "</option>";
-                                                }
-                                                ?>
+                                            <label class="form-label">Jenis Kelamin</label>
+                                            <select class="form-select" name="jenis_kelamin" required>
+                                                <option value="L" <?= ($row['jenis_kelamin'] == 'L') ? 'selected' : '' ?>>Laki-laki</option>
+                                                <option value="P" <?= ($row['jenis_kelamin'] == 'P') ? 'selected' : '' ?>>Perempuan</option>
                                             </select>
                                         </div>
                                     </div>
@@ -182,7 +171,7 @@ require_once __DIR__ . '/../includes/sidebar_admin.php';
                                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                 </div>
                                 <div class="modal-body">
-                                    Anda yakin ingin menghapus siswa "<?= htmlspecialchars($row['nama_siswa']) ?>"?
+                                    Anda yakin ingin menghapus siswa "<?= htmlspecialchars($row['nama_siswa']) ?>"? Tindakan ini akan menghapus semua data terkait siswa ini, termasuk absensi dan pendaftaran kelas.
                                 </div>
                                 <div class="modal-footer">
                                     <form action="" method="POST">
@@ -224,15 +213,11 @@ require_once __DIR__ . '/../includes/sidebar_admin.php';
                         <input type="text" class="form-control" name="nisn" placeholder="Masukkan Nomor Induk Siswa Nasional" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Kelas</label>
-                        <select class="form-select" name="kelas_id" required>
-                            <option value="">-- Pilih Kelas --</option>
-                            <?php
-                            mysqli_data_seek($kelas_list_result, 0);
-                            while($kelas = mysqli_fetch_assoc($kelas_list_result)) {
-                                echo "<option value='{$kelas['id']}'>" . htmlspecialchars($kelas['nama_kelas']) . "</option>";
-                            }
-                            ?>
+                        <label class="form-label">Jenis Kelamin</label>
+                        <select class="form-select" name="jenis_kelamin" required>
+                            <option value="">-- Pilih Jenis Kelamin --</option>
+                            <option value="L">Laki-laki</option>
+                            <option value="P">Perempuan</option>
                         </select>
                     </div>
                 </div>
