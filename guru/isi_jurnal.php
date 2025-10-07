@@ -136,11 +136,11 @@ require_once __DIR__ . '/../includes/header.php';
                     <textarea class="form-control" id="materi" name="materi" rows="4" required></textarea>
                 </div>
                 <hr>
-                <p class="font-weight-bold">Kehadiran Siswa</p>
+                <p class="font-weight-bold">Kehadiran Siswa (Otomatis dari Absensi)</p>
                 <div class="row">
                     <div class="col-md-3 mb-3">
-                        <label for="jml_hadir" class="form-label">Jumlah Hadir (Otomatis)</label>
-                        <input type="number" class="form-control" id="jml_hadir" name="jml_hadir" value="0" min="0" required readonly>
+                        <label for="jml_hadir" class="form-label">Jumlah Hadir</label>
+                        <input type="number" class="form-control" id="jml_hadir" name="jml_hadir" value="0" min="0" required>
                     </div>
                     <div class="col-md-3 mb-3">
                         <label for="jml_sakit" class="form-label">Sakit</label>
@@ -170,43 +170,74 @@ require_once __DIR__ . '/../includes/header.php';
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const kelasSelect = document.getElementById('kelas_id');
+    const tanggalInput = document.getElementById('tanggal');
     const hadirInput = document.getElementById('jml_hadir');
     const sakitInput = document.getElementById('jml_sakit');
     const izinInput = document.getElementById('jml_izin');
     const alfaInput = document.getElementById('jml_alfa');
 
-    let totalSiswa = 0;
+    function fetchAttendanceSummary() {
+        const kelasId = kelasSelect.value;
+        const tanggal = tanggalInput.value;
 
-    const calculateHadir = () => {
-        const sakit = parseInt(sakitInput.value) || 0;
-        const izin = parseInt(izinInput.value) || 0;
-        const alfa = parseInt(alfaInput.value) || 0;
-        const tidakHadir = sakit + izin + alfa;
-        const hadir = totalSiswa - tidakHadir;
-        hadirInput.value = Math.max(0, hadir); // Pastikan tidak negatif
-    };
-
-    kelasSelect.addEventListener('change', function() {
-        const kelasId = this.value;
-        if (kelasId) {
-            fetch(`<?= BASE_URL ?>api/get_jumlah_siswa.php?kelas_id=${kelasId}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.total_siswa !== undefined) {
-                        totalSiswa = data.total_siswa;
-                        calculateHadir();
-                    }
-                })
-                .catch(error => console.error('Error fetching student count:', error));
-        } else {
-            totalSiswa = 0;
-            calculateHadir();
+        if (!kelasId || !tanggal) {
+            // Jika kelas atau tanggal belum dipilih, reset form
+            hadirInput.value = 0;
+            sakitInput.value = 0;
+            izinInput.value = 0;
+            alfaInput.value = 0;
+            return;
         }
-    });
 
-    [sakitInput, izinInput, alfaInput].forEach(input => {
-        input.addEventListener('input', calculateHadir);
-    });
+        // Tampilkan loading atau nonaktifkan input sementara
+        setInputs(true);
+
+        fetch(`<?= BASE_URL ?>api/get_attendance_summary.php?kelas_id=${kelasId}&tanggal=${tanggal}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    hadirInput.value = data.jml_hadir;
+                    sakitInput.value = data.jml_sakit;
+                    izinInput.value = data.jml_izin;
+                    alfaInput.value = data.jml_alfa;
+                } else {
+                    // Jika ada error dari API, reset ke 0
+                    console.error('API Error:', data.message);
+                    hadirInput.value = 0;
+                    sakitInput.value = 0;
+                    izinInput.value = 0;
+                    alfaInput.value = 0;
+                }
+            })
+            .catch(error => {
+                console.error('Fetch Error:', error);
+                // Jika fetch gagal, reset ke 0
+                hadirInput.value = 0;
+                sakitInput.value = 0;
+                izinInput.value = 0;
+                alfaInput.value = 0;
+            })
+            .finally(() => {
+                // Selesai loading, aktifkan kembali input
+                setInputs(false);
+            });
+    }
+
+    function setInputs(disabled) {
+        hadirInput.disabled = disabled;
+        sakitInput.disabled = disabled;
+        izinInput.disabled = disabled;
+        alfaInput.disabled = disabled;
+    }
+
+    // Tambahkan event listener
+    kelasSelect.addEventListener('change', fetchAttendanceSummary);
+    tanggalInput.addEventListener('change', fetchAttendanceSummary);
+
+    // Panggil sekali saat halaman dimuat jika kelas sudah terpilih
+    if (kelasSelect.value) {
+        fetchAttendanceSummary();
+    }
 });
 </script>
 

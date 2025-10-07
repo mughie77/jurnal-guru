@@ -125,7 +125,7 @@ require_once __DIR__ . '/../config/database.php';
         }
     </style>
 </head>
-<body class="<?= strpos($_SERVER['REQUEST_URI'], 'guru/index.php') !== false ? 'guru-dashboard' : '' ?>">
+<body class="<?= (strpos($_SERVER['REQUEST_URI'], '/guru/') !== false) ? 'guru-dashboard' : '' ?>">
     <div class="sidebar-overlay"></div>
     <div id="wrapper">
         <!-- Sidebar akan dimasukkan di sini jika diperlukan -->

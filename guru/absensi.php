@@ -130,10 +130,14 @@ if (!empty($kelas_ids)) { // Hanya jalankan jika guru punya kelas
 
 // Sertakan header dan sidebar guru
 require_once __DIR__ . '/../includes/header.php';
-require_once __DIR__ . '/../includes/sidebar_guru.php';
 ?>
 
-<h1 class="h3 mb-4 text-gray-800">Manajemen Absensi Kelas Anda</h1>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Manajemen Absensi Kelas Anda</h1>
+    <a href="index.php" class="btn btn-secondary">
+        <i class="fa fa-arrow-left"></i> Kembali ke Dasbor
+    </a>
+</div>
 
 <?php if ($message): ?>
 <script>
