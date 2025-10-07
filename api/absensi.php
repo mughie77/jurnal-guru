@@ -8,12 +8,12 @@ date_default_timezone_set('Asia/Jakarta');
 // Ambil data JSON dari body request
 $data = json_decode(file_get_contents('php://input'), true);
 
-if (!$data || !isset($data['nisn'])) {
-    echo json_encode(['success' => false, 'message' => 'NISN tidak ditemukan.']);
+if (!$data || !isset($data['nis'])) {
+    echo json_encode(['success' => false, 'message' => 'NIS tidak ditemukan.']);
     exit;
 }
 
-$nisn = mysqli_real_escape_string($conn, $data['nisn']);
+$nis = mysqli_real_escape_string($conn, $data['nis']);
 $today = date('Y-m-d');
 $now = date('H:i:s');
 
@@ -22,7 +22,7 @@ $active_year_query = mysqli_query($conn, "SELECT id FROM tahun_pelajaran WHERE s
 $active_year = mysqli_fetch_assoc($active_year_query);
 $active_year_id = $active_year ? $active_year['id'] : null;
 
-// 1. Cari siswa dan kelasnya di tahun ajaran aktif berdasarkan NISN
+// 1. Cari siswa dan kelasnya di tahun ajaran aktif berdasarkan NIS
 $siswa_query = "
     SELECT
         s.id,
@@ -31,13 +31,13 @@ $siswa_query = "
     FROM siswa s
     LEFT JOIN siswa_kelas sk ON s.id = sk.siswa_id AND sk.tahun_pelajaran_id = " . ($active_year_id ?? 0) . "
     LEFT JOIN kelas k ON sk.kelas_id = k.id
-    WHERE s.nisn = '$nisn'
+    WHERE s.nis = '$nis'
 ";
 $siswa_result = mysqli_query($conn, $siswa_query);
 
 
 if (mysqli_num_rows($siswa_result) == 0) {
-    echo json_encode(['success' => false, 'message' => 'Siswa dengan NISN tersebut tidak ditemukan.']);
+    echo json_encode(['success' => false, 'message' => 'Siswa dengan NIS tersebut tidak ditemukan.']);
     exit;
 }
 

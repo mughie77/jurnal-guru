@@ -25,7 +25,6 @@ $siswa_list_query = "
 ";
 $siswa_list_result = mysqli_query($conn, $siswa_list_query);
 
-
 // Ambil data kelas untuk dropdown filter
 $kelas_list_query = "SELECT id, nama_kelas FROM kelas ORDER BY nama_kelas ASC";
 $kelas_list_result = mysqli_query($conn, $kelas_list_query);
@@ -36,7 +35,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['tambah_manual'])) {
     $tanggal = $_POST['tanggal'];
     $status = $_POST['status'];
 
-    // Cek apakah sudah ada absensi untuk siswa ini di tanggal yang sama
     $check_query = "SELECT id FROM absensi WHERE siswa_id = $siswa_id AND tanggal = '$tanggal'";
     $check_result = mysqli_query($conn, $check_query);
 
@@ -56,8 +54,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['tambah_manual'])) {
 }
 
 // Logika Filter
-$filter_tanggal = $_GET['tanggal'] ?? date('Y-m-d');
+$filter_start_date = $_GET['start_date'] ?? date('Y-m-d');
+$filter_end_date = $_GET['end_date'] ?? date('Y-m-d');
 $filter_kelas_id = $_GET['kelas_id'] ?? '';
+$filter_search = $_GET['search'] ?? '';
 
 $query = "
     SELECT
@@ -71,15 +71,45 @@ $query = "
     JOIN siswa s ON a.siswa_id = s.id
     LEFT JOIN siswa_kelas sk ON s.id = sk.siswa_id AND sk.tahun_pelajaran_id = " . ($active_year_id ?? 0) . "
     LEFT JOIN kelas k ON sk.kelas_id = k.id
-    WHERE a.tanggal = '$filter_tanggal'
 ";
 
+$where_clauses = [];
+$where_clauses[] = "a.tanggal BETWEEN '{$filter_start_date}' AND '{$filter_end_date}'";
+
 if (!empty($filter_kelas_id)) {
-    $query .= " AND k.id = " . (int)$filter_kelas_id;
+    $where_clauses[] = "k.id = " . (int)$filter_kelas_id;
+}
+if (!empty($filter_search)) {
+    $sanitized_search = mysqli_real_escape_string($conn, $filter_search);
+    $where_clauses[] = "s.nama_siswa LIKE '%{$sanitized_search}%'";
 }
 
-$query .= " ORDER BY k.nama_kelas, s.nama_siswa ASC";
+if (!empty($where_clauses)) {
+    $query .= " WHERE " . implode(' AND ', $where_clauses);
+}
+
+$query .= " ORDER BY a.tanggal DESC, k.nama_kelas, s.nama_siswa ASC";
 $result = mysqli_query($conn, $query);
+
+// Kueri untuk rekapitulasi
+$rekap_query = "
+    SELECT
+        status,
+        COUNT(id) as total
+    FROM ({$query}) as filtered_absensi
+    GROUP BY status
+";
+$rekap_result = mysqli_query($conn, $rekap_query);
+$rekap_data = [
+    'Hadir' => 0,
+    'Sakit' => 0,
+    'Izin' => 0,
+    'Tanpa Keterangan' => 0
+];
+while ($row = mysqli_fetch_assoc($rekap_result)) {
+    $rekap_data[$row['status']] = $row['total'];
+}
+
 
 require_once __DIR__ . '/../includes/header.php';
 require_once __DIR__ . '/../includes/sidebar_admin.php';
@@ -99,42 +129,123 @@ require_once __DIR__ . '/../includes/sidebar_admin.php';
 </script>
 <?php endif; ?>
 
-<!-- Tombol dan Filter -->
+<!-- Form Filter -->
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Filter Data Absensi</h6>
+    </div>
+    <div class="card-body">
+        <form action="" method="GET" class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label for="start_date" class="form-label">Dari Tanggal</label>
+                <input type="date" name="start_date" id="start_date" class="form-control" value="<?= htmlspecialchars($filter_start_date) ?>">
+            </div>
+            <div class="col-md-3">
+                <label for="end_date" class="form-label">Sampai Tanggal</label>
+                <input type="date" name="end_date" id="end_date" class="form-control" value="<?= htmlspecialchars($filter_end_date) ?>">
+            </div>
+            <div class="col-md-2">
+                <label for="kelas_id" class="form-label">Kelas</label>
+                <select name="kelas_id" id="kelas_id" class="form-select">
+                    <option value="">Semua Kelas</option>
+                    <?php mysqli_data_seek($kelas_list_result, 0); ?>
+                    <?php while ($kelas = mysqli_fetch_assoc($kelas_list_result)): ?>
+                        <option value="<?= $kelas['id'] ?>" <?= ($filter_kelas_id == $kelas['id']) ? 'selected' : '' ?>>
+                            <?= htmlspecialchars($kelas['nama_kelas']) ?>
+                        </option>
+                    <?php endwhile; ?>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="search" class="form-label">Cari Nama Siswa</label>
+                <input type="text" name="search" id="search" class="form-control" value="<?= htmlspecialchars($filter_search) ?>" placeholder="Masukkan nama...">
+            </div>
+            <div class="col-md-1">
+                <button type="submit" class="btn btn-info w-100">Filter</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<!-- Tombol Aksi -->
 <div class="d-flex justify-content-between mb-3">
     <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#tambahModal" <?= !$active_year_id ? 'disabled' : '' ?>>
         <i class="fa fa-plus"></i> Input Absensi Manual
     </button>
-    <form action="" method="GET" class="d-flex">
-        <input type="date" name="tanggal" class="form-control me-2" value="<?= htmlspecialchars($filter_tanggal) ?>">
-        <select name="kelas_id" class="form-select me-2">
-            <option value="">Semua Kelas</option>
-            <?php mysqli_data_seek($kelas_list_result, 0); ?>
-            <?php while ($kelas = mysqli_fetch_assoc($kelas_list_result)): ?>
-                <option value="<?= $kelas['id'] ?>" <?= ($filter_kelas_id == $kelas['id']) ? 'selected' : '' ?>>
-                    <?= htmlspecialchars($kelas['nama_kelas']) ?>
-                </option>
-            <?php endwhile; ?>
-        </select>
-        <button type="submit" class="btn btn-info">Filter</button>
-    </form>
+    <a href="export_absensi.php?start_date=<?= htmlspecialchars($filter_start_date) ?>&end_date=<?= htmlspecialchars($filter_end_date) ?>&kelas_id=<?= htmlspecialchars($filter_kelas_id) ?>&search=<?= htmlspecialchars($filter_search) ?>" class="btn btn-success">
+        <i class="fa fa-file-csv"></i> Ekspor ke CSV
+    </a>
 </div>
 
-<?php if (!$active_year_id): ?>
-    <div class="alert alert-warning">
-        Tidak ada tahun pelajaran yang aktif. Fitur absensi memerlukan tahun pelajaran aktif untuk menentukan kelas siswa.
+<!-- Rekapitulasi -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-2">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Hadir</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800"><?= $rekap_data['Hadir'] ?></div>
+                    </div>
+                    <div class="col-auto"><i class="fas fa-user-check fa-2x text-gray-300"></i></div>
+                </div>
+            </div>
+        </div>
     </div>
-<?php endif; ?>
+    <div class="col-xl-3 col-md-6 mb-2">
+        <div class="card border-left-warning shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Sakit</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800"><?= $rekap_data['Sakit'] ?></div>
+                    </div>
+                    <div class="col-auto"><i class="fas fa-medkit fa-2x text-gray-300"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-2">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Izin</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800"><?= $rekap_data['Izin'] ?></div>
+                    </div>
+                    <div class="col-auto"><i class="fas fa-info-circle fa-2x text-gray-300"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-2">
+        <div class="card border-left-danger shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Tanpa Keterangan</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800"><?= $rekap_data['Tanpa Keterangan'] ?></div>
+                    </div>
+                    <div class="col-auto"><i class="fas fa-user-times fa-2x text-gray-300"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <!-- Tabel Data -->
 <div class="card shadow mb-4">
     <div class="card-header py-3">
-        <h6 class="m-0 font-weight-bold text-primary">Daftar Absensi Tanggal: <?= date('d M Y', strtotime($filter_tanggal)) ?></h6>
+        <h6 class="m-0 font-weight-bold text-primary">Daftar Absensi</h6>
     </div>
     <div class="card-body">
         <div class="table-responsive">
             <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
                 <thead>
                     <tr>
+                        <th>Tanggal</th>
                         <th>Nama Siswa</th>
                         <th>Kelas (Tahun Aktif)</th>
                         <th>Status</th>
@@ -145,6 +256,7 @@ require_once __DIR__ . '/../includes/sidebar_admin.php';
                     <?php if($active_year_id && mysqli_num_rows($result) > 0): ?>
                         <?php while ($row = mysqli_fetch_assoc($result)): ?>
                         <tr>
+                            <td><?= date('d M Y', strtotime($row['tanggal'])) ?></td>
                             <td><?= htmlspecialchars($row['nama_siswa']) ?></td>
                             <td><?= htmlspecialchars($row['nama_kelas'] ?? '<i>Tidak Terdaftar</i>') ?></td>
                             <td>
@@ -164,7 +276,7 @@ require_once __DIR__ . '/../includes/sidebar_admin.php';
                         <?php endwhile; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="4" class="text-center">Tidak ada data absensi untuk tanggal dan filter yang dipilih.</td>
+                            <td colspan="5" class="text-center">Tidak ada data absensi untuk filter yang dipilih.</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>
