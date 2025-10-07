@@ -31,7 +31,7 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
         <div class="container">
-            <a class="navbar-brand" href="#">
+            <a class="navbar-brand" href="absen.php">
                 <i class="fas fa-barcode"></i> Absensi Siswa
             </a>
             <a href="login.php" class="btn btn-outline-primary">
