@@ -2,7 +2,7 @@
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../config/database.php';
 
-authorize_role(['admin']);
+authorize_role(['admin', 'waka']);
 
 $page_title = "Kenaikan Kelas";
 $message = '';

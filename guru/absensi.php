@@ -2,32 +2,48 @@
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../config/database.php';
 
-// Otorisasi untuk admin dan waka
-authorize_role(['admin', 'waka']);
+// Otorisasi hanya untuk guru
+authorize_role(['guru']);
 
-$page_title = "Manajemen Absensi";
+$page_title = "Manajemen Absensi Kelas";
 $message = '';
 $message_type = '';
+
+// Dapatkan guru_id dari user_id session
+$user_id = $_SESSION['user_id'];
+$guru_info_query = mysqli_query($conn, "SELECT id FROM guru WHERE user_id = $user_id");
+$guru_info = mysqli_fetch_assoc($guru_info_query);
+$guru_id = $guru_info ? $guru_info['id'] : null;
+
+// Dapatkan kelas yang diampu oleh guru sebagai wali kelas
+$kelas_ids = [];
+if ($guru_id) {
+    $kelas_query = mysqli_query($conn, "SELECT id FROM kelas WHERE wali_kelas_id = $guru_id");
+    while ($kelas = mysqli_fetch_assoc($kelas_query)) {
+        $kelas_ids[] = $kelas['id'];
+    }
+}
 
 // Ambil tahun pelajaran aktif
 $active_year_query = mysqli_query($conn, "SELECT id FROM tahun_pelajaran WHERE status = 'aktif'");
 $active_year = mysqli_fetch_assoc($active_year_query);
 $active_year_id = $active_year ? $active_year['id'] : null;
 
-// Ambil data siswa yang terdaftar di tahun ajaran aktif untuk dropdown
-$siswa_list_query = "
+// Ambil data siswa dari kelas yang diampu guru untuk dropdown
+$siswa_list_query_string = "
     SELECT s.id, s.nama_siswa, k.nama_kelas
     FROM siswa s
     JOIN siswa_kelas sk ON s.id = sk.siswa_id
     JOIN kelas k ON sk.kelas_id = k.id
     WHERE sk.tahun_pelajaran_id = " . ($active_year_id ?? 0) . "
-    ORDER BY s.nama_siswa ASC
 ";
-$siswa_list_result = mysqli_query($conn, $siswa_list_query);
-
-// Ambil data kelas untuk dropdown filter
-$kelas_list_query = "SELECT id, nama_kelas FROM kelas ORDER BY nama_kelas ASC";
-$kelas_list_result = mysqli_query($conn, $kelas_list_query);
+if (!empty($kelas_ids)) {
+    $siswa_list_query_string .= " AND sk.kelas_id IN (" . implode(',', $kelas_ids) . ")";
+} else {
+    $siswa_list_query_string .= " AND 1=0"; // Jika tidak ada kelas, jangan tampilkan siswa
+}
+$siswa_list_query_string .= " ORDER BY s.nama_siswa ASC";
+$siswa_list_result = mysqli_query($conn, $siswa_list_query_string);
 
 // Proses Aksi (Tambah Manual)
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['tambah_manual'])) {
@@ -35,87 +51,89 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['tambah_manual'])) {
     $tanggal = $_POST['tanggal'];
     $status = $_POST['status'];
 
-    $check_query = "SELECT id FROM absensi WHERE siswa_id = $siswa_id AND tanggal = '$tanggal'";
-    $check_result = mysqli_query($conn, $check_query);
+    // Validasi: pastikan guru hanya bisa input untuk siswanya
+    $is_his_student_query = "SELECT s.id FROM siswa s JOIN siswa_kelas sk ON s.id = sk.siswa_id WHERE s.id = $siswa_id AND sk.kelas_id IN (" . (!empty($kelas_ids) ? implode(',', $kelas_ids) : '0') . ") AND sk.tahun_pelajaran_id = " . ($active_year_id ?? 0);
+    $validation_result = mysqli_query($conn, $is_his_student_query);
 
-    if (mysqli_num_rows($check_result) > 0) {
-        $message = "Siswa ini sudah memiliki catatan absensi pada tanggal tersebut.";
-        $message_type = 'error';
-    } else {
-        $query = "INSERT INTO absensi (siswa_id, tanggal, status) VALUES ($siswa_id, '$tanggal', '$status')";
-        if (mysqli_query($conn, $query)) {
-            $message = "Absensi manual berhasil ditambahkan!";
-            $message_type = 'success';
-        } else {
-            $message = "Gagal menambahkan absensi: " . mysqli_error($conn);
+    if (mysqli_num_rows($validation_result) > 0) {
+        $check_query = "SELECT id FROM absensi WHERE siswa_id = $siswa_id AND tanggal = '$tanggal'";
+        $check_result = mysqli_query($conn, $check_query);
+
+        if (mysqli_num_rows($check_result) > 0) {
+            $message = "Siswa ini sudah memiliki catatan absensi pada tanggal tersebut.";
             $message_type = 'error';
+        } else {
+            $query = "INSERT INTO absensi (siswa_id, tanggal, status) VALUES ($siswa_id, '$tanggal', '$status')";
+            if (mysqli_query($conn, $query)) {
+                $message = "Absensi manual berhasil ditambahkan!";
+                $message_type = 'success';
+            } else {
+                $message = "Gagal menambahkan absensi: " . mysqli_error($conn);
+                $message_type = 'error';
+            }
         }
+    } else {
+        $message = "Error: Anda tidak memiliki hak untuk mengelola siswa ini.";
+        $message_type = 'error';
     }
 }
 
 // Logika Filter
 $filter_start_date = $_GET['start_date'] ?? date('Y-m-d');
 $filter_end_date = $_GET['end_date'] ?? date('Y-m-d');
-$filter_kelas_id = $_GET['kelas_id'] ?? '';
 $filter_search = $_GET['search'] ?? '';
 
 $query = "
     SELECT
-        a.id,
-        s.nama_siswa,
-        k.nama_kelas,
-        a.tanggal,
-        a.status,
-        a.jam_masuk
+        a.id, s.nama_siswa, k.nama_kelas, a.tanggal, a.status, a.jam_masuk
     FROM absensi a
     JOIN siswa s ON a.siswa_id = s.id
-    LEFT JOIN siswa_kelas sk ON s.id = sk.siswa_id AND sk.tahun_pelajaran_id = " . ($active_year_id ?? 0) . "
-    LEFT JOIN kelas k ON sk.kelas_id = k.id
+    JOIN siswa_kelas sk ON s.id = sk.siswa_id
+    JOIN kelas k ON sk.kelas_id = k.id
 ";
 
-$where_clauses = [];
-$where_clauses[] = "a.tanggal BETWEEN '{$filter_start_date}' AND '{$filter_end_date}'";
+$where_clauses = [
+    "a.tanggal BETWEEN '{$filter_start_date}' AND '{$filter_end_date}'",
+    "sk.tahun_pelajaran_id = " . ($active_year_id ?? 0)
+];
 
-if (!empty($filter_kelas_id)) {
-    $where_clauses[] = "k.id = " . (int)$filter_kelas_id;
+if (!empty($kelas_ids)) {
+    $where_clauses[] = "k.id IN (" . implode(',', $kelas_ids) . ")";
+} else {
+    $where_clauses[] = "1=0"; // Jika guru tidak punya kelas, jangan tampilkan apa-apa
 }
+
 if (!empty($filter_search)) {
     $sanitized_search = mysqli_real_escape_string($conn, $filter_search);
     $where_clauses[] = "s.nama_siswa LIKE '%{$sanitized_search}%'";
 }
 
-if (!empty($where_clauses)) {
-    $query .= " WHERE " . implode(' AND ', $where_clauses);
-}
-
-$query .= " ORDER BY a.tanggal DESC, k.nama_kelas, s.nama_siswa ASC";
+$query .= " WHERE " . implode(' AND ', $where_clauses);
+$query .= " ORDER BY a.tanggal DESC, s.nama_siswa ASC";
 $result = mysqli_query($conn, $query);
 
 // Kueri untuk rekapitulasi
-$rekap_query = "
-    SELECT
-        status,
-        COUNT(id) as total
-    FROM ({$query}) as filtered_absensi
-    GROUP BY status
-";
-$rekap_result = mysqli_query($conn, $rekap_query);
 $rekap_data = [
-    'Hadir' => 0,
-    'Sakit' => 0,
-    'Izin' => 0,
-    'Tanpa Keterangan' => 0
+    'Hadir' => 0, 'Sakit' => 0, 'Izin' => 0, 'Tanpa Keterangan' => 0
 ];
-while ($row = mysqli_fetch_assoc($rekap_result)) {
-    $rekap_data[$row['status']] = $row['total'];
+if (!empty($kelas_ids)) { // Hanya jalankan jika guru punya kelas
+    $rekap_query_string = "
+        SELECT status, COUNT(id) as total
+        FROM ({$query}) as filtered_absensi
+        GROUP BY status
+    ";
+    $rekap_result = mysqli_query($conn, $rekap_query_string);
+    while ($row = mysqli_fetch_assoc($rekap_result)) {
+        $rekap_data[$row['status']] = $row['total'];
+    }
 }
 
-
+// Sertakan header dan sidebar guru
 require_once __DIR__ . '/../includes/header.php';
-require_once __DIR__ . '/../includes/sidebar_admin.php';
+require_once __DIR__ . '/../includes/sidebar_guru.php';
 ?>
 
-<h1 class="h3 mb-4 text-gray-800">Manajemen Absensi Siswa</h1>
+<h1 class="h3 mb-4 text-gray-800">Manajemen Absensi Kelas Anda</h1>
 
 <?php if ($message): ?>
 <script>
@@ -136,44 +154,31 @@ require_once __DIR__ . '/../includes/sidebar_admin.php';
     </div>
     <div class="card-body">
         <form action="" method="GET" class="row g-3 align-items-end">
-            <div class="col-md-3">
+            <div class="col-md-4">
                 <label for="start_date" class="form-label">Dari Tanggal</label>
                 <input type="date" name="start_date" id="start_date" class="form-control" value="<?= htmlspecialchars($filter_start_date) ?>">
             </div>
-            <div class="col-md-3">
+            <div class="col-md-4">
                 <label for="end_date" class="form-label">Sampai Tanggal</label>
                 <input type="date" name="end_date" id="end_date" class="form-control" value="<?= htmlspecialchars($filter_end_date) ?>">
             </div>
-            <div class="col-md-2">
-                <label for="kelas_id" class="form-label">Kelas</label>
-                <select name="kelas_id" id="kelas_id" class="form-select">
-                    <option value="">Semua Kelas</option>
-                    <?php mysqli_data_seek($kelas_list_result, 0); ?>
-                    <?php while ($kelas = mysqli_fetch_assoc($kelas_list_result)): ?>
-                        <option value="<?= $kelas['id'] ?>" <?= ($filter_kelas_id == $kelas['id']) ? 'selected' : '' ?>>
-                            <?= htmlspecialchars($kelas['nama_kelas']) ?>
-                        </option>
-                    <?php endwhile; ?>
-                </select>
-            </div>
-            <div class="col-md-3">
+            <div class="col-md-4">
                 <label for="search" class="form-label">Cari Nama Siswa</label>
                 <input type="text" name="search" id="search" class="form-control" value="<?= htmlspecialchars($filter_search) ?>" placeholder="Masukkan nama...">
             </div>
-            <div class="col-md-1">
-                <button type="submit" class="btn btn-info w-100">Filter</button>
+            <div class="col-md-12 text-end mt-3">
+                <button type="submit" class="btn btn-info">Filter</button>
             </div>
         </form>
     </div>
 </div>
 
-
-<!-- Tombol Aksi -->
+<!-- Tombol Aksi dan Ekspor -->
 <div class="d-flex justify-content-between mb-3">
-    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#tambahModal" <?= !$active_year_id ? 'disabled' : '' ?>>
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#tambahModal" <?= (!$active_year_id || empty($kelas_ids)) ? 'disabled' : '' ?>>
         <i class="fa fa-plus"></i> Input Absensi Manual
     </button>
-    <a href="export_absensi.php?start_date=<?= htmlspecialchars($filter_start_date) ?>&end_date=<?= htmlspecialchars($filter_end_date) ?>&kelas_id=<?= htmlspecialchars($filter_kelas_id) ?>&search=<?= htmlspecialchars($filter_search) ?>" class="btn btn-success">
+    <a href="export_absensi.php?start_date=<?= htmlspecialchars($filter_start_date) ?>&end_date=<?= htmlspecialchars($filter_end_date) ?>&search=<?= htmlspecialchars($filter_search) ?>" class="btn btn-success" <?= (!$active_year_id || empty($kelas_ids)) ? 'disabled' : '' ?>>
         <i class="fa fa-file-csv"></i> Ekspor ke CSV
     </a>
 </div>
@@ -234,7 +239,6 @@ require_once __DIR__ . '/../includes/sidebar_admin.php';
     </div>
 </div>
 
-
 <!-- Tabel Data -->
 <div class="card shadow mb-4">
     <div class="card-header py-3">
@@ -247,18 +251,16 @@ require_once __DIR__ . '/../includes/sidebar_admin.php';
                     <tr>
                         <th>Tanggal</th>
                         <th>Nama Siswa</th>
-                        <th>Kelas (Tahun Aktif)</th>
                         <th>Status</th>
                         <th>Jam Masuk</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <?php if($active_year_id && mysqli_num_rows($result) > 0): ?>
+                    <?php if($active_year_id && !empty($kelas_ids) && mysqli_num_rows($result) > 0): ?>
                         <?php while ($row = mysqli_fetch_assoc($result)): ?>
                         <tr>
                             <td><?= date('d M Y', strtotime($row['tanggal'])) ?></td>
                             <td><?= htmlspecialchars($row['nama_siswa']) ?></td>
-                            <td><?= htmlspecialchars($row['nama_kelas'] ?? '<i>Tidak Terdaftar</i>') ?></td>
                             <td>
                                 <?php
                                 $status_class = '';
@@ -276,7 +278,7 @@ require_once __DIR__ . '/../includes/sidebar_admin.php';
                         <?php endwhile; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="5" class="text-center">Tidak ada data absensi untuk filter yang dipilih.</td>
+                            <td colspan="4" class="text-center">Tidak ada data absensi untuk filter yang dipilih atau Anda bukan wali kelas.</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>
@@ -296,7 +298,7 @@ require_once __DIR__ . '/../includes/sidebar_admin.php';
             <form action="" method="POST">
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Siswa (Tahun Ajaran Aktif)</label>
+                        <label class="form-label">Siswa</label>
                         <select class="form-select" name="siswa_id" required>
                             <option value="">-- Pilih Siswa --</option>
                             <?php mysqli_data_seek($siswa_list_result, 0); ?>
@@ -328,5 +330,6 @@ require_once __DIR__ . '/../includes/sidebar_admin.php';
 </div>
 
 <?php
+// Ganti footer dengan yang sesuai jika ada, atau gunakan footer standar
 require_once __DIR__ . '/../includes/footer.php';
 ?>

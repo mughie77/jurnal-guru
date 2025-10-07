@@ -2,8 +2,8 @@
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../config/database.php';
 
-// Otorisasi hanya untuk admin
-authorize_role(['admin']);
+// Otorisasi untuk admin dan waka
+authorize_role(['admin', 'waka']);
 
 $page_title = "Manajemen Pendaftaran Kelas";
 $message = '';
