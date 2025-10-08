@@ -7,20 +7,18 @@ require_once 'includes/public_header.php';
     <div class="text-center">
         <div class="card shadow-lg" style="max-width: 500px;">
             <div class="card-body p-5">
-                <h1 class="h4 text-gray-900 mb-4">Scan Barcode / Masukkan NIS</h1>
-                <h6 class="text-muted mb-4">Sistem akan otomatis submit setelah 1 detik</h6>
+                <h1 class="h4 text-gray-900 mb-2">Pindai Barcode / Ketik NIS</h1>
+                <p id="reader-status" class="text-muted mb-3">Posisikan barcode di depan kamera...</p>
 
-                <div id="qr-reader" style="width:100%;" class="mb-3"></div>
+                <div id="reader" style="width:100%;" class="mb-3"></div>
 
-                <form id="absensi-form">
+                <form id="absensi-form" class="mt-3">
                     <div class="mb-3">
-                        <input type="text" class="form-control form-control-lg text-center" id="nis-input" placeholder="Arahkan kamera ke barcode atau ketik NIS" autofocus>
+                        <label for="nis-input" class="form-label visually-hidden">NIS (Hasil Pindai)</label>
+                        <input type="text" class="form-control form-control-lg text-center" id="nis-input" placeholder="NIS akan muncul di sini" autofocus>
                     </div>
-                    <button type="button" id="start-scan-btn" class="btn btn-info mb-2 w-100">
-                        <i class="fa fa-camera"></i> Pindai dengan Kamera
-                    </button>
                     <button type="submit" class="btn btn-primary btn-lg w-100">
-                        <i class="fas fa-check"></i> Submit Kehadiran
+                        <i class="fas fa-check"></i> Submit Manual
                     </button>
                 </form>
             </div>
@@ -33,12 +31,10 @@ require_once 'includes/public_header.php';
 document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('absensi-form');
     const nisInput = document.getElementById('nis-input');
-    const startScanBtn = document.getElementById('start-scan-btn');
-    const qrReaderElement = document.getElementById('qr-reader');
+    const readerStatus = document.getElementById('reader-status');
     let typingTimer;
     const doneTypingInterval = 1000; // 1 detik
 
-    // Fungsi yang akan dipanggil untuk submit form
     const submitAttendance = function(event) {
         if (event) event.preventDefault();
         clearTimeout(typingTimer);
@@ -49,6 +45,8 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
+        nisInput.disabled = true;
+
         fetch('api/absensi.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -56,24 +54,23 @@ document.addEventListener('DOMContentLoaded', function () {
         })
         .then(response => response.json())
         .then(data => {
+            const messageConfig = {
+                timer: 2500,
+                showConfirmButton: false
+            };
             if (data.success) {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Berhasil!',
-                    html: `Siswa <strong>${data.nama_siswa}</strong> (${data.nama_kelas}) berhasil diabsen.`,
-                    timer: 3000,
-                    showConfirmButton: false
-                });
+                Swal.fire({ ...messageConfig, icon: 'success', title: 'Berhasil!', html: `Siswa <strong>${data.nama_siswa}</strong> (${data.nama_kelas}) berhasil diabsen.` });
             } else {
-                Swal.fire({ icon: 'error', title: 'Gagal!', text: data.message });
+                Swal.fire({ ...messageConfig, icon: 'error', title: 'Gagal!', text: data.message });
             }
-            nisInput.value = '';
-            nisInput.focus();
         })
         .catch(error => {
             console.error('Error:', error);
             Swal.fire({ icon: 'error', title: 'Oops...', text: 'Terjadi kesalahan!' });
+        })
+        .finally(() => {
             nisInput.value = '';
+            nisInput.disabled = false;
             nisInput.focus();
         });
     };
@@ -87,42 +84,55 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // Logika untuk scanner kamera
-    let html5QrCode = null;
+    const html5QrCode = new Html5Qrcode("reader");
 
-    startScanBtn.addEventListener('click', function() {
-        if (!html5QrCode) {
-            html5QrCode = new Html5Qrcode("qr-reader");
-        }
+    const qrCodeSuccessCallback = (decodedText, decodedResult) => {
+        nisInput.value = decodedText;
+        html5QrCode.stop().then(ignore => {
+            submitAttendance(null);
+            setTimeout(() => startScanner(), 2500); // Restart scanner after a delay
+        }).catch(err => console.error("Gagal menghentikan scanner.", err));
+    };
 
-        const qrCodeSuccessCallback = (decodedText, decodedResult) => {
-            nisInput.value = decodedText;
-            html5QrCode.stop().then(ignore => {
-                // Berhasil scan, langsung submit
-                submitAttendance(null);
-            }).catch(err => console.error("Failed to stop scanner.", err));
+    const startScanner = () => {
+        readerStatus.innerText = "Mencari kamera...";
+        const formatsToSupport = [
+            Html5QrcodeSupportedFormats.QR_CODE,
+            Html5QrcodeSupportedFormats.CODE_128,
+            Html5QrcodeSupportedFormats.CODE_39,
+            Html5QrcodeSupportedFormats.EAN_13,
+        ];
+        const config = {
+            fps: 10,
+            qrbox: { width: 280, height: 120 },
+            supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
+            formatsToSupport: formatsToSupport
         };
-
-        const config = { fps: 10, qrbox: { width: 250, height: 250 } };
 
         Html5Qrcode.getCameras().then(cameras => {
             if (cameras && cameras.length) {
-                // Pilih kamera belakang jika ada (lebih baik untuk mobile)
+                readerStatus.innerText = "Kamera aktif, arahkan barcode ke area pindai.";
                 const cameraId = cameras.length > 1 ? cameras[1].id : cameras[0].id;
-                html5QrCode.start(cameraId, config, qrCodeSuccessCallback)
+
+                html5QrCode.start({ deviceId: { exact: cameraId } }, config, qrCodeSuccessCallback)
+                .catch(err => {
+                    html5QrCode.start({ deviceId: { exact: cameras[0].id } }, config, qrCodeSuccessCallback)
                     .catch(err => {
-                        // Jika gagal dengan kamera belakang, coba kamera depan
-                        html5QrCode.start(cameras[0].id, config, qrCodeSuccessCallback)
-                            .catch(err => Swal.fire('Error', 'Tidak dapat memulai kamera.', 'error'));
+                        Swal.fire('Error', 'Tidak dapat memulai kamera.', 'error');
+                        readerStatus.innerText = "Error: Gagal memulai kamera.";
                     });
+                });
             } else {
                  Swal.fire('Error', 'Tidak ada kamera yang ditemukan.', 'error');
+                 readerStatus.innerText = "Error: Tidak ada kamera ditemukan.";
             }
         }).catch(err => {
-            Swal.fire('Error', 'Tidak dapat mengakses kamera.', 'error');
+            Swal.fire('Error', 'Izin kamera ditolak atau tidak dapat diakses.', 'error');
+            readerStatus.innerText = "Error: Izin kamera ditolak.";
         });
-    });
+    }
 
+    startScanner();
     nisInput.focus();
 });
 </script>
