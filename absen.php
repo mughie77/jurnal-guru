@@ -8,6 +8,7 @@ require_once 'includes/public_header.php';
         <div class="card shadow-lg" style="max-width: 500px;">
             <div class="card-body p-5">
                 <h1 class="h4 text-gray-900 mb-4">Scan Barcode / Masukkan NIS</h1>
+                <h6 class="text-muted mb-4">Sistem akan otomatis submit setelah 2 detik</h6>
                 <form id="absensi-form">
                     <div class="mb-3">
                         <input type="text" class="form-control form-control-lg text-center" id="nis-input" placeholder="Arahkan kamera ke barcode atau ketik NIS" autofocus>
@@ -25,9 +26,16 @@ require_once 'includes/public_header.php';
 document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('absensi-form');
     const nisInput = document.getElementById('nis-input');
+    let typingTimer;
+    const doneTypingInterval = 2000; // 2 detik
 
-    form.addEventListener('submit', function (e) {
-        e.preventDefault();
+    // Fungsi yang akan dipanggil untuk submit form
+    const submitAttendance = function(event) {
+        if (event) event.preventDefault();
+
+        // Batalkan timer jika ada, untuk mencegah double submit
+        clearTimeout(typingTimer);
+
         const nis = nisInput.value.trim();
 
         if (nis === '') {
@@ -77,6 +85,18 @@ document.addEventListener('DOMContentLoaded', function () {
             nisInput.value = '';
             nisInput.focus();
         });
+    };
+
+    // Event listener untuk submit manual (klik tombol)
+    form.addEventListener('submit', submitAttendance);
+
+    // Event listener untuk auto-submit setelah selesai mengetik
+    nisInput.addEventListener('input', function () {
+        clearTimeout(typingTimer);
+        // Hanya set timer jika input tidak kosong, agar tidak submit saat field dihapus
+        if (nisInput.value.trim() !== '') {
+            typingTimer = setTimeout(() => submitAttendance(null), doneTypingInterval);
+        }
     });
 
     // Auto-focus ke input field saat halaman dimuat
