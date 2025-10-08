@@ -62,6 +62,11 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 <i class="fa fa-calendar-alt"></i> Thn. Pelajaran
             </a>
         </li>
+        <li class="nav-item">
+            <a class="nav-link <?= ($current_page == 'pengaturan.php') ? 'active' : ''; ?>" href="<?= BASE_URL ?>admin/pengaturan.php">
+                <i class="fa fa-cog"></i> Pengaturan
+            </a>
+        </li>
     </ul>
 </div>
 <div class="main-content">

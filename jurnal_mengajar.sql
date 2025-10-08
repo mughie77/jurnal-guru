@@ -173,7 +173,7 @@ CREATE TABLE `absensi` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `siswa_id` int(11) NOT NULL,
   `tanggal` date NOT NULL,
-  `status` enum('Hadir','Sakit','Izin','Tanpa Keterangan') NOT NULL,
+  `status` enum('Hadir','Terlambat','Sakit','Izin','Tanpa Keterangan') NOT NULL,
   `jam_masuk` time DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
@@ -181,3 +181,22 @@ CREATE TABLE `absensi` (
   KEY `siswa_id` (`siswa_id`),
   CONSTRAINT `absensi_ibfk_1` FOREIGN KEY (`siswa_id`) REFERENCES `siswa` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `pengaturan`
+--
+CREATE TABLE `pengaturan` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `setting_key` varchar(100) NOT NULL,
+  `setting_value` varchar(255) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `setting_key` (`setting_key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `pengaturan`
+--
+INSERT INTO `pengaturan` (`setting_key`, `setting_value`) VALUES
+('jam_masuk_sekolah', '07:00:00');

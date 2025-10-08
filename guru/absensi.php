@@ -114,7 +114,7 @@ $result = mysqli_query($conn, $query);
 
 // Kueri untuk rekapitulasi
 $rekap_data = [
-    'Hadir' => 0, 'Sakit' => 0, 'Izin' => 0, 'Tanpa Keterangan' => 0
+    'Hadir' => 0, 'Terlambat' => 0, 'Sakit' => 0, 'Izin' => 0, 'Tanpa Keterangan' => 0
 ];
 if (!empty($kelas_ids)) { // Hanya jalankan jika guru punya kelas
     $rekap_query_string = "
@@ -124,11 +124,13 @@ if (!empty($kelas_ids)) { // Hanya jalankan jika guru punya kelas
     ";
     $rekap_result = mysqli_query($conn, $rekap_query_string);
     while ($row = mysqli_fetch_assoc($rekap_result)) {
-        $rekap_data[$row['status']] = $row['total'];
+        if (array_key_exists($row['status'], $rekap_data)) {
+            $rekap_data[$row['status']] = $row['total'];
+        }
     }
 }
 
-// Sertakan header dan sidebar guru
+// Sertakan header
 require_once __DIR__ . '/../includes/header.php';
 ?>
 
@@ -207,7 +209,20 @@ require_once __DIR__ . '/../includes/header.php';
             <div class="card-body">
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Sakit</div>
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Terlambat</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800"><?= $rekap_data['Terlambat'] ?></div>
+                    </div>
+                    <div class="col-auto"><i class="fas fa-clock fa-2x text-gray-300"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-2 col-md-6 mb-2">
+        <div class="card border-left-secondary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-secondary text-uppercase mb-1">Sakit</div>
                         <div class="h5 mb-0 font-weight-bold text-gray-800"><?= $rekap_data['Sakit'] ?></div>
                     </div>
                     <div class="col-auto"><i class="fas fa-medkit fa-2x text-gray-300"></i></div>
@@ -215,7 +230,7 @@ require_once __DIR__ . '/../includes/header.php';
             </div>
         </div>
     </div>
-    <div class="col-xl-3 col-md-6 mb-2">
+    <div class="col-xl-2 col-md-6 mb-2">
         <div class="card border-left-info shadow h-100 py-2">
             <div class="card-body">
                 <div class="row no-gutters align-items-center">
@@ -228,12 +243,12 @@ require_once __DIR__ . '/../includes/header.php';
             </div>
         </div>
     </div>
-    <div class="col-xl-3 col-md-6 mb-2">
+    <div class="col-xl-2 col-md-6 mb-2">
         <div class="card border-left-danger shadow h-100 py-2">
             <div class="card-body">
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Tanpa Keterangan</div>
+                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Alfa</div>
                         <div class="h5 mb-0 font-weight-bold text-gray-800"><?= $rekap_data['Tanpa Keterangan'] ?></div>
                     </div>
                     <div class="col-auto"><i class="fas fa-user-times fa-2x text-gray-300"></i></div>
@@ -242,6 +257,7 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
     </div>
 </div>
+
 
 <!-- Tabel Data -->
 <div class="card shadow mb-4">
@@ -270,14 +286,15 @@ require_once __DIR__ . '/../includes/header.php';
                                 $status_class = '';
                                 switch ($row['status']) {
                                     case 'Hadir': $status_class = 'bg-success text-white'; break;
-                                    case 'Sakit': $status_class = 'bg-warning text-dark'; break;
+                                    case 'Terlambat': $status_class = 'bg-warning text-dark'; break;
+                                    case 'Sakit': $status_class = 'bg-secondary text-white'; break;
                                     case 'Izin': $status_class = 'bg-info text-dark'; break;
                                     case 'Tanpa Keterangan': $status_class = 'bg-danger text-white'; break;
                                 }
                                 ?>
                                 <span class="badge <?= $status_class ?>"><?= htmlspecialchars($row['status']) ?></span>
                             </td>
-                            <td><?= $row['status'] == 'Hadir' ? htmlspecialchars($row['jam_masuk']) : '-' ?></td>
+                            <td><?= ($row['status'] == 'Hadir' || $row['status'] == 'Terlambat') ? htmlspecialchars($row['jam_masuk']) : '-' ?></td>
                         </tr>
                         <?php endwhile; ?>
                     <?php else: ?>
@@ -334,6 +351,5 @@ require_once __DIR__ . '/../includes/header.php';
 </div>
 
 <?php
-// Ganti footer dengan yang sesuai jika ada, atau gunakan footer standar
 require_once __DIR__ . '/../includes/footer.php';
 ?>
