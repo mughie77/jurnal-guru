@@ -177,12 +177,12 @@ require_once __DIR__ . '/../includes/sidebar_admin.php';
                 <div class="modal-header"><h5 class="modal-title">Tambah Mata Pelajaran</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Nama Mata Pelajaran</label>
-                        <input type="text" class="form-control" name="nama_mapel" placeholder="Contoh: Matematika" required>
+                        <label for="tambah_nama_mapel" class="form-label">Nama Mata Pelajaran</label>
+                        <input type="text" id="tambah_nama_mapel" class="form-control" name="nama_mapel" placeholder="Contoh: Matematika Wajib" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Kode Mapel</label>
-                        <input type="text" class="form-control" name="kode_mapel" placeholder="Contoh: MTK-X" required>
+                        <label for="tambah_kode_mapel" class="form-label">Kode Mapel</label>
+                        <input type="text" id="tambah_kode_mapel" class="form-control" name="kode_mapel" placeholder="Contoh: MW" required>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -197,3 +197,21 @@ require_once __DIR__ . '/../includes/sidebar_admin.php';
 <?php
 require_once __DIR__ . '/../includes/footer.php';
 ?>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const namaMapelInput = document.getElementById('tambah_nama_mapel');
+    const kodeMapelInput = document.getElementById('tambah_kode_mapel');
+
+    if (namaMapelInput && kodeMapelInput) {
+        namaMapelInput.addEventListener('input', function() {
+            const namaMapel = this.value;
+            // Ambil huruf pertama dari setiap kata, ubah ke uppercase
+            const kodeOtomatis = namaMapel.split(' ')
+                                          .map(word => word.charAt(0))
+                                          .join('')
+                                          .toUpperCase();
+            kodeMapelInput.value = kodeOtomatis;
+        });
+    }
+});
+</script>

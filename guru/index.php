@@ -86,6 +86,21 @@ require_once __DIR__ . '/../includes/header.php';
                 </div>
             </a>
         </div>
+
+        <!-- Menu Manajemen Absensi -->
+        <div class="col-xl-4 col-md-6 mb-4">
+            <a href="<?= BASE_URL ?>guru/absensi.php" class="card-menu">
+                <div class="card border-left-info shadow h-100 py-4">
+                    <div class="card-body text-center">
+                        <div class="mb-3">
+                            <i class="fas fa-calendar-check card-icon"></i>
+                        </div>
+                        <h5 class="card-title">Manajemen Absensi</h5>
+                        <p class="card-text">Kelola absensi siswa di kelas perwalian Anda.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
     </div>
 </div>
 

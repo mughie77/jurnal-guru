@@ -23,6 +23,19 @@ $today = date('Y-m-d');
 $result_jurnal = mysqli_query($conn, "SELECT COUNT(id) as total FROM jurnal WHERE tanggal = '$today'");
 $total_jurnal_hari_ini = mysqli_fetch_assoc($result_jurnal)['total'];
 
+// 5. Jumlah Siswa
+$result_siswa = mysqli_query($conn, "SELECT COUNT(id) as total FROM siswa");
+$total_siswa = mysqli_fetch_assoc($result_siswa)['total'];
+
+// 6. Jumlah Absen Masuk Hari Ini
+$result_hadir = mysqli_query($conn, "SELECT COUNT(id) as total FROM absensi WHERE tanggal = '$today' AND status = 'Hadir'");
+$total_hadir_hari_ini = mysqli_fetch_assoc($result_hadir)['total'];
+
+// 7. Jumlah Absen Tidak Masuk Hari Ini (Sakit, Izin, Alpha)
+$result_tidak_hadir = mysqli_query($conn, "SELECT COUNT(id) as total FROM absensi WHERE tanggal = '$today' AND status != 'Hadir'");
+$total_tidak_hadir_hari_ini = mysqli_fetch_assoc($result_tidak_hadir)['total'];
+
+
 // Set judul halaman
 $page_title = "Dashboard Admin";
 
@@ -114,6 +127,64 @@ require_once __DIR__ . '/../includes/sidebar_admin.php';
         </div>
     </div>
 </div>
+
+<!-- Content Row for Student Stats -->
+<div class="row">
+    <!-- Card Jumlah Siswa -->
+    <div class="col-xl-4 col-md-6 mb-4">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            Jumlah Siswa</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800"><?= $total_siswa ?></div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-users fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card Absen Masuk Hari Ini -->
+    <div class="col-xl-4 col-md-6 mb-4">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Absen Masuk (Hari Ini)</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800"><?= $total_hadir_hari_ini ?></div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-user-check fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card Tidak Masuk Hari Ini -->
+    <div class="col-xl-4 col-md-6 mb-4">
+        <div class="card border-left-danger shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                            Tidak Masuk (Hari Ini)</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800"><?= $total_tidak_hadir_hari_ini ?></div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-user-times fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <div class="card shadow mb-4">
     <div class="card-header py-3">
