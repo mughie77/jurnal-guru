@@ -170,6 +170,9 @@ require_once __DIR__ . '/../includes/sidebar_admin.php';
 <button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#tambahModal">
     <i class="fa fa-plus"></i> Tambah Guru
 </button>
+<a href="import_guru_excel.php" class="btn btn-success mb-3">
+    <i class="fa fa-file-excel"></i> Import Excel
+</a>
 
 <div class="card shadow mb-4">
     <div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary">Daftar Guru</h6></div>

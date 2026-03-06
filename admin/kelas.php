@@ -102,6 +102,9 @@ require_once __DIR__ . '/../includes/sidebar_admin.php';
 <button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#tambahModal">
     <i class="fa fa-plus"></i> Tambah Kelas
 </button>
+<a href="import_siswa_excel.php" class="btn btn-success mb-3">
+    <i class="fa fa-file-excel"></i> Import Excel Data Siswa
+</a>
 
 <!-- Tabel Data -->
 <div class="card shadow mb-4">

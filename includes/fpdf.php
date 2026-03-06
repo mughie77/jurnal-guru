@@ -66,6 +66,7 @@ protected $ZoomMode;           // zoom display mode
 protected $LayoutMode;         // layout display mode
 protected $metadata;           // document properties
 protected $PDFVersion;         // PDF version number
+protected $CurRotation;        // current page rotation
 
 /*******************************************************************************
 *                               Public methods                                 *
@@ -1812,6 +1813,12 @@ protected function _put($s)
 {
 	// Add a line to the document
 	$this->buffer .= $s."\n";
+}
+
+protected function _out($s)
+{
+	// Add a line to the document
+	$this->_put($s);
 }
 
 protected function _putstream($s)
