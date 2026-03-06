@@ -33,6 +33,11 @@ $current_page = basename($_SERVER['PHP_SELF']);
             </a>
         </li>
         <li class="nav-item">
+            <a class="nav-link <?= ($current_page == 'siswa.php') ? 'active' : ''; ?>" href="<?= BASE_URL ?>admin/siswa.php">
+                <i class="fa fa-user-graduate"></i> Manajemen Siswa
+            </a>
+        </li>
+        <li class="nav-item">
             <a class="nav-link <?= ($current_page == 'mapel.php') ? 'active' : ''; ?>" href="<?= BASE_URL ?>admin/mapel.php">
                 <i class="fa fa-book"></i> Manajemen Mapel
             </a>

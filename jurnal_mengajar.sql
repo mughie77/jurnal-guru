@@ -44,6 +44,19 @@ CREATE TABLE `guru` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `mata_pelajaran`
+--
+CREATE TABLE `mata_pelajaran` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `nama_mapel` varchar(100) NOT NULL,
+  `kode_mapel` varchar(20) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `kode_mapel` (`kode_mapel`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `guru_mapel`
 --
 CREATE TABLE `guru_mapel` (
@@ -53,19 +66,6 @@ CREATE TABLE `guru_mapel` (
   KEY `mapel_id` (`mapel_id`),
   CONSTRAINT `guru_mapel_ibfk_1` FOREIGN KEY (`guru_id`) REFERENCES `guru` (`id`) ON DELETE CASCADE,
   CONSTRAINT `guru_mapel_ibfk_2` FOREIGN KEY (`mapel_id`) REFERENCES `mata_pelajaran` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `mata_pelajaran`
---
-CREATE TABLE `mata_pelajaran` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `nama_mapel` varchar(100) NOT NULL,
-  `kode_mapel` varchar(20) NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `kode_mapel` (`kode_mapel`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
@@ -101,6 +101,41 @@ CREATE TABLE `kelas` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `siswa`
+--
+CREATE TABLE `siswa` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `nis` varchar(20) NOT NULL,
+  `nama_siswa` varchar(255) NOT NULL,
+  `jenis_kelamin` enum('L','P') NOT NULL,
+  `alamat` text DEFAULT NULL,
+  `no_telp` varchar(20) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `nis` (`nis`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `siswa_kelas`
+--
+CREATE TABLE `siswa_kelas` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `siswa_id` int(11) NOT NULL,
+  `kelas_id` int(11) NOT NULL,
+  `tahun_pelajaran_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `siswa_id` (`siswa_id`),
+  KEY `kelas_id` (`kelas_id`),
+  KEY `tahun_pelajaran_id` (`tahun_pelajaran_id`),
+  CONSTRAINT `siswa_kelas_ibfk_1` FOREIGN KEY (`siswa_id`) REFERENCES `siswa` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `siswa_kelas_ibfk_2` FOREIGN KEY (`kelas_id`) REFERENCES `kelas` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `siswa_kelas_ibfk_3` FOREIGN KEY (`tahun_pelajaran_id`) REFERENCES `tahun_pelajaran` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `jurnal`
 --
 CREATE TABLE `jurnal` (
@@ -128,3 +163,37 @@ CREATE TABLE `jurnal` (
   CONSTRAINT `jurnal_ibfk_3` FOREIGN KEY (`kelas_id`) REFERENCES `kelas` (`id`) ON DELETE RESTRICT,
   CONSTRAINT `jurnal_ibfk_4` FOREIGN KEY (`tahun_pelajaran_id`) REFERENCES `tahun_pelajaran` (`id`) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `absensi_harian`
+--
+CREATE TABLE `absensi_harian` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `siswa_id` int(11) NOT NULL,
+  `tanggal` date NOT NULL,
+  `waktu_masuk` time DEFAULT NULL,
+  `status` enum('Hadir','Sakit','Izin','Alfa','Terlambat') NOT NULL DEFAULT 'Hadir',
+  `keterangan` text DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `siswa_id` (`siswa_id`),
+  CONSTRAINT `absensi_harian_ibfk_1` FOREIGN KEY (`siswa_id`) REFERENCES `siswa` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `pengaturan`
+--
+CREATE TABLE `pengaturan` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `nama_setting` varchar(100) NOT NULL,
+  `nilai_setting` text DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `nama_setting` (`nama_setting`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+INSERT INTO `pengaturan` (`nama_setting`, `nilai_setting`) VALUES
+('nama_sekolah', 'SMKN 2 Bondowoso'),
+('jam_masuk_sekolah', '07:00:00');
