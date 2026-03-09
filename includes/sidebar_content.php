@@ -5,34 +5,60 @@ $role = $_SESSION['role'];
 function nav_link($url, $icon, $label, $active) {
     $base_url = BASE_URL;
     $class = $active
-        ? 'bg-indigo-600 text-white'
+        ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30'
         : 'text-slate-400 hover:bg-slate-800 hover:text-white';
     return "
-        <a href='{$base_url}{$url}' class='flex items-center px-4 py-3 rounded-xl transition-all duration-200 group {$class}'>
-            <i class='{$icon} w-6 text-center text-lg mr-3 ".($active ? "" : "group-hover:scale-110 transition-transform")."'></i>
+        <a href='{$base_url}{$url}' class='flex items-center px-4 py-3 rounded-xl transition-all duration-300 group {$class}'>
+            <i class='{$icon} w-6 text-center text-lg mr-3 ".($active ? "" : "group-hover:scale-110 group-hover:text-indigo-400 transition-all")."'></i>
             <span class='font-medium'>{$label}</span>
         </a>";
 }
 
-if ($role == 'admin') {
-    echo nav_link('admin/index.php', 'fa fa-tachometer-alt', 'Dashboard', $current_page == 'index.php');
-    echo nav_link('admin/jurnal.php', 'fa fa-book-open', 'Data Jurnal', $current_page == 'jurnal.php');
-    echo nav_link('admin/rekap_absensi.php', 'fa fa-chart-line', 'Rekap Absensi', $current_page == 'rekap_absensi.php');
-    echo nav_link('admin/users.php', 'fa fa-users', 'Manajemen User', $current_page == 'users.php');
-    echo nav_link('admin/guru.php', 'fa fa-chalkboard-teacher', 'Manajemen Guru', $current_page == 'guru.php');
-    echo nav_link('admin/kelas.php', 'fa fa-school', 'Manajemen Kelas', $current_page == 'kelas.php');
-    echo nav_link('admin/naik_kelas.php', 'fa fa-level-up-alt', 'Kenaikan Kelas', $current_page == 'naik_kelas.php');
-    echo nav_link('admin/mapping_siswa.php', 'fa fa-project-diagram', 'Mapping Siswa', $current_page == 'mapping_siswa.php');
-    echo nav_link('admin/siswa.php', 'fa fa-user-graduate', 'Manajemen Siswa', $current_page == 'siswa.php');
-    echo nav_link('admin/mapel.php', 'fa fa-book', 'Mata Pelajaran', $current_page == 'mapel.php');
-    echo nav_link('admin/tahun_pelajaran.php', 'fa fa-calendar-alt', 'Tahun Pelajaran', $current_page == 'tahun_pelajaran.php');
-} elseif ($role == 'waka') {
-    echo nav_link('waka/index.php', 'fa fa-tachometer-alt', 'Dashboard', $current_page == 'index.php');
-    echo nav_link('waka/jurnal.php', 'fa fa-book-open', 'Laporan Jurnal', $current_page == 'jurnal.php');
-    echo nav_link('admin/rekap_absensi.php', 'fa fa-chart-line', 'Rekap Absensi', $current_page == 'rekap_absensi.php');
+function sub_nav_link($url, $label, $active) {
+    $base_url = BASE_URL;
+    $class = $active ? 'text-indigo-400 font-bold' : 'text-slate-500 hover:text-slate-300';
+    $bullet = $active ? 'bg-indigo-400' : 'bg-slate-700';
+    return "
+        <a href='{$base_url}{$url}' class='flex items-center py-2 pl-12 pr-4 transition-colors group {$class}'>
+            <div class='w-1.5 h-1.5 rounded-full mr-3 {$bullet} group-hover:bg-indigo-400 transition-colors'></div>
+            <span class='text-sm'>{$label}</span>
+        </a>";
 }
 
-echo "<div class='pt-4 mt-4 border-t border-slate-800'>";
+if ($role == 'admin' || $role == 'waka') {
+    echo nav_link($role.'/index.php', 'fa fa-tachometer-alt', 'Dashboard', $current_page == 'index.php');
+
+    // Group: Data Master
+    $master_active = in_array($current_page, ['guru.php', 'mapel.php', 'tahun_pelajaran.php', 'users.php']);
+    echo "
+    <div class='pt-4'>
+        <p class='px-4 text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] mb-2'>Data Master</p>
+        ".nav_link('admin/users.php', 'fa fa-users-cog', 'Manajemen User', $current_page == 'users.php')."
+        ".nav_link('admin/guru.php', 'fa fa-chalkboard-teacher', 'Data Guru', $current_page == 'guru.php')."
+        ".nav_link('admin/mapel.php', 'fa fa-book', 'Mata Pelajaran', $current_page == 'mapel.php')."
+        ".nav_link('admin/tahun_pelajaran.php', 'fa fa-calendar-alt', 'Tahun Pelajaran', $current_page == 'tahun_pelajaran.php')."
+    </div>";
+
+    // Group: Akademik
+    echo "
+    <div class='pt-6'>
+        <p class='px-4 text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] mb-2'>Akademik</p>
+        ".nav_link('admin/kelas.php', 'fa fa-school', 'Manajemen Kelas', $current_page == 'kelas.php')."
+        ".nav_link('admin/siswa.php', 'fa fa-user-graduate', 'Data Siswa', $current_page == 'siswa.php')."
+        ".nav_link('admin/mapping_siswa.php', 'fa fa-project-diagram', 'Mapping Kelas', $current_page == 'mapping_siswa.php')."
+        ".nav_link('admin/naik_kelas.php', 'fa fa-level-up-alt', 'Kenaikan Kelas', $current_page == 'naik_kelas.php')."
+    </div>";
+
+    // Group: Laporan
+    echo "
+    <div class='pt-6'>
+        <p class='px-4 text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] mb-2'>Laporan & Rekap</p>
+        ".nav_link($role.'/jurnal.php', 'fa fa-book-open', 'Jurnal Mengajar', $current_page == 'jurnal.php')."
+        ".nav_link('admin/rekap_absensi.php', 'fa fa-chart-line', 'Rekap Absensi', $current_page == 'rekap_absensi.php')."
+    </div>";
+}
+
+echo "<div class='pt-8 mt-8 border-t border-slate-800/50'>";
 echo nav_link('logout.php', 'fa fa-sign-out-alt text-rose-500', 'Keluar Sistem', false);
 echo "</div>";
 ?>
