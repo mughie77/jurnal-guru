@@ -21,10 +21,6 @@
                     </div>
                     <span class="text-[8px] font-black uppercase mt-1 text-indigo-600">Jurnal</span>
                 </a>
-                <a href="<?= BASE_URL ?>guru/riwayat.php" class="flex flex-col items-center p-2 rounded-xl transition-all <?= basename($_SERVER['PHP_SELF']) == 'riwayat.php' ? 'text-indigo-600' : 'text-slate-400' ?>">
-                    <i class="fa fa-history text-lg"></i>
-                    <span class="text-[8px] font-black uppercase mt-1">Riwayat</span>
-                </a>
                 <a href="<?= BASE_URL ?>guru/perangkat.php" class="flex flex-col items-center p-2 rounded-xl transition-all <?= basename($_SERVER['PHP_SELF']) == 'perangkat.php' ? 'text-indigo-600' : 'text-slate-400' ?>">
                     <i class="fa fa-folder text-lg"></i>
                     <span class="text-[8px] font-black uppercase mt-1">Perangkat</span>

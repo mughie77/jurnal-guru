@@ -35,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['simpan_jurnal'])) {
 require_once __DIR__ . '/../includes/header.php';
 ?>
 
-<style>#sidebar, header { display: none; } .lg\:ml-64 { margin-left: 0; }</style>
+<style>#sidebar, header, nav.navbar { display: none !important; } .lg\:ml-64 { margin-left: 0 !important; } .main-content { margin-left: 0 !important; padding-top: 2rem !important; }</style>
 
 <div class="max-w-4xl mx-auto pb-32 px-4">
     <div class="flex items-center justify-between mb-8">

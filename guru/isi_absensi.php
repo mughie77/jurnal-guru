@@ -17,9 +17,14 @@ $message = ''; $message_type = '';
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['simpan_absensi'])) {
     mysqli_begin_transaction($conn);
     try {
+        $mid = $_POST['mapel_id'];
+        $kid = $_POST['kelas_id'];
+        $tgl = $_POST['tanggal'];
+        $jam = $_POST['jam_ke'];
+
         // 1. Create a "Pre-Journal" entry to link attendance to
         $stmt = mysqli_prepare($conn, "INSERT INTO jurnal (guru_id, mapel_id, kelas_id, tahun_pelajaran_id, tanggal, jam_ke, materi) VALUES (?, ?, ?, ?, ?, ?, '')");
-        mysqli_stmt_bind_param($stmt, "iiiiss", $guru_id, $_POST['mapel_id'], $_POST['kelas_id'], $active_tahun_id, $_POST['tanggal'], $_POST['jam_ke']);
+        mysqli_stmt_bind_param($stmt, "iiiiss", $guru_id, $mid, $kid, $active_tahun_id, $tgl, $jam);
         mysqli_stmt_execute($stmt);
         $jurnal_id = mysqli_insert_id($conn);
 
@@ -43,8 +48,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['simpan_absensi'])) {
         }
 
         mysqli_commit($conn);
-        // 3. Redirect to Journal entry to fill the content
-        header("Location: isi_jurnal.php?jid=$jurnal_id");
+        // 3. Redirect using JavaScript to avoid header issues
+        echo "<script>window.location.href = 'isi_jurnal.php?jid=$jurnal_id';</script>";
         exit;
     } catch (Exception $e) { mysqli_rollback($conn); $message = "Error: " . $e->getMessage(); $message_type = 'error'; }
 }
@@ -52,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['simpan_absensi'])) {
 require_once __DIR__ . '/../includes/header.php';
 ?>
 
-<style>#sidebar, header { display: none; } .lg\:ml-64 { margin-left: 0; }</style>
+<style>#sidebar, header, nav.navbar { display: none !important; } .lg\:ml-64 { margin-left: 0 !important; } .main-content { margin-left: 0 !important; padding-top: 2rem !important; }</style>
 
 <div class="max-w-4xl mx-auto pb-32 px-4">
     <div class="flex items-center justify-between mb-8">

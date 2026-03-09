@@ -28,7 +28,7 @@ $result = mysqli_query($conn, $sql);
 require_once __DIR__ . '/../includes/header.php';
 ?>
 
-<style>#sidebar, header { display: none; } .lg\:ml-64 { margin-left: 0; }</style>
+<style>#sidebar, header, nav.navbar { display: none !important; } .lg\:ml-64 { margin-left: 0 !important; } .main-content { margin-left: 0 !important; padding-top: 2rem !important; }</style>
 
 <div class="max-w-6xl mx-auto pb-20">
     <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
