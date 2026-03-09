@@ -17,6 +17,7 @@ function nav_link($url, $icon, $label, $active) {
 if ($role == 'admin') {
     echo nav_link('admin/index.php', 'fa fa-tachometer-alt', 'Dashboard', $current_page == 'index.php');
     echo nav_link('admin/jurnal.php', 'fa fa-book-open', 'Data Jurnal', $current_page == 'jurnal.php');
+    echo nav_link('admin/rekap_absensi.php', 'fa fa-chart-line', 'Rekap Absensi', $current_page == 'rekap_absensi.php');
     echo nav_link('admin/users.php', 'fa fa-users', 'Manajemen User', $current_page == 'users.php');
     echo nav_link('admin/guru.php', 'fa fa-chalkboard-teacher', 'Manajemen Guru', $current_page == 'guru.php');
     echo nav_link('admin/kelas.php', 'fa fa-school', 'Manajemen Kelas', $current_page == 'kelas.php');
@@ -27,6 +28,7 @@ if ($role == 'admin') {
 } elseif ($role == 'waka') {
     echo nav_link('waka/index.php', 'fa fa-tachometer-alt', 'Dashboard', $current_page == 'index.php');
     echo nav_link('waka/jurnal.php', 'fa fa-book-open', 'Laporan Jurnal', $current_page == 'jurnal.php');
+    echo nav_link('admin/rekap_absensi.php', 'fa fa-chart-line', 'Rekap Absensi', $current_page == 'rekap_absensi.php');
 }
 
 echo "<div class='pt-4 mt-4 border-t border-slate-800'>";

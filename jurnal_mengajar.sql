@@ -6,6 +6,23 @@ USE `jurnal_mengajar`;
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `absensi_jurnal`
+--
+CREATE TABLE `absensi_jurnal` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `jurnal_id` int(11) NOT NULL,
+  `siswa_id` int(11) NOT NULL,
+  `status` enum('H','S','I','A') NOT NULL DEFAULT 'H',
+  PRIMARY KEY (`id`),
+  KEY `jurnal_id` (`jurnal_id`),
+  KEY `siswa_id` (`siswa_id`),
+  CONSTRAINT `absensi_jurnal_ibfk_1` FOREIGN KEY (`jurnal_id`) REFERENCES `jurnal` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `absensi_jurnal_ibfk_2` FOREIGN KEY (`siswa_id`) REFERENCES `siswa` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `users`
 --
 CREATE TABLE `users` (
