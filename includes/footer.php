@@ -1,40 +1,24 @@
-<!-- /.container-fluid -->
-                </div>
-            </div>
-            <!-- End of Main Content -->
-
-            <!-- Footer -->
-            <footer class="sticky-footer bg-white">
-                <div class="container my-auto">
-                    <div class="copyright text-center my-auto">
-                        <span>Copyright &copy; Aplikasi Jurnal Mengajar <?= date('Y'); ?></span>
-                    </div>
-                </div>
-            </footer>
-            <!-- End of Footer -->
-
+                </div> <!-- .container-fluid or main end -->
+            </main>
         </div>
-        <!-- End of Content Wrapper -->
     </div>
-    <!-- End of Page Wrapper -->
 
-    <!-- Bootstrap 5 Bundle with Popper -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-    <!-- Custom scripts for all pages-->
-    <script src="<?= BASE_URL ?>assets/js/script.js"></script>
-
-    <!-- Sidebar Toggle Script -->
     <script>
-    document.addEventListener("DOMContentLoaded", function() {
+        const sidebar = document.getElementById('sidebar');
         const sidebarToggle = document.getElementById('sidebarToggle');
+
         if (sidebarToggle) {
-            sidebarToggle.addEventListener('click', function (event) {
-                event.preventDefault();
-                document.body.classList.toggle('sidebar-toggled');
+            sidebarToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('-translate-x-full');
             });
         }
-    });
+
+        // Close sidebar on mobile when clicking outside
+        document.addEventListener('mousedown', (e) => {
+            if (window.innerWidth < 1024 && !sidebar.contains(e.target) && !sidebarToggle.contains(e.target)) {
+                sidebar.classList.add('-translate-x-full');
+            }
+        });
     </script>
 </body>
 </html>

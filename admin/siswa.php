@@ -13,171 +13,99 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $nis = mysqli_real_escape_string($conn, $_POST['nis']);
         $nama_siswa = mysqli_real_escape_string($conn, $_POST['nama_siswa']);
         $jenis_kelamin = $_POST['jenis_kelamin'];
-        $alamat = mysqli_real_escape_string($conn, $_POST['alamat']);
-        $no_telp = mysqli_real_escape_string($conn, $_POST['no_telp']);
-
-        $query = "INSERT INTO siswa (nis, nama_siswa, jenis_kelamin, alamat, no_telp) VALUES ('$nis', '$nama_siswa', '$jenis_kelamin', '$alamat', '$no_telp')";
-        if (mysqli_query($conn, $query)) {
+        if (mysqli_query($conn, "INSERT INTO siswa (nis, nama_siswa, jenis_kelamin) VALUES ('$nis', '$nama_siswa', '$jenis_kelamin')")) {
             $message = "Siswa berhasil ditambahkan!";
             $message_type = 'success';
-        } else {
-            $message = "Gagal: " . mysqli_error($conn);
-            $message_type = 'error';
         }
     } elseif (isset($_POST['edit'])) {
         $id = $_POST['id'];
         $nis = mysqli_real_escape_string($conn, $_POST['nis']);
         $nama_siswa = mysqli_real_escape_string($conn, $_POST['nama_siswa']);
         $jenis_kelamin = $_POST['jenis_kelamin'];
-        $alamat = mysqli_real_escape_string($conn, $_POST['alamat']);
-        $no_telp = mysqli_real_escape_string($conn, $_POST['no_telp']);
-
-        $query = "UPDATE siswa SET nis = '$nis', nama_siswa = '$nama_siswa', jenis_kelamin = '$jenis_kelamin', alamat = '$alamat', no_telp = '$no_telp' WHERE id = $id";
-        if (mysqli_query($conn, $query)) {
-            $message = "Siswa berhasil diperbarui!";
-            $message_type = 'success';
-        } else {
-            $message = "Gagal: " . mysqli_error($conn);
-            $message_type = 'error';
-        }
+        mysqli_query($conn, "UPDATE siswa SET nis = '$nis', nama_siswa = '$nama_siswa', jenis_kelamin = '$jenis_kelamin' WHERE id = $id");
+        $message = "Data siswa diperbarui!";
+        $message_type = 'success';
     } elseif (isset($_POST['hapus'])) {
-        $id = $_POST['id'];
-        if (mysqli_query($conn, "DELETE FROM siswa WHERE id = $id")) {
-            $message = "Siswa berhasil dihapus!";
-            $message_type = 'success';
-        } else {
-            $message = "Gagal: " . mysqli_error($conn);
-            $message_type = 'error';
-        }
+        mysqli_query($conn, "DELETE FROM siswa WHERE id = " . (int)$_POST['id']);
+        $message = "Siswa dihapus!";
+        $message_type = 'success';
     }
 }
 
-$query = "SELECT * FROM siswa ORDER BY nama_siswa ASC";
+$query = "SELECT s.*, k.nama_kelas
+          FROM siswa s
+          LEFT JOIN siswa_kelas sk ON s.id = sk.siswa_id AND sk.tahun_pelajaran_id = '$active_tahun_id'
+          LEFT JOIN kelas k ON sk.kelas_id = k.id
+          ORDER BY s.nama_siswa ASC";
 $result = mysqli_query($conn, $query);
 
 require_once __DIR__ . '/../includes/header.php';
-require_once __DIR__ . '/../includes/sidebar_admin.php';
 ?>
 
-<h1 class="h3 mb-4 text-gray-800">Manajemen Siswa</h1>
+<div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+    <div>
+        <h1 class="text-3xl font-bold text-slate-800 tracking-tight">Manajemen Siswa</h1>
+        <p class="text-slate-500">Kelola database siswa dan penempatan kelas.</p>
+    </div>
+    <div class="flex gap-3">
+        <button onclick="openModal('tambahModal')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-indigo-200 transition-all flex items-center">
+            <i class="fa fa-plus mr-2"></i> Tambah Siswa
+        </button>
+        <a href="import_siswa_excel.php" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-emerald-200 transition-all flex items-center">
+            <i class="fa fa-file-excel mr-2"></i> Import Excel
+        </a>
+    </div>
+</div>
 
 <?php if ($message): ?>
 <script>
-    Swal.fire({
-        icon: '<?= $message_type ?>',
-        title: '<?= ucfirst($message_type) ?>',
-        text: '<?= addslashes($message) ?>',
-        timer: 3000,
-        showConfirmButton: false
-    });
+    Swal.fire({ icon: '<?= $message_type ?>', title: '<?= ucfirst($message_type) ?>', text: '<?= addslashes(htmlspecialchars($message)) ?>' });
 </script>
 <?php endif; ?>
 
-<button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#tambahModal">
-    <i class="fa fa-plus"></i> Tambah Siswa
-</button>
-<a href="import_siswa_excel.php" class="btn btn-success mb-3">
-    <i class="fa fa-file-excel"></i> Import Excel
-</a>
-
-<div class="card shadow mb-4">
-    <div class="card-header py-3">
-        <h6 class="m-0 font-weight-bold text-primary">Daftar Siswa</h6>
-    </div>
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
-                <thead>
-                    <tr>
-                        <th>NIS</th>
-                        <th>Nama Siswa</th>
-                        <th>L/P</th>
-                        <th>No. Telp</th>
-                        <th>Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php while ($row = mysqli_fetch_assoc($result)): ?>
-                    <tr>
-                        <td><?= htmlspecialchars($row['nis']) ?></td>
-                        <td><?= htmlspecialchars($row['nama_siswa']) ?></td>
-                        <td><?= $row['jenis_kelamin'] ?></td>
-                        <td><?= htmlspecialchars($row['no_telp'] ?? '-') ?></td>
-                        <td>
-                            <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#editModal-<?= $row['id'] ?>"><i class="fa fa-edit"></i></button>
-                            <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#hapusModal-<?= $row['id'] ?>"><i class="fa fa-trash"></i></button>
-                        </td>
-                    </tr>
-
-                    <!-- Modal Edit -->
-                    <div class="modal fade" id="editModal-<?= $row['id'] ?>" tabindex="-1" aria-hidden="true">
-                        <div class="modal-dialog">
-                            <div class="modal-content">
-                                <form action="" method="POST">
-                                    <div class="modal-header"><h5 class="modal-title">Edit Siswa</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-                                    <div class="modal-body">
-                                        <input type="hidden" name="id" value="<?= $row['id'] ?>">
-                                        <div class="mb-3"><label class="form-label">NIS</label><input type="text" name="nis" class="form-control" value="<?= htmlspecialchars($row['nis']) ?>" required></div>
-                                        <div class="mb-3"><label class="form-label">Nama Siswa</label><input type="text" name="nama_siswa" class="form-control" value="<?= htmlspecialchars($row['nama_siswa']) ?>" required></div>
-                                        <div class="mb-3">
-                                            <label class="form-label">Jenis Kelamin</label>
-                                            <select name="jenis_kelamin" class="form-select">
-                                                <option value="L" <?= $row['jenis_kelamin'] == 'L' ? 'selected' : '' ?>>Laki-laki</option>
-                                                <option value="P" <?= $row['jenis_kelamin'] == 'P' ? 'selected' : '' ?>>Perempuan</option>
-                                            </select>
-                                        </div>
-                                        <div class="mb-3"><label class="form-label">Alamat</label><textarea name="alamat" class="form-control"><?= htmlspecialchars($row['alamat']) ?></textarea></div>
-                                        <div class="mb-3"><label class="form-label">No. Telp</label><input type="text" name="no_telp" class="form-control" value="<?= htmlspecialchars($row['no_telp']) ?>"></div>
-                                    </div>
-                                    <div class="modal-footer"><button type="submit" name="edit" class="btn btn-primary">Simpan</button></div>
-                                </form>
-                            </div>
+<div class="lux-card overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-slate-50 border-b border-slate-100">
+                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">NIS</th>
+                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Nama Siswa</th>
+                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">JK</th>
+                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Kelas Aktif</th>
+                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Aksi</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-50">
+                <?php while ($row = mysqli_fetch_assoc($result)): ?>
+                <tr class="hover:bg-slate-50/50 transition-colors">
+                    <td class="px-6 py-4 font-mono text-sm text-indigo-600"><?= htmlspecialchars($row['nis']) ?></td>
+                    <td class="px-6 py-4 font-semibold text-slate-700"><?= htmlspecialchars($row['nama_siswa']) ?></td>
+                    <td class="px-6 py-4 text-center">
+                        <span class="px-2 py-0.5 rounded text-xs font-bold <?= $row['jenis_kelamin'] == 'L' ? 'bg-blue-100 text-blue-600' : 'bg-pink-100 text-pink-600' ?>">
+                            <?= $row['jenis_kelamin'] ?>
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-slate-600"><?= htmlspecialchars($row['nama_kelas'] ?? 'N/A') ?></td>
+                    <td class="px-6 py-4">
+                        <div class="flex justify-center gap-2">
+                            <button onclick="openModal('editModal-<?= $row['id'] ?>')" class="w-9 h-9 flex items-center justify-center rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-600 hover:text-white transition-all">
+                                <i class="fa fa-edit"></i>
+                            </button>
+                            <button onclick="openModal('hapusModal-<?= $row['id'] ?>')" class="w-9 h-9 flex items-center justify-center rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white transition-all">
+                                <i class="fa fa-trash"></i>
+                            </button>
                         </div>
-                    </div>
-
-                    <!-- Modal Hapus -->
-                    <div class="modal fade" id="hapusModal-<?= $row['id'] ?>" tabindex="-1" aria-hidden="true">
-                        <div class="modal-dialog">
-                            <div class="modal-content">
-                                <form action="" method="POST">
-                                    <div class="modal-header"><h5 class="modal-title">Hapus Siswa</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-                                    <div class="modal-body">Apakah Anda yakin ingin menghapus "<?= htmlspecialchars($row['nama_siswa']) ?>"?</div>
-                                    <div class="modal-footer">
-                                        <input type="hidden" name="id" value="<?= $row['id'] ?>">
-                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                                        <button type="submit" name="hapus" class="btn btn-danger">Hapus</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                    <?php endwhile; ?>
-                </tbody>
-            </table>
-        </div>
+                    </td>
+                </tr>
+                <?php endwhile; ?>
+            </tbody>
+        </table>
     </div>
 </div>
 
-<!-- Modal Tambah (Simplified) -->
-<div class="modal fade" id="tambahModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form action="" method="POST">
-                <div class="modal-header"><h5 class="modal-title">Tambah Siswa</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-                <div class="modal-body">
-                    <div class="mb-3"><label class="form-label">NIS</label><input type="text" name="nis" class="form-control" required></div>
-                    <div class="mb-3"><label class="form-label">Nama Siswa</label><input type="text" name="nama_siswa" class="form-control" required></div>
-                    <div class="mb-3">
-                        <label class="form-label">Jenis Kelamin</label>
-                        <select name="jenis_kelamin" class="form-select"><option value="L">Laki-laki</option><option value="P">Perempuan</option></select>
-                    </div>
-                    <div class="mb-3"><label class="form-label">Alamat</label><textarea name="alamat" class="form-control"></textarea></div>
-                    <div class="mb-3"><label class="form-label">No. Telp</label><input type="text" name="no_telp" class="form-control"></div>
-                </div>
-                <div class="modal-footer"><button type="submit" name="tambah" class="btn btn-primary">Simpan</button></div>
-            </form>
-        </div>
-    </div>
-</div>
+<script>
+function openModal(id) { document.getElementById('modalOverlay').classList.remove('hidden'); document.getElementById(id).classList.remove('hidden'); setTimeout(() => { document.getElementById('modalOverlay').classList.add('opacity-100'); document.getElementById(id).classList.add('opacity-100', 'scale-100'); }, 10); }
+function closeModal(id) { document.getElementById('modalOverlay').classList.remove('opacity-100'); document.getElementById(id).classList.remove('opacity-100', 'scale-100'); setTimeout(() => { document.getElementById('modalOverlay').classList.add('hidden'); document.getElementById(id).classList.add('hidden'); }, 300); }
+</script>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

@@ -2,130 +2,76 @@
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../config/database.php';
 
-// Otorisasi hanya untuk admin
 authorize_role(['admin']);
 
-// Ambil data statistik
-// 1. Jumlah Guru
-$result_guru = mysqli_query($conn, "SELECT COUNT(id) as total FROM guru");
-$total_guru = mysqli_fetch_assoc($result_guru)['total'];
-
-// 2. Jumlah Mata Pelajaran
-$result_mapel = mysqli_query($conn, "SELECT COUNT(id) as total FROM mata_pelajaran");
-$total_mapel = mysqli_fetch_assoc($result_mapel)['total'];
-
-// 3. Jumlah Kelas
-$result_kelas = mysqli_query($conn, "SELECT COUNT(id) as total FROM kelas");
-$total_kelas = mysqli_fetch_assoc($result_kelas)['total'];
-
-// 4. Jumlah Jurnal Hari Ini
+$total_guru = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(id) as total FROM guru"))['total'];
+$total_mapel = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(id) as total FROM mata_pelajaran"))['total'];
+$total_kelas = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(id) as total FROM kelas"))['total'];
 $today = date('Y-m-d');
-$result_jurnal = mysqli_query($conn, "SELECT COUNT(id) as total FROM jurnal WHERE tanggal = '$today'");
-$total_jurnal_hari_ini = mysqli_fetch_assoc($result_jurnal)['total'];
+$total_jurnal_hari_ini = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(id) as total FROM jurnal WHERE tanggal = '$today'"))['total'];
 
-// Set judul halaman
 $page_title = "Dashboard Admin";
-
-// Sertakan header
 require_once __DIR__ . '/../includes/header.php';
 ?>
 
-<?php
-// Sertakan sidebar admin
-require_once __DIR__ . '/../includes/sidebar_admin.php';
-?>
+<div class="mb-8">
+    <h1 class="text-3xl font-bold text-slate-800 tracking-tight">Dashboard Admin</h1>
+    <p class="text-slate-500">Ringkasan statistik sistem saat ini.</p>
+</div>
 
-<!-- Page Heading -->
-<h1 class="h3 mb-4 text-gray-800">Dashboard</h1>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <?php
+    $stats = [
+        ['label' => 'Total Guru', 'value' => $total_guru, 'icon' => 'fa-chalkboard-teacher', 'color' => 'indigo'],
+        ['label' => 'Mata Pelajaran', 'value' => $total_mapel, 'icon' => 'fa-book', 'color' => 'emerald'],
+        ['label' => 'Total Kelas', 'value' => $total_kelas, 'icon' => 'fa-school', 'color' => 'sky'],
+        ['label' => 'Jurnal Hari Ini', 'value' => $total_jurnal_hari_ini, 'icon' => 'fa-calendar-check', 'color' => 'amber'],
+    ];
 
-<!-- Content Row -->
-<div class="row">
-
-    <!-- Card Jumlah Guru -->
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-primary shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                            Jumlah Guru</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800"><?= $total_guru ?></div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-chalkboard-teacher fa-2x text-gray-300"></i>
-                    </div>
-                </div>
-            </div>
+    foreach ($stats as $stat):
+    ?>
+    <div class="lux-card p-6 flex items-center group hover:scale-[1.02] transition-transform duration-300">
+        <div class="p-4 rounded-2xl bg-<?= $stat['color'] ?>-50 text-<?= $stat['color'] ?>-600 mr-5 group-hover:bg-<?= $stat['color'] ?>-600 group-hover:text-white transition-colors duration-300">
+            <i class="fas <?= $stat['icon'] ?> text-2xl"></i>
+        </div>
+        <div>
+            <p class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-1"><?= $stat['label'] ?></p>
+            <p class="text-2xl font-extrabold text-slate-800"><?= $stat['value'] ?></p>
         </div>
     </div>
+    <?php endforeach; ?>
+</div>
 
-    <!-- Card Jumlah Mata Pelajaran -->
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-success shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                            Jumlah Mata Pelajaran</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800"><?= $total_mapel ?></div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-book fa-2x text-gray-300"></i>
-                    </div>
+<div class="lux-card">
+    <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-gradient-to-r from-indigo-50/50 to-transparent">
+        <h2 class="text-xl font-bold text-slate-800">Selamat Datang!</h2>
+        <span class="px-4 py-1.5 rounded-full bg-indigo-100 text-indigo-700 text-xs font-bold uppercase tracking-widest">Sistem Aktif</span>
+    </div>
+    <div class="p-8 leading-relaxed text-slate-600">
+        <p class="mb-4">Selamat datang di Panel Administrasi <span class="font-bold text-slate-800 uppercase tracking-tight italic">JurnalApp</span>.</p>
+        <p>Gunakan menu navigasi di sisi kiri untuk mengelola infrastruktur data sekolah Anda. Anda memiliki kendali penuh atas manajemen guru, siswa, kelas, serta pemantauan jurnal mengajar secara real-time.</p>
+
+        <div class="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="p-4 rounded-xl bg-slate-50 border border-slate-100 flex items-start">
+                <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center mr-4 mt-1">
+                    <i class="fa fa-shield-alt"></i>
+                </div>
+                <div>
+                    <h4 class="font-bold text-slate-800">Data Aman</h4>
+                    <p class="text-sm">Semua interaksi database dienkripsi dan diproteksi.</p>
                 </div>
             </div>
-        </div>
-    </div>
-
-    <!-- Card Jumlah Kelas -->
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-info shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                            Jumlah Kelas
-                        </div>
-                        <div class="h5 mb-0 mr-3 font-weight-bold text-gray-800"><?= $total_kelas ?></div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-school fa-2x text-gray-300"></i>
-                    </div>
+            <div class="p-4 rounded-xl bg-slate-50 border border-slate-100 flex items-start">
+                <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center mr-4 mt-1">
+                    <i class="fa fa-bolt"></i>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Card Jurnal Hari Ini -->
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-warning shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                            Jurnal Terisi (Hari Ini)</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800"><?= $total_jurnal_hari_ini ?></div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-calendar-check fa-2x text-gray-300"></i>
-                    </div>
+                <div>
+                    <h4 class="font-bold text-slate-800">Akses Cepat</h4>
+                    <p class="text-sm">Antarmuka mewah dioptimalkan untuk performa tinggi.</p>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<div class="card shadow mb-4">
-    <div class="card-header py-3">
-        <h6 class="m-0 font-weight-bold text-primary">Selamat Datang!</h6>
-    </div>
-    <div class="card-body">
-        <p>Selamat datang di Dashboard Admin Aplikasi Jurnal Mengajar.</p>
-        <p>Anda dapat mengelola semua data master melalui menu navigasi di sebelah kiri, termasuk data pengguna, guru, kelas, mata pelajaran, dan tahun pelajaran. Anda juga dapat memantau dan mengekspor semua jurnal yang telah diisi oleh para guru.</p>
-    </div>
-</div>
-
-<?php
-// Sertakan footer
-require_once __DIR__ . '/../includes/footer.php';
-?>
+<?php require_once __DIR__ . '/../includes/footer.php'; ?>

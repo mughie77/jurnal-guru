@@ -5,128 +5,92 @@ require_once __DIR__ . '/../includes/SimpleXLSX.php';
 use Shuchkin\SimpleXLSX;
 
 authorize_role(['admin']);
-
-$page_title = "Import Siswa dari Excel";
-$message = '';
-$message_type = '';
+$page_title = "Import Siswa";
+$message = ''; $message_type = '';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['excel_file'])) {
     $file = $_FILES['excel_file']['tmp_name'];
     $kelas_id = (int)$_POST['kelas_id'];
-    $tahun_id = $active_tahun_id;
-
-    if (!$tahun_id) {
-        $message = "Gagal: Tidak ada tahun pelajaran aktif.";
-        $message_type = 'error';
-    } elseif ($xlsx = SimpleXLSX::parse($file)) {
-        $rows = $xlsx->rows();
-        array_shift($rows); // Skip header
-
+    if ($xlsx = SimpleXLSX::parse($file)) {
+        $rows = $xlsx->rows(); array_shift($rows);
         $success_count = 0;
-        $error_count = 0;
-        $errors = [];
-
         mysqli_begin_transaction($conn);
         try {
-            // Prepare statements
             $stmt_siswa = mysqli_prepare($conn, "INSERT INTO siswa (nis, nama_siswa, jenis_kelamin) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE nama_siswa = VALUES(nama_siswa), jenis_kelamin = VALUES(jenis_kelamin)");
             $stmt_link = mysqli_prepare($conn, "INSERT INTO siswa_kelas (siswa_id, kelas_id, tahun_pelajaran_id) VALUES (?, ?, ?)");
-
-            foreach ($rows as $index => $row) {
-                if (empty($row[0]) || empty($row[1])) continue; // Skip if NIS or Name is empty
-
-                $nis = $row[0];
-                $nama_siswa = $row[1];
+            foreach ($rows as $row) {
+                if (empty($row[0]) || empty($row[1])) continue;
                 $jk = strtoupper($row[2]) == 'P' ? 'P' : 'L';
-
-                // 1. Insert/Update Siswa
-                mysqli_stmt_bind_param($stmt_siswa, "sss", $nis, $nama_siswa, $jk);
+                mysqli_stmt_bind_param($stmt_siswa, "sss", $row[0], $row[1], $jk);
                 mysqli_stmt_execute($stmt_siswa);
-
-                // Get ID (could be from insert or existing)
-                $res_id = mysqli_query($conn, "SELECT id FROM siswa WHERE nis = '".mysqli_real_escape_string($conn, $nis)."'");
-                $siswa_id = mysqli_fetch_assoc($res_id)['id'];
-
-                // 2. Link to Class for this school year
-                // Cek dulu apakah sudah ada linknya
-                $check_link = mysqli_query($conn, "SELECT id FROM siswa_kelas WHERE siswa_id = $siswa_id AND tahun_pelajaran_id = $tahun_id");
+                $res_id = mysqli_query($conn, "SELECT id FROM siswa WHERE nis = '".mysqli_real_escape_string($conn, $row[0])."'");
+                $sid = mysqli_fetch_assoc($res_id)['id'];
+                $check_link = mysqli_query($conn, "SELECT id FROM siswa_kelas WHERE siswa_id = $sid AND tahun_pelajaran_id = $active_tahun_id");
                 if (mysqli_num_rows($check_link) == 0) {
-                    mysqli_stmt_bind_param($stmt_link, "iii", $siswa_id, $kelas_id, $tahun_id);
+                    mysqli_stmt_bind_param($stmt_link, "iii", $sid, $kelas_id, $active_tahun_id);
                     mysqli_stmt_execute($stmt_link);
-                } else {
-                    // Update if already exists (move to this class)
-                    mysqli_query($conn, "UPDATE siswa_kelas SET kelas_id = $kelas_id WHERE siswa_id = $siswa_id AND tahun_pelajaran_id = $tahun_id");
                 }
-
                 $success_count++;
             }
-
-            // 3. Update Class Counts
-            $q_count_L = mysqli_query($conn, "SELECT COUNT(*) as jml FROM siswa_kelas JOIN siswa ON siswa_kelas.siswa_id = siswa.id WHERE kelas_id = $kelas_id AND tahun_pelajaran_id = $tahun_id AND jenis_kelamin = 'L'");
-            $jml_L = mysqli_fetch_assoc($q_count_L)['jml'];
-            $q_count_P = mysqli_query($conn, "SELECT COUNT(*) as jml FROM siswa_kelas JOIN siswa ON siswa_kelas.siswa_id = siswa.id WHERE kelas_id = $kelas_id AND tahun_pelajaran_id = $tahun_id AND jenis_kelamin = 'P'");
-            $jml_P = mysqli_fetch_assoc($q_count_P)['jml'];
-
-            mysqli_query($conn, "UPDATE kelas SET jumlah_siswa_L = $jml_L, jumlah_siswa_P = $jml_P WHERE id = $kelas_id");
-
-            mysqli_stmt_close($stmt_siswa);
-            mysqli_stmt_close($stmt_link);
-            mysqli_commit($conn);
-
-            $message = "Berhasil mengimpor $success_count siswa ke kelas ini.";
-            $message_type = 'success';
-        } catch (Exception $e) {
-            mysqli_rollback($conn);
-            $message = "Gagal mengimpor: " . $e->getMessage();
-            $message_type = 'error';
-        }
-    } else {
-        $message = "Gagal membaca file Excel: " . SimpleXLSX::parseError();
-        $message_type = 'error';
+            mysqli_commit($conn); $message = "Berhasil mengimpor $success_count siswa."; $message_type = 'success';
+        } catch (Exception $e) { mysqli_rollback($conn); $message = "Error: " . $e->getMessage(); $message_type = 'error'; }
     }
 }
 
-// Ambil data kelas untuk dropdown
 $kelases = mysqli_query($conn, "SELECT id, nama_kelas FROM kelas ORDER BY nama_kelas");
-
 require_once __DIR__ . '/../includes/header.php';
-require_once __DIR__ . '/../includes/sidebar_admin.php';
 ?>
 
-<h1 class="h3 mb-4 text-gray-800">Import Siswa dari Excel</h1>
+<div class="mb-8">
+    <h1 class="text-3xl font-bold text-slate-800 tracking-tight">Import Siswa</h1>
+    <p class="text-slate-500">Unggah file Excel untuk menambah siswa ke kelas terpilih.</p>
+</div>
 
 <?php if ($message): ?>
-<div class="alert alert-<?= ($message_type == 'success') ? 'success' : 'danger' ?> alert-dismissible fade show" role="alert">
-    <?= $message ?>
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+<div class="mb-6 p-4 rounded-xl <?= $message_type == 'success' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-rose-50 text-rose-700 border-rose-100' ?> border flex items-center">
+    <i class="fa <?= $message_type == 'success' ? 'fa-check-circle' : 'fa-exclamation-circle' ?> mr-3 text-xl"></i>
+    <span class="font-bold"><?= $message ?></span>
 </div>
 <?php endif; ?>
 
-<div class="card shadow mb-4">
-    <div class="card-header py-3">
-        <h6 class="m-0 font-weight-bold text-primary">Upload File Excel (.xlsx)</h6>
-    </div>
-    <div class="card-body">
-        <form action="" method="POST" enctype="multipart/form-data">
-            <div class="mb-3">
-                <label class="form-label">Pilih Kelas Tujuan</label>
-                <select name="kelas_id" class="form-select" required>
-                    <option value="">-- Pilih Kelas --</option>
-                    <?php while($k = mysqli_fetch_assoc($kelases)): ?>
-                        <option value="<?= $k['id'] ?>"><?= htmlspecialchars($k['nama_kelas']) ?></option>
-                    <?php endwhile; ?>
-                </select>
-                <small class="text-muted">Impor akan dilakukan untuk tahun pelajaran aktif.</small>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">File Excel</label>
-                <input type="file" name="excel_file" class="form-control" accept=".xlsx" required>
-                <small class="text-muted">Format: <strong>NIS, Nama Siswa, L/P</strong></small>
-            </div>
-            <button type="submit" class="btn btn-primary"><i class="fa fa-upload"></i> Import Sekarang</button>
-            <a href="kelas.php" class="btn btn-secondary">Kembali</a>
-        </form>
-    </div>
+<div class="lux-card p-8">
+    <form action="" method="POST" enctype="multipart/form-data" class="space-y-8">
+        <div>
+            <label class="block text-sm font-bold text-slate-700 mb-2">Pilih Kelas Tujuan</label>
+            <select name="kelas_id" required class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 bg-white shadow-sm">
+                <option value="">-- Pilih Kelas --</option>
+                <?php while($k = mysqli_fetch_assoc($kelases)): ?>
+                    <option value="<?= $k['id'] ?>"><?= htmlspecialchars($k['nama_kelas']) ?></option>
+                <?php endwhile; ?>
+            </select>
+        </div>
+
+        <div class="relative group">
+            <input type="file" name="excel_file" id="excel_file" class="hidden" accept=".xlsx" required onchange="updateFileName(this)">
+            <label for="excel_file" class="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-slate-300 rounded-3xl bg-slate-50 group-hover:bg-indigo-50 group-hover:border-indigo-300 transition-all cursor-pointer">
+                <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                    <i class="fa fa-cloud-upload-alt text-4xl text-slate-400 group-hover:text-indigo-500 mb-4"></i>
+                    <p class="mb-2 text-sm text-slate-500"><span class="font-bold">Klik untuk unggah</span> file Excel siswa</p>
+                    <p class="text-xs text-slate-400">Format: NIS, Nama Siswa, L/P</p>
+                    <p id="fileName" class="mt-4 text-indigo-600 font-bold"></p>
+                </div>
+            </label>
+        </div>
+
+        <div class="flex gap-4">
+            <a href="siswa.php" class="flex-1 px-6 py-3.5 rounded-xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-50 text-center transition-all">Kembali</a>
+            <button type="submit" class="flex-[2] bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-indigo-200 transition-all flex items-center justify-center">
+                <i class="fa fa-upload mr-2"></i> Mulai Import
+            </button>
+        </div>
+    </form>
 </div>
+
+<script>
+function updateFileName(input) {
+    const fileName = input.files[0] ? input.files[0].name : '';
+    document.getElementById('fileName').textContent = fileName;
+}
+</script>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

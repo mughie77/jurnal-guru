@@ -3,13 +3,11 @@ require_once 'config/database.php';
 
 $error_message = '';
 
-// Jika sudah login, redirect ke index utama
 if (isset($_SESSION['user_id'])) {
     header('Location: ' . BASE_URL);
     exit();
 }
 
-// Proses login ketika form disubmit
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $username = $_POST['username'];
     $password = $_POST['password'];
@@ -24,15 +22,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $result = mysqli_stmt_get_result($stmt);
 
         if ($user = mysqli_fetch_assoc($result)) {
-            // Verifikasi password
             if (password_verify($password, $user['password'])) {
-                // Login berhasil, set session
                 $_SESSION['user_id'] = $user['id'];
                 $_SESSION['nama_lengkap'] = $user['nama_lengkap'];
                 $_SESSION['username'] = $user['username'];
                 $_SESSION['role'] = $user['role'];
-
-                // Redirect ke halaman index utama (yang akan mengarahkan ke dashboard)
                 header('Location: ' . BASE_URL . 'index.php');
                 exit();
             } else {
@@ -50,85 +44,77 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Aplikasi Jurnal Mengajar</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Login - JurnalApp</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: #f4f7f6;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-        .login-container {
-            max-width: 400px;
-            width: 100%;
-        }
-        .card {
-            border: none;
-            border-radius: 1rem;
-            box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);
-        }
-        .card-header {
-            background-color: #0d6efd; /* Biru Bootstrap */
-            color: white;
-            border-top-left-radius: 1rem;
-            border-top-right-radius: 1rem;
-            text-align: center;
-            padding: 1.5rem;
-        }
-        .card-header h3 {
-            margin: 0;
-            font-weight: 600;
-        }
-        .card-body {
-            padding: 2rem;
-        }
-        .form-control {
-            border-radius: 0.5rem;
-            padding: 0.75rem 1rem;
-        }
-        .btn-primary {
-            background-color: #0d6efd;
-            border: none;
-            border-radius: 0.5rem;
-            padding: 0.75rem;
-            font-weight: 600;
-            width: 100%;
+        body { font-family: 'Poppins', sans-serif; }
+        .bg-pattern {
+            background-color: #4f46e5;
+            background-image: radial-gradient(#ffffff 1px, transparent 1px);
+            background-size: 40px 40px;
+            background-opacity: 0.1;
         }
     </style>
 </head>
-<body>
-    <div class="login-container">
-        <div class="card">
-            <div class="card-header">
-                <h3>Aplikasi Jurnal Mengajar</h3>
-            </div>
-            <div class="card-body">
-                <p class="text-center text-muted mb-4">Silakan login untuk melanjutkan</p>
+<body class="bg-slate-900 flex items-center justify-center min-h-screen px-4">
+    <div class="max-w-md w-full">
+        <div class="text-center mb-10">
+            <h1 class="text-4xl font-extrabold text-white tracking-tight mb-2">
+                Jurnal<span class="text-indigo-500">App</span>
+            </h1>
+            <p class="text-slate-400">Sistem Informasi Jurnal Mengajar Sekolah</p>
+        </div>
 
+        <div class="bg-white rounded-3xl shadow-2xl overflow-hidden border border-white/10">
+            <div class="bg-gradient-to-r from-indigo-600 to-indigo-700 px-8 py-6">
+                <h2 class="text-2xl font-bold text-white">Selamat Datang</h2>
+                <p class="text-indigo-100/70 text-sm">Silakan login untuk mengakses dashboard</p>
+            </div>
+
+            <div class="p-8">
                 <?php if (!empty($error_message)): ?>
-                    <div class="alert alert-danger" role="alert">
+                    <div class="bg-rose-50 text-rose-600 px-4 py-3 rounded-xl text-sm font-medium mb-6 flex items-center border border-rose-100">
+                        <i class="fa fa-exclamation-circle mr-3"></i>
                         <?= htmlspecialchars($error_message) ?>
                     </div>
                 <?php endif; ?>
 
-                <form action="login.php" method="POST">
-                    <div class="mb-3">
-                        <label for="username" class="form-label">Username</label>
-                        <input type="text" class="form-control" id="username" name="username" required>
+                <form action="login.php" method="POST" class="space-y-5">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Username</label>
+                        <div class="relative">
+                            <i class="fa fa-user absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            <input type="text" name="username" required
+                                class="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 outline-none transition-all"
+                                placeholder="Masukkan username">
+                        </div>
                     </div>
-                    <div class="mb-4">
-                        <label for="password" class="form-label">Password</label>
-                        <input type="password" class="form-control" id="password" name="password" required>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Password</label>
+                        <div class="relative">
+                            <i class="fa fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            <input type="password" name="password" required
+                                class="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 outline-none transition-all"
+                                placeholder="••••••••">
+                        </div>
                     </div>
-                    <button type="submit" class="btn btn-primary">Login</button>
+
+                    <button type="submit"
+                        class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-indigo-200 transition-all transform hover:-translate-y-1 active:scale-95">
+                        Masuk ke Akun
+                    </button>
                 </form>
             </div>
         </div>
+
+        <p class="text-center text-slate-500 text-sm mt-8">
+            &copy; <?= date('Y') ?> JurnalApp Team. All rights reserved.
+        </p>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </body>
 </html>

@@ -2,116 +2,75 @@
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../config/database.php';
 
-// Otorisasi hanya untuk guru
-authorize_role(['guru', 'admin']); // Admin ditambahkan untuk kemudahan testing
-
+authorize_role(['guru', 'admin']);
 $page_title = "Dashboard Guru";
-
 require_once __DIR__ . '/../includes/header.php';
 ?>
 
 <style>
-/* Override default layout for this specific page */
-.main-content {
-    margin-left: 0; /* Remove sidebar margin */
-    background-color: #f8f9fa; /* Default background */
-}
-.navbar {
-    display: none; /* Hide top navbar on this page */
-}
-.guru-header {
-    background-color: #6a63e8; /* Purple background */
-    color: #fff;
-    padding: 2rem;
-    border-bottom-left-radius: 1.5rem;
-    border-bottom-right-radius: 1.5rem;
-}
-.guru-dashboard-container {
-    padding: 2rem;
-}
-.guru-welcome {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-.guru-welcome h2 {
-    font-weight: 600;
-    margin: 0;
-}
-.logout-btn {
-    color: #6a63e8;
-    background-color: #fff;
-    border-radius: 20px;
-    padding: 0.5rem 1rem;
-    text-decoration: none;
-    font-weight: 500;
-    transition: background-color 0.2s;
-}
-.logout-btn:hover {
-    background-color: #f0f0f0;
-}
-.menu-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1.5rem;
-}
-.menu-card {
-    background-color: #fff;
-    border-radius: 1rem;
-    padding: 2rem;
-    text-align: center;
-    text-decoration: none;
-    color: #333;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-.menu-card:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 20px 35px rgba(0, 0, 0, 0.15);
-}
-.menu-card .icon {
-    font-size: 4rem;
-    color: #6a63e8;
-    margin-bottom: 1rem;
-}
-.menu-card h5 {
-    font-weight: 600;
-    margin: 0;
-}
+/* Hide sidebar and topbar for Guru focus mode */
+#sidebar { display: none; }
+.lg\:ml-64 { margin-left: 0; }
+header { display: none; }
 </style>
 
-<div class="main-content">
-    <div class="guru-header">
-        <div class="guru-welcome">
-            <div>
-                <h2>Selamat Datang,</h2>
-                <p class="lead mb-0"><?= htmlspecialchars($_SESSION['nama_lengkap']) ?>!</p>
-            </div>
-            <div>
-                <a href="<?= BASE_URL ?>logout.php" class="logout-btn">
-                    <i class="fas fa-sign-out-alt"></i> Logout
+<div class="max-w-5xl mx-auto">
+    <!-- Header Guru -->
+    <div class="bg-gradient-to-br from-indigo-600 to-indigo-800 rounded-3xl p-8 md:p-12 text-white shadow-2xl mb-10 relative overflow-hidden">
+        <div class="relative z-10">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div>
+                    <h1 class="text-3xl md:text-4xl font-extrabold mb-2">Selamat Datang,</h1>
+                    <p class="text-indigo-100 text-xl md:text-2xl opacity-90"><?= htmlspecialchars($_SESSION['nama_lengkap']) ?>!</p>
+                </div>
+                <a href="<?= BASE_URL ?>logout.php" class="inline-flex items-center px-6 py-3 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-2xl border border-white/20 transition-all font-bold group">
+                    <i class="fa fa-sign-out-alt mr-3 group-hover:translate-x-1 transition-transform"></i> Keluar Sistem
                 </a>
             </div>
         </div>
+        <!-- Decorative blobs -->
+        <div class="absolute -top-12 -right-12 w-64 h-64 bg-indigo-500 rounded-full blur-3xl opacity-20"></div>
+        <div class="absolute -bottom-12 -left-12 w-64 h-64 bg-indigo-400 rounded-full blur-3xl opacity-10"></div>
     </div>
 
-    <div class="guru-dashboard-container">
-        <div class="menu-grid">
-        <a href="<?= BASE_URL ?>guru/isi_jurnal.php" class="menu-card">
-            <div class="icon">
-                <i class="fas fa-edit"></i>
+    <!-- Menu Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+        <a href="<?= BASE_URL ?>guru/isi_jurnal.php" class="lux-card group p-8 text-center hover:scale-[1.03] transition-all duration-300">
+            <div class="w-24 h-24 bg-indigo-50 text-indigo-600 rounded-3xl flex items-center justify-center mx-auto mb-6 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300 shadow-inner">
+                <i class="fa fa-edit text-4xl"></i>
             </div>
-            <h5>Isi Jurnal</h5>
+            <h3 class="text-2xl font-bold text-slate-800 mb-2">Isi Jurnal</h3>
+            <p class="text-slate-500">Catat aktivitas pembelajaran hari ini dengan cepat dan mudah.</p>
         </a>
-        <a href="<?= BASE_URL ?>guru/riwayat.php" class="menu-card">
-            <div class="icon">
-                <i class="fas fa-history"></i>
+
+        <a href="<?= BASE_URL ?>guru/riwayat.php" class="lux-card group p-8 text-center hover:scale-[1.03] transition-all duration-300">
+            <div class="w-24 h-24 bg-emerald-50 text-emerald-600 rounded-3xl flex items-center justify-center mx-auto mb-6 group-hover:bg-emerald-600 group-hover:text-white transition-all duration-300 shadow-inner">
+                <i class="fa fa-history text-4xl"></i>
             </div>
-            <h5>Riwayat Jurnal</h5>
+            <h3 class="text-2xl font-bold text-slate-800 mb-2">Riwayat Jurnal</h3>
+            <p class="text-slate-500">Lihat dan tinjau kembali catatan mengajar Anda sebelumnya.</p>
         </a>
+    </div>
+
+    <!-- Quick Stats or Info -->
+    <div class="lux-card p-6 bg-slate-50/50 border-slate-200/60">
+        <div class="flex items-center text-slate-500">
+            <i class="fa fa-calendar-alt mr-3"></i>
+            <span class="font-medium"><?= date('l, d F Y') ?></span>
+            <span class="mx-3 text-slate-300">|</span>
+            <i class="fa fa-clock mr-3"></i>
+            <span class="font-medium" id="liveClock">00:00:00</span>
+        </div>
     </div>
 </div>
 
-<?php
-require_once __DIR__ . '/../includes/footer.php';
-?>
+<script>
+function updateClock() {
+    const now = new Date();
+    document.getElementById('liveClock').textContent = now.toLocaleTimeString('id-ID');
+}
+setInterval(updateClock, 1000);
+updateClock();
+</script>
+
+<?php require_once __DIR__ . '/../includes/footer.php'; ?>

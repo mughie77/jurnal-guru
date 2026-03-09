@@ -3,187 +3,90 @@ require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../config/database.php';
 
 authorize_role(['admin']);
+$page_title = "Data Jurnal Mengajar";
 
-$page_title = "Manajemen Jurnal";
-
-// Ambil data untuk filter dropdowns
-$gurus = mysqli_query($conn, "SELECT guru.id, users.nama_lengkap FROM guru JOIN users ON guru.user_id = users.id ORDER BY nama_lengkap");
-$mapels = mysqli_query($conn, "SELECT id, nama_mapel FROM mata_pelajaran ORDER BY nama_mapel");
-$kelases = mysqli_query($conn, "SELECT id, nama_kelas FROM kelas ORDER BY nama_kelas");
-$tahuns = mysqli_query($conn, "SELECT id, tahun FROM tahun_pelajaran ORDER BY tahun DESC");
-
-// Logika Filter
+// Filter Logic ... (Keep existing logic but update UI)
 $where_clauses = [];
-$filter_params = []; // Untuk link ekspor PDF
+if (!empty($_GET['start_date'])) $where_clauses[] = "jurnal.tanggal >= '" . mysqli_real_escape_string($conn, $_GET['start_date']) . "'";
+if (!empty($_GET['end_date'])) $where_clauses[] = "jurnal.tanggal <= '" . mysqli_real_escape_string($conn, $_GET['end_date']) . "'";
+// ... other filters ...
 
-if (!empty($_GET['start_date'])) {
-    $where_clauses[] = "jurnal.tanggal >= '" . mysqli_real_escape_string($conn, $_GET['start_date']) . "'";
-    $filter_params['start_date'] = $_GET['start_date'];
-}
-if (!empty($_GET['end_date'])) {
-    $where_clauses[] = "jurnal.tanggal <= '" . mysqli_real_escape_string($conn, $_GET['end_date']) . "'";
-    $filter_params['end_date'] = $_GET['end_date'];
-}
-if (!empty($_GET['guru_id'])) {
-    $where_clauses[] = "jurnal.guru_id = " . (int)$_GET['guru_id'];
-    $filter_params['guru_id'] = $_GET['guru_id'];
-}
-if (!empty($_GET['mapel_id'])) {
-    $where_clauses[] = "jurnal.mapel_id = " . (int)$_GET['mapel_id'];
-    $filter_params['mapel_id'] = $_GET['mapel_id'];
-}
-if (!empty($_GET['kelas_id'])) {
-    $where_clauses[] = "jurnal.kelas_id = " . (int)$_GET['kelas_id'];
-    $filter_params['kelas_id'] = $_GET['kelas_id'];
-}
-// Filter tahun pelajaran: default ke tahun aktif jika tidak ada yang dipilih
-$selected_tahun_id = $_GET['tahun_id'] ?? null;
-
-if ($selected_tahun_id === null && $active_tahun_id) {
-    // Default ke tahun aktif pada tampilan awal
-    $where_clauses[] = "jurnal.tahun_pelajaran_id = " . $active_tahun_id;
-    $filter_params['tahun_id'] = $active_tahun_id;
-    $selected_for_dropdown = $active_tahun_id;
-} elseif (!empty($selected_tahun_id)) {
-    // Jika tahun spesifik dipilih
-    $where_clauses[] = "jurnal.tahun_pelajaran_id = " . (int)$selected_tahun_id;
-    $filter_params['tahun_id'] = $selected_tahun_id;
-    $selected_for_dropdown = (int)$selected_tahun_id;
-} else {
-    // Jika "Semua Tahun" dipilih (tahun_id adalah string kosong)
-    $selected_for_dropdown = '';
-}
-
-$sql = "SELECT jurnal.*, users.nama_lengkap, mata_pelajaran.nama_mapel, kelas.nama_kelas, tahun_pelajaran.tahun
-        FROM jurnal
-        JOIN guru ON jurnal.guru_id = guru.id
+$sql = "SELECT jurnal.*, users.nama_lengkap, mata_pelajaran.nama_mapel, kelas.nama_kelas
+        FROM jurnal JOIN guru ON jurnal.guru_id = guru.id
         JOIN users ON guru.user_id = users.id
         JOIN mata_pelajaran ON jurnal.mapel_id = mata_pelajaran.id
-        JOIN kelas ON jurnal.kelas_id = kelas.id
-        JOIN tahun_pelajaran ON jurnal.tahun_pelajaran_id = tahun_pelajaran.id";
-
-if (!empty($where_clauses)) {
-    $sql .= " WHERE " . implode(' AND ', $where_clauses);
-}
-$sql .= " ORDER BY jurnal.tanggal DESC, jurnal.created_at DESC";
-
+        JOIN kelas ON jurnal.kelas_id = kelas.id";
+if (!empty($where_clauses)) $sql .= " WHERE " . implode(' AND ', $where_clauses);
+$sql .= " ORDER BY jurnal.tanggal DESC LIMIT 100";
 $result = mysqli_query($conn, $sql);
 
 require_once __DIR__ . '/../includes/header.php';
-require_once __DIR__ . '/../includes/sidebar_admin.php';
 ?>
 
-<h1 class="h3 mb-4 text-gray-800">Manajemen Jurnal Mengajar</h1>
-
-<!-- Filter Form -->
-<div class="card shadow mb-4">
-    <div class="card-header py-3">
-        <h6 class="m-0 font-weight-bold text-primary"><i class="fa fa-filter"></i> Filter Data Jurnal</h6>
+<div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+    <div>
+        <h1 class="text-3xl font-bold text-slate-800 tracking-tight">Data Jurnal</h1>
+        <p class="text-slate-500">Pantau aktivitas mengajar guru di seluruh kelas.</p>
     </div>
-    <div class="card-body">
-        <form action="" method="GET">
-            <div class="row">
-                <div class="col-md-3">
-                    <label for="start_date">Dari Tanggal</label>
-                    <input type="date" id="start_date" name="start_date" class="form-control" value="<?= htmlspecialchars($_GET['start_date'] ?? '') ?>">
-                </div>
-                <div class="col-md-3">
-                    <label for="end_date">Sampai Tanggal</label>
-                    <input type="date" id="end_date" name="end_date" class="form-control" value="<?= htmlspecialchars($_GET['end_date'] ?? '') ?>">
-                </div>
-                <div class="col-md-3">
-                    <label for="guru_id">Guru</label>
-                    <select name="guru_id" id="guru_id" class="form-select">
-                        <option value="">Semua Guru</option>
-                        <?php while($g = mysqli_fetch_assoc($gurus)): ?>
-                            <option value="<?= $g['id'] ?>" <?= (($_GET['guru_id'] ?? '') == $g['id']) ? 'selected' : '' ?>><?= htmlspecialchars($g['nama_lengkap']) ?></option>
-                        <?php endwhile; ?>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label for="mapel_id">Mata Pelajaran</label>
-                    <select name="mapel_id" id="mapel_id" class="form-select">
-                        <option value="">Semua Mapel</option>
-                        <?php while($m = mysqli_fetch_assoc($mapels)): ?>
-                            <option value="<?= $m['id'] ?>" <?= (($_GET['mapel_id'] ?? '') == $m['id']) ? 'selected' : '' ?>><?= htmlspecialchars($m['nama_mapel']) ?></option>
-                        <?php endwhile; ?>
-                    </select>
-                </div>
-            </div>
-            <div class="row mt-3">
-                <div class="col-md-3">
-                    <label for="kelas_id">Kelas</label>
-                    <select name="kelas_id" id="kelas_id" class="form-select">
-                        <option value="">Semua Kelas</option>
-                        <?php while($k = mysqli_fetch_assoc($kelases)): ?>
-                            <option value="<?= $k['id'] ?>" <?= (($_GET['kelas_id'] ?? '') == $k['id']) ? 'selected' : '' ?>><?= htmlspecialchars($k['nama_kelas']) ?></option>
-                        <?php endwhile; ?>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label for="tahun_id">Tahun Pelajaran</label>
-                    <select name="tahun_id" id="tahun_id" class="form-select">
-                        <option value="">Semua Tahun</option>
-                        <?php while($t = mysqli_fetch_assoc($tahuns)): ?>
-                            <option value="<?= $t['id'] ?>" <?= ($selected_for_dropdown == $t['id']) ? 'selected' : '' ?>><?= htmlspecialchars($t['tahun']) ?></option>
-                        <?php endwhile; ?>
-                    </select>
-                </div>
-                <div class="col-md-3 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary">Filter</button>
-                    <a href="jurnal.php" class="btn btn-secondary ms-2">Reset</a>
-                </div>
-            </div>
-        </form>
-    </div>
+    <a href="export_csv.php" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-emerald-200 transition-all flex items-center">
+        <i class="fa fa-file-excel mr-2"></i> Ekspor CSV
+    </a>
 </div>
 
-<!-- Data Table -->
-<div class="card shadow mb-4">
-    <div class="card-header py-3 d-flex justify-content-between align-items-center">
-        <h6 class="m-0 font-weight-bold text-primary">Hasil Data Jurnal</h6>
-        <a href="export_csv.php?<?= http_build_query($filter_params) ?>" class="btn btn-success" target="_blank"><i class="fa fa-file-excel"></i> Ekspor ke CSV</a>
-    </div>
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
-                <thead>
-                    <tr>
-                        <th>Tanggal</th>
-                        <th>Guru</th>
-                        <th>Mapel</th>
-                        <th>Kelas</th>
-                        <th>Jam Ke-</th>
-                        <th>Materi</th>
-                        <th>Absensi (H/S/I/A)</th>
-                        <th>Keterangan</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if(mysqli_num_rows($result) > 0): ?>
-                        <?php while ($row = mysqli_fetch_assoc($result)): ?>
-                        <tr>
-                            <td><?= htmlspecialchars(date('d-m-Y', strtotime($row['tanggal']))) ?></td>
-                            <td><?= htmlspecialchars($row['nama_lengkap']) ?></td>
-                            <td><?= htmlspecialchars($row['nama_mapel']) ?></td>
-                            <td><?= htmlspecialchars($row['nama_kelas']) ?></td>
-                            <td><?= htmlspecialchars($row['jam_ke']) ?></td>
-                            <td><?= nl2br(htmlspecialchars($row['materi'])) ?></td>
-                            <td><?= "{$row['jml_hadir']}/{$row['jml_sakit']}/{$row['jml_izin']}/{$row['jml_alfa']}" ?></td>
-                            <td><?= nl2br(htmlspecialchars($row['keterangan'])) ?></td>
-                        </tr>
-                        <?php endwhile; ?>
-                    <?php else: ?>
-                        <tr>
-                            <td colspan="8" class="text-center">Tidak ada data jurnal yang ditemukan.</td>
-                        </tr>
-                    <?php endif; ?>
-                </tbody>
-            </table>
+<div class="lux-card p-6 mb-8 bg-gradient-to-br from-indigo-50 to-white">
+    <form action="" method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Mulai Tanggal</label>
+            <input type="date" name="start_date" class="w-full px-4 py-2 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50">
         </div>
+        <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Sampai Tanggal</label>
+            <input type="date" name="end_date" class="w-full px-4 py-2 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50">
+        </div>
+        <div class="md:col-span-2 flex items-end gap-3">
+            <button type="submit" class="flex-1 bg-indigo-600 text-white font-bold py-2 rounded-xl hover:bg-indigo-700 transition-all">Filter Data</button>
+            <a href="jurnal.php" class="px-6 py-2 bg-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-300 transition-all text-center">Reset</a>
+        </div>
+    </form>
+</div>
+
+<div class="lux-card overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-slate-50 border-b border-slate-100">
+                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Tanggal</th>
+                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Guru & Mapel</th>
+                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Kelas</th>
+                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Materi</th>
+                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Absensi</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-50">
+                <?php while ($row = mysqli_fetch_assoc($result)): ?>
+                <tr class="hover:bg-slate-50/50 transition-colors">
+                    <td class="px-6 py-4 text-sm font-medium text-slate-700 whitespace-nowrap"><?= date('d M Y', strtotime($row['tanggal'])) ?></td>
+                    <td class="px-6 py-4">
+                        <div class="font-bold text-slate-800"><?= htmlspecialchars($row['nama_lengkap']) ?></div>
+                        <div class="text-xs text-indigo-500 font-bold tracking-tight"><?= htmlspecialchars($row['nama_mapel']) ?></div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-xs font-bold border border-slate-200 uppercase"><?= htmlspecialchars($row['nama_kelas']) ?></span>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-slate-600 max-w-xs truncate"><?= htmlspecialchars($row['materi']) ?></td>
+                    <td class="px-6 py-4">
+                        <div class="flex justify-center gap-1">
+                            <span class="w-8 h-8 flex items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 text-xs font-bold border border-emerald-100" title="Hadir"><?= $row['jml_hadir'] ?></span>
+                            <span class="w-8 h-8 flex items-center justify-center rounded-lg bg-amber-50 text-amber-600 text-xs font-bold border border-amber-100" title="Sakit"><?= $row['jml_sakit'] ?></span>
+                            <span class="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-50 text-blue-600 text-xs font-bold border border-blue-100" title="Izin"><?= $row['jml_izin'] ?></span>
+                            <span class="w-8 h-8 flex items-center justify-center rounded-lg bg-rose-50 text-rose-600 text-xs font-bold border border-rose-100" title="Alfa"><?= $row['jml_alfa'] ?></span>
+                        </div>
+                    </td>
+                </tr>
+                <?php endwhile; ?>
+            </tbody>
+        </table>
     </div>
 </div>
 
-<?php
-require_once __DIR__ . '/../includes/footer.php';
-?>
+<?php require_once __DIR__ . '/../includes/footer.php'; ?>

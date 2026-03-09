@@ -2,58 +2,43 @@
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../config/database.php';
 
-// Otorisasi untuk waka dan admin
 authorize_role(['waka', 'admin']);
-
 $page_title = "Data Tahun Pelajaran";
 
-// Ambil semua data tahun pelajaran
 $result = mysqli_query($conn, "SELECT * FROM tahun_pelajaran ORDER BY tahun DESC");
-
 require_once __DIR__ . '/../includes/header.php';
-require_once __DIR__ . '/../includes/sidebar_waka.php';
 ?>
 
-<h1 class="h3 mb-4 text-gray-800">Data Tahun Pelajaran</h1>
+<div class="mb-8">
+    <h1 class="text-3xl font-bold text-slate-800 tracking-tight italic">Tahun Pelajaran</h1>
+    <p class="text-slate-500">Periode akademik yang terdaftar di sistem.</p>
+</div>
 
-<div class="card shadow mb-4">
-    <div class="card-header py-3">
-        <h6 class="m-0 font-weight-bold text-primary">Daftar Tahun Pelajaran</h6>
-    </div>
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
-                <thead>
-                    <tr>
-                        <th>Tahun Pelajaran</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if (mysqli_num_rows($result) > 0): ?>
-                        <?php while ($row = mysqli_fetch_assoc($result)): ?>
-                        <tr>
-                            <td><?= htmlspecialchars($row['tahun']) ?></td>
-                            <td>
-                                <?php if ($row['status'] == 'aktif'): ?>
-                                    <span class="badge bg-success">Aktif</span>
-                                <?php else: ?>
-                                    <span class="badge bg-secondary">Tidak Aktif</span>
-                                <?php endif; ?>
-                            </td>
-                        </tr>
-                        <?php endwhile; ?>
-                    <?php else: ?>
-                        <tr>
-                            <td colspan="2" class="text-center">Belum ada data tahun pelajaran.</td>
-                        </tr>
-                    <?php endif; ?>
-                </tbody>
-            </table>
-        </div>
+<div class="lux-card overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-slate-50 border-b border-slate-100">
+                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Tahun Pelajaran</th>
+                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Status</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-50">
+                <?php while ($row = mysqli_fetch_assoc($result)): ?>
+                <tr class="hover:bg-slate-50/50 transition-colors">
+                    <td class="px-6 py-4 font-bold text-slate-700"><?= htmlspecialchars($row['tahun']) ?></td>
+                    <td class="px-6 py-4 text-center">
+                        <?php if ($row['status'] == 'aktif'): ?>
+                            <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold uppercase tracking-widest border border-emerald-200">Aktif</span>
+                        <?php else: ?>
+                            <span class="px-3 py-1 rounded-full bg-slate-100 text-slate-500 text-xs font-bold uppercase tracking-widest border border-slate-200">Tidak Aktif</span>
+                        <?php endif; ?>
+                    </td>
+                </tr>
+                <?php endwhile; ?>
+            </tbody>
+        </table>
     </div>
 </div>
 
-<?php
-require_once __DIR__ . '/../includes/footer.php';
-?>
+<?php require_once __DIR__ . '/../includes/footer.php'; ?>
