@@ -38,10 +38,16 @@ require_once __DIR__ . '/../includes/header.php';
 <style>#sidebar, header, nav.navbar { display: none !important; } .lg\:ml-64 { margin-left: 0 !important; } .main-content { margin-left: 0 !important; padding-top: 2rem !important; }</style>
 
 <div class="max-w-4xl mx-auto pb-32 px-4">
+    <!-- Progress Indicator -->
+    <div class="flex items-center gap-2 mb-10 overflow-hidden rounded-full bg-slate-200 h-2">
+        <div class="w-1/2 h-full bg-emerald-500"></div>
+        <div class="w-1/2 h-full bg-indigo-500 animate-pulse"></div>
+    </div>
+
     <div class="flex items-center justify-between mb-8">
         <div>
-            <h1 class="text-3xl font-black text-slate-800 tracking-tight italic">Lengkapi Jurnal</h1>
-            <p class="text-slate-500 font-medium tracking-wide">Langkah 2: Isi Materi Pembelajaran</p>
+            <h1 class="text-3xl font-black text-slate-800 tracking-tight italic">Langkah 2: Isi Jurnal</h1>
+            <p class="text-slate-500 font-medium tracking-wide uppercase text-[10px] tracking-[0.3em]">Finalisasi Catatan Mengajar</p>
         </div>
         <a href="index.php" class="w-12 h-12 flex items-center justify-center rounded-2xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition-all shadow-sm">
             <i class="fa fa-arrow-left"></i>

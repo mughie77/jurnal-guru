@@ -15,11 +15,11 @@
                     <i class="fa fa-user-check text-lg"></i>
                     <span class="text-[8px] font-black uppercase mt-1">Absensi</span>
                 </a>
-                <a href="<?= BASE_URL ?>guru/isi_jurnal.php" class="flex flex-col items-center p-2 rounded-xl transition-all <?= basename($_SERVER['PHP_SELF']) == 'isi_jurnal.php' ? 'text-indigo-600' : 'text-slate-400' ?>">
-                    <div class="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center text-white shadow-lg shadow-indigo-200 -mt-8 border-4 border-slate-50">
+                <a href="<?= BASE_URL ?>guru/isi_absensi.php" class="flex flex-col items-center p-2 rounded-xl transition-all <?= in_array(basename($_SERVER['PHP_SELF']), ['isi_absensi.php', 'isi_jurnal.php']) ? 'text-indigo-600' : 'text-slate-400' ?>">
+                    <div class="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center text-white shadow-lg shadow-indigo-200 -mt-8 border-4 border-slate-50 transition-transform active:scale-90">
                         <i class="fa fa-plus"></i>
                     </div>
-                    <span class="text-[8px] font-black uppercase mt-1 text-indigo-600">Jurnal</span>
+                    <span class="text-[8px] font-black uppercase mt-1 text-indigo-600">Isi Jurnal</span>
                 </a>
                 <a href="<?= BASE_URL ?>guru/perangkat.php" class="flex flex-col items-center p-2 rounded-xl transition-all <?= basename($_SERVER['PHP_SELF']) == 'perangkat.php' ? 'text-indigo-600' : 'text-slate-400' ?>">
                     <i class="fa fa-folder text-lg"></i>
