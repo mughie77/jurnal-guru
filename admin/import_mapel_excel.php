@@ -17,7 +17,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['excel_file'])) {
             $stmt = mysqli_prepare($conn, "INSERT IGNORE INTO mata_pelajaran (kode_mapel, nama_mapel) VALUES (?, ?)");
             foreach ($rows as $row) {
                 if (empty($row[0]) || empty($row[1])) continue;
-                mysqli_stmt_bind_param($stmt, "ss", $row[0], $row[1]);
+                $kode = $row[0];
+                $nama = $row[1];
+                mysqli_stmt_bind_param($stmt, "ss", $kode, $nama);
                 mysqli_stmt_execute($stmt);
                 if (mysqli_stmt_affected_rows($stmt) > 0) $count++;
             }

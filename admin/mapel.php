@@ -6,23 +6,27 @@ authorize_role(['admin']);
 $page_title = "Manajemen Mata Pelajaran";
 $message = ''; $message_type = '';
 
+function generateUniqueKode($conn) {
+    $chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    do {
+        $kode = "";
+        for ($i = 0; $i < 5; $i++) $kode .= $chars[rand(0, strlen($chars) - 1)];
+        $check = mysqli_query($conn, "SELECT id FROM mata_pelajaran WHERE kode_mapel = '$kode'");
+    } while (mysqli_num_rows($check) > 0);
+    return $kode;
+}
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (isset($_POST['tambah'])) {
         $nama_mapel = mysqli_real_escape_string($conn, $_POST['nama_mapel']);
-        $kode_mapel = mysqli_real_escape_string($conn, $_POST['kode_mapel']);
-        $check = mysqli_query($conn, "SELECT id FROM mata_pelajaran WHERE kode_mapel = '$kode_mapel'");
-        if (mysqli_num_rows($check) > 0) {
-            $message = "Gagal: Kode Mapel sudah ada."; $message_type = 'error';
-        } else {
-            if (mysqli_query($conn, "INSERT INTO mata_pelajaran (nama_mapel, kode_mapel) VALUES ('$nama_mapel', '$kode_mapel')")) {
-                $message = "Mata pelajaran ditambahkan!"; $message_type = 'success';
-            }
+        $kode_mapel = generateUniqueKode($conn);
+        if (mysqli_query($conn, "INSERT INTO mata_pelajaran (nama_mapel, kode_mapel) VALUES ('$nama_mapel', '$kode_mapel')")) {
+            $message = "Mata pelajaran ditambahkan dengan kode: $kode_mapel"; $message_type = 'success';
         }
     } elseif (isset($_POST['edit'])) {
         $id = (int)$_POST['id'];
         $nama_mapel = mysqli_real_escape_string($conn, $_POST['nama_mapel']);
-        $kode_mapel = mysqli_real_escape_string($conn, $_POST['kode_mapel']);
-        mysqli_query($conn, "UPDATE mata_pelajaran SET nama_mapel = '$nama_mapel', kode_mapel = '$kode_mapel' WHERE id = $id");
+        mysqli_query($conn, "UPDATE mata_pelajaran SET nama_mapel = '$nama_mapel' WHERE id = $id");
         $message = "Mata pelajaran diperbarui!"; $message_type = 'success';
     } elseif (isset($_POST['hapus'])) {
         $id = (int)$_POST['id'];
@@ -94,8 +98,7 @@ require_once __DIR__ . '/../includes/header.php';
 <div id="tambahModal" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-white rounded-3xl shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0 overflow-hidden">
     <div class="bg-indigo-600 px-8 py-6 text-white"><h3 class="text-2xl font-bold">Tambah Mapel</h3></div>
     <form action="" method="POST" class="p-8 space-y-4">
-        <div><label class="block text-sm font-bold text-slate-700 mb-1">Nama Mapel</label><input type="text" name="nama_mapel" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50"></div>
-        <div><label class="block text-sm font-bold text-slate-700 mb-1">Kode Mapel</label><input type="text" name="kode_mapel" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50"></div>
+        <div><label class="block text-sm font-bold text-slate-700 mb-1">Nama Mapel</label><input type="text" name="nama_mapel" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50" placeholder="Contoh: Pemrograman Web"></div>
         <div class="pt-4 flex gap-3">
             <button type="button" onclick="closeModal('tambahModal')" class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 font-bold text-slate-600 hover:bg-slate-50">Batal</button>
             <button type="submit" name="tambah" class="flex-1 px-4 py-2.5 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-100">Simpan</button>
@@ -108,8 +111,8 @@ require_once __DIR__ . '/../includes/header.php';
     <div class="bg-amber-500 px-8 py-6 text-white"><h3 class="text-2xl font-bold">Edit Mapel</h3></div>
     <form action="" method="POST" class="p-8 space-y-4">
         <input type="hidden" name="id" id="edit_id">
-        <div><label class="block text-sm font-bold text-slate-700 mb-1">Nama Mapel</label><input type="text" name="nama_mapel" id="edit_nama" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"></div>
-        <div><label class="block text-sm font-bold text-slate-700 mb-1">Kode Mapel</label><input type="text" name="kode_mapel" id="edit_kode" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"></div>
+        <div><label class="block text-sm font-bold text-slate-700 mb-1">Kode Mapel (Permanen)</label><input type="text" id="edit_kode" disabled class="w-full px-4 py-2.5 rounded-xl border border-slate-100 bg-slate-50 text-slate-400 font-mono font-bold outline-none cursor-not-allowed"></div>
+        <div><label class="block text-sm font-bold text-slate-700 mb-1">Nama Mata Pelajaran</label><input type="text" name="nama_mapel" id="edit_nama" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"></div>
         <div class="pt-4 flex gap-3">
             <button type="button" onclick="closeModal('editModal')" class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 font-bold text-slate-600 hover:bg-slate-50">Batal</button>
             <button type="submit" name="edit" class="flex-1 px-4 py-2.5 rounded-xl bg-amber-500 text-white font-bold hover:bg-amber-600">Simpan</button>

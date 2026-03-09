@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../includes/auth.php';
-require_once __DIR__ . '/../includes/SimpleXLSXEx.php';
-use Shuchkin\SimpleXLSXEx;
+require_once __DIR__ . '/../includes/SimpleXLSXGen.php';
+use Shuchkin\SimpleXLSXGen;
 
 authorize_role(['admin']);
 
@@ -43,7 +43,7 @@ switch ($type) {
         die("Tipe template tidak valid.");
 }
 
-$xlsx = SimpleXLSXEx::create($data);
+$xlsx = SimpleXLSXGen::fromArray($data);
 $xlsx->downloadAs($filename);
 exit();
 ?>
