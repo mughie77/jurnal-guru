@@ -48,12 +48,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['simpan_absensi'])) {
         }
 
         mysqli_commit($conn);
-        // 3. Robust redirect
+        // 3. Robust redirect using location.replace to prevent back-loops
         echo "<div class='fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[200] flex items-center justify-center flex-col text-white'>
                 <div class='w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4'></div>
                 <p class='font-black italic tracking-widest animate-pulse uppercase'>Menyimpan Absensi...</p>
               </div>";
-        echo "<script>setTimeout(() => { window.location.href = 'isi_jurnal.php?jid=$jurnal_id'; }, 1000);</script>";
+        echo "<script>setTimeout(() => { window.location.replace('isi_jurnal.php?jid=$jurnal_id'); }, 800);</script>";
         exit;
     } catch (Exception $e) { mysqli_rollback($conn); $message = "Error: " . $e->getMessage(); $message_type = 'error'; }
 }
