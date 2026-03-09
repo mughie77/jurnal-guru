@@ -13,24 +13,22 @@ $total_jurnal = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as total
 $hadir_avg = mysqli_fetch_assoc(mysqli_query($conn, "SELECT AVG(jml_hadir) as avg FROM jurnal WHERE guru_id = $guru_id"))['avg'];
 $recent_jurnals = mysqli_query($conn, "SELECT j.*, k.nama_kelas, mp.nama_mapel FROM jurnal j JOIN kelas k ON j.kelas_id = k.id JOIN mata_pelajaran mp ON j.mapel_id = mp.id WHERE j.guru_id = $guru_id ORDER BY j.tanggal DESC LIMIT 5");
 
-$page_title = "Dashboard Guru";
+$page_title = "Beranda Guru";
 require_once __DIR__ . '/../includes/header.php';
 ?>
 
 <style>
     #sidebar, header { display: none; }
     .lg\:ml-64 { margin-left: 0; }
-    body { background-color: #F3F4F6; }
-    .dashboard-grid { display: grid; grid-template-columns: 80px 1fr 300px; min-height: 100vh; }
-    @media (max-width: 1024px) { .dashboard-grid { grid-template-columns: 1fr; } .sidebar-mini, .right-panel { display: none; } }
+    body { background-color: #F8FAFC; }
 </style>
 
-<div class="bg-slate-50 min-h-screen">
+<div class="bg-slate-50 min-h-screen pb-24">
     <!-- Main Content -->
     <div class="p-8 lg:p-12 max-w-7xl mx-auto">
         <div class="flex items-center justify-between mb-12">
             <div>
-                <h1 class="text-3xl font-black text-slate-800 tracking-tight italic">Dashboard Guru <span class="text-indigo-600">(<?= htmlspecialchars($_SESSION['nama_lengkap']) ?>)</span></h1>
+                <h1 class="text-3xl font-black text-slate-800 tracking-tight italic">Beranda Guru <span class="text-indigo-600">(<?= htmlspecialchars($_SESSION['nama_lengkap']) ?>)</span></h1>
                 <p class="text-slate-400 font-medium tracking-wide"><?= date('l, d F Y') ?></p>
             </div>
             <div class="flex items-center gap-4">
@@ -60,50 +58,66 @@ require_once __DIR__ . '/../includes/header.php';
                 </div>
             </div>
             <div class="lux-card p-8 bg-white border-slate-100 flex flex-col justify-center items-center text-center group cursor-pointer hover:border-indigo-500 transition-all">
-                <a href="isi_jurnal.php" class="contents">
+                <a href="isi_absensi.php" class="contents">
                     <div class="w-16 h-16 rounded-2xl bg-slate-50 text-indigo-600 flex items-center justify-center mb-4 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-500 shadow-inner">
-                        <i class="fa fa-plus text-2xl"></i>
+                        <i class="fa fa-user-check text-2xl"></i>
                     </div>
-                    <p class="font-black text-slate-800 italic uppercase tracking-tighter">Isi Jurnal Baru</p>
+                    <p class="font-black text-slate-800 italic uppercase tracking-tighter">Mulai Absensi & Jurnal</p>
                 </a>
             </div>
         </div>
 
-        <!-- Activity Table -->
-        <div class="lux-card overflow-hidden border-none shadow-2xl">
-            <div class="p-6 border-b border-slate-50 flex items-center justify-between">
-                <h3 class="font-black text-slate-800 italic uppercase tracking-widest text-sm">Aktivitas Mengajar Terbaru</h3>
-                <a href="riwayat.php" class="text-xs font-bold text-indigo-600 hover:underline">Lihat Semua</a>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+            <!-- Menu Grid -->
+            <div class="grid grid-cols-2 gap-4">
+                <a href="rekap_absen.php" class="lux-card p-6 flex flex-col items-center justify-center text-center gap-4 group hover:bg-emerald-600 transition-all duration-500">
+                    <div class="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-sm group-hover:rotate-12 group-hover:bg-white transition-all"><i class="fa fa-chart-line text-xl"></i></div>
+                    <span class="text-sm font-black text-slate-700 uppercase tracking-tighter group-hover:text-white">Rekap Absensi</span>
+                </a>
+                <a href="riwayat.php" class="lux-card p-6 flex flex-col items-center justify-center text-center gap-4 group hover:bg-amber-500 transition-all duration-500">
+                    <div class="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center shadow-sm group-hover:rotate-12 group-hover:bg-white transition-all"><i class="fa fa-history text-xl"></i></div>
+                    <span class="text-sm font-black text-slate-700 uppercase tracking-tighter group-hover:text-white">Riwayat Jurnal</span>
+                </a>
+                <a href="perangkat.php" class="lux-card p-6 flex flex-col items-center justify-center text-center gap-4 group hover:bg-indigo-600 transition-all duration-500">
+                    <div class="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shadow-sm group-hover:rotate-12 group-hover:bg-white transition-all"><i class="fa fa-folder-open text-xl"></i></div>
+                    <span class="text-sm font-black text-slate-700 uppercase tracking-tighter group-hover:text-white">Perangkat</span>
+                </a>
+                <a href="<?= BASE_URL ?>logout.php" class="lux-card p-6 flex flex-col items-center justify-center text-center gap-4 group hover:bg-rose-600 transition-all duration-500">
+                    <div class="w-14 h-14 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center shadow-sm group-hover:rotate-12 group-hover:bg-white transition-all"><i class="fa fa-sign-out-alt text-xl"></i></div>
+                    <span class="text-sm font-black text-slate-700 uppercase tracking-tighter group-hover:text-white">Keluar Sistem</span>
+                </a>
             </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left">
-                    <thead>
-                        <tr class="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-50">
-                            <th class="px-6 py-4">Tanggal</th>
-                            <th class="px-6 py-4">Mata Pelajaran</th>
-                            <th class="px-6 py-4 text-center">Kelas</th>
-                            <th class="px-6 py-4 text-center">Hadir</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-50">
-                        <?php while($j = mysqli_fetch_assoc($recent_jurnals)): ?>
-                        <tr class="hover:bg-slate-50/50 transition-colors">
-                            <td class="px-6 py-4 text-xs font-bold text-slate-700"><?= date('d M', strtotime($j['tanggal'])) ?></td>
-                            <td class="px-6 py-4 font-bold text-slate-800 text-sm italic"><?= htmlspecialchars($j['nama_mapel']) ?></td>
-                            <td class="px-6 py-4 text-center">
-                                <span class="px-2 py-1 rounded bg-indigo-50 text-indigo-600 text-[10px] font-black border border-indigo-100 uppercase"><?= $j['nama_kelas'] ?></span>
-                            </td>
-                            <td class="px-6 py-4 text-center">
-                                <span class="font-black text-emerald-500"><?= $j['jml_hadir'] ?></span>
-                            </td>
-                        </tr>
-                        <?php endwhile; ?>
-                    </tbody>
-                </table>
+
+            <!-- Activity Table -->
+            <div class="lux-card overflow-hidden border-none shadow-2xl">
+                <div class="p-6 border-b border-slate-50 flex items-center justify-between">
+                    <h3 class="font-black text-slate-800 italic uppercase tracking-widest text-sm">Aktivitas Terakhir</h3>
+                    <a href="riwayat.php" class="text-xs font-bold text-indigo-600 hover:underline">Lihat Semua</a>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-50">
+                                <th class="px-6 py-4">Tanggal</th>
+                                <th class="px-6 py-4">Pelajaran</th>
+                                <th class="px-6 py-4 text-center">Kelas</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-50">
+                            <?php mysqli_data_seek($recent_jurnals, 0); while($j = mysqli_fetch_assoc($recent_jurnals)): ?>
+                            <tr class="hover:bg-slate-50/50 transition-colors">
+                                <td class="px-6 py-4 text-xs font-bold text-slate-700"><?= date('d M', strtotime($j['tanggal'])) ?></td>
+                                <td class="px-6 py-4 font-bold text-slate-800 text-sm italic"><?= htmlspecialchars($j['nama_mapel']) ?></td>
+                                <td class="px-6 py-4 text-center">
+                                    <span class="px-2 py-1 rounded bg-slate-100 text-slate-500 text-[10px] font-black uppercase border border-slate-200"><?= $j['nama_kelas'] ?></span>
+                                </td>
+                            </tr>
+                            <?php endwhile; ?>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
-    </div>
-
     </div>
 </div>
 

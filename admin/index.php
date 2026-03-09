@@ -10,12 +10,12 @@ $total_kelas = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(id) as total
 $today = date('Y-m-d');
 $total_jurnal_hari_ini = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(id) as total FROM jurnal WHERE tanggal = '$today'"))['total'];
 
-$page_title = "Dashboard Admin";
+$page_title = "Beranda Admin";
 require_once __DIR__ . '/../includes/header.php';
 ?>
 
 <div class="mb-8">
-    <h1 class="text-3xl font-bold text-slate-800 tracking-tight">Dashboard Admin</h1>
+    <h1 class="text-3xl font-bold text-slate-800 tracking-tight">Beranda Admin</h1>
     <p class="text-slate-500">Ringkasan statistik sistem saat ini.</p>
 </div>
 
