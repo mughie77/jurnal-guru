@@ -18,6 +18,17 @@ $res_j = mysqli_query($conn, "SELECT j.*, mp.nama_mapel, k.nama_kelas
                                WHERE j.id = $jurnal_id");
 $j = mysqli_fetch_assoc($res_j);
 
+// Ambil siswa yang tidak hadir (S/I/A)
+$res_abs = mysqli_query($conn, "SELECT s.nama_siswa, aj.status
+                                 FROM absensi_jurnal aj
+                                 JOIN siswa s ON aj.siswa_id = s.id
+                                 WHERE aj.jurnal_id = $jurnal_id AND aj.status != 'H'
+                                 ORDER BY aj.status ASC, s.nama_siswa ASC");
+$tidak_hadir = [];
+while ($row = mysqli_fetch_assoc($res_abs)) {
+    $tidak_hadir[] = $row;
+}
+
 $message = ''; $message_type = '';
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['simpan_jurnal'])) {
     if (!verify_csrf_token($_POST['csrf_token'] ?? '')) die("CSRF Token Invalid");
@@ -64,6 +75,25 @@ require_once __DIR__ . '/../includes/header.php';
             <div><p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Jam Ke-</p><p class="font-bold text-slate-800"><?= htmlspecialchars($j['jam_ke']) ?></p></div>
             <div><p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Kehadiran</p><p class="font-bold text-emerald-600"><?= $j['jml_hadir'] ?> Siswa</p></div>
         </div>
+
+        <?php if (!empty($tidak_hadir)): ?>
+        <div class="mb-10 p-6 rounded-2xl bg-rose-50 border border-rose-100">
+            <h3 class="text-xs font-black text-rose-700 uppercase tracking-widest mb-4 flex items-center">
+                <i class="fa fa-user-times mr-2"></i> Siswa Tidak Hadir
+            </h3>
+            <div class="flex flex-wrap gap-2">
+                <?php foreach ($tidak_hadir as $th): ?>
+                    <span class="px-3 py-1.5 bg-white rounded-xl border border-rose-200 shadow-sm text-sm font-bold text-slate-700">
+                        <span class="inline-flex items-center justify-center w-5 h-5 rounded-md text-[10px] font-black mr-2
+                            <?= $th['status'] == 'S' ? 'bg-amber-500 text-white' : ($th['status'] == 'I' ? 'bg-blue-500 text-white' : 'bg-rose-500 text-white') ?>">
+                            <?= $th['status'] ?>
+                        </span>
+                        <?= htmlspecialchars($th['nama_siswa']) ?>
+                    </span>
+                <?php endforeach; ?>
+            </div>
+        </div>
+        <?php endif; ?>
 
         <form action="" method="POST" class="space-y-8">
             <input type="hidden" name="csrf_token" value="<?= get_csrf_token() ?>">
