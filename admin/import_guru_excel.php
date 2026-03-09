@@ -55,10 +55,13 @@ require_once __DIR__ . '/../includes/header.php';
             <i class="fa fa-info-circle mr-2"></i> Petunjuk Format Excel
         </h3>
         <p class="text-indigo-700/80 text-sm leading-relaxed">Pastikan file Excel Anda memiliki kolom dengan urutan sebagai berikut pada sheet pertama:</p>
-        <div class="mt-4 flex flex-wrap gap-2">
+        <div class="mt-4 flex flex-wrap gap-2 items-center">
             <?php foreach(['Nama Lengkap', 'NIP (Username)', 'Alamat', 'No. Telp'] as $col): ?>
                 <span class="px-3 py-1.5 bg-white rounded-lg border border-indigo-200 text-indigo-600 text-xs font-bold uppercase shadow-sm"><?= $col ?></span>
             <?php endforeach; ?>
+            <a href="<?= BASE_URL ?>api/download_template.php?type=guru" class="ml-auto inline-flex items-center text-indigo-600 hover:text-indigo-800 font-bold text-sm bg-white px-4 py-2 rounded-xl border border-indigo-100 shadow-sm transition-all">
+                <i class="fa fa-download mr-2"></i> Unduh Template Excel
+            </a>
         </div>
     </div>
 

@@ -54,6 +54,16 @@ require_once __DIR__ . '/../includes/header.php';
 <?php endif; ?>
 
 <div class="lux-card p-8">
+    <div class="mb-8 p-6 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-between">
+        <div>
+            <h3 class="text-indigo-800 font-bold mb-1">Format Excel</h3>
+            <p class="text-indigo-700/70 text-xs">Kolom: NIS, Nama Siswa, L/P</p>
+        </div>
+        <a href="<?= BASE_URL ?>api/download_template.php?type=siswa" class="inline-flex items-center text-indigo-600 hover:text-indigo-800 font-bold text-sm bg-white px-4 py-2 rounded-xl border border-indigo-100 shadow-sm transition-all">
+            <i class="fa fa-download mr-2"></i> Unduh Template
+        </a>
+    </div>
+
     <form action="" method="POST" enctype="multipart/form-data" class="space-y-8">
         <div>
             <label class="block text-sm font-bold text-slate-700 mb-2">Pilih Kelas Tujuan</label>

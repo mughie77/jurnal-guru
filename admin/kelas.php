@@ -47,12 +47,15 @@ require_once __DIR__ . '/../includes/header.php';
         <h1 class="text-3xl font-bold text-slate-800 tracking-tight">Manajemen Kelas</h1>
         <p class="text-slate-500">Kelola daftar kelas dan penugasan wali kelas.</p>
     </div>
-    <div class="flex gap-3">
+    <div class="flex flex-wrap gap-3">
         <button onclick="openModal('tambahModal')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-indigo-200 transition-all flex items-center">
             <i class="fa fa-plus mr-2"></i> Tambah Kelas
         </button>
+        <a href="import_kelas_excel.php" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-blue-200 transition-all flex items-center">
+            <i class="fa fa-plus-circle mr-2"></i> Import Daftar Kelas
+        </a>
         <a href="import_siswa_excel.php" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-emerald-200 transition-all flex items-center">
-            <i class="fa fa-file-excel mr-2"></i> Import Siswa
+            <i class="fa fa-file-excel mr-2"></i> Import Siswa (Assign ke Kelas)
         </a>
     </div>
 </div>

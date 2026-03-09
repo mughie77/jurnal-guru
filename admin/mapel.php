@@ -41,9 +41,14 @@ require_once __DIR__ . '/../includes/header.php';
         <h1 class="text-3xl font-bold text-slate-800 tracking-tight italic">Mata Pelajaran</h1>
         <p class="text-slate-500">Daftar mata pelajaran yang tersedia di kurikulum.</p>
     </div>
-    <button onclick="openModal('tambahModal')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-indigo-200 transition-all flex items-center">
-        <i class="fa fa-plus mr-2"></i> Tambah Mapel
-    </button>
+    <div class="flex gap-3">
+        <button onclick="openModal('tambahModal')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-indigo-200 transition-all flex items-center">
+            <i class="fa fa-plus mr-2"></i> Tambah Mapel
+        </button>
+        <a href="import_mapel_excel.php" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-emerald-200 transition-all flex items-center">
+            <i class="fa fa-file-excel mr-2"></i> Import Excel
+        </a>
+    </div>
 </div>
 
 <?php if ($message): ?>
