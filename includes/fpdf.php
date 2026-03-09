@@ -1817,8 +1817,10 @@ protected function _put($s)
 
 protected function _out($s)
 {
-	// Add a line to the document
-	$this->_put($s);
+	if($this->state==2)
+		$this->pages[$this->page] .= $s."\n";
+	else
+		$this->buffer .= $s."\n";
 }
 
 protected function _putstream($s)

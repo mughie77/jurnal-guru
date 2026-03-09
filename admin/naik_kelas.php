@@ -11,6 +11,7 @@ if (!$active_tahun_id) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['proses_naik'])) {
+    if (!verify_csrf_token($_POST['csrf_token'] ?? '')) die("CSRF Token Invalid");
     $kelas_asal = (int)$_POST['kelas_asal'];
     $kelas_tujuan = (int)$_POST['kelas_tujuan'];
 
@@ -62,6 +63,7 @@ require_once __DIR__ . '/../includes/header.php';
 
 <div class="lux-card p-10 bg-white max-w-2xl">
     <form action="" method="POST" class="space-y-8">
+        <input type="hidden" name="csrf_token" value="<?= get_csrf_token() ?>">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div class="space-y-4 p-6 rounded-2xl bg-slate-50 border border-slate-100">
                 <label class="block text-xs font-black text-slate-400 uppercase tracking-widest">Kelas Asal</label>

@@ -13,7 +13,7 @@ if (!$conn) {
 
 // --- URL Konfigurasi ---
 // Pastikan untuk mengubah ini sesuai dengan domain atau path aplikasi Anda
-define('BASE_URL', 'https://localhost/jurnal-mengajar/');
+define('BASE_URL', 'http://localhost:8000/');
 
 // --- Mulai Session ---
 // Panggil session_start() di sini agar tersedia di semua halaman

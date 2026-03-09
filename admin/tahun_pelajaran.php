@@ -74,6 +74,7 @@ require_once __DIR__ . '/../includes/header.php';
                         <div class="flex justify-center gap-2">
                             <?php if ($row['status'] != 'aktif'): ?>
                             <form action="" method="POST">
+                                <input type="hidden" name="csrf_token" value="<?= get_csrf_token() ?>">
                                 <input type="hidden" name="id" value="<?= $row['id'] ?>">
                                 <button type="submit" name="set_aktif" class="w-9 h-9 flex items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all" title="Aktifkan">
                                     <i class="fa fa-check"></i>
@@ -110,7 +111,6 @@ require_once __DIR__ . '/../includes/header.php';
         <h3 class="text-xl font-bold text-slate-800 mb-2 italic">Hapus Tahun?</h3>
         <p class="text-sm text-slate-500 mb-8">Hapus periode <span class="font-bold text-slate-800"><?= htmlspecialchars($row['tahun']) ?></span>?</p>
         <form action="" method="POST" class="flex gap-2">
-                                <input type="hidden" name="csrf_token" value="<?= get_csrf_token() ?>">
             <input type="hidden" name="csrf_token" value="<?= get_csrf_token() ?>">
             <input type="hidden" name="id" value="<?= $row['id'] ?>">
             <button type="button" onclick="closeModal('hapusModal-<?= $row['id'] ?>')" class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 font-bold text-slate-600">Batal</button>

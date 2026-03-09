@@ -9,6 +9,7 @@ $page_title = "Import Siswa";
 $message = ''; $message_type = '';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['excel_file'])) {
+    if (!verify_csrf_token($_POST['csrf_token'] ?? '')) die("CSRF Token Invalid");
     $file = $_FILES['excel_file']['tmp_name'];
     $kelas_id = (int)$_POST['kelas_id'];
     if ($xlsx = SimpleXLSX::parse($file)) {
@@ -65,6 +66,7 @@ require_once __DIR__ . '/../includes/header.php';
     </div>
 
     <form action="" method="POST" enctype="multipart/form-data" class="space-y-8">
+        <input type="hidden" name="csrf_token" value="<?= get_csrf_token() ?>">
         <div>
             <label class="block text-sm font-bold text-slate-700 mb-2">Pilih Kelas Tujuan</label>
             <select name="kelas_id" required class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 bg-white shadow-sm">

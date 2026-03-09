@@ -20,6 +20,7 @@ $j = mysqli_fetch_assoc($res_j);
 
 $message = ''; $message_type = '';
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['simpan_jurnal'])) {
+    if (!verify_csrf_token($_POST['csrf_token'] ?? '')) die("CSRF Token Invalid");
     $materi = mysqli_real_escape_string($conn, $_POST['materi']);
     $keterangan = mysqli_real_escape_string($conn, $_POST['keterangan']);
 
@@ -65,6 +66,7 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
 
         <form action="" method="POST" class="space-y-8">
+            <input type="hidden" name="csrf_token" value="<?= get_csrf_token() ?>">
             <div>
                 <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">Materi Pembahasan Hari Ini</label>
                 <textarea name="materi" rows="5" required placeholder="Jelaskan pokok bahasan, kompetensi dasar, atau aktivitas yang dilakukan..." class="w-full px-6 py-4 rounded-3xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-100 font-medium text-slate-600 text-lg transition-all"></textarea>

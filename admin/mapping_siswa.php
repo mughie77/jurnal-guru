@@ -9,6 +9,7 @@ $message = ''; $message_type = '';
 if (!$active_tahun_id) die("Error: Tidak ada tahun pelajaran aktif.");
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['proses_mapping'])) {
+    if (!verify_csrf_token($_POST['csrf_token'] ?? '')) die("CSRF Token Invalid");
     $kelas_id = (int)$_POST['kelas_id'];
     $siswa_ids = $_POST['siswa_ids'] ?? [];
 
@@ -62,6 +63,7 @@ require_once __DIR__ . '/../includes/header.php';
 <?php endif; ?>
 
 <form action="" method="POST" id="mappingForm">
+    <input type="hidden" name="csrf_token" value="<?= get_csrf_token() ?>">
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <!-- Sidebar: Filter & Action -->
         <div class="space-y-6">

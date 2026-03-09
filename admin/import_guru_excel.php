@@ -10,6 +10,7 @@ $page_title = "Import Guru dari Excel";
 $message = ''; $message_type = '';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['excel_file'])) {
+    if (!verify_csrf_token($_POST['csrf_token'] ?? '')) die("CSRF Token Invalid");
     $file = $_FILES['excel_file']['tmp_name'];
     if ($xlsx = SimpleXLSX::parse($file)) {
         $rows = $xlsx->rows(); array_shift($rows);
@@ -17,14 +18,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['excel_file'])) {
         mysqli_begin_transaction($conn);
         try {
             $stmt_user = mysqli_prepare($conn, "INSERT INTO users (nama_lengkap, username, password, role) VALUES (?, ?, ?, 'guru')");
-            $stmt_guru = mysqli_prepare($conn, "INSERT INTO guru (user_id, nip) VALUES (?, ?)");
+            $stmt_guru = mysqli_prepare($conn, "INSERT INTO guru (user_id, nip, alamat, no_telp) VALUES (?, ?, ?, ?)");
             foreach ($rows as $row) {
                 if (empty($row[0]) || empty($row[1])) continue;
                 $pass = password_hash($row[1], PASSWORD_DEFAULT);
                 mysqli_stmt_bind_param($stmt_user, "sss", $row[0], $row[1], $pass);
                 mysqli_stmt_execute($stmt_user);
                 $uid = mysqli_insert_id($conn);
-                mysqli_stmt_bind_param($stmt_guru, "is", $uid, $row[1]);
+
+                $alamat = $row[2] ?? null;
+                $no_telp = $row[3] ?? null;
+                mysqli_stmt_bind_param($stmt_guru, "isss", $uid, $row[1], $alamat, $no_telp);
                 mysqli_stmt_execute($stmt_guru);
                 $success_count++;
             }
@@ -66,6 +70,7 @@ require_once __DIR__ . '/../includes/header.php';
     </div>
 
     <form action="" method="POST" enctype="multipart/form-data" class="space-y-6">
+        <input type="hidden" name="csrf_token" value="<?= get_csrf_token() ?>">
         <div class="relative group">
             <input type="file" name="excel_file" id="excel_file" class="hidden" accept=".xlsx" required onchange="updateFileName(this)">
             <label for="excel_file" class="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-slate-300 rounded-3xl bg-slate-50 group-hover:bg-indigo-50 group-hover:border-indigo-300 transition-all cursor-pointer">

@@ -12,6 +12,7 @@ $guru_id = mysqli_fetch_assoc($guru_res)['id'];
 $message = ''; $message_type = '';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['upload'])) {
+    if (!verify_csrf_token($_POST['csrf_token'] ?? '')) die("CSRF Token Invalid");
     $nama = mysqli_real_escape_string($conn, $_POST['nama_perangkat']);
     $jenis = mysqli_real_escape_string($conn, $_POST['jenis_perangkat']);
     $file = $_FILES['file_perangkat'];
@@ -29,7 +30,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['upload'])) {
     } else { $message = "Format file tidak didukung (PDF/Word)."; $message_type = 'error'; }
 }
 
-if (isset($_POST['hapus'])) {
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['hapus'])) {
+    if (!verify_csrf_token($_POST['csrf_token'] ?? '')) die("CSRF Token Invalid");
     $id = (int)$_POST['id'];
     $res = mysqli_query($conn, "SELECT file_path FROM perangkat WHERE id = $id AND guru_id = $guru_id");
     if ($row = mysqli_fetch_assoc($res)) {
@@ -63,6 +65,7 @@ require_once __DIR__ . '/../includes/header.php';
             <div class="lux-card p-8 bg-white shadow-2xl sticky top-8 border-none">
                 <h3 class="text-sm font-black text-slate-400 uppercase tracking-widest mb-6 italic">Unggah Berkas Baru</h3>
                 <form action="" method="POST" enctype="multipart/form-data" class="space-y-5">
+                    <input type="hidden" name="csrf_token" value="<?= get_csrf_token() ?>">
                     <div>
                         <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-1">Nama Perangkat</label>
                         <input type="text" name="nama_perangkat" required class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 font-bold">
@@ -99,6 +102,7 @@ require_once __DIR__ . '/../includes/header.php';
                     <div class="flex gap-2 pt-4 border-t border-slate-50">
                         <a href="<?= BASE_URL . $p['file_path'] ?>" target="_blank" class="flex-1 flex items-center justify-center py-2 bg-indigo-50 text-indigo-600 text-[10px] font-black rounded-xl hover:bg-indigo-600 hover:text-white transition-all italic">BUKA FILE</a>
                         <form action="" method="POST" onsubmit="return confirm('Hapus berkas ini?')">
+                            <input type="hidden" name="csrf_token" value="<?= get_csrf_token() ?>">
                             <input type="hidden" name="id" value="<?= $p['id'] ?>">
                             <button type="submit" name="hapus" class="w-9 h-9 flex items-center justify-center text-rose-300 hover:text-rose-600 transition-all"><i class="fa fa-trash-alt text-xs"></i></button>
                         </form>

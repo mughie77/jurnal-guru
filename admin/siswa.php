@@ -9,6 +9,7 @@ $message = '';
 $message_type = '';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    if (!verify_csrf_token($_POST['csrf_token'] ?? '')) die("CSRF Token Invalid");
     if (isset($_POST['tambah'])) {
         $nis = mysqli_real_escape_string($conn, $_POST['nis']);
         $nama_siswa = mysqli_real_escape_string($conn, $_POST['nama_siswa']);
@@ -108,6 +109,7 @@ require_once __DIR__ . '/../includes/header.php';
 <div id="tambahModal" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-white rounded-3xl shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0 overflow-hidden">
     <div class="bg-indigo-600 px-8 py-6 text-white font-bold italic text-2xl">Tambah Siswa</div>
     <form action="" method="POST" class="p-8 space-y-4">
+        <input type="hidden" name="csrf_token" value="<?= get_csrf_token() ?>">
         <div><label class="block text-sm font-bold text-slate-700 mb-1">NIS</label><input type="text" name="nis" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50"></div>
         <div><label class="block text-sm font-bold text-slate-700 mb-1">Nama Siswa</label><input type="text" name="nama_siswa" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50"></div>
         <div><label class="block text-sm font-bold text-slate-700 mb-1">Jenis Kelamin</label>
@@ -124,6 +126,7 @@ require_once __DIR__ . '/../includes/header.php';
 <div id="editModal-<?= $row['id'] ?>" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-white rounded-3xl shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0 overflow-hidden">
     <div class="bg-amber-500 px-8 py-6 text-white font-bold italic text-2xl">Edit Siswa</div>
     <form action="" method="POST" class="p-8 space-y-4">
+        <input type="hidden" name="csrf_token" value="<?= get_csrf_token() ?>">
         <input type="hidden" name="id" value="<?= $row['id'] ?>">
         <div><label class="block text-sm font-bold text-slate-700 mb-1">NIS</label><input type="text" name="nis" value="<?= htmlspecialchars($row['nis']) ?>" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"></div>
         <div><label class="block text-sm font-bold text-slate-700 mb-1">Nama Siswa</label><input type="text" name="nama_siswa" value="<?= htmlspecialchars($row['nama_siswa']) ?>" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"></div>
@@ -143,6 +146,7 @@ require_once __DIR__ . '/../includes/header.php';
         <h3 class="text-xl font-bold text-slate-800 mb-2 italic">Hapus Siswa?</h3>
         <p class="text-sm text-slate-500 mb-8">Anda akan menghapus data siswa <span class="font-bold text-slate-800"><?= htmlspecialchars($row['nama_siswa']) ?></span>.</p>
         <form action="" method="POST" class="flex gap-2">
+            <input type="hidden" name="csrf_token" value="<?= get_csrf_token() ?>">
             <input type="hidden" name="id" value="<?= $row['id'] ?>">
             <button type="button" onclick="closeModal('hapusModal-<?= $row['id'] ?>')" class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 font-bold text-slate-600">Batal</button>
             <button type="submit" name="hapus" class="flex-1 px-4 py-2.5 rounded-xl bg-rose-600 text-white font-bold hover:bg-rose-700 transition-all">Hapus</button>

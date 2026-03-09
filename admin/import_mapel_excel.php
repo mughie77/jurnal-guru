@@ -9,6 +9,7 @@ $page_title = "Import Mata Pelajaran";
 $message = ''; $message_type = '';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['excel_file'])) {
+    if (!verify_csrf_token($_POST['csrf_token'] ?? '')) die("CSRF Token Invalid");
     if ($xlsx = SimpleXLSX::parse($_FILES['excel_file']['tmp_name'])) {
         $rows = $xlsx->rows(); array_shift($rows);
         $count = 0;
@@ -64,6 +65,7 @@ require_once __DIR__ . '/../includes/header.php';
     </div>
 
     <form action="" method="POST" enctype="multipart/form-data" class="space-y-6">
+        <input type="hidden" name="csrf_token" value="<?= get_csrf_token() ?>">
         <div class="relative group">
             <input type="file" name="excel_file" id="excel_file" class="hidden" accept=".xlsx" required onchange="updateFileName(this)">
             <label for="excel_file" class="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-slate-300 rounded-3xl bg-slate-50 group-hover:bg-indigo-50 transition-all cursor-pointer">
