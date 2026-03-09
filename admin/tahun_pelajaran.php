@@ -7,6 +7,7 @@ $page_title = "Tahun Pelajaran";
 $message = ''; $message_type = '';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    if (!verify_csrf_token($_POST['csrf_token'] ?? '')) die("CSRF Token Invalid");
     if (isset($_POST['tambah'])) {
         $tahun = mysqli_real_escape_string($conn, $_POST['tahun']);
         mysqli_query($conn, "INSERT INTO tahun_pelajaran (tahun) VALUES ('$tahun')");
@@ -96,6 +97,7 @@ require_once __DIR__ . '/../includes/header.php';
 <div id="tambahModal" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-white rounded-3xl shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0 overflow-hidden">
     <div class="bg-indigo-600 px-8 py-6 text-white font-bold italic text-2xl">Tambah Tahun Pelajaran</div>
     <form action="" method="POST" class="p-8 space-y-4">
+        <input type="hidden" name="csrf_token" value="<?= get_csrf_token() ?>">
         <div><label class="block text-sm font-bold text-slate-700 mb-1">Tahun Pelajaran</label><input type="text" name="tahun" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50" placeholder="Contoh: 2024/2025"></div>
         <div class="pt-4 flex gap-3"><button type="button" onclick="closeModal('tambahModal')" class="flex-1 px-6 py-2.5 rounded-xl border border-slate-200 font-bold text-slate-600">Batal</button><button type="submit" name="tambah" class="flex-1 px-6 py-2.5 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-100">Simpan</button></div>
     </form>
@@ -108,6 +110,8 @@ require_once __DIR__ . '/../includes/header.php';
         <h3 class="text-xl font-bold text-slate-800 mb-2 italic">Hapus Tahun?</h3>
         <p class="text-sm text-slate-500 mb-8">Hapus periode <span class="font-bold text-slate-800"><?= htmlspecialchars($row['tahun']) ?></span>?</p>
         <form action="" method="POST" class="flex gap-2">
+                                <input type="hidden" name="csrf_token" value="<?= get_csrf_token() ?>">
+            <input type="hidden" name="csrf_token" value="<?= get_csrf_token() ?>">
             <input type="hidden" name="id" value="<?= $row['id'] ?>">
             <button type="button" onclick="closeModal('hapusModal-<?= $row['id'] ?>')" class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 font-bold text-slate-600">Batal</button>
             <button type="submit" name="hapus" class="flex-1 px-4 py-2.5 rounded-xl bg-rose-600 text-white font-bold hover:bg-rose-700 transition-all">Hapus</button>

@@ -15,18 +15,23 @@ $kelases = mysqli_query($conn, "SELECT id, nama_kelas FROM kelas ORDER BY nama_k
 
 $message = ''; $message_type = '';
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['simpan_absensi'])) {
+    mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
     mysqli_begin_transaction($conn);
     try {
+        if (!verify_csrf_token($_POST['csrf_token'] ?? '')) throw new Exception("Token Keamanan Tidak Valid.");
+
         $mid = $_POST['mapel_id'];
         $kid = $_POST['kelas_id'];
         $tgl = $_POST['tanggal'];
         $jam = $_POST['jam_ke'];
 
-        // 1. Create a "Pre-Journal" entry to link attendance to
+        // 1. Create a "Pre-Journal" entry
         $stmt = mysqli_prepare($conn, "INSERT INTO jurnal (guru_id, mapel_id, kelas_id, tahun_pelajaran_id, tanggal, jam_ke, materi, jml_hadir, jml_sakit, jml_izin, jml_alfa) VALUES (?, ?, ?, ?, ?, ?, '', 0, 0, 0, 0)");
         mysqli_stmt_bind_param($stmt, "iiiiss", $guru_id, $mid, $kid, $active_tahun_id, $tgl, $jam);
         mysqli_stmt_execute($stmt);
         $jurnal_id = mysqli_insert_id($conn);
+
+        if (!$jurnal_id) throw new Exception("Gagal membuat record jurnal.");
 
         // 2. Save individual attendance
         if (!empty($_POST['absen'])) {
@@ -48,24 +53,28 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['simpan_absensi'])) {
         }
 
         mysqli_commit($conn);
-        // 3. Robust redirect using SweetAlert2 popup
-        echo "<script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script>";
+
+        // 3. Success and Redirect
+        echo "<!DOCTYPE html><html><head><script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script></head><body style='font-family:sans-serif;'>";
         echo "<script>
             document.addEventListener('DOMContentLoaded', function() {
                 Swal.fire({
                     icon: 'success',
                     title: 'Berhasil!',
-                    text: 'Absensi telah disimpan. Lanjut mengisi jurnal materi.',
+                    text: 'Absensi telah disimpan. Silakan lengkapi materi jurnal.',
                     showConfirmButton: false,
-                    timer: 1500,
+                    timer: 2000,
                     timerProgressBar: true
                 }).then(() => {
-                    window.location.replace('isi_jurnal.php?jid=$jurnal_id');
+                    window.location.href = 'isi_jurnal.php?jid=$jurnal_id';
                 });
             });
-        </script>";
+        </script></body></html>";
         exit;
-    } catch (Exception $e) { mysqli_rollback($conn); $message = "Error: " . $e->getMessage(); $message_type = 'error'; }
+    } catch (Exception $e) {
+        mysqli_rollback($conn);
+        $message = "Gagal: " . $e->getMessage(); $message_type = 'error';
+    }
 }
 
 require_once __DIR__ . '/../includes/header.php';
@@ -85,6 +94,7 @@ require_once __DIR__ . '/../includes/header.php';
     </div>
 
     <form action="" method="POST" class="space-y-8">
+        <input type="hidden" name="csrf_token" value="<?= get_csrf_token() ?>">
         <div class="lux-card p-8 bg-white shadow-2xl">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>

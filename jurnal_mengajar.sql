@@ -175,6 +175,7 @@ CREATE TABLE `jurnal` (
   KEY `mapel_id` (`mapel_id`),
   KEY `kelas_id` (`kelas_id`),
   KEY `tahun_pelajaran_id` (`tahun_pelajaran_id`),
+  KEY `tanggal` (`tanggal`),
   CONSTRAINT `jurnal_ibfk_1` FOREIGN KEY (`guru_id`) REFERENCES `guru` (`id`) ON DELETE CASCADE,
   CONSTRAINT `jurnal_ibfk_2` FOREIGN KEY (`mapel_id`) REFERENCES `mata_pelajaran` (`id`) ON DELETE RESTRICT,
   CONSTRAINT `jurnal_ibfk_3` FOREIGN KEY (`kelas_id`) REFERENCES `kelas` (`id`) ON DELETE RESTRICT,
@@ -195,6 +196,7 @@ CREATE TABLE `absensi_harian` (
   `keterangan` text DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `siswa_id` (`siswa_id`),
+  KEY `tanggal` (`tanggal`),
   CONSTRAINT `absensi_harian_ibfk_1` FOREIGN KEY (`siswa_id`) REFERENCES `siswa` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
