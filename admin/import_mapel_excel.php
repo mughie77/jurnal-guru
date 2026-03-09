@@ -16,9 +16,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['excel_file'])) {
         try {
             $stmt = mysqli_prepare($conn, "INSERT IGNORE INTO mata_pelajaran (kode_mapel, nama_mapel) VALUES (?, ?)");
             foreach ($rows as $row) {
-                if (empty($row[0]) || empty($row[1])) continue;
-                $kode = $row[0];
-                $nama = $row[1];
+                if (empty($row[0])) continue;
+                $nama = $row[0];
+
+                // Function logic for code generation
+                $chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+                do {
+                    $kode = "";
+                    for ($i = 0; $i < 5; $i++) $kode .= $chars[rand(0, strlen($chars) - 1)];
+                    $check = mysqli_query($conn, "SELECT id FROM mata_pelajaran WHERE kode_mapel = '$kode'");
+                } while (mysqli_num_rows($check) > 0);
+
                 mysqli_stmt_bind_param($stmt, "ss", $kode, $nama);
                 mysqli_stmt_execute($stmt);
                 if (mysqli_stmt_affected_rows($stmt) > 0) $count++;
@@ -48,7 +56,7 @@ require_once __DIR__ . '/../includes/header.php';
     <div class="mb-8 p-6 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-between">
         <div>
             <h3 class="text-indigo-800 font-bold mb-1 italic text-lg">Template Import</h3>
-            <p class="text-indigo-700/70 text-sm italic">Kolom: Kode Mapel, Nama Mata Pelajaran</p>
+            <p class="text-indigo-700/70 text-sm italic">Kolom: Nama Mata Pelajaran</p>
         </div>
         <a href="<?= BASE_URL ?>api/download_template.php?type=mapel" class="inline-flex items-center px-5 py-2.5 bg-white text-indigo-600 font-bold rounded-xl border border-indigo-100 shadow-sm hover:shadow-md transition-all">
             <i class="fa fa-download mr-2"></i> Unduh Template

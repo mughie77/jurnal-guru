@@ -34,9 +34,9 @@ switch ($type) {
     case 'mapel':
         $filename = 'Template_Import_Mapel.xlsx';
         $data = [
-            ['Kode Mapel', 'Nama Mata Pelajaran'],
-            ['WEB-X', 'Pemrograman Web X'],
-            ['PBO-XI', 'Pemrograman Berorientasi Objek XI'],
+            ['Nama Mata Pelajaran'],
+            ['Pemrograman Web X'],
+            ['Pemrograman Berorientasi Objek XI'],
         ];
         break;
     default:
