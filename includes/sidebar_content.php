@@ -55,6 +55,7 @@ if ($role == 'admin' || $role == 'waka') {
         <p class='px-4 text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] mb-2'>Laporan & Rekap</p>
         ".nav_link($role.'/jurnal.php', 'fa fa-book-open', 'Jurnal Mengajar', $current_page == 'jurnal.php')."
         ".nav_link('admin/rekap_absensi.php', 'fa fa-chart-line', 'Rekap Absensi', $current_page == 'rekap_absensi.php')."
+        ".nav_link('admin/perangkat.php', 'fa fa-folder-open', 'Data Perangkat', $current_page == 'perangkat.php')."
     </div>";
 }
 

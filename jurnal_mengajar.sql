@@ -214,3 +214,20 @@ CREATE TABLE `pengaturan` (
 INSERT INTO `pengaturan` (`nama_setting`, `nilai_setting`) VALUES
 ('nama_sekolah', 'SMKN 2 Bondowoso'),
 ('jam_masuk_sekolah', '07:00:00');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `perangkat`
+--
+CREATE TABLE `perangkat` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `guru_id` int(11) NOT NULL,
+  `nama_perangkat` varchar(255) NOT NULL,
+  `jenis_perangkat` varchar(100) NOT NULL,
+  `file_path` varchar(255) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `guru_id` (`guru_id`),
+  CONSTRAINT `perangkat_ibfk_1` FOREIGN KEY (`guru_id`) REFERENCES `guru` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
