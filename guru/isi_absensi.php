@@ -19,7 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['simpan_absensi'])) {
     try {
         // 1. Create a "Pre-Journal" entry to link attendance to
         $stmt = mysqli_prepare($conn, "INSERT INTO jurnal (guru_id, mapel_id, kelas_id, tahun_pelajaran_id, tanggal, jam_ke, materi) VALUES (?, ?, ?, ?, ?, ?, '')");
-        mysqli_stmt_bind_param($stmt, "iiiis s", $guru_id, $_POST['mapel_id'], $_POST['kelas_id'], $active_tahun_id, $_POST['tanggal'], $_POST['jam_ke']);
+        mysqli_stmt_bind_param($stmt, "iiiiss", $guru_id, $_POST['mapel_id'], $_POST['kelas_id'], $active_tahun_id, $_POST['tanggal'], $_POST['jam_ke']);
         mysqli_stmt_execute($stmt);
         $jurnal_id = mysqli_insert_id($conn);
 

@@ -26,7 +26,7 @@ function sub_nav_link($url, $label, $active) {
 }
 
 if ($role == 'admin' || $role == 'waka') {
-    echo nav_link($role.'/index.php', 'fa fa-tachometer-alt', 'Dashboard', $current_page == 'index.php');
+    echo nav_link($role.'/index.php', 'fa fa-tachometer-alt', 'Beranda', $current_page == 'index.php');
 
     // Group: Data Master
     $master_active = in_array($current_page, ['guru.php', 'mapel.php', 'tahun_pelajaran.php', 'users.php']);
@@ -42,7 +42,7 @@ if ($role == 'admin' || $role == 'waka') {
     // Group: Akademik
     echo "
     <div class='pt-6'>
-        <p class='px-4 text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] mb-2'>Akademik</p>
+        <p class='px-4 text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] mb-2'>Data Akademik</p>
         ".nav_link('admin/kelas.php', 'fa fa-school', 'Manajemen Kelas', $current_page == 'kelas.php')."
         ".nav_link('admin/siswa.php', 'fa fa-user-graduate', 'Data Siswa', $current_page == 'siswa.php')."
         ".nav_link('admin/mapping_siswa.php', 'fa fa-project-diagram', 'Mapping Kelas', $current_page == 'mapping_siswa.php')."

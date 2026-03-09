@@ -29,6 +29,10 @@
                     <i class="fa fa-folder text-lg"></i>
                     <span class="text-[8px] font-black uppercase mt-1">Perangkat</span>
                 </a>
+                <a href="<?= BASE_URL ?>logout.php" class="flex flex-col items-center p-2 rounded-xl transition-all text-rose-400 hover:text-rose-600">
+                    <i class="fa fa-sign-out-alt text-lg"></i>
+                    <span class="text-[8px] font-black uppercase mt-1">Keluar</span>
+                </a>
             </div>
         </div>
     <?php endif; ?>
