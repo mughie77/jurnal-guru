@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['simpan_absensi'])) {
         $jam = $_POST['jam_ke'];
 
         // 1. Create a "Pre-Journal" entry to link attendance to
-        $stmt = mysqli_prepare($conn, "INSERT INTO jurnal (guru_id, mapel_id, kelas_id, tahun_pelajaran_id, tanggal, jam_ke, materi) VALUES (?, ?, ?, ?, ?, ?, '')");
+        $stmt = mysqli_prepare($conn, "INSERT INTO jurnal (guru_id, mapel_id, kelas_id, tahun_pelajaran_id, tanggal, jam_ke, materi, jml_hadir, jml_sakit, jml_izin, jml_alfa) VALUES (?, ?, ?, ?, ?, ?, '', 0, 0, 0, 0)");
         mysqli_stmt_bind_param($stmt, "iiiiss", $guru_id, $mid, $kid, $active_tahun_id, $tgl, $jam);
         mysqli_stmt_execute($stmt);
         $jurnal_id = mysqli_insert_id($conn);
@@ -51,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['simpan_absensi'])) {
         // 3. Robust redirect
         echo "<div class='fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[200] flex items-center justify-center flex-col text-white'>
                 <div class='w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4'></div>
-                <p class='font-black italic tracking-widest animate-pulse'>MENYIMPAN ABSENSI...</p>
+                <p class='font-black italic tracking-widest animate-pulse uppercase'>Menyimpan Absensi...</p>
               </div>";
         echo "<script>setTimeout(() => { window.location.href = 'isi_jurnal.php?jid=$jurnal_id'; }, 1000);</script>";
         exit;
