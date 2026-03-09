@@ -27,6 +27,9 @@ if ($role == 'admin') {
 } elseif ($role == 'waka') {
     echo nav_link('waka/index.php', 'fa fa-tachometer-alt', 'Dashboard', $current_page == 'index.php');
     echo nav_link('waka/jurnal.php', 'fa fa-book-open', 'Laporan Jurnal', $current_page == 'jurnal.php');
-    // ... add more as needed
 }
+
+echo "<div class='pt-4 mt-4 border-t border-slate-800'>";
+echo nav_link('logout.php', 'fa fa-sign-out-alt text-rose-500', 'Keluar Sistem', false);
+echo "</div>";
 ?>
