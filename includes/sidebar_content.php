@@ -22,6 +22,7 @@ if ($role == 'admin') {
     echo nav_link('admin/guru.php', 'fa fa-chalkboard-teacher', 'Manajemen Guru', $current_page == 'guru.php');
     echo nav_link('admin/kelas.php', 'fa fa-school', 'Manajemen Kelas', $current_page == 'kelas.php');
     echo nav_link('admin/naik_kelas.php', 'fa fa-level-up-alt', 'Kenaikan Kelas', $current_page == 'naik_kelas.php');
+    echo nav_link('admin/mapping_siswa.php', 'fa fa-project-diagram', 'Mapping Siswa', $current_page == 'mapping_siswa.php');
     echo nav_link('admin/siswa.php', 'fa fa-user-graduate', 'Manajemen Siswa', $current_page == 'siswa.php');
     echo nav_link('admin/mapel.php', 'fa fa-book', 'Mata Pelajaran', $current_page == 'mapel.php');
     echo nav_link('admin/tahun_pelajaran.php', 'fa fa-calendar-alt', 'Tahun Pelajaran', $current_page == 'tahun_pelajaran.php');
