@@ -162,16 +162,17 @@ document.addEventListener('DOMContentLoaded', function() {
     kSelect.addEventListener('change', function() {
         if (!this.value) { attSection.classList.add('hidden'); return; }
         fetch(`../api/get_siswa_kelas.php?kelas_id=${this.value}`)
-            .then(r => {
-                if (!r.ok) throw new Error('Network response was not ok');
-                return r.json();
+            .then(async r => {
+                const data = await r.json();
+                if (!r.ok) throw new Error(data.error || 'Terjadi kesalahan sistem');
+                return data;
             })
             .then(data => {
                 sGrid.innerHTML = '';
-                if (data.length === 0) {
+                if (!data || data.length === 0) {
                     sGrid.innerHTML = '<div class="col-span-full p-8 text-center text-slate-400 italic bg-slate-50 rounded-2xl">Tidak ada siswa terdaftar di kelas ini untuk tahun pelajaran aktif.</div>';
-                }
-                data.forEach(s => {
+                } else {
+                    data.forEach(s => {
                     const card = document.createElement('div');
                     card.className = "lux-card p-4 flex items-center justify-between";
                     card.innerHTML = `
@@ -189,13 +190,15 @@ document.addEventListener('DOMContentLoaded', function() {
                                 </label>`).join('')}
                         </div>`;
                     sGrid.appendChild(card);
-                });
+                    });
+                }
                 attSection.classList.remove('hidden'); updateCounts();
                 document.querySelectorAll('input[type="radio"]').forEach(r => r.addEventListener('change', updateCounts));
             })
             .catch(err => {
                 console.error('Error fetching students:', err);
-                Swal.fire('Error', 'Gagal memuat daftar siswa. Pastikan tahun pelajaran aktif sudah diatur.', 'error');
+                Swal.fire('Gagal Memuat Siswa', err.message, 'error');
+                attSection.classList.add('hidden');
             });
     });
 });
