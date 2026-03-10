@@ -6,14 +6,21 @@ authorize_role(['admin', 'waka']);
 $page_title = "Data Perangkat Mengajar";
 
 $guru_id = (int)($_GET['guru_id'] ?? 0);
+$search = mysqli_real_escape_string($conn, $_GET['search'] ?? '');
+
+$where_clauses = [];
+if ($guru_id > 0) $where_clauses[] = "p.guru_id = $guru_id";
+if (!empty($search)) $where_clauses[] = "p.nama_perangkat LIKE '%$search%'";
+
+$where_sql = !empty($where_clauses) ? "WHERE " . implode(" AND ", $where_clauses) : "";
+
 $gurus = mysqli_query($conn, "SELECT g.id, u.nama_lengkap FROM guru g JOIN users u ON g.user_id = u.id ORDER BY u.nama_lengkap ASC");
 
-$where = $guru_id > 0 ? "WHERE p.guru_id = $guru_id" : "";
 $query = "SELECT p.*, u.nama_lengkap as nama_guru
           FROM perangkat p
           JOIN guru g ON p.guru_id = g.id
           JOIN users u ON g.user_id = u.id
-          $where
+          $where_sql
           ORDER BY p.created_at DESC";
 $perangkats = mysqli_query($conn, $query);
 
@@ -27,18 +34,25 @@ require_once __DIR__ . '/../includes/header.php';
     </div>
 </div>
 
-<div class="lux-card p-6 mb-8 bg-gradient-to-br from-indigo-50/50 to-white flex flex-wrap items-end gap-4">
-    <form action="" method="GET" class="flex flex-wrap items-end gap-4 flex-1">
-        <div class="flex-1 min-w-[250px]">
-            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2">Filter Berdasarkan Guru</label>
-            <select name="guru_id" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-100 bg-white font-bold text-slate-700">
+<div class="lux-card p-6 mb-8 bg-gradient-to-br from-indigo-50/50 to-white">
+    <form action="" method="GET" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div class="space-y-1">
+            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Cari Perangkat</label>
+            <input type="text" name="search" value="<?= htmlspecialchars($search) ?>" placeholder="Nama berkas..." class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-100 bg-white shadow-sm">
+        </div>
+        <div class="space-y-1">
+            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Filter Guru</label>
+            <select name="guru_id" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-100 bg-white shadow-sm font-bold text-slate-700">
                 <option value="">-- Semua Guru --</option>
                 <?php mysqli_data_seek($gurus, 0); while($g = mysqli_fetch_assoc($gurus)): ?>
                     <option value="<?= $g['id'] ?>" <?= $g['id'] == $guru_id ? 'selected' : '' ?>><?= htmlspecialchars($g['nama_lengkap']) ?></option>
                 <?php endwhile; ?>
             </select>
         </div>
-        <button type="submit" class="px-8 py-2.5 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100">Filter Data</button>
+        <div class="lg:col-span-2 flex items-end gap-3">
+            <button type="submit" class="flex-1 px-6 py-2.5 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100">Terapkan Filter</button>
+            <a href="perangkat.php" class="px-6 py-2.5 bg-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-300 transition-all text-center">Reset</a>
+        </div>
     </form>
 </div>
 

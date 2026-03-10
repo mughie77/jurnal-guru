@@ -60,30 +60,49 @@ require_once __DIR__ . '/../includes/header.php';
     <script>Swal.fire({ icon: '<?= $message_type ?>', title: '<?= ucfirst($message_type) ?>', text: '<?= $message ?>' });</script>
     <?php endif; ?>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
-        <div class="lg:col-span-1">
-            <div class="lux-card p-8 bg-white shadow-2xl sticky top-8 border-none">
-                <h3 class="text-sm font-black text-slate-400 uppercase tracking-widest mb-6 italic">Unggah Berkas Baru</h3>
-                <form action="" method="POST" enctype="multipart/form-data" class="space-y-5">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 sm:gap-10">
+        <div class="lg:col-span-1 order-2 lg:order-1">
+            <div class="lux-card p-6 sm:p-8 bg-white shadow-2xl lg:sticky lg:top-8 border-none overflow-hidden relative">
+                <div class="absolute top-0 right-0 p-3 opacity-5 pointer-events-none">
+                    <i class="fa fa-cloud-upload-alt text-6xl text-indigo-900"></i>
+                </div>
+                <h3 class="text-xs sm:text-sm font-black text-slate-400 uppercase tracking-widest mb-6 italic relative z-10">Unggah Berkas Baru</h3>
+                <form action="" method="POST" enctype="multipart/form-data" class="space-y-4 sm:space-y-5 relative z-10">
                     <input type="hidden" name="csrf_token" value="<?= get_csrf_token() ?>">
                     <div>
-                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-1">Nama Perangkat</label>
-                        <input type="text" name="nama_perangkat" required class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 font-bold">
+                        <label class="block text-[9px] sm:text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-1">Nama Perangkat</label>
+                        <input type="text" name="nama_perangkat" placeholder="Contoh: RPP Web Dasar" required class="w-full px-4 py-3 rounded-xl border border-slate-100 bg-slate-50 focus:bg-white border-transparent focus:border-indigo-100 focus:ring-4 focus:ring-indigo-50 transition-all font-bold text-slate-700 text-sm">
                     </div>
                     <div>
-                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-1">Jenis</label>
-                        <select name="jenis_perangkat" required class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 bg-white font-bold">
+                        <label class="block text-[9px] sm:text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-1">Jenis</label>
+                        <select name="jenis_perangkat" required class="w-full px-4 py-3 rounded-xl border border-slate-100 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-indigo-50 bg-white font-bold text-slate-700 text-sm appearance-none cursor-pointer transition-all">
                             <option value="RPP">RPP</option><option value="Silabus">Silabus</option><option value="Modul Ajar">Modul Ajar</option><option value="Lainnya">Lainnya</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-1">File (PDF/Word)</label>
-                        <input type="file" name="file_perangkat" required class="w-full text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:bg-indigo-50 file:text-indigo-600 cursor-pointer hover:file:bg-indigo-100 transition-all">
+                        <label class="block text-[9px] sm:text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-1">File Berkas</label>
+                        <div class="relative group">
+                            <input type="file" name="file_perangkat" required class="hidden" id="file_perangkat" onchange="updateFileName(this)">
+                            <label for="file_perangkat" class="flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 group-hover:border-indigo-300 group-hover:bg-indigo-50 transition-all cursor-pointer">
+                                <div class="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-indigo-500 shadow-sm"><i class="fa fa-file-import"></i></div>
+                                <div class="flex-1 overflow-hidden">
+                                    <p id="file-chosen" class="text-[10px] font-bold text-slate-400 truncate">Pilih PDF/Word...</p>
+                                </div>
+                            </label>
+                        </div>
                     </div>
-                    <button type="submit" name="upload" class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-2xl shadow-xl shadow-indigo-100 transition-all transform hover:-translate-y-1 active:scale-95">SIMPAN BERKAS</button>
+                    <button type="submit" name="upload" class="w-full py-4 bg-slate-900 hover:bg-indigo-600 text-white font-black rounded-2xl shadow-xl shadow-slate-200 hover:shadow-indigo-100 transition-all active:scale-95 text-xs sm:text-sm tracking-widest">SIMPAN BERKAS</button>
                 </form>
             </div>
         </div>
+
+        <script>
+        function updateFileName(input) {
+            const fileName = input.files[0] ? input.files[0].name : "Pilih PDF/Word...";
+            document.getElementById('file-chosen').textContent = fileName;
+            document.getElementById('file-chosen').classList.add('text-indigo-600');
+        }
+        </script>
 
         <div class="lg:col-span-2">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">

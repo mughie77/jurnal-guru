@@ -10,6 +10,13 @@ $message_type = '';
 
 $guru_list_result = mysqli_query($conn, "SELECT guru.id, users.nama_lengkap FROM guru JOIN users ON guru.user_id = users.id ORDER BY users.nama_lengkap ASC");
 
+// Search Logic
+$search = mysqli_real_escape_string($conn, $_GET['search'] ?? '');
+$where_sql = "";
+if (!empty($search)) {
+    $where_sql = " WHERE (kelas.nama_kelas LIKE '%$search%' OR users.nama_lengkap LIKE '%$search%')";
+}
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (!verify_csrf_token($_POST['csrf_token'] ?? '')) die("CSRF Token Invalid");
     if (isset($_POST['tambah'])) {
@@ -37,7 +44,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 $query = "SELECT kelas.*, users.nama_lengkap as nama_wali_kelas
           FROM kelas LEFT JOIN guru ON kelas.wali_kelas_id = guru.id
-          LEFT JOIN users ON guru.user_id = users.id ORDER BY kelas.nama_kelas ASC";
+          LEFT JOIN users ON guru.user_id = users.id
+          $where_sql
+          ORDER BY kelas.nama_kelas ASC";
 $result = mysqli_query($conn, $query);
 
 require_once __DIR__ . '/../includes/header.php';
@@ -59,6 +68,19 @@ require_once __DIR__ . '/../includes/header.php';
             <i class="fa fa-file-excel mr-2"></i> Import Siswa (Assign ke Kelas)
         </a>
     </div>
+</div>
+
+<div class="lux-card p-6 mb-8 bg-gradient-to-br from-indigo-50/50 to-white">
+    <form action="" method="GET" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="space-y-1">
+            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Cari Kelas</label>
+            <input type="text" name="search" value="<?= htmlspecialchars($search) ?>" placeholder="Nama Kelas atau Wali..." class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-100 bg-white shadow-sm">
+        </div>
+        <div class="lg:col-span-2 flex items-end gap-3">
+            <button type="submit" class="px-8 py-2.5 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100">Cari</button>
+            <a href="kelas.php" class="px-6 py-2.5 bg-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-300 transition-all">Reset</a>
+        </div>
+    </form>
 </div>
 
 <?php if ($message): ?>

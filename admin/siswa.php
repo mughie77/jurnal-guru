@@ -2,13 +2,14 @@
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../config/database.php';
 
-authorize_role(['admin']);
+authorize_role(['admin', 'waka']);
 
 $page_title = "Manajemen Siswa";
 $message = '';
 $message_type = '';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    if ($_SESSION['role'] !== 'admin') die("Akses Ditolak: Hanya Admin yang dapat mengubah data.");
     if (!verify_csrf_token($_POST['csrf_token'] ?? '')) die("CSRF Token Invalid");
 
     mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
@@ -56,12 +57,32 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 }
 
+// Search and Filter Logic
+$search = mysqli_real_escape_string($conn, $_GET['search'] ?? '');
+$kelas_filter = (int)($_GET['kelas_id'] ?? 0);
+
+$where_clauses = [];
+if (!empty($search)) {
+    $where_clauses[] = "(s.nama_siswa LIKE '%$search%' OR s.nis LIKE '%$search%')";
+}
+if ($kelas_filter > 0) {
+    $where_clauses[] = "sk.kelas_id = $kelas_filter";
+}
+
+$where_sql = "";
+if (!empty($where_clauses)) {
+    $where_sql = " AND " . implode(" AND ", $where_clauses);
+}
+
 $query = "SELECT s.*, k.nama_kelas
           FROM siswa s
           LEFT JOIN siswa_kelas sk ON s.id = sk.siswa_id AND sk.tahun_pelajaran_id = '$active_tahun_id'
           LEFT JOIN kelas k ON sk.kelas_id = k.id
+          WHERE 1=1 $where_sql
           ORDER BY s.nama_siswa ASC";
 $result = mysqli_query($conn, $query);
+
+$kelas_list = mysqli_query($conn, "SELECT id, nama_kelas FROM kelas ORDER BY nama_kelas ASC");
 
 require_once __DIR__ . '/../includes/header.php';
 ?>
@@ -71,6 +92,7 @@ require_once __DIR__ . '/../includes/header.php';
         <h1 class="text-3xl font-bold text-slate-800 tracking-tight">Manajemen Siswa</h1>
         <p class="text-slate-500">Kelola database siswa dan penempatan kelas.</p>
     </div>
+    <?php if($_SESSION['role'] == 'admin'): ?>
     <div class="flex gap-3">
         <button onclick="openModal('tambahModal')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-indigo-200 transition-all flex items-center">
             <i class="fa fa-plus mr-2"></i> Tambah Siswa
@@ -79,6 +101,29 @@ require_once __DIR__ . '/../includes/header.php';
             <i class="fa fa-file-excel mr-2"></i> Import Excel
         </a>
     </div>
+    <?php endif; ?>
+</div>
+
+<div class="lux-card p-6 mb-8 bg-gradient-to-br from-indigo-50/50 to-white">
+    <form action="" method="GET" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div class="space-y-1">
+            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Cari Siswa</label>
+            <input type="text" name="search" value="<?= htmlspecialchars($search) ?>" placeholder="Nama atau NIS..." class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-100 bg-white shadow-sm">
+        </div>
+        <div class="space-y-1">
+            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Filter Kelas</label>
+            <select name="kelas_id" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-100 bg-white shadow-sm font-bold text-slate-700">
+                <option value="">-- Semua Kelas --</option>
+                <?php mysqli_data_seek($kelas_list, 0); while($k = mysqli_fetch_assoc($kelas_list)): ?>
+                    <option value="<?= $k['id'] ?>" <?= $k['id'] == $kelas_filter ? 'selected' : '' ?>><?= htmlspecialchars($k['nama_kelas']) ?></option>
+                <?php endwhile; ?>
+            </select>
+        </div>
+        <div class="lg:col-span-2 flex items-end gap-3">
+            <button type="submit" class="flex-1 px-6 py-2.5 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100">Terapkan Filter</button>
+            <a href="siswa.php" class="px-6 py-2.5 bg-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-300 transition-all">Reset</a>
+        </div>
+    </form>
 </div>
 
 <?php if ($message): ?>
@@ -112,12 +157,16 @@ require_once __DIR__ . '/../includes/header.php';
                     <td class="px-6 py-4 text-sm text-slate-600"><?= htmlspecialchars($row['nama_kelas'] ?? 'N/A') ?></td>
                     <td class="px-6 py-4">
                         <div class="flex justify-center gap-2">
+                            <?php if($_SESSION['role'] == 'admin'): ?>
                             <button onclick="openModal('editModal-<?= $row['id'] ?>')" class="w-9 h-9 flex items-center justify-center rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-600 hover:text-white transition-all">
                                 <i class="fa fa-edit"></i>
                             </button>
                             <button onclick="openModal('hapusModal-<?= $row['id'] ?>')" class="w-9 h-9 flex items-center justify-center rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white transition-all">
                                 <i class="fa fa-trash"></i>
                             </button>
+                            <?php else: ?>
+                                <span class="text-[10px] text-slate-400 italic">View only</span>
+                            <?php endif; ?>
                         </div>
                     </td>
                 </tr>

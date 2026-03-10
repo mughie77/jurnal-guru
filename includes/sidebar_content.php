@@ -25,11 +25,10 @@ function sub_nav_link($url, $label, $active) {
         </a>";
 }
 
-if ($role == 'admin' || $role == 'waka') {
-    echo nav_link($role.'/index.php', 'fa fa-tachometer-alt', 'Beranda', $current_page == 'index.php');
+if ($role == 'admin') {
+    echo nav_link('admin/index.php', 'fa fa-tachometer-alt', 'Beranda', $current_page == 'index.php');
 
     // Group: Data Master
-    $master_active = in_array($current_page, ['guru.php', 'mapel.php', 'tahun_pelajaran.php', 'users.php']);
     echo "
     <div class='pt-4'>
         <p class='px-4 text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] mb-2'>Data Master</p>
@@ -53,7 +52,34 @@ if ($role == 'admin' || $role == 'waka') {
     echo "
     <div class='pt-6'>
         <p class='px-4 text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] mb-2'>Laporan & Rekap</p>
-        ".nav_link($role.'/jurnal.php', 'fa fa-book-open', 'Jurnal Mengajar', $current_page == 'jurnal.php')."
+        ".nav_link('admin/jurnal.php', 'fa fa-book-open', 'Jurnal Mengajar', $current_page == 'jurnal.php')."
+        ".nav_link('admin/rekap_absensi.php', 'fa fa-chart-line', 'Rekap Absensi', $current_page == 'rekap_absensi.php')."
+        ".nav_link('admin/perangkat.php', 'fa fa-folder-open', 'Data Perangkat', $current_page == 'perangkat.php')."
+    </div>";
+} elseif ($role == 'waka') {
+    echo nav_link('waka/index.php', 'fa fa-tachometer-alt', 'Beranda', $current_page == 'index.php');
+
+    // Group: Data Master (View only for Waka)
+    echo "
+    <div class='pt-4'>
+        <p class='px-4 text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] mb-2'>Data Master</p>
+        ".nav_link('waka/guru.php', 'fa fa-chalkboard-teacher', 'Data Guru', $current_page == 'guru.php')."
+        ".nav_link('waka/mapel.php', 'fa fa-book', 'Mata Pelajaran', $current_page == 'mapel.php')."
+    </div>";
+
+    // Group: Akademik (View only for Waka)
+    echo "
+    <div class='pt-6'>
+        <p class='px-4 text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] mb-2'>Data Akademik</p>
+        ".nav_link('waka/kelas.php', 'fa fa-school', 'Manajemen Kelas', $current_page == 'kelas.php')."
+        ".nav_link('admin/siswa.php', 'fa fa-user-graduate', 'Data Siswa', $current_page == 'siswa.php')."
+    </div>";
+
+    // Group: Laporan (Full access for Waka)
+    echo "
+    <div class='pt-6'>
+        <p class='px-4 text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] mb-2'>Laporan & Rekap</p>
+        ".nav_link('waka/jurnal.php', 'fa fa-book-open', 'Jurnal Mengajar', $current_page == 'jurnal.php')."
         ".nav_link('admin/rekap_absensi.php', 'fa fa-chart-line', 'Rekap Absensi', $current_page == 'rekap_absensi.php')."
         ".nav_link('admin/perangkat.php', 'fa fa-folder-open', 'Data Perangkat', $current_page == 'perangkat.php')."
     </div>";

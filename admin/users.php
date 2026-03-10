@@ -6,6 +6,23 @@ authorize_role(['admin']);
 $page_title = "Manajemen User";
 $message = ''; $message_type = '';
 
+// Search Logic
+$search = mysqli_real_escape_string($conn, $_GET['search'] ?? '');
+$role_filter = mysqli_real_escape_string($conn, $_GET['role'] ?? '');
+
+$where_clauses = [];
+if (!empty($search)) {
+    $where_clauses[] = "(nama_lengkap LIKE '%$search%' OR username LIKE '%$search%')";
+}
+if (!empty($role_filter)) {
+    $where_clauses[] = "role = '$role_filter'";
+}
+
+$where_sql = "";
+if (!empty($where_clauses)) {
+    $where_sql = " WHERE " . implode(" AND ", $where_clauses);
+}
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
         die("Invalid CSRF Token");
@@ -39,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 }
 
-$result = mysqli_query($conn, "SELECT * FROM users ORDER BY nama_lengkap ASC");
+$result = mysqli_query($conn, "SELECT * FROM users $where_sql ORDER BY nama_lengkap ASC");
 require_once __DIR__ . '/../includes/header.php';
 ?>
 
@@ -51,6 +68,28 @@ require_once __DIR__ . '/../includes/header.php';
     <button onclick="openModal('tambahModal')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-indigo-200 transition-all flex items-center">
         <i class="fa fa-plus mr-2"></i> Tambah User
     </button>
+</div>
+
+<div class="lux-card p-6 mb-8 bg-gradient-to-br from-indigo-50/50 to-white">
+    <form action="" method="GET" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div class="space-y-1">
+            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Cari Pengguna</label>
+            <input type="text" name="search" value="<?= htmlspecialchars($search) ?>" placeholder="Nama atau Username..." class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-100 bg-white shadow-sm">
+        </div>
+        <div class="space-y-1">
+            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Filter Role</label>
+            <select name="role" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-100 bg-white shadow-sm font-bold text-slate-700">
+                <option value="">-- Semua Role --</option>
+                <option value="admin" <?= $role_filter == 'admin' ? 'selected' : '' ?>>Administrator</option>
+                <option value="waka" <?= $role_filter == 'waka' ? 'selected' : '' ?>>Waka Kurikulum</option>
+                <option value="guru" <?= $role_filter == 'guru' ? 'selected' : '' ?>>Guru</option>
+            </select>
+        </div>
+        <div class="lg:col-span-2 flex items-end gap-3">
+            <button type="submit" class="flex-1 px-6 py-2.5 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100">Terapkan Filter</button>
+            <a href="users.php" class="px-6 py-2.5 bg-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-300 transition-all">Reset</a>
+        </div>
+    </form>
 </div>
 
 <?php if ($message): ?>
