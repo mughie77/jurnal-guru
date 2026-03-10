@@ -173,6 +173,14 @@ require_once __DIR__ . '/../includes/header.php';
         <input type="hidden" name="id" id="edit_id"><input type="hidden" name="user_id" id="edit_user_id">
         <div><label class="block text-sm font-bold text-slate-700 mb-2">Nama Lengkap</label><input type="text" name="nama_lengkap" id="edit_nama" required class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"></div>
         <div><label class="block text-sm font-bold text-slate-700 mb-2">NIP</label><input type="text" name="nip" id="edit_nip" required class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"></div>
+        <div>
+            <label class="block text-sm font-bold text-slate-700 mb-2">Mata Pelajaran</label>
+            <select name="mapel_ids[]" multiple class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50 h-40">
+                <?php mysqli_data_seek($mapel_list, 0); while($m = mysqli_fetch_assoc($mapel_list)): ?>
+                    <option value="<?= $m['id'] ?>"><?= htmlspecialchars($m['nama_mapel']) ?></option>
+                <?php endwhile; ?>
+            </select>
+        </div>
         <div class="pt-4 flex gap-4">
             <button type="button" onclick="closeModal('editModal')" class="flex-1 px-6 py-3 rounded-xl border border-slate-200 font-bold text-slate-600 hover:bg-slate-50 transition-all">Batal</button>
             <button type="submit" name="edit" class="flex-[2] px-6 py-3 rounded-xl bg-amber-500 text-white font-bold hover:bg-amber-600 shadow-lg shadow-amber-100 transition-all">Simpan Perubahan</button>
@@ -209,6 +217,16 @@ function closeAllModals() { document.querySelectorAll('.modal-content').forEach(
 function openEditModal(data) {
     document.getElementById('edit_id').value = data.id; document.getElementById('edit_user_id').value = data.user_id;
     document.getElementById('edit_nama').value = data.nama_lengkap; document.getElementById('edit_nip').value = data.nip;
+
+    // Set mapel selects if available
+    const select = document.querySelector('#editModal select[name="mapel_ids[]"]');
+    if (select && data.mapel_diampu) {
+        const mapels = data.mapel_diampu.split(', ');
+        Array.from(select.options).forEach(opt => {
+            opt.selected = mapels.includes(opt.text);
+        });
+    }
+
     openModal('editModal');
 }
 function openDeleteModal(id, uid, nama) {

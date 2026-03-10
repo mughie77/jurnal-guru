@@ -48,8 +48,8 @@ require_once __DIR__ . '/../includes/header.php';
         <p class="text-slate-500">Tinjau aktivitas mengajar guru di seluruh unit.</p>
     </div>
     <div class="flex gap-3">
-        <a href="export_csv.php<?= !empty($_SERVER['QUERY_STRING']) ? '?' . $_SERVER['QUERY_STRING'] : '' ?>" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-emerald-100 transition-all flex items-center">
-            <i class="fa fa-file-csv mr-2"></i> Unduh CSV
+        <a href="export_excel.php<?= !empty($_SERVER['QUERY_STRING']) ? '?' . $_SERVER['QUERY_STRING'] : '' ?>" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-emerald-100 transition-all flex items-center">
+            <i class="fa fa-file-excel mr-2"></i> Unduh Excel
         </a>
         <a href="export_pdf.php<?= !empty($_SERVER['QUERY_STRING']) ? '?' . $_SERVER['QUERY_STRING'] : '' ?>" target="_blank" class="bg-rose-600 hover:bg-rose-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-rose-100 transition-all flex items-center">
             <i class="fa fa-file-pdf mr-2"></i> Unduh PDF

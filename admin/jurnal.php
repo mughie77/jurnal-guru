@@ -46,8 +46,8 @@ require_once __DIR__ . '/../includes/header.php';
         <h1 class="text-3xl font-bold text-slate-800 tracking-tight">Data Jurnal</h1>
         <p class="text-slate-500">Pantau aktivitas mengajar guru di seluruh kelas.</p>
     </div>
-    <a href="export_csv.php" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-emerald-200 transition-all flex items-center">
-        <i class="fa fa-file-excel mr-2"></i> Ekspor CSV
+    <a href="export_excel.php<?= !empty($_SERVER['QUERY_STRING']) ? '?' . $_SERVER['QUERY_STRING'] : '' ?>" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-emerald-200 transition-all flex items-center">
+        <i class="fa fa-file-excel mr-2"></i> Unduh Excel
     </a>
 </div>
 
