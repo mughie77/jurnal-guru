@@ -44,77 +44,91 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - JurnalApp</title>
+    <title>Login - Jurnal Mengajar</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { font-family: 'Poppins', sans-serif; }
-        .bg-pattern {
-            background-color: #4f46e5;
-            background-image: radial-gradient(#ffffff 1px, transparent 1px);
-            background-size: 40px 40px;
-            background-opacity: 0.1;
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .glass-bg {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
         }
     </style>
 </head>
-<body class="bg-slate-900 flex items-center justify-center min-h-screen px-4">
-    <div class="max-w-md w-full">
-        <div class="text-center mb-10">
-            <h1 class="text-4xl font-extrabold text-white tracking-tight mb-2">
-                Jurnal<span class="text-indigo-500">App</span>
-            </h1>
-            <p class="text-slate-400">Sistem Informasi Jurnal Mengajar Sekolah</p>
+<body class="bg-[#F8FAFC] min-h-screen flex items-center justify-center p-6 relative overflow-hidden">
+    <!-- Decorative Elements -->
+    <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-100/50 rounded-full blur-[120px]"></div>
+    <div class="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-emerald-100/50 rounded-full blur-[120px]"></div>
+
+    <div class="max-w-[420px] w-full relative">
+        <div class="text-center mb-10 animate-in fade-in slide-in-from-top-4 duration-700">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white shadow-xl shadow-indigo-100 mb-6 group transition-transform hover:scale-110">
+                <i class="fa fa-book-open text-3xl text-indigo-600"></i>
+            </div>
+            <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">Jurnal<span class="text-indigo-600">Mengajar</span></h1>
+            <p class="text-slate-500 mt-2 font-medium">Selamat datang kembali, silakan login.</p>
         </div>
 
-        <div class="bg-white rounded-3xl shadow-2xl overflow-hidden border border-white/10">
-            <div class="bg-gradient-to-r from-indigo-600 to-indigo-700 px-8 py-6">
-                <h2 class="text-2xl font-bold text-white">Selamat Datang</h2>
-                <p class="text-indigo-100/70 text-sm">Silakan login untuk mengakses dashboard</p>
-            </div>
+        <div class="bg-white rounded-[32px] shadow-[0_20px_50px_rgba(0,0,0,0.04)] border border-slate-100 p-10 animate-in fade-in zoom-in duration-500">
+            <?php if ($error_message): ?>
+                <div class="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-100 text-rose-600 text-sm font-bold flex items-center animate-shake">
+                    <i class="fa fa-circle-exclamation mr-3 text-lg"></i>
+                    <?= htmlspecialchars($error_message) ?>
+                </div>
+            <?php endif; ?>
 
-            <div class="p-8">
-                <?php if (!empty($error_message)): ?>
-                    <div class="bg-rose-50 text-rose-600 px-4 py-3 rounded-xl text-sm font-medium mb-6 flex items-center border border-rose-100">
-                        <i class="fa fa-exclamation-circle mr-3"></i>
-                        <?= htmlspecialchars($error_message) ?>
-                    </div>
-                <?php endif; ?>
-
-                <form action="login.php" method="POST" class="space-y-5">
-                    <div>
-                        <label class="block text-sm font-semibold text-slate-700 mb-2">Username</label>
-                        <div class="relative">
-                            <i class="fa fa-user absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                            <input type="text" name="username" required
-                                class="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 outline-none transition-all"
-                                placeholder="Masukkan username">
+            <form action="" method="POST" class="space-y-6">
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 ml-1">Username / NIP</label>
+                    <div class="group relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors group-focus-within:text-indigo-600 text-slate-400">
+                            <i class="fa fa-user"></i>
                         </div>
+                        <input type="text" name="username" required
+                            class="w-full pl-11 pr-4 py-4 rounded-2xl bg-slate-50 border-2 border-transparent focus:border-indigo-100 focus:bg-white focus:ring-4 focus:ring-indigo-50 outline-none transition-all font-semibold text-slate-700 placeholder:text-slate-300"
+                            placeholder="Username Anda">
                     </div>
+                </div>
 
-                    <div>
-                        <label class="block text-sm font-semibold text-slate-700 mb-2">Password</label>
-                        <div class="relative">
-                            <i class="fa fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                            <input type="password" name="password" required
-                                class="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 outline-none transition-all"
-                                placeholder="••••••••">
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 ml-1">Password</label>
+                    <div class="group relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors group-focus-within:text-indigo-600 text-slate-400">
+                            <i class="fa fa-lock"></i>
                         </div>
+                        <input type="password" name="password" required
+                            class="w-full pl-11 pr-4 py-4 rounded-2xl bg-slate-50 border-2 border-transparent focus:border-indigo-100 focus:bg-white focus:ring-4 focus:ring-indigo-50 outline-none transition-all font-semibold text-slate-700 placeholder:text-slate-300"
+                            placeholder="••••••••">
                     </div>
+                </div>
 
+                <div class="pt-2">
                     <button type="submit"
-                        class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-indigo-200 transition-all transform hover:-translate-y-1 active:scale-95">
-                        Masuk ke Akun
+                        class="w-full bg-slate-900 hover:bg-indigo-600 text-white font-bold py-4 rounded-2xl shadow-xl shadow-slate-200 hover:shadow-indigo-100 transition-all active:scale-[0.98] flex items-center justify-center gap-3 group">
+                        <span>Masuk Sekarang</span>
+                        <i class="fa fa-arrow-right transition-transform group-hover:translate-x-1"></i>
                     </button>
-                </form>
-            </div>
+                </div>
+            </form>
         </div>
 
-        <p class="text-center text-slate-500 text-sm mt-8">
-            &copy; <?= date('Y') ?> JurnalApp Team. All rights reserved.
-        </p>
+        <div class="mt-8 text-center">
+            <a href="index.php" class="text-slate-400 hover:text-indigo-600 font-bold text-sm transition-colors flex items-center justify-center gap-2 group">
+                <i class="fa fa-arrow-left text-xs transition-transform group-hover:-translate-x-1"></i>
+                Kembali ke Halaman Utama
+            </a>
+        </div>
     </div>
 
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-4px); }
+            75% { transform: translateX(4px); }
+        }
+        .animate-shake { animation: shake 0.4s ease-in-out 0s 2; }
+    </style>
 </body>
 </html>

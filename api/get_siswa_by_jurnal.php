@@ -1,8 +1,12 @@
 <?php
 require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../includes/auth.php';
 
-authorize_role(['admin', 'guru']);
+if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['admin', 'guru'])) {
+    header('Content-Type: application/json');
+    http_response_code(403);
+    echo json_encode(['error' => 'Akses ditolak']);
+    exit();
+}
 header('Content-Type: application/json');
 
 $jurnal_id = (int)($_GET['jurnal_id'] ?? 0);

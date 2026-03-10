@@ -1,9 +1,28 @@
 <?php
 require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../includes/auth.php';
+
+// Disable any potential warnings/notices outputting to the buffer
+error_reporting(0);
+ini_set('display_errors', 0);
+
+// Ensure no whitespace before this point
+ob_start();
+
+// Cek apakah user sudah login. Jika tidak, kembalikan JSON error.
+if (!isset($_SESSION['user_id'])) {
+    header('Content-Type: application/json');
+    http_response_code(401);
+    echo json_encode(['error' => 'Sesi berakhir, silakan login kembali.']);
+    exit();
+}
 
 // Otorisasi role apa saja yang butuh API ini (admin, guru)
-authorize_role(['admin', 'guru']);
+if (!in_array($_SESSION['role'], ['admin', 'guru'])) {
+    header('Content-Type: application/json');
+    http_response_code(403);
+    echo json_encode(['error' => 'Akses ditolak.']);
+    exit();
+}
 
 header('Content-Type: application/json');
 
@@ -40,5 +59,8 @@ while ($row = mysqli_fetch_assoc($result)) {
     $siswa[] = $row;
 }
 
+// Clear any accidental output (whitespace, notices) before sending JSON
+ob_clean();
 echo json_encode($siswa);
+exit();
 ?>

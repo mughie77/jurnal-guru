@@ -29,9 +29,14 @@ require_once __DIR__ . '/../includes/header.php';
         <h1 class="text-3xl font-bold text-slate-800 tracking-tight italic">Laporan Jurnal</h1>
         <p class="text-slate-500">Tinjau aktivitas mengajar guru di seluruh unit.</p>
     </div>
-    <a href="export_csv.php" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-emerald-200 transition-all flex items-center">
-        <i class="fa fa-file-csv mr-2"></i> Unduh CSV
-    </a>
+    <div class="flex gap-3">
+        <a href="export_csv.php<?= !empty($_SERVER['QUERY_STRING']) ? '?' . $_SERVER['QUERY_STRING'] : '' ?>" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-emerald-100 transition-all flex items-center">
+            <i class="fa fa-file-csv mr-2"></i> Unduh CSV
+        </a>
+        <a href="export_pdf.php<?= !empty($_SERVER['QUERY_STRING']) ? '?' . $_SERVER['QUERY_STRING'] : '' ?>" target="_blank" class="bg-rose-600 hover:bg-rose-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-rose-100 transition-all flex items-center">
+            <i class="fa fa-file-pdf mr-2"></i> Unduh PDF
+        </a>
+    </div>
 </div>
 
 <div class="lux-card p-6 mb-8 bg-gradient-to-br from-indigo-50/50 to-white">
