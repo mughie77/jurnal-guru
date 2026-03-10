@@ -26,19 +26,26 @@ if (!empty($search)) {
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (!verify_csrf_token($_POST['csrf_token'] ?? '')) die("CSRF Token Invalid");
     if (isset($_POST['tambah'])) {
-        $nama_mapel = mysqli_real_escape_string($conn, $_POST['nama_mapel']);
+        $nama_mapel = $_POST['nama_mapel'];
         $kode_mapel = generateUniqueKode($conn);
-        if (mysqli_query($conn, "INSERT INTO mata_pelajaran (nama_mapel, kode_mapel) VALUES ('$nama_mapel', '$kode_mapel')")) {
+        $stmt = mysqli_prepare($conn, "INSERT INTO mata_pelajaran (nama_mapel, kode_mapel) VALUES (?, ?)");
+        mysqli_stmt_bind_param($stmt, "ss", $nama_mapel, $kode_mapel);
+        if (mysqli_stmt_execute($stmt)) {
             $message = "Mata pelajaran ditambahkan dengan kode: $kode_mapel"; $message_type = 'success';
         }
     } elseif (isset($_POST['edit'])) {
         $id = (int)$_POST['id'];
-        $nama_mapel = mysqli_real_escape_string($conn, $_POST['nama_mapel']);
-        mysqli_query($conn, "UPDATE mata_pelajaran SET nama_mapel = '$nama_mapel' WHERE id = $id");
-        $message = "Mata pelajaran diperbarui!"; $message_type = 'success';
+        $nama_mapel = $_POST['nama_mapel'];
+        $stmt = mysqli_prepare($conn, "UPDATE mata_pelajaran SET nama_mapel = ? WHERE id = ?");
+        mysqli_stmt_bind_param($stmt, "si", $nama_mapel, $id);
+        if (mysqli_stmt_execute($stmt)) {
+            $message = "Mata pelajaran diperbarui!"; $message_type = 'success';
+        }
     } elseif (isset($_POST['hapus'])) {
         $id = (int)$_POST['id'];
-        if (mysqli_query($conn, "DELETE FROM mata_pelajaran WHERE id = $id")) {
+        $stmt = mysqli_prepare($conn, "DELETE FROM mata_pelajaran WHERE id = ?");
+        mysqli_stmt_bind_param($stmt, "i", $id);
+        if (mysqli_stmt_execute($stmt)) {
             $message = "Mata pelajaran dihapus!"; $message_type = 'success';
         }
     }

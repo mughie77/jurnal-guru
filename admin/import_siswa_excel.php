@@ -4,7 +4,7 @@ require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/SimpleXLSX.php';
 use Shuchkin\SimpleXLSX;
 
-authorize_role(['admin', 'waka']);
+authorize_role(['admin']);
 
 $page_title = "Import Siswa dari Excel";
 $message = ''; $message_type = '';

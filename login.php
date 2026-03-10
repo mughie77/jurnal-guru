@@ -23,6 +23,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         if ($user = mysqli_fetch_assoc($result)) {
             if (password_verify($password, $user['password'])) {
+                // If "Remember Me" is checked, set cookie for 30 days
+                if (isset($_POST['remember_me'])) {
+                    $lifetime = 30 * 24 * 60 * 60; // 30 days
+                    ini_set('session.gc_maxlifetime', $lifetime);
+                    session_set_cookie_params($lifetime, '/');
+                    session_regenerate_id(true);
+                    $_SESSION['remember_me'] = true;
+                }
+
                 $_SESSION['user_id'] = $user['id'];
                 $_SESSION['nama_lengkap'] = $user['nama_lengkap'];
                 $_SESSION['username'] = $user['username'];
@@ -102,6 +111,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                             class="w-full pl-11 pr-4 py-4 rounded-2xl bg-slate-50 border-2 border-transparent focus:border-indigo-100 focus:bg-white focus:ring-4 focus:ring-indigo-50 outline-none transition-all font-semibold text-slate-700 placeholder:text-slate-300"
                             placeholder="••••••••">
                     </div>
+                </div>
+
+                <div class="flex items-center ml-1">
+                    <input type="checkbox" name="remember_me" id="remember_me" class="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500 cursor-pointer">
+                    <label for="remember_me" class="ml-2 text-xs font-bold text-slate-500 cursor-pointer hover:text-indigo-600 transition-colors">Ingat Saya (Terus Login)</label>
                 </div>
 
                 <div class="pt-2">

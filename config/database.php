@@ -37,7 +37,17 @@ if (empty($domainName)) {
 // --- Mulai Session ---
 // Panggil session_start() di sini agar tersedia di semua halaman
 if (session_status() == PHP_SESSION_NONE) {
+    // Check for persistent session before starting
+    if (isset($_COOKIE[session_name()])) {
+        // If we want to support long sessions, we might need to increase gc_maxlifetime
+        // Default is usually 1440 (24 mins). Let's set it to 30 days if remember_me was used.
+        // But we don't know yet if remember_me was used until session is started.
+        ini_set('session.gc_maxlifetime', 30 * 24 * 60 * 60);
+    }
     session_start();
+
+    // After starting, if remember_me is set, we can ensure cookie is refreshed if needed
+    // though usually browser handles the expiration set during login.
 }
 
 // --- Fungsi Helper untuk Tahun Pelajaran Aktif ---

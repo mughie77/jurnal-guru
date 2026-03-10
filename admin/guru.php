@@ -10,36 +10,64 @@ $message = ''; $message_type = '';
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (!verify_csrf_token($_POST['csrf_token'] ?? '')) die("CSRF Token Invalid");
     if (isset($_POST['tambah'])) {
-        $nama = mysqli_real_escape_string($conn, $_POST['nama_lengkap']);
-        $nip = mysqli_real_escape_string($conn, $_POST['nip']);
+        $nama = $_POST['nama_lengkap'];
+        $nip = $_POST['nip'];
         $pass = password_hash($nip, PASSWORD_DEFAULT);
         mysqli_begin_transaction($conn);
         try {
-            mysqli_query($conn, "INSERT INTO users (nama_lengkap, username, password, role) VALUES ('$nama', '$nip', '$pass', 'guru')");
+            $stmt1 = mysqli_prepare($conn, "INSERT INTO users (nama_lengkap, username, password, role) VALUES (?, ?, ?, 'guru')");
+            mysqli_stmt_bind_param($stmt1, "sss", $nama, $nip, $pass);
+            mysqli_stmt_execute($stmt1);
             $uid = mysqli_insert_id($conn);
-            mysqli_query($conn, "INSERT INTO guru (user_id, nip) VALUES ($uid, '$nip')");
+
+            $stmt2 = mysqli_prepare($conn, "INSERT INTO guru (user_id, nip) VALUES (?, ?)");
+            mysqli_stmt_bind_param($stmt2, "is", $uid, $nip);
+            mysqli_stmt_execute($stmt2);
             $gid = mysqli_insert_id($conn);
+
             if (!empty($_POST['mapel_ids'])) {
-                foreach ($_POST['mapel_ids'] as $mid) mysqli_query($conn, "INSERT INTO guru_mapel (guru_id, mapel_id) VALUES ($gid, $mid)");
+                $stmt3 = mysqli_prepare($conn, "INSERT INTO guru_mapel (guru_id, mapel_id) VALUES (?, ?)");
+                foreach ($_POST['mapel_ids'] as $mid) {
+                    $mid_int = (int)$mid;
+                    mysqli_stmt_bind_param($stmt3, "ii", $gid, $mid_int);
+                    mysqli_stmt_execute($stmt3);
+                }
             }
             mysqli_commit($conn); $message = "Guru berhasil ditambahkan!"; $message_type = 'success';
         } catch (Exception $e) { mysqli_rollback($conn); $message = "Gagal: " . $e->getMessage(); $message_type = 'error'; }
     } elseif (isset($_POST['edit'])) {
-        $gid = $_POST['id']; $uid = $_POST['user_id'];
-        $nama = mysqli_real_escape_string($conn, $_POST['nama_lengkap']);
-        $nip = mysqli_real_escape_string($conn, $_POST['nip']);
+        $gid = (int)$_POST['id']; $uid = (int)$_POST['user_id'];
+        $nama = $_POST['nama_lengkap'];
+        $nip = $_POST['nip'];
         mysqli_begin_transaction($conn);
         try {
-            mysqli_query($conn, "UPDATE users SET nama_lengkap = '$nama' WHERE id = $uid");
-            mysqli_query($conn, "UPDATE guru SET nip = '$nip' WHERE id = $gid");
-            mysqli_query($conn, "DELETE FROM guru_mapel WHERE guru_id = $gid");
+            $stmt1 = mysqli_prepare($conn, "UPDATE users SET nama_lengkap = ? WHERE id = ?");
+            mysqli_stmt_bind_param($stmt1, "si", $nama, $uid);
+            mysqli_stmt_execute($stmt1);
+
+            $stmt2 = mysqli_prepare($conn, "UPDATE guru SET nip = ? WHERE id = ?");
+            mysqli_stmt_bind_param($stmt2, "si", $nip, $gid);
+            mysqli_stmt_execute($stmt2);
+
+            $stmt3 = mysqli_prepare($conn, "DELETE FROM guru_mapel WHERE guru_id = ?");
+            mysqli_stmt_bind_param($stmt3, "i", $gid);
+            mysqli_stmt_execute($stmt3);
+
             if (!empty($_POST['mapel_ids'])) {
-                foreach ($_POST['mapel_ids'] as $mid) mysqli_query($conn, "INSERT INTO guru_mapel (guru_id, mapel_id) VALUES ($gid, $mid)");
+                $stmt4 = mysqli_prepare($conn, "INSERT INTO guru_mapel (guru_id, mapel_id) VALUES (?, ?)");
+                foreach ($_POST['mapel_ids'] as $mid) {
+                    $mid_int = (int)$mid;
+                    mysqli_stmt_bind_param($stmt4, "ii", $gid, $mid_int);
+                    mysqli_stmt_execute($stmt4);
+                }
             }
             mysqli_commit($conn); $message = "Data guru diperbarui!"; $message_type = 'success';
         } catch (Exception $e) { mysqli_rollback($conn); $message = "Gagal: " . $e->getMessage(); $message_type = 'error'; }
     } elseif (isset($_POST['hapus'])) {
-        if (mysqli_query($conn, "DELETE FROM users WHERE id = " . (int)$_POST['user_id'])) {
+        $uid = (int)$_POST['user_id'];
+        $stmt = mysqli_prepare($conn, "DELETE FROM users WHERE id = ?");
+        mysqli_stmt_bind_param($stmt, "i", $uid);
+        if (mysqli_stmt_execute($stmt)) {
             $message = "Guru berhasil dihapus!"; $message_type = 'success';
         }
     }

@@ -7,6 +7,7 @@ if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
 }
 
 if (session_status() == PHP_SESSION_NONE) {
+    // Shared session logic from database.php
     session_start();
 }
 

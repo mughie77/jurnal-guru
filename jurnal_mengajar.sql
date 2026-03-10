@@ -128,6 +128,7 @@ CREATE TABLE `siswa_kelas` (
   KEY `siswa_id` (`siswa_id`),
   KEY `kelas_id` (`kelas_id`),
   KEY `tahun_pelajaran_id` (`tahun_pelajaran_id`),
+  UNIQUE KEY `siswa_tahun` (`siswa_id`, `tahun_pelajaran_id`),
   CONSTRAINT `siswa_kelas_ibfk_1` FOREIGN KEY (`siswa_id`) REFERENCES `siswa` (`id`) ON DELETE CASCADE,
   CONSTRAINT `siswa_kelas_ibfk_2` FOREIGN KEY (`kelas_id`) REFERENCES `kelas` (`id`) ON DELETE CASCADE,
   CONSTRAINT `siswa_kelas_ibfk_3` FOREIGN KEY (`tahun_pelajaran_id`) REFERENCES `tahun_pelajaran` (`id`) ON DELETE CASCADE
