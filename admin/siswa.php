@@ -10,26 +10,49 @@ $message_type = '';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (!verify_csrf_token($_POST['csrf_token'] ?? '')) die("CSRF Token Invalid");
-    if (isset($_POST['tambah'])) {
-        $nis = mysqli_real_escape_string($conn, $_POST['nis']);
-        $nama_siswa = mysqli_real_escape_string($conn, $_POST['nama_siswa']);
-        $jenis_kelamin = $_POST['jenis_kelamin'];
-        if (mysqli_query($conn, "INSERT INTO siswa (nis, nama_siswa, jenis_kelamin) VALUES ('$nis', '$nama_siswa', '$jenis_kelamin')")) {
-            $message = "Siswa berhasil ditambahkan!";
-            $message_type = 'success';
+
+    mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+    try {
+        if (isset($_POST['tambah'])) {
+            $nis = $_POST['nis'];
+            $nama_siswa = $_POST['nama_siswa'];
+            $jenis_kelamin = $_POST['jenis_kelamin'];
+
+            $stmt = mysqli_prepare($conn, "INSERT INTO siswa (nis, nama_siswa, jenis_kelamin) VALUES (?, ?, ?)");
+            mysqli_stmt_bind_param($stmt, "sss", $nis, $nama_siswa, $jenis_kelamin);
+            if (mysqli_stmt_execute($stmt)) {
+                $message = "Siswa berhasil ditambahkan!";
+                $message_type = 'success';
+            }
+        } elseif (isset($_POST['edit'])) {
+            $id = (int)$_POST['id'];
+            $nis = $_POST['nis'];
+            $nama_siswa = $_POST['nama_siswa'];
+            $jenis_kelamin = $_POST['jenis_kelamin'];
+
+            $stmt = mysqli_prepare($conn, "UPDATE siswa SET nis = ?, nama_siswa = ?, jenis_kelamin = ? WHERE id = ?");
+            mysqli_stmt_bind_param($stmt, "sssi", $nis, $nama_siswa, $jenis_kelamin, $id);
+            if (mysqli_stmt_execute($stmt)) {
+                $message = "Data siswa diperbarui!";
+                $message_type = 'success';
+            }
+        } elseif (isset($_POST['hapus'])) {
+            $id = (int)$_POST['id'];
+            $stmt = mysqli_prepare($conn, "DELETE FROM siswa WHERE id = ?");
+            mysqli_stmt_bind_param($stmt, "i", $id);
+            if (mysqli_stmt_execute($stmt)) {
+                $message = "Siswa dihapus!";
+                $message_type = 'success';
+            }
         }
-    } elseif (isset($_POST['edit'])) {
-        $id = $_POST['id'];
-        $nis = mysqli_real_escape_string($conn, $_POST['nis']);
-        $nama_siswa = mysqli_real_escape_string($conn, $_POST['nama_siswa']);
-        $jenis_kelamin = $_POST['jenis_kelamin'];
-        mysqli_query($conn, "UPDATE siswa SET nis = '$nis', nama_siswa = '$nama_siswa', jenis_kelamin = '$jenis_kelamin' WHERE id = $id");
-        $message = "Data siswa diperbarui!";
-        $message_type = 'success';
-    } elseif (isset($_POST['hapus'])) {
-        mysqli_query($conn, "DELETE FROM siswa WHERE id = " . (int)$_POST['id']);
-        $message = "Siswa dihapus!";
-        $message_type = 'success';
+    } catch (mysqli_sql_exception $e) {
+        if ($e->getCode() == 1062) {
+            $message = "Gagal: NIS " . htmlspecialchars($_POST['nis']) . " sudah terdaftar di sistem.";
+            $message_type = 'error';
+        } else {
+            $message = "Database Error: " . $e->getMessage();
+            $message_type = 'error';
+        }
     }
 }
 
