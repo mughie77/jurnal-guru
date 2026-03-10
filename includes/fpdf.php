@@ -1134,7 +1134,43 @@ protected function _loadfont($font)
 	// Load a font definition file from the font directory
 	if(strpos($font,'/')!==false || strpos($font,"\\")!==false)
 		$this->Error('Incorrect font definition file name: '.$font);
-	include($this->fontpath.$font);
+	$file = $this->fontpath.$font;
+	if(!file_exists($file))
+	{
+		// Attempt to handle core fonts without metric files
+		$family = '';
+		if(strpos($font, 'helvetica')===0) $family = 'helvetica';
+		elseif(strpos($font, 'courier')===0) $family = 'courier';
+		elseif(strpos($font, 'times')===0) $family = 'times';
+		elseif(strpos($font, 'symbol')===0) $family = 'symbol';
+		elseif(strpos($font, 'zapfdingbats')===0) $family = 'zapfdingbats';
+		if($family)
+		{
+			$style = '';
+			if(strpos($font, 'bi.php')!==false) $style = 'BI';
+			elseif(strpos($font, 'b.php')!==false) $style = 'B';
+			elseif(strpos($font, 'i.php')!==false) $style = 'I';
+			$name = '';
+			if($family=='helvetica') {
+				$names = array(''=>'Helvetica', 'B'=>'Helvetica-Bold', 'I'=>'Helvetica-Oblique', 'BI'=>'Helvetica-BoldOblique');
+				$name = $names[$style];
+			} elseif($family=='courier') {
+				$names = array(''=>'Courier', 'B'=>'Courier-Bold', 'I'=>'Courier-Oblique', 'BI'=>'Courier-BoldOblique');
+				$name = $names[$style];
+			} elseif($family=='times') {
+				$names = array(''=>'Times-Roman', 'B'=>'Times-Bold', 'I'=>'Times-Italic', 'BI'=>'Times-BoldItalic');
+				$name = $names[$style];
+			} elseif($family=='symbol') { $name = 'Symbol'; }
+			elseif($family=='zapfdingbats') { $name = 'ZapfDingbats'; }
+			if($name) {
+				$cw = array();
+				for($i=0;$i<=255;$i++) $cw[chr($i)] = ($family=='times') ? 500 : 600;
+				return array('type'=>'Core', 'name'=>$name, 'up'=>-100, 'ut'=>50, 'cw'=>$cw);
+			}
+		}
+		$this->Error('Could not include font definition file: '.$font);
+	}
+	include($file);
 	if(!isset($name))
 		$this->Error('Could not include font definition file');
 	if(!isset($cw))
