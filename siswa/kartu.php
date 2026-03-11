@@ -7,7 +7,7 @@ authorize_role(['siswa']);
 $siswa_id = $_SESSION['user_id'];
 
 // Get Student Profile
-$query = "SELECT s.*, k.nama_kelas, tp.tahun_pelajaran
+$query = "SELECT s.*, k.nama_kelas, tp.tahun as tahun_pelajaran
           FROM siswa s
           JOIN siswa_kelas sk ON s.id = sk.siswa_id
           JOIN kelas k ON sk.kelas_id = k.id
