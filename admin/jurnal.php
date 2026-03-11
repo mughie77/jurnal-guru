@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/pagination.php';
 
 authorize_role(['admin']);
 $page_title = "Data Jurnal Mengajar";
@@ -27,11 +28,15 @@ $sql = "SELECT jurnal.*, users.nama_lengkap, mata_pelajaran.nama_mapel, kelas.na
         JOIN mata_pelajaran ON jurnal.mapel_id = mata_pelajaran.id
         JOIN kelas ON jurnal.kelas_id = kelas.id";
 
+$where_sql = "";
 if (!empty($where_clauses)) {
-    $sql .= " WHERE " . implode(' AND ', $where_clauses);
+    $where_sql = " WHERE " . implode(' AND ', $where_clauses);
 }
 
-$sql .= " ORDER BY jurnal.tanggal DESC, jurnal.created_at DESC";
+$pagin = get_pagination_data($conn, "jurnal JOIN guru ON jurnal.guru_id = guru.id JOIN users ON guru.user_id = users.id", 15, $where_sql);
+
+$sql .= $where_sql;
+$sql .= " ORDER BY jurnal.tanggal DESC, jurnal.created_at DESC LIMIT {$pagin['limit']} OFFSET {$pagin['offset']}";
 
 $guru_list = mysqli_query($conn, "SELECT g.id, u.nama_lengkap FROM guru g JOIN users u ON g.user_id = u.id ORDER BY u.nama_lengkap ASC");
 $kelas_list = mysqli_query($conn, "SELECT id, nama_kelas FROM kelas ORDER BY nama_kelas ASC");
@@ -137,5 +142,7 @@ require_once __DIR__ . '/../includes/header.php';
         </table>
     </div>
 </div>
+
+<?= render_pagination($pagin['page'], $pagin['total_pages'], $_GET) ?>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

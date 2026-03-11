@@ -44,6 +44,7 @@ if ($role == 'admin') {
         <p class='px-4 text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] mb-2'>Data Akademik</p>
         ".nav_link('admin/kelas.php', 'fa fa-school', 'Manajemen Kelas', $current_page == 'kelas.php')."
         ".nav_link('admin/siswa.php', 'fa fa-user-graduate', 'Data Siswa', $current_page == 'siswa.php')."
+        ".nav_link('admin/alumni.php', 'fa fa-user-tag', 'Data Alumni', $current_page == 'alumni.php')."
         ".nav_link('admin/mapping_siswa.php', 'fa fa-project-diagram', 'Mapping Kelas', $current_page == 'mapping_siswa.php')."
         ".nav_link('admin/naik_kelas.php', 'fa fa-level-up-alt', 'Kenaikan Kelas', $current_page == 'naik_kelas.php')."
     </div>";
@@ -80,6 +81,7 @@ if ($role == 'admin') {
         <p class='px-4 text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] mb-2'>Data Akademik</p>
         ".nav_link('waka/kelas.php', 'fa fa-school', 'Manajemen Kelas', $current_page == 'kelas.php')."
         ".nav_link('admin/siswa.php', 'fa fa-user-graduate', 'Data Siswa', $current_page == 'siswa.php')."
+        ".nav_link('admin/alumni.php', 'fa fa-user-tag', 'Data Alumni', $current_page == 'alumni.php')."
     </div>";
 
     // Group: Laporan (Full access for Waka)

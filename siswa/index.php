@@ -20,17 +20,18 @@ $siswa = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
 
 // Attendance Recap per Subject
 $query_absensi = "SELECT mp.nama_mapel,
-                  SUM(CASE WHEN a.status = 'H' THEN 1 ELSE 0 END) as hadir,
-                  SUM(CASE WHEN a.status = 'S' THEN 1 ELSE 0 END) as sakit,
-                  SUM(CASE WHEN a.status = 'I' THEN 1 ELSE 0 END) as izin,
-                  SUM(CASE WHEN a.status = 'A' THEN 1 ELSE 0 END) as alfa,
-                  SUM(CASE WHEN a.status = 'T' THEN 1 ELSE 0 END) as terlambat
-                  FROM absensi a
-                  JOIN mata_pelajaran mp ON a.mapel_id = mp.id
-                  WHERE a.siswa_id = ? AND a.tahun_pelajaran_id = ?
+                  SUM(CASE WHEN aj.status = 'H' THEN 1 ELSE 0 END) as hadir,
+                  SUM(CASE WHEN aj.status = 'S' THEN 1 ELSE 0 END) as sakit,
+                  SUM(CASE WHEN aj.status = 'I' THEN 1 ELSE 0 END) as izin,
+                  SUM(CASE WHEN aj.status = 'A' THEN 1 ELSE 0 END) as alfa,
+                  (SELECT COUNT(*) FROM absensi_harian ah WHERE ah.siswa_id = ? AND ah.status = 'Terlambat' AND ah.tanggal IN (SELECT tanggal FROM jurnal WHERE mapel_id = mp.id)) as terlambat
+                  FROM absensi_jurnal aj
+                  JOIN jurnal j ON aj.jurnal_id = j.id
+                  JOIN mata_pelajaran mp ON j.mapel_id = mp.id
+                  WHERE aj.siswa_id = ? AND j.tahun_pelajaran_id = ?
                   GROUP BY mp.id";
 $stmt_abs = mysqli_prepare($conn, $query_absensi);
-mysqli_stmt_bind_param($stmt_abs, "ii", $siswa_id, $active_tahun_id);
+mysqli_stmt_bind_param($stmt_abs, "iii", $siswa_id, $siswa_id, $active_tahun_id);
 mysqli_stmt_execute($stmt_abs);
 $absensi_recap = mysqli_stmt_get_result($stmt_abs);
 

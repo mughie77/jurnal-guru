@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/pagination.php';
 
 authorize_role(['admin']);
 $page_title = "Manajemen Mata Pelajaran";
@@ -51,7 +52,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 }
 
-$result = mysqli_query($conn, "SELECT * FROM mata_pelajaran $where_sql ORDER BY nama_mapel ASC");
+$pagin = get_pagination_data($conn, "mata_pelajaran", 15, $where_sql);
+$result = mysqli_query($conn, "SELECT * FROM mata_pelajaran $where_sql ORDER BY nama_mapel ASC LIMIT {$pagin['limit']} OFFSET {$pagin['offset']}");
+
 require_once __DIR__ . '/../includes/header.php';
 ?>
 
@@ -118,6 +121,8 @@ require_once __DIR__ . '/../includes/header.php';
         </table>
     </div>
 </div>
+
+<?= render_pagination($pagin['page'], $pagin['total_pages'], $_GET) ?>
 
 <!-- Modals -->
 <div id="modalOverlay" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] hidden transition-opacity duration-300 opacity-0" onclick="closeAllModals()"></div>

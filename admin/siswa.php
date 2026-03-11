@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/pagination.php';
 
 authorize_role(['admin', 'waka']);
 
@@ -68,6 +69,9 @@ $search = mysqli_real_escape_string($conn, $_GET['search'] ?? '');
 $kelas_filter = (int)($_GET['kelas_id'] ?? 0);
 
 $where_clauses = [];
+// Main Siswa view only shows students with a class in the active year
+$where_clauses[] = "s.id IN (SELECT siswa_id FROM siswa_kelas WHERE tahun_pelajaran_id = '$active_tahun_id')";
+
 if (!empty($search)) {
     $where_clauses[] = "(s.nama_siswa LIKE '%$search%' OR s.nis LIKE '%$search%')";
 }
@@ -75,17 +79,19 @@ if ($kelas_filter > 0) {
     $where_clauses[] = "sk.kelas_id = $kelas_filter";
 }
 
-$where_sql = "";
+$where_sql = " WHERE 1=1";
 if (!empty($where_clauses)) {
-    $where_sql = " AND " . implode(" AND ", $where_clauses);
+    $where_sql .= " AND " . implode(" AND ", $where_clauses);
 }
+
+$pagin = get_pagination_data($conn, "siswa s LEFT JOIN siswa_kelas sk ON s.id = sk.siswa_id AND sk.tahun_pelajaran_id = '$active_tahun_id'", 15, $where_sql);
 
 $query = "SELECT s.*, k.nama_kelas
           FROM siswa s
           LEFT JOIN siswa_kelas sk ON s.id = sk.siswa_id AND sk.tahun_pelajaran_id = '$active_tahun_id'
           LEFT JOIN kelas k ON sk.kelas_id = k.id
-          WHERE 1=1 $where_sql
-          ORDER BY s.nama_siswa ASC";
+          $where_sql
+          ORDER BY s.nama_siswa ASC LIMIT {$pagin['limit']} OFFSET {$pagin['offset']}";
 $result = mysqli_query($conn, $query);
 
 $kelas_list = mysqli_query($conn, "SELECT id, nama_kelas FROM kelas ORDER BY nama_kelas ASC");
@@ -187,6 +193,8 @@ require_once __DIR__ . '/../includes/header.php';
         </table>
     </div>
 </div>
+
+<?= render_pagination($pagin['page'], $pagin['total_pages'], $_GET) ?>
 
 <div id="modalOverlay" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] hidden transition-opacity duration-300 opacity-0" onclick="closeAllModals()"></div>
 

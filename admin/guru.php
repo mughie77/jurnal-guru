@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/pagination.php';
 
 authorize_role(['admin']);
 
@@ -85,12 +86,14 @@ if (!empty($search)) {
     $where_sql = " WHERE (users.nama_lengkap LIKE '%$search%' OR guru.nip LIKE '%$search%')";
 }
 
+$pagin = get_pagination_data($conn, "guru JOIN users ON guru.user_id = users.id", 15, $where_sql);
+
 $query = "SELECT guru.*, users.nama_lengkap, GROUP_CONCAT(mata_pelajaran.nama_mapel SEPARATOR ', ') as mapel_diampu
           FROM guru JOIN users ON guru.user_id = users.id
           LEFT JOIN guru_mapel ON guru.id = guru_mapel.guru_id
           LEFT JOIN mata_pelajaran ON guru_mapel.mapel_id = mata_pelajaran.id
           $where_sql
-          GROUP BY guru.id ORDER BY users.nama_lengkap ASC";
+          GROUP BY guru.id ORDER BY users.nama_lengkap ASC LIMIT {$pagin['limit']} OFFSET {$pagin['offset']}";
 $result = mysqli_query($conn, $query);
 
 require_once __DIR__ . '/../includes/header.php';
@@ -171,6 +174,8 @@ require_once __DIR__ . '/../includes/header.php';
         </table>
     </div>
 </div>
+
+<?= render_pagination($pagin['page'], $pagin['total_pages'], $_GET) ?>
 
 <!-- Modal Container -->
 <div id="modalOverlay" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] hidden transition-opacity duration-300 opacity-0" onclick="closeAllModals()"></div>

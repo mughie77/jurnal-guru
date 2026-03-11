@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/pagination.php';
 
 authorize_role(['admin', 'waka']);
 $page_title = "Data Perangkat Mengajar";
@@ -14,6 +15,8 @@ if (!empty($search)) $where_clauses[] = "p.nama_perangkat LIKE '%$search%'";
 
 $where_sql = !empty($where_clauses) ? "WHERE " . implode(" AND ", $where_clauses) : "";
 
+$pagin = get_pagination_data($conn, "perangkat p JOIN guru g ON p.guru_id = g.id JOIN users u ON g.user_id = u.id", 15, $where_sql);
+
 $gurus = mysqli_query($conn, "SELECT g.id, u.nama_lengkap FROM guru g JOIN users u ON g.user_id = u.id ORDER BY u.nama_lengkap ASC");
 
 $query = "SELECT p.*, u.nama_lengkap as nama_guru
@@ -21,7 +24,7 @@ $query = "SELECT p.*, u.nama_lengkap as nama_guru
           JOIN guru g ON p.guru_id = g.id
           JOIN users u ON g.user_id = u.id
           $where_sql
-          ORDER BY p.created_at DESC";
+          ORDER BY p.created_at DESC LIMIT {$pagin['limit']} OFFSET {$pagin['offset']}";
 $perangkats = mysqli_query($conn, $query);
 
 require_once __DIR__ . '/../includes/header.php';
@@ -93,5 +96,7 @@ require_once __DIR__ . '/../includes/header.php';
         </table>
     </div>
 </div>
+
+<?= render_pagination($pagin['page'], $pagin['total_pages'], $_GET) ?>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>
