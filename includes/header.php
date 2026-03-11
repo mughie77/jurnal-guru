@@ -1,12 +1,25 @@
 <?php
 require_once __DIR__ . '/../config/database.php';
+
+// Get Settings
+$res_set = mysqli_query($conn, "SELECT * FROM pengaturan");
+$app_sets = [];
+while ($r = mysqli_fetch_assoc($res_set)) {
+    $app_sets[$r['nama_setting']] = $r['nilai_setting'];
+}
+$app_name = $app_sets['nama_sekolah'] ?? 'Aplikasi Jurnal Mengajar';
+$favicon = !empty($app_sets['favicon']) ? BASE_URL . 'uploads/' . $app_sets['favicon'] : BASE_URL . 'assets/img/favicon.png';
 ?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Beranda - Aplikasi Jurnal Mengajar</title>
+    <title><?= $page_title ?? 'Beranda' ?> - <?= htmlspecialchars($app_name) ?></title>
+
+    <?php if ($favicon): ?>
+    <link rel="icon" type="image/png" href="<?= $favicon ?>">
+    <?php endif; ?>
 
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -38,17 +51,24 @@ require_once __DIR__ . '/../config/database.php';
         .glass { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); }
         .lux-card { @apply bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-100; }
         .sidebar-transition { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        #sidebar::-webkit-scrollbar { width: 4px; }
+        #sidebar::-webkit-scrollbar-track { background: transparent; }
+        #sidebar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+        #sidebar::-webkit-scrollbar-thumb:hover { background: #475569; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800">
     <div class="flex h-screen overflow-hidden">
         <!-- Sidebar -->
-        <aside id="sidebar" class="sidebar-transition fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-white transform -translate-x-full lg:translate-x-0 lg:static lg:inset-0 shadow-2xl">
-            <div class="flex items-center justify-center h-20 border-b border-slate-800 px-6">
-                <span class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-emerald-400">JurnalApp</span>
+        <aside id="sidebar" class="sidebar-transition fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-white transform -translate-x-full lg:translate-x-0 lg:static lg:inset-0 shadow-2xl flex flex-col">
+            <div class="flex flex-col items-center justify-center py-8 border-b border-slate-800 px-6 shrink-0">
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-emerald-400 tracking-tighter">JurnalApp</span>
+                </div>
+                <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest text-center truncate w-full"><?= htmlspecialchars($app_name) ?></p>
             </div>
 
-            <nav class="mt-6 px-4 space-y-2 overflow-y-auto max-h-[calc(100vh-5rem)]">
+            <nav class="flex-1 mt-4 px-4 space-y-2 overflow-y-auto pb-8">
                 <?php require_once __DIR__ . '/sidebar_content.php'; ?>
             </nav>
         </aside>

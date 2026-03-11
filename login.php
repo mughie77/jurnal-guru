@@ -1,6 +1,15 @@
 <?php
 require_once 'config/database.php';
 
+// Get Settings
+$res_set = mysqli_query($conn, "SELECT * FROM pengaturan");
+$app_sets = [];
+while ($r = mysqli_fetch_assoc($res_set)) {
+    $app_sets[$r['nama_setting']] = $r['nilai_setting'];
+}
+$app_name = $app_sets['nama_sekolah'] ?? 'Aplikasi Jurnal Mengajar';
+$favicon = !empty($app_sets['favicon']) ? BASE_URL . 'uploads/' . $app_sets['favicon'] : null;
+
 $error_message = '';
 
 if (isset($_SESSION['user_id'])) {
@@ -53,7 +62,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Jurnal Mengajar</title>
+    <title>Login - <?= htmlspecialchars($app_name) ?></title>
+    <?php if ($favicon): ?>
+    <link rel="icon" type="image/png" href="<?= $favicon ?>">
+    <?php endif; ?>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -73,10 +85,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     <div class="max-w-[420px] w-full relative">
         <div class="text-center mb-10 animate-in fade-in slide-in-from-top-4 duration-700">
-            <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white shadow-xl shadow-indigo-100 mb-6 group transition-transform hover:scale-110">
-                <i class="fa fa-book-open text-3xl text-indigo-600"></i>
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white shadow-xl shadow-indigo-100 mb-6 group transition-transform hover:scale-110 overflow-hidden">
+                <?php if ($favicon): ?>
+                    <img src="<?= $favicon ?>" class="max-w-full max-h-full object-contain p-2">
+                <?php else: ?>
+                    <i class="fa fa-book-open text-3xl text-indigo-600"></i>
+                <?php endif; ?>
             </div>
             <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">Jurnal<span class="text-indigo-600">Mengajar</span></h1>
+            <p class="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] mb-1"><?= htmlspecialchars($app_name) ?></p>
             <p class="text-slate-500 mt-2 font-medium">Selamat datang kembali, silakan login.</p>
         </div>
 

@@ -56,6 +56,13 @@ if ($role == 'admin') {
         ".nav_link('admin/rekap_absensi.php', 'fa fa-chart-line', 'Rekap Absensi', $current_page == 'rekap_absensi.php')."
         ".nav_link('admin/perangkat.php', 'fa fa-folder-open', 'Data Perangkat', $current_page == 'perangkat.php')."
     </div>";
+
+    // Group: Sistem
+    echo "
+    <div class='pt-6'>
+        <p class='px-4 text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] mb-2'>Sistem</p>
+        ".nav_link('admin/pengaturan.php', 'fa fa-cog', 'Pengaturan', $current_page == 'pengaturan.php')."
+    </div>";
 } elseif ($role == 'waka') {
     echo nav_link('waka/index.php', 'fa fa-tachometer-alt', 'Beranda', $current_page == 'index.php');
 
