@@ -29,8 +29,8 @@ if (substr($base_url, -1) !== '/') {
 if (empty($domainName)) {
     define('BASE_URL', '/');
 } else {
-    // Normalisasi: jika kita di dalam folder 'admin' atau 'guru', kita perlu naik ke root
-    $base_path = str_replace(['/admin/', '/guru/', '/waka/', '/api/'], '/', $scriptName);
+    // Normalisasi: jika kita di dalam folder 'admin', 'guru', 'siswa', atau 'waka', kita perlu naik ke root
+    $base_path = str_replace(['/admin/', '/guru/', '/waka/', '/api/', '/siswa/'], '/', $scriptName);
     define('BASE_URL', $protocol . $domainName . $base_path);
 }
 

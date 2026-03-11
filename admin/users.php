@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/pagination.php';
 
 authorize_role(['admin']);
 $page_title = "Manajemen User";
@@ -22,6 +23,8 @@ $where_sql = "";
 if (!empty($where_clauses)) {
     $where_sql = " WHERE " . implode(" AND ", $where_clauses);
 }
+
+$pagin = get_pagination_data($conn, "users", 15, $where_sql);
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
@@ -56,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 }
 
-$result = mysqli_query($conn, "SELECT * FROM users $where_sql ORDER BY nama_lengkap ASC");
+$result = mysqli_query($conn, "SELECT * FROM users $where_sql ORDER BY nama_lengkap ASC LIMIT {$pagin['limit']} OFFSET {$pagin['offset']}");
 require_once __DIR__ . '/../includes/header.php';
 ?>
 
@@ -137,6 +140,8 @@ require_once __DIR__ . '/../includes/header.php';
         </table>
     </div>
 </div>
+
+<?= render_pagination($pagin['page'], $pagin['total_pages'], $_GET) ?>
 
 <div id="modalOverlay" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] hidden transition-opacity duration-300 opacity-0" onclick="closeAllModals()"></div>
 

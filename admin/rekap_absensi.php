@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/pagination.php';
 
 authorize_role(['admin', 'waka']);
 $page_title = "Rekap Absensi Jurnal";
@@ -22,12 +23,15 @@ if ($kelas_id > 0) {
                      ORDER BY j.jam_ke ASC";
     $res_jurnal = mysqli_query($conn, $query_jurnal);
 
+    $where_siswa = " WHERE sk.kelas_id = $kelas_id AND sk.tahun_pelajaran_id = $active_tahun_id";
+    $pagin = get_pagination_data($conn, "siswa s JOIN siswa_kelas sk ON s.id = sk.siswa_id", 30, $where_siswa);
+
     // Ambil daftar siswa di kelas tersebut
     $query_siswa = "SELECT s.id, s.nama_siswa, s.nis
                     FROM siswa s
                     JOIN siswa_kelas sk ON s.id = sk.siswa_id
-                    WHERE sk.kelas_id = $kelas_id AND sk.tahun_pelajaran_id = $active_tahun_id
-                    ORDER BY s.nama_siswa ASC";
+                    $where_siswa
+                    ORDER BY s.nama_siswa ASC LIMIT {$pagin['limit']} OFFSET {$pagin['offset']}";
     $res_siswa = mysqli_query($conn, $query_siswa);
 
     $jurnals = [];
@@ -125,6 +129,9 @@ require_once __DIR__ . '/../includes/header.php';
         </table>
     </div>
 </div>
+
+<?= render_pagination($pagin['page'], $pagin['total_pages'], $_GET) ?>
+
 <?php else: ?>
 <div class="lux-card p-20 text-center">
     <div class="w-20 h-20 bg-slate-50 text-slate-300 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl"><i class="fa fa-search"></i></div>

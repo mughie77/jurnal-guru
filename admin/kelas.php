@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/pagination.php';
 
 authorize_role(['admin']);
 
@@ -16,6 +17,8 @@ $where_sql = "";
 if (!empty($search)) {
     $where_sql = " WHERE (kelas.nama_kelas LIKE '%$search%' OR users.nama_lengkap LIKE '%$search%')";
 }
+
+$pagin = get_pagination_data($conn, "kelas LEFT JOIN guru ON kelas.wali_kelas_id = guru.id LEFT JOIN users ON guru.user_id = users.id", 15, $where_sql);
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (!verify_csrf_token($_POST['csrf_token'] ?? '')) die("CSRF Token Invalid");
@@ -46,7 +49,7 @@ $query = "SELECT kelas.*, users.nama_lengkap as nama_wali_kelas
           FROM kelas LEFT JOIN guru ON kelas.wali_kelas_id = guru.id
           LEFT JOIN users ON guru.user_id = users.id
           $where_sql
-          ORDER BY kelas.nama_kelas ASC";
+          ORDER BY kelas.nama_kelas ASC LIMIT {$pagin['limit']} OFFSET {$pagin['offset']}";
 $result = mysqli_query($conn, $query);
 
 require_once __DIR__ . '/../includes/header.php';
@@ -130,6 +133,8 @@ require_once __DIR__ . '/../includes/header.php';
         </table>
     </div>
 </div>
+
+<?= render_pagination($pagin['page'], $pagin['total_pages'], $_GET) ?>
 
 <div id="modalOverlay" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] hidden transition-opacity duration-300 opacity-0" onclick="closeAllModals()"></div>
 
