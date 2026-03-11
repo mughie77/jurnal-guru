@@ -32,10 +32,10 @@
                         <i class="fa fa-home text-lg"></i>
                         <span class="text-[8px] font-black uppercase mt-1">Beranda</span>
                     </a>
-                    <div class="flex flex-col items-center p-2 text-slate-300 pointer-events-none opacity-20">
-                        <i class="fa fa-history text-lg"></i>
-                        <span class="text-[8px] font-black uppercase mt-1">Riwayat</span>
-                    </div>
+                    <a href="<?= BASE_URL ?>siswa/barcode.php" class="flex flex-col items-center p-2 rounded-xl transition-all <?= basename($_SERVER['PHP_SELF']) == 'barcode.php' ? 'text-indigo-600' : 'text-slate-400' ?>">
+                        <i class="fa fa-qrcode text-lg"></i>
+                        <span class="text-[8px] font-black uppercase mt-1">Barcode</span>
+                    </a>
                     <a href="<?= BASE_URL ?>siswa/kartu.php" class="flex flex-col items-center p-2 rounded-xl transition-all <?= basename($_SERVER['PHP_SELF']) == 'kartu.php' ? 'text-indigo-600' : 'text-slate-400' ?>">
                         <div class="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center text-white shadow-lg shadow-indigo-200 -mt-8 border-4 border-slate-50 transition-transform active:scale-90">
                             <i class="fa fa-id-card"></i>

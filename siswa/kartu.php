@@ -23,7 +23,7 @@ $res_set = mysqli_query($conn, "SELECT * FROM pengaturan");
 $sets = [];
 while ($r = mysqli_fetch_assoc($res_set)) $sets[$r['nama_setting']] = $r['nilai_setting'];
 
-$page_title = "Kartu Pelajar";
+$page_title = "Kartu Pelajar Digital";
 require_once __DIR__ . '/../includes/header.php';
 ?>
 
@@ -44,6 +44,7 @@ require_once __DIR__ . '/../includes/header.php';
         position: relative;
         overflow: hidden;
         box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        border: 1px solid #e2e8f0;
     }
 
     .card-header-bg {
@@ -66,76 +67,102 @@ require_once __DIR__ . '/../includes/header.php';
         display: flex;
         align-items: center;
         justify-content: center;
+        z-index: 10;
+    }
+
+    @media print {
+        body * { visibility: hidden; background: none !important; }
+        .card-id, .card-id * { visibility: visible; }
+        .card-id {
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            border: none;
+            box-shadow: none;
+        }
+        .no-print { display: none !important; }
     }
 </style>
 
-<div class="bg-slate-50 min-h-screen pb-24 flex flex-col items-center p-6">
+<!-- QRCode Generator -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<div class="bg-slate-50 min-h-screen pb-24 flex flex-col items-center p-6 no-print">
     <div class="mb-8 text-center">
         <h1 class="text-2xl font-black italic text-slate-800 uppercase tracking-widest">Kartu Pelajar Digital</h1>
-        <p class="text-slate-400 font-bold text-xs uppercase tracking-[0.3em] mt-1">Sistem Informasi Akademik CAKRA</p>
+        <p class="text-slate-400 font-bold text-xs uppercase tracking-[0.3em] mt-1">Verifikasi Sistem CAKRA</p>
     </div>
 
-    <div class="card-id-wrapper animate-in zoom-in duration-500">
+    <div id="printableCard" class="card-id-wrapper animate-in zoom-in duration-500">
         <div class="card-id flex flex-col items-center">
             <!-- Background & Logo -->
-            <div class="card-header-bg w-full flex flex-col items-center pt-4">
-                <div class="flex items-center gap-2 mb-1">
-                    <div class="w-8 h-8 rounded-lg bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30">
-                        <i class="fa fa-graduation-cap text-white text-sm"></i>
-                    </div>
-                    <span class="text-lg font-black text-white italic tracking-tighter uppercase">CAKRA</span>
-                </div>
-                <p class="text-[8px] font-black text-white/70 uppercase tracking-widest text-center px-8">Central Academic Knowledge & Record Application</p>
+            <div class="card-header-bg w-full flex flex-col items-center pt-6">
+                <h3 class="text-white font-black text-xs uppercase tracking-[0.3em] mb-1">Kartu Pelajar Digital</h3>
+                <h2 class="text-white font-black text-sm uppercase tracking-wider text-center px-4 leading-tight"><?= htmlspecialchars($sets['nama_sekolah'] ?? 'SMK Negeri CAKRA') ?></h2>
             </div>
 
             <!-- Photo -->
             <div class="photo-frame overflow-hidden">
-                <i class="fa fa-user text-6xl text-slate-300"></i>
+                <?php if (!empty($siswa['foto'])): ?>
+                    <img src="<?= BASE_URL ?>uploads/siswa/<?= $siswa['foto'] ?>" class="w-full h-full object-cover">
+                <?php else: ?>
+                    <i class="fa fa-user text-6xl text-slate-300"></i>
+                <?php endif; ?>
             </div>
 
-            <!-- Info Section -->
-            <div class="mt-24 w-full px-8 text-center">
-                <h2 class="text-xl font-black text-slate-800 uppercase tracking-tighter italic leading-tight mb-1"><?= htmlspecialchars($siswa['nama_siswa']) ?></h2>
-                <p class="text-indigo-600 font-black text-sm tracking-[0.2em] mb-6 uppercase"><?= htmlspecialchars($siswa['nama_kelas']) ?></p>
+            <!-- Name Below Photo -->
+            <div class="mt-24 w-full px-6 text-center">
+                <h2 class="text-xl font-black text-slate-900 uppercase tracking-tighter italic leading-tight mb-0.5"><?= htmlspecialchars($siswa['nama_siswa']) ?></h2>
+                <p class="text-indigo-600 font-black text-[10px] tracking-[0.2em] mb-4 uppercase"><?= htmlspecialchars($siswa['nama_kelas']) ?></p>
 
-                <div class="space-y-4 text-left">
-                    <div class="flex flex-col">
-                        <span class="text-[8px] font-black text-slate-400 uppercase tracking-widest">NIS / NISN</span>
-                        <span class="text-sm font-bold text-slate-700"><?= htmlspecialchars($siswa['nis']) ?> / <?= htmlspecialchars($siswa['nisn'] ?? '-') ?></span>
+                <div class="grid grid-cols-2 gap-4 text-left border-t border-slate-100 pt-4">
+                    <div>
+                        <span class="text-[7px] font-black text-slate-400 uppercase tracking-widest block">NIS</span>
+                        <span class="text-[11px] font-bold text-slate-700"><?= htmlspecialchars($siswa['nis']) ?></span>
                     </div>
-                    <div class="flex flex-col">
-                        <span class="text-[8px] font-black text-slate-400 uppercase tracking-widest">Sekolah</span>
-                        <span class="text-sm font-bold text-slate-700 truncate"><?= htmlspecialchars($sets['nama_sekolah'] ?? 'Sekolah Menengah Kejuruan') ?></span>
+                    <div>
+                        <span class="text-[7px] font-black text-slate-400 uppercase tracking-widest block">NISN</span>
+                        <span class="text-[11px] font-bold text-slate-700"><?= htmlspecialchars($siswa['nisn'] ?? '-') ?></span>
                     </div>
-                    <div class="flex flex-col">
-                        <span class="text-[8px] font-black text-slate-400 uppercase tracking-widest">Tahun Pelajaran</span>
-                        <span class="text-sm font-bold text-slate-700 italic"><?= htmlspecialchars($siswa['tahun_pelajaran']) ?></span>
+                    <div class="col-span-2">
+                        <span class="text-[7px] font-black text-slate-400 uppercase tracking-widest block">Tahun Pelajaran</span>
+                        <span class="text-[11px] font-bold text-slate-700 italic"><?= htmlspecialchars($siswa['tahun_pelajaran']) ?></span>
                     </div>
                 </div>
             </div>
 
-            <!-- QR Code Placeholder -->
-            <div class="mt-8 flex flex-col items-center">
-                <div class="w-16 h-16 bg-slate-50 rounded-xl flex items-center justify-center border border-slate-100 p-2 grayscale">
-                    <i class="fa fa-qrcode text-4xl text-slate-300"></i>
-                </div>
-                <p class="text-[6px] font-black text-slate-300 uppercase tracking-[0.3em] mt-2 italic">Official Academic ID</p>
+            <!-- QR Code -->
+            <div class="mt-6 flex flex-col items-center">
+                <p class="text-[7px] font-black text-slate-400 uppercase tracking-[0.3em] mb-2 italic">Verifikasi CAKRA</p>
+                <div id="qrcode" class="p-1.5 bg-white border border-slate-100 rounded-xl shadow-sm"></div>
             </div>
 
-            <div class="absolute bottom-4 left-0 right-0 text-center">
-                <p class="text-[8px] font-black text-indigo-100 bg-indigo-600 inline-block px-4 py-1 rounded-full uppercase tracking-[0.2em]">Verifikasi CAKRA</p>
+            <div class="absolute bottom-3 left-0 right-0 text-center">
+                <p class="text-[7px] font-black text-indigo-100 bg-indigo-600 inline-block px-4 py-1.5 rounded-full uppercase tracking-[0.2em] shadow-lg shadow-indigo-200">Official Academic ID</p>
             </div>
         </div>
     </div>
 
-    <div class="mt-12 max-w-xs text-center">
-        <p class="text-[10px] text-slate-400 font-bold italic leading-relaxed">
-            "Kartu ini adalah tanda pengenal sah di lingkungan <?= htmlspecialchars($sets['nama_sekolah'] ?? 'Sekolah') ?>. Tunjukkan kartu ini saat melakukan absensi harian."
-        </p>
-        <button onclick="window.print()" class="mt-6 px-6 py-3 bg-white text-indigo-600 font-black text-xs uppercase tracking-widest rounded-xl shadow-sm border border-slate-200 hover:bg-slate-50 transition-all flex items-center justify-center mx-auto">
-            <i class="fa fa-print mr-2"></i> Cetak Kartu
+    <div class="mt-12 max-w-xs text-center no-print">
+        <button onclick="window.print()" class="px-8 py-4 bg-slate-900 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-xl hover:bg-indigo-600 transition-all flex items-center justify-center mx-auto group">
+            <i class="fa fa-print mr-2 group-hover:scale-110 transition-transform"></i> Cetak Kartu Saja
         </button>
+        <p class="mt-4 text-[10px] text-slate-400 font-bold italic leading-relaxed px-4">
+            "Klik tombol di atas untuk mencetak kartu. Printer akan otomatis menyesuaikan area cetak hanya pada bagian kartu."
+        </p>
     </div>
 </div>
+
+<script>
+    new QRCode(document.getElementById("qrcode"), {
+        text: "<?= $siswa['nis'] ?>",
+        width: 64,
+        height: 64,
+        colorDark : "#1e293b",
+        colorLight : "#ffffff",
+        correctLevel : QRCode.CorrectLevel.H
+    });
+</script>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

@@ -35,6 +35,7 @@ CREATE TABLE `guru` (
   `nip` varchar(50) NOT NULL,
   `alamat` text DEFAULT NULL,
   `no_telp` varchar(20) DEFAULT NULL,
+  `foto` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `nip` (`nip`),
   KEY `user_id` (`user_id`),
@@ -111,6 +112,7 @@ CREATE TABLE `siswa` (
   `jenis_kelamin` enum('L','P') NOT NULL,
   `alamat` text DEFAULT NULL,
   `no_telp` varchar(20) DEFAULT NULL,
+  `foto` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `nis` (`nis`),
   UNIQUE KEY `nisn` (`nisn`)
