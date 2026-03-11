@@ -62,8 +62,9 @@ $favicon = !empty($app_sets['favicon']) ? BASE_URL . 'uploads/' . $app_sets['fav
         <!-- Sidebar -->
         <aside id="sidebar" class="sidebar-transition fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-white transform -translate-x-full lg:translate-x-0 lg:static lg:inset-0 shadow-2xl flex flex-col">
             <div class="flex flex-col items-center justify-center py-8 border-b border-slate-800 px-6 shrink-0">
-                <div class="flex items-center gap-2 mb-1">
-                    <span class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-emerald-400 tracking-tighter">JurnalApp</span>
+                <div class="flex flex-col items-center mb-1">
+                    <span class="text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-emerald-400 tracking-tighter">CAKRA</span>
+                    <p class="text-[7px] text-slate-500 font-bold uppercase tracking-[0.1em] text-center leading-none mt-1">Central Academic Knowledge & Record Application</p>
                 </div>
                 <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest text-center truncate w-full"><?= htmlspecialchars($app_name) ?></p>
             </div>

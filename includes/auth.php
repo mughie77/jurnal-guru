@@ -38,6 +38,7 @@ function authorize_role(array $allowed_roles) {
             case 'admin': header('Location: ' . BASE_URL . 'admin/'); break;
             case 'waka': header('Location: ' . BASE_URL . 'waka/'); break;
             case 'guru': header('Location: ' . BASE_URL . 'guru/'); break;
+            case 'siswa': header('Location: ' . BASE_URL . 'siswa/'); break;
             default: header('Location: ' . BASE_URL . 'logout.php'); break;
         }
         exit();

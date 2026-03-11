@@ -12,6 +12,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (isset($_POST['tambah'])) {
         $nama = $_POST['nama_lengkap'];
         $nip = $_POST['nip'];
+        $alamat = $_POST['alamat'] ?: null;
+        $no_telp = $_POST['no_telp'] ?: null;
         $pass = password_hash($nip, PASSWORD_DEFAULT);
         mysqli_begin_transaction($conn);
         try {
@@ -20,8 +22,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             mysqli_stmt_execute($stmt1);
             $uid = mysqli_insert_id($conn);
 
-            $stmt2 = mysqli_prepare($conn, "INSERT INTO guru (user_id, nip) VALUES (?, ?)");
-            mysqli_stmt_bind_param($stmt2, "is", $uid, $nip);
+            $stmt2 = mysqli_prepare($conn, "INSERT INTO guru (user_id, nip, alamat, no_telp) VALUES (?, ?, ?, ?)");
+            mysqli_stmt_bind_param($stmt2, "isss", $uid, $nip, $alamat, $no_telp);
             mysqli_stmt_execute($stmt2);
             $gid = mysqli_insert_id($conn);
 
@@ -39,14 +41,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $gid = (int)$_POST['id']; $uid = (int)$_POST['user_id'];
         $nama = $_POST['nama_lengkap'];
         $nip = $_POST['nip'];
+        $alamat = $_POST['alamat'] ?: null;
+        $no_telp = $_POST['no_telp'] ?: null;
         mysqli_begin_transaction($conn);
         try {
             $stmt1 = mysqli_prepare($conn, "UPDATE users SET nama_lengkap = ? WHERE id = ?");
             mysqli_stmt_bind_param($stmt1, "si", $nama, $uid);
             mysqli_stmt_execute($stmt1);
 
-            $stmt2 = mysqli_prepare($conn, "UPDATE guru SET nip = ? WHERE id = ?");
-            mysqli_stmt_bind_param($stmt2, "si", $nip, $gid);
+            $stmt2 = mysqli_prepare($conn, "UPDATE guru SET nip = ?, alamat = ?, no_telp = ? WHERE id = ?");
+            mysqli_stmt_bind_param($stmt2, "sssi", $nip, $alamat, $no_telp, $gid);
             mysqli_stmt_execute($stmt2);
 
             $stmt3 = mysqli_prepare($conn, "DELETE FROM guru_mapel WHERE guru_id = ?");
@@ -172,20 +176,25 @@ require_once __DIR__ . '/../includes/header.php';
 <div id="modalOverlay" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] hidden transition-opacity duration-300 opacity-0" onclick="closeAllModals()"></div>
 
 <!-- Tambah Modal -->
-<div id="tambahModal" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-white rounded-3xl shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0 overflow-hidden">
+<div id="tambahModal" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl bg-white rounded-3xl shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0 overflow-hidden">
     <div class="bg-indigo-600 px-8 py-6 text-white"><h3 class="text-2xl font-bold italic">Tambah Guru</h3></div>
     <form action="" method="POST" class="p-8 space-y-5">
         <input type="hidden" name="csrf_token" value="<?= get_csrf_token() ?>">
-        <div><label class="block text-sm font-bold text-slate-700 mb-2">Nama Lengkap</label><input type="text" name="nama_lengkap" required class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50"></div>
-        <div><label class="block text-sm font-bold text-slate-700 mb-2">NIP (Username)</label><input type="text" name="nip" required class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50"></div>
-        <div>
-            <label class="block text-sm font-bold text-slate-700 mb-2">Mata Pelajaran</label>
+        <div class="grid grid-cols-2 gap-4">
+            <div><label class="block text-sm font-bold text-slate-700 mb-2">Nama Lengkap</label><input type="text" name="nama_lengkap" required class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50"></div>
+            <div><label class="block text-sm font-bold text-slate-700 mb-2">NIP (Username)</label><input type="text" name="nip" required class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50"></div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+            <div><label class="block text-sm font-bold text-slate-700 mb-2">No. Telp/HP</label><input type="text" name="no_telp" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50"></div>
+            <div class="row-span-2">
+                <label class="block text-sm font-bold text-slate-700 mb-2">Mata Pelajaran</label>
             <select name="mapel_ids[]" multiple class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 h-40">
                 <?php mysqli_data_seek($mapel_list, 0); while($m = mysqli_fetch_assoc($mapel_list)): ?>
                     <option value="<?= $m['id'] ?>"><?= htmlspecialchars($m['nama_mapel']) ?></option>
                 <?php endwhile; ?>
             </select>
         </div>
+        <div><label class="block text-sm font-bold text-slate-700 mb-2">Alamat</label><textarea name="alamat" rows="2" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50"></textarea></div>
         <div class="pt-4 flex gap-4">
             <button type="button" onclick="closeModal('tambahModal')" class="flex-1 px-6 py-3 rounded-xl border border-slate-200 font-bold text-slate-600 hover:bg-slate-50 transition-all">Batal</button>
             <button type="submit" name="tambah" class="flex-[2] px-6 py-3 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all">Simpan Data</button>
@@ -194,21 +203,26 @@ require_once __DIR__ . '/../includes/header.php';
 </div>
 
 <!-- Edit Modal -->
-<div id="editModal" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-white rounded-3xl shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0 overflow-hidden">
+<div id="editModal" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl bg-white rounded-3xl shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0 overflow-hidden">
     <div class="bg-amber-500 px-8 py-6 text-white"><h3 class="text-2xl font-bold italic">Edit Data Guru</h3></div>
     <form action="" method="POST" class="p-8 space-y-5">
         <input type="hidden" name="csrf_token" value="<?= get_csrf_token() ?>">
         <input type="hidden" name="id" id="edit_id"><input type="hidden" name="user_id" id="edit_user_id">
-        <div><label class="block text-sm font-bold text-slate-700 mb-2">Nama Lengkap</label><input type="text" name="nama_lengkap" id="edit_nama" required class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"></div>
-        <div><label class="block text-sm font-bold text-slate-700 mb-2">NIP</label><input type="text" name="nip" id="edit_nip" required class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"></div>
-        <div>
-            <label class="block text-sm font-bold text-slate-700 mb-2">Mata Pelajaran</label>
+        <div class="grid grid-cols-2 gap-4">
+            <div><label class="block text-sm font-bold text-slate-700 mb-2">Nama Lengkap</label><input type="text" name="nama_lengkap" id="edit_nama" required class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"></div>
+            <div><label class="block text-sm font-bold text-slate-700 mb-2">NIP</label><input type="text" name="nip" id="edit_nip" required class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"></div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+            <div><label class="block text-sm font-bold text-slate-700 mb-2">No. Telp/HP</label><input type="text" name="no_telp" id="edit_telp" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"></div>
+            <div class="row-span-2">
+                <label class="block text-sm font-bold text-slate-700 mb-2">Mata Pelajaran</label>
             <select name="mapel_ids[]" multiple class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50 h-40">
                 <?php mysqli_data_seek($mapel_list, 0); while($m = mysqli_fetch_assoc($mapel_list)): ?>
                     <option value="<?= $m['id'] ?>"><?= htmlspecialchars($m['nama_mapel']) ?></option>
                 <?php endwhile; ?>
             </select>
         </div>
+        <div><label class="block text-sm font-bold text-slate-700 mb-2">Alamat</label><textarea name="alamat" id="edit_alamat" rows="2" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"></textarea></div>
         <div class="pt-4 flex gap-4">
             <button type="button" onclick="closeModal('editModal')" class="flex-1 px-6 py-3 rounded-xl border border-slate-200 font-bold text-slate-600 hover:bg-slate-50 transition-all">Batal</button>
             <button type="submit" name="edit" class="flex-[2] px-6 py-3 rounded-xl bg-amber-500 text-white font-bold hover:bg-amber-600 shadow-lg shadow-amber-100 transition-all">Simpan Perubahan</button>
@@ -245,6 +259,7 @@ function closeAllModals() { document.querySelectorAll('.modal-content').forEach(
 function openEditModal(data) {
     document.getElementById('edit_id').value = data.id; document.getElementById('edit_user_id').value = data.user_id;
     document.getElementById('edit_nama').value = data.nama_lengkap; document.getElementById('edit_nip').value = data.nip;
+    document.getElementById('edit_alamat').value = data.alamat || ''; document.getElementById('edit_telp').value = data.no_telp || '';
 
     // Set mapel selects if available
     const select = document.querySelector('#editModal select[name="mapel_ids[]"]');

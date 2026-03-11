@@ -106,12 +106,14 @@ CREATE TABLE `kelas` (
 CREATE TABLE `siswa` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `nis` varchar(20) NOT NULL,
+  `nisn` varchar(20) DEFAULT NULL,
   `nama_siswa` varchar(255) NOT NULL,
   `jenis_kelamin` enum('L','P') NOT NULL,
   `alamat` text DEFAULT NULL,
   `no_telp` varchar(20) DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `nis` (`nis`)
+  UNIQUE KEY `nis` (`nis`),
+  UNIQUE KEY `nisn` (`nisn`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------

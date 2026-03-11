@@ -48,7 +48,7 @@ require_once __DIR__ . '/../includes/header.php';
         <span class="px-4 py-1.5 rounded-full bg-indigo-100 text-indigo-700 text-xs font-bold uppercase tracking-widest">Sistem Aktif</span>
     </div>
     <div class="p-8 leading-relaxed text-slate-600">
-        <p class="mb-4">Selamat datang di Panel Administrasi <span class="font-bold text-slate-800 uppercase tracking-tight italic">JurnalApp</span> - <?= htmlspecialchars($app_name) ?>.</p>
+        <p class="mb-4">Selamat datang di Panel Administrasi <span class="font-bold text-slate-800 uppercase tracking-tight italic text-indigo-600">CAKRA</span> - <?= htmlspecialchars($app_name) ?>.</p>
         <p>Gunakan menu navigasi di sisi kiri untuk mengelola infrastruktur data sekolah Anda. Anda memiliki kendali penuh atas manajemen guru, siswa, kelas, serta pemantauan jurnal mengajar secara real-time.</p>
 
         <div class="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">

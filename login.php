@@ -51,7 +51,29 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $error_message = "Username atau Password salah.";
             }
         } else {
-            $error_message = "Username atau Password salah.";
+            // Check student table
+            $sql_siswa = "SELECT id, nis, nama_siswa FROM siswa WHERE nis = ?";
+            $stmt_s = mysqli_prepare($conn, $sql_siswa);
+            mysqli_stmt_bind_param($stmt_s, "s", $username);
+            mysqli_stmt_execute($stmt_s);
+            $res_s = mysqli_stmt_get_result($stmt_s);
+
+            if ($siswa = mysqli_fetch_assoc($res_s)) {
+                // Student password is their NIS
+                if ($password === $siswa['nis']) {
+                    $_SESSION['user_id'] = $siswa['id'];
+                    $_SESSION['nama_lengkap'] = $siswa['nama_siswa'];
+                    $_SESSION['username'] = $siswa['nis'];
+                    $_SESSION['role'] = 'siswa';
+                    header('Location: ' . BASE_URL . 'siswa/index.php');
+                    exit();
+                } else {
+                    $error_message = "Username atau Password salah.";
+                }
+            } else {
+                $error_message = "Username atau Password salah.";
+            }
+            mysqli_stmt_close($stmt_s);
         }
         mysqli_stmt_close($stmt);
     }
@@ -92,7 +114,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <i class="fa fa-book-open text-3xl text-indigo-600"></i>
                 <?php endif; ?>
             </div>
-            <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">Jurnal<span class="text-indigo-600">Mengajar</span></h1>
+            <h1 class="text-4xl font-black text-slate-900 tracking-tighter">CAKRA</h1>
+            <p class="text-[8px] text-slate-400 font-bold uppercase tracking-[0.2em] mb-4">Central Academic Knowledge & Record Application</p>
             <p class="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] mb-1"><?= htmlspecialchars($app_name) ?></p>
             <p class="text-slate-500 mt-2 font-medium">Selamat datang kembali, silakan login.</p>
         </div>

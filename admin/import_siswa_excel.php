@@ -28,9 +28,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['excel_file'])) {
         mysqli_begin_transaction($conn);
         try {
             // Prepared statements
-            $stmt_siswa = mysqli_prepare($conn, "INSERT INTO siswa (nis, nama_siswa, jenis_kelamin)
-                                               VALUES (?, ?, ?)
-                                               ON DUPLICATE KEY UPDATE nama_siswa = VALUES(nama_siswa), jenis_kelamin = VALUES(jenis_kelamin), id=LAST_INSERT_ID(id)");
+            $stmt_siswa = mysqli_prepare($conn, "INSERT INTO siswa (nis, nisn, nama_siswa, jenis_kelamin, alamat, no_telp)
+                                               VALUES (?, ?, ?, ?, ?, ?)
+                                               ON DUPLICATE KEY UPDATE nisn = VALUES(nisn), nama_siswa = VALUES(nama_siswa), jenis_kelamin = VALUES(jenis_kelamin), alamat = VALUES(alamat), no_telp = VALUES(no_telp), id=LAST_INSERT_ID(id)");
 
             $stmt_link = mysqli_prepare($conn, "INSERT INTO siswa_kelas (siswa_id, kelas_id, tahun_pelajaran_id)
                                               VALUES (?, ?, ?)
@@ -43,11 +43,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['excel_file'])) {
                 }
 
                 $nis = (string)$row[0];
-                $nama_siswa = $row[1];
-                $jk = (strtoupper(trim($row[2] ?? '')) == 'P') ? 'P' : 'L';
+                $nisn = (string)($row[1] ?? '');
+                $nama_siswa = $row[2] ?? '';
+                $jk = (strtoupper(trim($row[3] ?? '')) == 'P') ? 'P' : 'L';
+                $alamat = $row[4] ?? null;
+                $no_telp = $row[5] ?? null;
 
                 // Insert/Update Siswa
-                mysqli_stmt_bind_param($stmt_siswa, "sss", $nis, $nama_siswa, $jk);
+                mysqli_stmt_bind_param($stmt_siswa, "ssssss", $nis, $nisn, $nama_siswa, $jk, $alamat, $no_telp);
                 if (!mysqli_stmt_execute($stmt_siswa)) {
                     throw new Exception("Gagal memproses siswa pada baris " . ($index + 2));
                 }
@@ -113,7 +116,7 @@ require_once __DIR__ . '/../includes/header.php';
                     <i class="fa fa-info-circle mr-2"></i> Format File Excel
                 </h3>
                 <div class="flex flex-wrap gap-1.5 mb-3">
-                    <?php foreach(['NIS', 'Nama Siswa', 'L/P'] as $col): ?>
+                    <?php foreach(['NIS', 'NISN', 'Nama Siswa', 'L/P', 'Alamat', 'No. Telp'] as $col): ?>
                         <span class="px-2 py-1 bg-white rounded-lg border border-amber-200 text-amber-600 text-[10px] font-black uppercase"><?= $col ?></span>
                     <?php endforeach; ?>
                 </div>

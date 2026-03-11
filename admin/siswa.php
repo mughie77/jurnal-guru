@@ -16,11 +16,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     try {
         if (isset($_POST['tambah'])) {
             $nis = $_POST['nis'];
+            $nisn = $_POST['nisn'] ?: null;
             $nama_siswa = $_POST['nama_siswa'];
             $jenis_kelamin = $_POST['jenis_kelamin'];
+            $alamat = $_POST['alamat'] ?: null;
+            $no_telp = $_POST['no_telp'] ?: null;
 
-            $stmt = mysqli_prepare($conn, "INSERT INTO siswa (nis, nama_siswa, jenis_kelamin) VALUES (?, ?, ?)");
-            mysqli_stmt_bind_param($stmt, "sss", $nis, $nama_siswa, $jenis_kelamin);
+            $stmt = mysqli_prepare($conn, "INSERT INTO siswa (nis, nisn, nama_siswa, jenis_kelamin, alamat, no_telp) VALUES (?, ?, ?, ?, ?, ?)");
+            mysqli_stmt_bind_param($stmt, "ssssss", $nis, $nisn, $nama_siswa, $jenis_kelamin, $alamat, $no_telp);
             if (mysqli_stmt_execute($stmt)) {
                 $message = "Siswa berhasil ditambahkan!";
                 $message_type = 'success';
@@ -28,11 +31,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         } elseif (isset($_POST['edit'])) {
             $id = (int)$_POST['id'];
             $nis = $_POST['nis'];
+            $nisn = $_POST['nisn'] ?: null;
             $nama_siswa = $_POST['nama_siswa'];
             $jenis_kelamin = $_POST['jenis_kelamin'];
+            $alamat = $_POST['alamat'] ?: null;
+            $no_telp = $_POST['no_telp'] ?: null;
 
-            $stmt = mysqli_prepare($conn, "UPDATE siswa SET nis = ?, nama_siswa = ?, jenis_kelamin = ? WHERE id = ?");
-            mysqli_stmt_bind_param($stmt, "sssi", $nis, $nama_siswa, $jenis_kelamin, $id);
+            $stmt = mysqli_prepare($conn, "UPDATE siswa SET nis = ?, nisn = ?, nama_siswa = ?, jenis_kelamin = ?, alamat = ?, no_telp = ? WHERE id = ?");
+            mysqli_stmt_bind_param($stmt, "ssssssi", $nis, $nisn, $nama_siswa, $jenis_kelamin, $alamat, $no_telp, $id);
             if (mysqli_stmt_execute($stmt)) {
                 $message = "Data siswa diperbarui!";
                 $message_type = 'success';
@@ -137,7 +143,7 @@ require_once __DIR__ . '/../includes/header.php';
         <table class="w-full text-left border-collapse">
             <thead>
                 <tr class="bg-slate-50 border-b border-slate-100">
-                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">NIS</th>
+                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">NIS / NISN</th>
                     <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Nama Siswa</th>
                     <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">JK</th>
                     <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Kelas Aktif</th>
@@ -147,8 +153,14 @@ require_once __DIR__ . '/../includes/header.php';
             <tbody class="divide-y divide-slate-50">
                 <?php while ($row = mysqli_fetch_assoc($result)): ?>
                 <tr class="hover:bg-slate-50/50 transition-colors">
-                    <td class="px-6 py-4 font-mono text-sm text-indigo-600"><?= htmlspecialchars($row['nis']) ?></td>
-                    <td class="px-6 py-4 font-semibold text-slate-700"><?= htmlspecialchars($row['nama_siswa']) ?></td>
+                    <td class="px-6 py-4 font-mono text-sm">
+                        <div class="text-indigo-600 font-bold"><?= htmlspecialchars($row['nis']) ?></div>
+                        <div class="text-slate-400 text-[10px]"><?= htmlspecialchars($row['nisn'] ?? '-') ?></div>
+                    </td>
+                    <td class="px-6 py-4 font-semibold text-slate-700">
+                        <?= htmlspecialchars($row['nama_siswa']) ?>
+                        <div class="text-[10px] text-slate-400 font-normal italic"><?= htmlspecialchars($row['no_telp'] ?? '') ?></div>
+                    </td>
                     <td class="px-6 py-4 text-center">
                         <span class="px-2 py-0.5 rounded text-xs font-bold <?= $row['jenis_kelamin'] == 'L' ? 'bg-blue-100 text-blue-600' : 'bg-pink-100 text-pink-600' ?>">
                             <?= $row['jenis_kelamin'] ?>
@@ -178,36 +190,50 @@ require_once __DIR__ . '/../includes/header.php';
 
 <div id="modalOverlay" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] hidden transition-opacity duration-300 opacity-0" onclick="closeAllModals()"></div>
 
-<div id="tambahModal" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-white rounded-3xl shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0 overflow-hidden">
+<div id="tambahModal" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl bg-white rounded-3xl shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0 overflow-hidden">
     <div class="bg-indigo-600 px-8 py-6 text-white font-bold italic text-2xl">Tambah Siswa</div>
     <form action="" method="POST" class="p-8 space-y-4">
         <input type="hidden" name="csrf_token" value="<?= get_csrf_token() ?>">
-        <div><label class="block text-sm font-bold text-slate-700 mb-1">NIS</label><input type="text" name="nis" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50"></div>
-        <div><label class="block text-sm font-bold text-slate-700 mb-1">Nama Siswa</label><input type="text" name="nama_siswa" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50"></div>
-        <div><label class="block text-sm font-bold text-slate-700 mb-1">Jenis Kelamin</label>
-            <select name="jenis_kelamin" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 bg-white">
-                <option value="L">Laki-laki</option>
-                <option value="P">Perempuan</option>
-            </select>
+        <div class="grid grid-cols-2 gap-4">
+            <div><label class="block text-sm font-bold text-slate-700 mb-1">NIS</label><input type="text" name="nis" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50"></div>
+            <div><label class="block text-sm font-bold text-slate-700 mb-1">NISN</label><input type="text" name="nisn" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50"></div>
         </div>
+        <div><label class="block text-sm font-bold text-slate-700 mb-1">Nama Siswa</label><input type="text" name="nama_siswa" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50"></div>
+        <div class="grid grid-cols-2 gap-4">
+            <div><label class="block text-sm font-bold text-slate-700 mb-1">Jenis Kelamin</label>
+                <select name="jenis_kelamin" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 bg-white">
+                    <option value="L">Laki-laki</option>
+                    <option value="P">Perempuan</option>
+                </select>
+            </div>
+            <div><label class="block text-sm font-bold text-slate-700 mb-1">No. Telp/HP</label><input type="text" name="no_telp" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50"></div>
+        </div>
+        <div><label class="block text-sm font-bold text-slate-700 mb-1">Alamat</label><textarea name="alamat" rows="2" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50"></textarea></div>
         <div class="pt-4 flex gap-3"><button type="button" onclick="closeModal('tambahModal')" class="flex-1 px-6 py-2.5 rounded-xl border border-slate-200 font-bold text-slate-600">Batal</button><button type="submit" name="tambah" class="flex-1 px-6 py-2.5 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-100">Simpan</button></div>
     </form>
 </div>
 
 <?php mysqli_data_seek($result, 0); while ($row = mysqli_fetch_assoc($result)): ?>
-<div id="editModal-<?= $row['id'] ?>" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-white rounded-3xl shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0 overflow-hidden">
+<div id="editModal-<?= $row['id'] ?>" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl bg-white rounded-3xl shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0 overflow-hidden">
     <div class="bg-amber-500 px-8 py-6 text-white font-bold italic text-2xl">Edit Siswa</div>
     <form action="" method="POST" class="p-8 space-y-4">
         <input type="hidden" name="csrf_token" value="<?= get_csrf_token() ?>">
         <input type="hidden" name="id" value="<?= $row['id'] ?>">
-        <div><label class="block text-sm font-bold text-slate-700 mb-1">NIS</label><input type="text" name="nis" value="<?= htmlspecialchars($row['nis']) ?>" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"></div>
-        <div><label class="block text-sm font-bold text-slate-700 mb-1">Nama Siswa</label><input type="text" name="nama_siswa" value="<?= htmlspecialchars($row['nama_siswa']) ?>" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"></div>
-        <div><label class="block text-sm font-bold text-slate-700 mb-1">Jenis Kelamin</label>
-            <select name="jenis_kelamin" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50 bg-white">
-                <option value="L" <?= $row['jenis_kelamin'] == 'L' ? 'selected' : '' ?>>Laki-laki</option>
-                <option value="P" <?= $row['jenis_kelamin'] == 'P' ? 'selected' : '' ?>>Perempuan</option>
-            </select>
+        <div class="grid grid-cols-2 gap-4">
+            <div><label class="block text-sm font-bold text-slate-700 mb-1">NIS</label><input type="text" name="nis" value="<?= htmlspecialchars($row['nis']) ?>" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"></div>
+            <div><label class="block text-sm font-bold text-slate-700 mb-1">NISN</label><input type="text" name="nisn" value="<?= htmlspecialchars($row['nisn'] ?? '') ?>" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"></div>
         </div>
+        <div><label class="block text-sm font-bold text-slate-700 mb-1">Nama Siswa</label><input type="text" name="nama_siswa" value="<?= htmlspecialchars($row['nama_siswa']) ?>" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"></div>
+        <div class="grid grid-cols-2 gap-4">
+            <div><label class="block text-sm font-bold text-slate-700 mb-1">Jenis Kelamin</label>
+                <select name="jenis_kelamin" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50 bg-white">
+                    <option value="L" <?= $row['jenis_kelamin'] == 'L' ? 'selected' : '' ?>>Laki-laki</option>
+                    <option value="P" <?= $row['jenis_kelamin'] == 'P' ? 'selected' : '' ?>>Perempuan</option>
+                </select>
+            </div>
+            <div><label class="block text-sm font-bold text-slate-700 mb-1">No. Telp/HP</label><input type="text" name="no_telp" value="<?= htmlspecialchars($row['no_telp'] ?? '') ?>" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"></div>
+        </div>
+        <div><label class="block text-sm font-bold text-slate-700 mb-1">Alamat</label><textarea name="alamat" rows="2" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"><?= htmlspecialchars($row['alamat'] ?? '') ?></textarea></div>
         <div class="pt-4 flex gap-3"><button type="button" onclick="closeModal('editModal-<?= $row['id'] ?>')" class="flex-1 px-6 py-2.5 rounded-xl border border-slate-200 font-bold text-slate-600">Batal</button><button type="submit" name="edit" class="flex-1 px-6 py-2.5 rounded-xl bg-amber-500 text-white font-bold hover:bg-amber-600 shadow-lg shadow-amber-100">Simpan</button></div>
     </form>
 </div>
