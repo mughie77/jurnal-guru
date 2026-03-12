@@ -50,29 +50,29 @@ class IDCardPDF extends FPDF {
 
         // Logo Frame (Lightened version of indigo)
         $this->SetFillColor(99, 102, 241);
-        $this->Rect(35.5, 8, 14, 14, 'F');
+        $this->Rect(35.5, 4, 14, 14, 'F');
 
         // Logo
         $logo_path = __DIR__ . '/../uploads/' . ($sets['favicon'] ?? '');
         if (!empty($sets['favicon']) && file_exists($logo_path)) {
-            $this->Image($logo_path, 37.5, 10, 10, 10);
+            $this->Image($logo_path, 37.5, 6, 10, 10);
         }
 
         // Header Text
         $this->SetTextColor(210, 210, 255);
         $this->SetFont('Helvetica', 'B', 6);
-        $this->SetXY(0, 24);
+        $this->SetXY(0, 20);
         $this->Cell(85, 4, 'KARTU PELAJAR DIGITAL', 0, 1, 'C');
 
         $this->SetTextColor(255, 255, 255);
         $this->SetFont('Helvetica', 'B', 10);
-        $this->SetXY(10, 28);
+        $this->SetXY(10, 24);
         $this->MultiCell(65, 4.5, strtoupper($sets['nama_sekolah'] ?? 'SMK NEGERI CAKRA'), 0, 'C');
 
         // Photo (Circular Clipping)
         $foto_path = __DIR__ . '/../uploads/siswa/' . ($siswa['foto'] ?? '');
         $photo_x = 42.5; // Center X
-        $photo_y = 65;   // Center Y
+        $photo_y = 52;   // Center Y - Moved up to match -50px margin
         $photo_r = 22;   // Radius
 
         // Outer Circle (White border & thickness)
@@ -95,7 +95,7 @@ class IDCardPDF extends FPDF {
 
         // Name Section
         $this->SetTextColor(15, 23, 42);
-        $this->SetXY(5, 92);
+        $this->SetXY(5, 80); // Moved up
         $this->SetFont('Helvetica', 'B', 16);
         $this->Cell(75, 8, strtoupper($siswa['nama_siswa']), 0, 1, 'C');
 
@@ -105,13 +105,13 @@ class IDCardPDF extends FPDF {
 
         // Divider
         $this->SetDrawColor(241, 245, 249);
-        $this->Line(15, 108, 70, 108);
+        $this->Line(15, 94, 70, 94); // Moved up
 
         // Details Grid
         $this->SetTextColor(148, 163, 184);
         $this->SetFont('Helvetica', 'B', 7);
 
-        $this->SetXY(15, 112);
+        $this->SetXY(15, 98); // Moved up
         $this->Cell(25, 4, 'NIS', 0, 0);
         $this->Cell(30, 4, 'NISN', 0, 1);
 
@@ -131,9 +131,26 @@ class IDCardPDF extends FPDF {
         $this->SetX(15);
         $this->Cell(0, 5, $siswa['tahun_pelajaran'], 0, 1);
 
-        // QR Code Section (Bottom Left)
+        // QR Code Section (Match Web Layout - QR on Left)
         $qr_url = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" . $siswa['nis'];
-        $this->Image($qr_url, 55, 110, 15, 15, 'png');
+        $this->Image($qr_url, 15, 104, 16, 16, 'png');
+
+        $this->SetXY(33, 106);
+        $this->SetTextColor(148, 163, 184);
+        $this->SetFont('Helvetica', 'B', 6);
+        $this->Cell(30, 3, 'VERIFIED BY', 0, 1);
+        $this->SetX(33);
+        $this->SetTextColor(79, 70, 229);
+        $this->SetFont('Helvetica', 'BI', 8);
+        $this->Cell(30, 4, 'CAKRA SYSTEM', 0, 1);
+
+        // Official ID Tag (Right side)
+        $this->SetFillColor(79, 70, 229);
+        $this->Rect(60, 108, 15, 5, 'F');
+        $this->SetTextColor(255, 255, 255);
+        $this->SetFont('Helvetica', 'B', 5);
+        $this->SetXY(60, 108);
+        $this->Cell(15, 5, 'OFFICIAL ID', 0, 0, 'C');
 
         // Branding (Bottom Center Bar)
         $this->SetFillColor(79, 70, 229);

@@ -56,7 +56,7 @@ require_once __DIR__ . '/../includes/header.php';
         display: flex;
         flex-direction: column;
         align-items: center;
-        padding-top: 24px;
+        padding-top: 10px;
         z-index: 1;
         position: relative;
     }
@@ -67,7 +67,7 @@ require_once __DIR__ . '/../includes/header.php';
         bottom: -1px;
         left: 0;
         right: 0;
-        height: 40px;
+        height: 30px;
         background: white;
         clip-path: ellipse(60% 100% at 50% 100%);
     }
@@ -78,7 +78,7 @@ require_once __DIR__ . '/../includes/header.php';
         background: #f1f5f9;
         border: 6px solid white;
         border-radius: 50%;
-        margin-top: -85px;
+        margin-top: -50px;
         align-self: center;
         box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.2);
         display: flex;
@@ -150,11 +150,11 @@ require_once __DIR__ . '/../includes/header.php';
             </div>
 
             <!-- Name Below Photo -->
-            <div class="mt-6 w-full px-8 text-center flex-1">
+            <div class="mt-2 w-full px-8 text-center flex-1">
                 <h2 class="text-2xl font-black text-slate-900 uppercase tracking-tighter italic leading-none mb-1"><?= htmlspecialchars($siswa['nama_siswa']) ?></h2>
                 <p class="text-indigo-600 font-black text-[11px] tracking-[0.3em] mb-4 uppercase"><?= htmlspecialchars($siswa['nama_kelas']) ?></p>
 
-                <div class="grid grid-cols-2 gap-4 text-left border-t border-slate-100 pt-5">
+                <div class="grid grid-cols-2 gap-4 text-left border-t border-slate-100 pt-3">
                     <div>
                         <span class="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-0.5">NIS</span>
                         <span class="text-[12px] font-bold text-slate-800 tracking-tight"><?= htmlspecialchars($siswa['nis']) ?></span>
