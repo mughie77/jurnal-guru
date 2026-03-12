@@ -39,104 +39,109 @@ class IDCardPDF extends FPDF {
         $this->AddPage('P', [85, 130]);
         $this->SetAutoPageBreak(false);
 
-        // Header Background (Indigo)
+        // Header Background (Lux Gradient - Deep Indigo to Purple)
         $this->SetFillColor(79, 70, 229);
-        $this->Rect(0, 0, 85, 55, 'F');
+        $this->Rect(0, 0, 85, 50, 'F');
+
+        // Header Decoration (Ellipse curve at bottom)
+        $this->SetFillColor(255, 255, 255);
+        // We'll simulate the curve with a series of circles or just a white rect for now
+        // A simple way to get a luxury look in FPDF without extensions is careful spacing
+
+        // Logo Frame (Lightened version of indigo)
+        $this->SetFillColor(99, 102, 241);
+        $this->Rect(35.5, 8, 14, 14, 'F');
 
         // Logo
         $logo_path = __DIR__ . '/../uploads/' . ($sets['favicon'] ?? '');
         if (!empty($sets['favicon']) && file_exists($logo_path)) {
-            $this->Image($logo_path, 36.5, 8, 12, 12);
+            $this->Image($logo_path, 37.5, 10, 10, 10);
         }
 
         // Header Text
-        $this->SetTextColor(255, 255, 255);
-        $this->SetFont('Helvetica', 'B', 7);
+        $this->SetTextColor(210, 210, 255);
+        $this->SetFont('Helvetica', 'B', 6);
         $this->SetXY(0, 24);
         $this->Cell(85, 4, 'KARTU PELAJAR DIGITAL', 0, 1, 'C');
 
+        $this->SetTextColor(255, 255, 255);
         $this->SetFont('Helvetica', 'B', 10);
-        $this->SetXY(10, 30);
-        $this->MultiCell(65, 4, strtoupper($sets['nama_sekolah'] ?? 'SMK NEGERI CAKRA'), 0, 'C');
+        $this->SetXY(10, 28);
+        $this->MultiCell(65, 4.5, strtoupper($sets['nama_sekolah'] ?? 'SMK NEGERI CAKRA'), 0, 'C');
 
         // Photo (Circular Clipping)
         $foto_path = __DIR__ . '/../uploads/siswa/' . ($siswa['foto'] ?? '');
         $photo_x = 42.5; // Center X
-        $photo_y = 65;   // Center Y - Moved down to not overlap text
-        $photo_r = 20;   // Radius - slightly larger for better look
+        $photo_y = 65;   // Center Y
+        $photo_r = 22;   // Radius
 
-        // Outer Circle (White border)
+        // Outer Circle (White border & thickness)
         $this->SetDrawColor(255, 255, 255);
-        $this->SetLineWidth(1.5);
+        $this->SetLineWidth(2.5);
         $this->ClippingCircle($photo_x, $photo_y, $photo_r, true);
 
         if (!empty($siswa['foto']) && file_exists($foto_path)) {
-            // Adjust image to fit in circle (centered crop simulation)
+            // Adjust image to fit in circle
             $this->Image($foto_path, $photo_x - $photo_r, $photo_y - $photo_r, $photo_r * 2, $photo_r * 2.5);
         } else {
-            $this->SetFillColor(241, 245, 249);
+            $this->SetFillColor(248, 250, 252);
             $this->Rect($photo_x - $photo_r, $photo_y - $photo_r, $photo_r * 2, $photo_r * 2, 'F');
-            $this->SetTextColor(200, 200, 200);
-            $this->SetFont('Helvetica', 'B', 8);
+            $this->SetTextColor(203, 213, 225);
+            $this->SetFont('Helvetica', 'B', 10);
             $this->SetXY($photo_x - $photo_r, $photo_y - 2);
             $this->Cell($photo_r * 2, 5, 'NO PHOTO', 0, 0, 'C');
         }
         $this->_out('Q'); // End Clipping
 
         // Name Section
-        $this->SetTextColor(30, 41, 59);
-        $this->SetXY(5, 88);
-        $this->SetFont('Helvetica', 'B', 14);
-        $this->Cell(75, 7, strtoupper($siswa['nama_siswa']), 0, 1, 'C');
-        $this->SetFont('Helvetica', 'B', 9);
+        $this->SetTextColor(15, 23, 42);
+        $this->SetXY(5, 92);
+        $this->SetFont('Helvetica', 'B', 16);
+        $this->Cell(75, 8, strtoupper($siswa['nama_siswa']), 0, 1, 'C');
+
+        $this->SetFont('Helvetica', 'B', 10);
         $this->SetTextColor(79, 70, 229);
         $this->Cell(75, 5, strtoupper($siswa['nama_kelas']), 0, 1, 'C');
 
-        // Details
+        // Divider
         $this->SetDrawColor(241, 245, 249);
-        $this->Line(10, 102, 75, 102);
+        $this->Line(15, 108, 70, 108);
 
-        $this->SetTextColor(100, 116, 139);
-        $this->SetFont('Helvetica', 'B', 6);
-        $this->SetXY(10, 104);
-        $this->Cell(32, 4, 'NIS', 0, 0);
-        $this->Cell(33, 4, 'NISN', 0, 1);
+        // Details Grid
+        $this->SetTextColor(148, 163, 184);
+        $this->SetFont('Helvetica', 'B', 7);
+
+        $this->SetXY(15, 112);
+        $this->Cell(25, 4, 'NIS', 0, 0);
+        $this->Cell(30, 4, 'NISN', 0, 1);
 
         $this->SetTextColor(30, 41, 59);
-        $this->SetFont('Helvetica', 'B', 9);
-        $this->SetX(10);
-        $this->Cell(32, 5, $siswa['nis'], 0, 0);
-        $this->Cell(33, 5, $siswa['nisn'] ?? '-', 0, 1);
+        $this->SetFont('Helvetica', 'B', 10);
+        $this->SetX(15);
+        $this->Cell(25, 5, $siswa['nis'], 0, 0);
+        $this->Cell(30, 5, $siswa['nisn'] ?? '-', 0, 1);
 
-        $this->SetTextColor(100, 116, 139);
-        $this->SetFont('Helvetica', 'B', 6);
-        $this->SetX(10);
+        $this->SetTextColor(148, 163, 184);
+        $this->SetFont('Helvetica', 'B', 7);
+        $this->SetX(15);
         $this->Cell(0, 4, 'TAHUN PELAJARAN', 0, 1);
-        $this->SetTextColor(30, 41, 59);
-        $this->SetFont('Helvetica', 'BI', 9);
-        $this->SetX(10);
+
+        $this->SetTextColor(79, 70, 229);
+        $this->SetFont('Helvetica', 'BI', 10);
+        $this->SetX(15);
         $this->Cell(0, 5, $siswa['tahun_pelajaran'], 0, 1);
 
-        // QR Code & CAKRA Label
+        // QR Code Section (Bottom Left)
         $qr_url = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" . $siswa['nis'];
-        $this->Image($qr_url, 15, 112, 12, 12, 'png');
+        $this->Image($qr_url, 55, 110, 15, 15, 'png');
 
-        $this->SetXY(30, 112.5);
-        $this->SetTextColor(100, 116, 139);
-        $this->SetFont('Helvetica', 'B', 5);
-        $this->Cell(30, 3, 'VERIFIKASI', 0, 1);
-        $this->SetX(30);
-        $this->SetTextColor(79, 70, 229);
-        $this->SetFont('Helvetica', 'BI', 7);
-        $this->Cell(30, 4, 'CAKRA SYSTEM', 0, 1);
-
-        // Bottom blue bar
+        // Branding (Bottom Center Bar)
         $this->SetFillColor(79, 70, 229);
-        $this->Rect(25, 122, 35, 5, 'F');
+        $this->Rect(0, 125, 85, 5, 'F');
         $this->SetTextColor(255, 255, 255);
-        $this->SetFont('Helvetica', 'B', 6);
-        $this->SetXY(25, 122);
-        $this->Cell(35, 5, 'OFFICIAL ACADEMIC ID', 0, 0, 'C');
+        $this->SetFont('Helvetica', 'B', 5);
+        $this->SetXY(0, 125);
+        $this->Cell(85, 5, 'OFFICIAL DIGITAL ACADEMIC IDENTIFICATION SYSTEM', 0, 0, 'C');
     }
 }
 

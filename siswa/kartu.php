@@ -50,25 +50,37 @@ require_once __DIR__ . '/../includes/header.php';
     }
 
     .card-header-bg {
-        height: 150px;
-        background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%);
+        height: 180px;
+        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
         flex-shrink: 0;
         display: flex;
         flex-direction: column;
         align-items: center;
-        padding-top: 20px;
+        padding-top: 24px;
         z-index: 1;
+        position: relative;
+    }
+
+    .card-header-bg::after {
+        content: '';
+        position: absolute;
+        bottom: -1px;
+        left: 0;
+        right: 0;
+        height: 40px;
+        background: white;
+        clip-path: ellipse(60% 100% at 50% 100%);
     }
 
     .photo-frame {
-        width: 110px;
+        width: 140px;
         height: 140px;
         background: #f1f5f9;
-        border: 4px solid white;
-        border-radius: 16px;
-        margin-top: -55px;
+        border: 6px solid white;
+        border-radius: 50%;
+        margin-top: -85px;
         align-self: center;
-        box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.2);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -117,59 +129,60 @@ require_once __DIR__ . '/../includes/header.php';
         <div class="card-id">
             <!-- Background & Logo -->
             <div class="card-header-bg">
-                <div class="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30 mb-2 shadow-inner">
+                <div class="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-xl flex items-center justify-center border border-white/20 mb-3 shadow-2xl">
                     <?php if(!empty($sets['favicon'])): ?>
-                        <img src="<?= BASE_URL ?>uploads/<?= $sets['favicon'] ?>" class="max-w-[70%] max-h-[70%] object-contain">
+                        <img src="<?= BASE_URL ?>uploads/<?= $sets['favicon'] ?>" class="max-w-[70%] max-h-[70%] object-contain drop-shadow-lg">
                     <?php else: ?>
-                        <i class="fa fa-graduation-cap text-white text-xl"></i>
+                        <i class="fa fa-graduation-cap text-white text-2xl"></i>
                     <?php endif; ?>
                 </div>
-                <h3 class="text-white font-black text-[9px] uppercase tracking-[0.4em] mb-1">Kartu Pelajar Digital</h3>
-                <h2 class="text-white font-black text-[11px] uppercase tracking-wider text-center px-8 leading-tight mb-2"><?= htmlspecialchars($sets['nama_sekolah'] ?? 'SMK Negeri CAKRA') ?></h2>
+                <h3 class="text-white/80 font-bold text-[8px] uppercase tracking-[0.5em] mb-1">Kartu Pelajar Digital</h3>
+                <h2 class="text-white font-black text-[12px] uppercase tracking-wider text-center px-10 leading-tight mb-2 drop-shadow-md"><?= htmlspecialchars($sets['nama_sekolah'] ?? 'SMK Negeri CAKRA') ?></h2>
             </div>
 
             <!-- Photo -->
             <div class="photo-frame">
                 <?php if (!empty($siswa['foto'])): ?>
-                    <img src="<?= BASE_URL ?>uploads/siswa/<?= $siswa['foto'] ?>" class="w-full h-full object-cover">
+                    <img src="<?= BASE_URL ?>uploads/siswa/<?= $siswa['foto'] ?>" class="w-full h-full object-cover scale-110">
                 <?php else: ?>
-                    <i class="fa fa-user text-5xl text-slate-300"></i>
+                    <i class="fa fa-user text-6xl text-slate-200"></i>
                 <?php endif; ?>
             </div>
 
             <!-- Name Below Photo -->
-            <div class="mt-4 w-full px-6 text-center flex-1">
-                <h2 class="text-xl font-black text-slate-900 uppercase tracking-tighter italic leading-tight mb-0.5"><?= htmlspecialchars($siswa['nama_siswa']) ?></h2>
-                <p class="text-indigo-600 font-black text-[10px] tracking-[0.2em] mb-3 uppercase"><?= htmlspecialchars($siswa['nama_kelas']) ?></p>
+            <div class="mt-6 w-full px-8 text-center flex-1">
+                <h2 class="text-2xl font-black text-slate-900 uppercase tracking-tighter italic leading-none mb-1"><?= htmlspecialchars($siswa['nama_siswa']) ?></h2>
+                <p class="text-indigo-600 font-black text-[11px] tracking-[0.3em] mb-4 uppercase"><?= htmlspecialchars($siswa['nama_kelas']) ?></p>
 
-                <div class="grid grid-cols-2 gap-3 text-left border-t border-slate-100 pt-3">
+                <div class="grid grid-cols-2 gap-4 text-left border-t border-slate-100 pt-5">
                     <div>
-                        <span class="text-[7px] font-black text-slate-400 uppercase tracking-widest block">NIS</span>
-                        <span class="text-[11px] font-bold text-slate-700"><?= htmlspecialchars($siswa['nis']) ?></span>
+                        <span class="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-0.5">NIS</span>
+                        <span class="text-[12px] font-bold text-slate-800 tracking-tight"><?= htmlspecialchars($siswa['nis']) ?></span>
                     </div>
                     <div>
-                        <span class="text-[7px] font-black text-slate-400 uppercase tracking-widest block">NISN</span>
-                        <span class="text-[11px] font-bold text-slate-700"><?= htmlspecialchars($siswa['nisn'] ?? '-') ?></span>
+                        <span class="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-0.5">NISN</span>
+                        <span class="text-[12px] font-bold text-slate-800 tracking-tight"><?= htmlspecialchars($siswa['nisn'] ?? '-') ?></span>
                     </div>
                     <div class="col-span-2">
-                        <span class="text-[7px] font-black text-slate-400 uppercase tracking-widest block">Tahun Pelajaran</span>
-                        <span class="text-[11px] font-bold text-slate-700 italic"><?= htmlspecialchars($siswa['tahun_pelajaran']) ?></span>
+                        <span class="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-0.5">Tahun Pelajaran</span>
+                        <span class="text-[12px] font-bold text-indigo-600 italic"><?= htmlspecialchars($siswa['tahun_pelajaran']) ?></span>
                     </div>
                 </div>
             </div>
 
-            <!-- QR Code -->
-            <div class="mt-auto flex flex-col items-center relative pb-8">
-                <div class="flex items-center gap-4 mb-4">
-                    <div id="qrcode" class="p-1 bg-white border border-slate-100 rounded-lg shadow-sm"></div>
-                    <div class="text-left">
-                        <p class="text-[7px] font-black text-slate-400 uppercase tracking-[0.2em] mb-0.5">Verifikasi</p>
-                        <p class="text-[9px] font-black text-indigo-600 italic tracking-tighter leading-none">CAKRA SYSTEM</p>
+            <!-- QR Code Section -->
+            <div class="mt-auto bg-slate-50/80 backdrop-blur-sm border-t border-slate-100 px-8 py-6">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div id="qrcode" class="p-1.5 bg-white border border-slate-200 rounded-xl shadow-sm scale-110"></div>
+                        <div class="ml-2">
+                            <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Verified by</p>
+                            <p class="text-[10px] font-black text-indigo-600 italic tracking-tighter uppercase leading-none">CAKRA SYSTEM</p>
+                        </div>
                     </div>
-                </div>
-
-                <div>
-                    <p class="text-[7px] font-black text-indigo-100 bg-indigo-600 inline-block px-4 py-1 rounded-full uppercase tracking-[0.2em] shadow-lg shadow-indigo-200">Official Academic ID</p>
+                    <div class="text-right">
+                        <span class="text-[8px] font-black text-white bg-indigo-600 px-3 py-1.5 rounded-full uppercase tracking-widest shadow-lg shadow-indigo-200">Official ID</span>
+                    </div>
                 </div>
             </div>
         </div>
