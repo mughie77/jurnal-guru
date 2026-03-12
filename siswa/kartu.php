@@ -71,17 +71,29 @@ require_once __DIR__ . '/../includes/header.php';
     }
 
     @media print {
-        body * { visibility: hidden; background: none !important; }
-        .card-id, .card-id * { visibility: visible; }
-        .card-id {
-            position: fixed;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%);
-            border: none;
-            box-shadow: none;
+        body { background: none !important; }
+        #sidebar, header, .no-print, .mb-8 { display: none !important; }
+        .bg-slate-50 { background: none !important; }
+        .lg\:ml-64 { margin: 0 !important; }
+        main { padding: 0 !important; }
+
+        .card-id-wrapper {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
-        .no-print { display: none !important; }
+
+        .card-id {
+            box-shadow: none !important;
+            border: 1px solid #eee !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
     }
 </style>
 
@@ -97,9 +109,16 @@ require_once __DIR__ . '/../includes/header.php';
     <div id="printableCard" class="card-id-wrapper animate-in zoom-in duration-500">
         <div class="card-id flex flex-col items-center">
             <!-- Background & Logo -->
-            <div class="card-header-bg w-full flex flex-col items-center pt-6">
-                <h3 class="text-white font-black text-xs uppercase tracking-[0.3em] mb-1">Kartu Pelajar Digital</h3>
-                <h2 class="text-white font-black text-sm uppercase tracking-wider text-center px-4 leading-tight"><?= htmlspecialchars($sets['nama_sekolah'] ?? 'SMK Negeri CAKRA') ?></h2>
+            <div class="card-header-bg w-full flex flex-col items-center pt-4">
+                <div class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30 mb-2">
+                    <?php if(!empty($sets['favicon'])): ?>
+                        <img src="<?= BASE_URL ?>uploads/<?= $sets['favicon'] ?>" class="max-w-[70%] max-h-[70%] object-contain">
+                    <?php else: ?>
+                        <i class="fa fa-graduation-cap text-white text-lg"></i>
+                    <?php endif; ?>
+                </div>
+                <h3 class="text-white font-black text-[8px] uppercase tracking-[0.4em] mb-1">Kartu Pelajar Digital</h3>
+                <h2 class="text-white font-black text-[10px] uppercase tracking-wider text-center px-4 leading-tight"><?= htmlspecialchars($sets['nama_sekolah'] ?? 'SMK Negeri CAKRA') ?></h2>
             </div>
 
             <!-- Photo -->
@@ -133,12 +152,12 @@ require_once __DIR__ . '/../includes/header.php';
             </div>
 
             <!-- QR Code -->
-            <div class="mt-6 flex flex-col items-center">
+            <div class="mt-6 flex flex-col items-center relative">
                 <p class="text-[7px] font-black text-slate-400 uppercase tracking-[0.3em] mb-2 italic">Verifikasi CAKRA</p>
                 <div id="qrcode" class="p-1.5 bg-white border border-slate-100 rounded-xl shadow-sm"></div>
             </div>
 
-            <div class="absolute bottom-3 left-0 right-0 text-center">
+            <div class="mt-4 text-center">
                 <p class="text-[7px] font-black text-indigo-100 bg-indigo-600 inline-block px-4 py-1.5 rounded-full uppercase tracking-[0.2em] shadow-lg shadow-indigo-200">Official Academic ID</p>
             </div>
         </div>
