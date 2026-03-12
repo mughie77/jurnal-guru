@@ -5,8 +5,10 @@ require_once __DIR__ . '/../config/database.php';
 authorize_role(['guru', 'admin']);
 
 $user_id = $_SESSION['user_id'];
-$guru_res = mysqli_query($conn, "SELECT id FROM guru WHERE user_id = $user_id");
-$guru_id = mysqli_fetch_assoc($guru_res)['id'];
+$guru_res = mysqli_query($conn, "SELECT id, foto FROM guru WHERE user_id = $user_id");
+$g_data = mysqli_fetch_assoc($guru_res);
+$guru_id = $g_data['id'];
+$guru_foto = $g_data['foto'];
 
 // Stats for Dashboard
 $total_jurnal = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as total FROM jurnal WHERE guru_id = $guru_id"))['total'];
@@ -27,9 +29,18 @@ require_once __DIR__ . '/../includes/header.php';
     <!-- Main Content -->
     <div class="p-8 lg:p-12 max-w-7xl mx-auto">
         <div class="flex items-center justify-between mb-12">
-            <div>
-                <h1 class="text-3xl font-black text-slate-800 tracking-tight italic">Beranda Guru <span class="text-indigo-600">(<?= htmlspecialchars($_SESSION['nama_lengkap']) ?>)</span></h1>
-                <p class="text-slate-400 font-medium tracking-wide"><?= date('l, d F Y') ?></p>
+            <div class="flex items-center gap-6">
+                <div class="w-20 h-20 rounded-2xl bg-indigo-600 border-4 border-white shadow-xl overflow-hidden flex items-center justify-center">
+                    <?php if(!empty($guru_foto)): ?>
+                        <img src="<?= BASE_URL ?>uploads/guru/<?= $guru_foto ?>" class="w-full h-full object-cover">
+                    <?php else: ?>
+                        <i class="fa fa-user-tie text-white text-3xl"></i>
+                    <?php endif; ?>
+                </div>
+                <div>
+                    <h1 class="text-3xl font-black text-slate-800 tracking-tight italic">Beranda Guru <span class="text-indigo-600">(<?= htmlspecialchars($_SESSION['nama_lengkap']) ?>)</span></h1>
+                    <p class="text-slate-400 font-medium tracking-wide"><?= date('l, d F Y') ?></p>
+                </div>
             </div>
             <div class="flex items-center gap-4">
                 <button class="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-50 transition-all"><i class="fa fa-search"></i></button>

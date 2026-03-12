@@ -176,6 +176,7 @@ require_once __DIR__ . '/../includes/header.php';
         <table class="w-full text-left border-collapse">
             <thead>
                 <tr class="bg-slate-50 border-b border-slate-100">
+                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Foto</th>
                     <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">NIS / NISN</th>
                     <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Nama Siswa</th>
                     <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">JK</th>
@@ -186,6 +187,15 @@ require_once __DIR__ . '/../includes/header.php';
             <tbody class="divide-y divide-slate-50">
                 <?php while ($row = mysqli_fetch_assoc($result)): ?>
                 <tr class="hover:bg-slate-50/50 transition-colors">
+                    <td class="px-6 py-4">
+                        <div class="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 overflow-hidden shadow-sm flex items-center justify-center mx-auto">
+                            <?php if(!empty($row['foto'])): ?>
+                                <img src="<?= BASE_URL ?>uploads/siswa/<?= $row['foto'] ?>" class="w-full h-full object-cover">
+                            <?php else: ?>
+                                <i class="fa fa-user-graduate text-slate-300"></i>
+                            <?php endif; ?>
+                        </div>
+                    </td>
                     <td class="px-6 py-4 font-mono text-sm">
                         <div class="text-indigo-600 font-bold"><?= htmlspecialchars($row['nis']) ?></div>
                         <div class="text-slate-400 text-[10px]"><?= htmlspecialchars($row['nisn'] ?? '-') ?></div>

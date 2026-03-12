@@ -50,8 +50,12 @@ require_once __DIR__ . '/../includes/header.php';
         <!-- Header Profil -->
         <div class="lux-card p-6 mb-8 bg-gradient-to-br from-indigo-600 to-indigo-800 text-white relative overflow-hidden">
             <div class="relative z-10 flex items-center gap-6">
-                <div class="w-20 h-20 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-3xl font-black italic shadow-inner">
-                    <?= strtoupper(substr($siswa['nama_siswa'], 0, 1)) ?>
+                <div class="w-24 h-24 rounded-2xl bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center text-3xl font-black italic shadow-inner overflow-hidden">
+                    <?php if(!empty($siswa['foto'])): ?>
+                        <img src="<?= BASE_URL ?>uploads/siswa/<?= $siswa['foto'] ?>" class="w-full h-full object-cover">
+                    <?php else: ?>
+                        <?= strtoupper(substr($siswa['nama_siswa'], 0, 1)) ?>
+                    <?php endif; ?>
                 </div>
                 <div>
                     <h1 class="text-2xl font-black italic tracking-tight leading-tight"><?= htmlspecialchars($siswa['nama_siswa']) ?></h1>

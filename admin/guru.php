@@ -16,6 +16,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $alamat = $_POST['alamat'] ?: null;
         $no_telp = $_POST['no_telp'] ?: null;
         $pass = password_hash($nip, PASSWORD_DEFAULT);
+
+        $foto = null;
+        if (!empty($_FILES['foto']['name'])) {
+            $ext = strtolower(pathinfo($_FILES['foto']['name'], PATHINFO_EXTENSION));
+            if (in_array($ext, ['jpg', 'jpeg', 'png'])) {
+                $foto = $nip . "_" . time() . "." . $ext;
+                move_uploaded_file($_FILES['foto']['tmp_name'], __DIR__ . "/../uploads/guru/" . $foto);
+            }
+        }
+
         mysqli_begin_transaction($conn);
         try {
             $stmt1 = mysqli_prepare($conn, "INSERT INTO users (nama_lengkap, username, password, role) VALUES (?, ?, ?, 'guru')");
@@ -23,8 +33,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             mysqli_stmt_execute($stmt1);
             $uid = mysqli_insert_id($conn);
 
-            $stmt2 = mysqli_prepare($conn, "INSERT INTO guru (user_id, nip, alamat, no_telp) VALUES (?, ?, ?, ?)");
-            mysqli_stmt_bind_param($stmt2, "isss", $uid, $nip, $alamat, $no_telp);
+            $stmt2 = mysqli_prepare($conn, "INSERT INTO guru (user_id, nip, alamat, no_telp, foto) VALUES (?, ?, ?, ?, ?)");
+            mysqli_stmt_bind_param($stmt2, "issss", $uid, $nip, $alamat, $no_telp, $foto);
             mysqli_stmt_execute($stmt2);
             $gid = mysqli_insert_id($conn);
 
@@ -44,14 +54,33 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $nip = $_POST['nip'];
         $alamat = $_POST['alamat'] ?: null;
         $no_telp = $_POST['no_telp'] ?: null;
+
+        $q_foto = "";
+        $params = [$nip, $alamat, $no_telp];
+        $types = "sss";
+
+        if (!empty($_FILES['foto']['name'])) {
+            $ext = strtolower(pathinfo($_FILES['foto']['name'], PATHINFO_EXTENSION));
+            if (in_array($ext, ['jpg', 'jpeg', 'png'])) {
+                $foto = $nip . "_" . time() . "." . $ext;
+                move_uploaded_file($_FILES['foto']['tmp_name'], __DIR__ . "/../uploads/guru/" . $foto);
+                $q_foto = ", foto = ?";
+                $params[] = $foto;
+                $types .= "s";
+            }
+        }
+
+        $params[] = $gid;
+        $types .= "i";
+
         mysqli_begin_transaction($conn);
         try {
             $stmt1 = mysqli_prepare($conn, "UPDATE users SET nama_lengkap = ? WHERE id = ?");
             mysqli_stmt_bind_param($stmt1, "si", $nama, $uid);
             mysqli_stmt_execute($stmt1);
 
-            $stmt2 = mysqli_prepare($conn, "UPDATE guru SET nip = ?, alamat = ?, no_telp = ? WHERE id = ?");
-            mysqli_stmt_bind_param($stmt2, "sssi", $nip, $alamat, $no_telp, $gid);
+            $stmt2 = mysqli_prepare($conn, "UPDATE guru SET nip = ?, alamat = ?, no_telp = ? $q_foto WHERE id = ?");
+            mysqli_stmt_bind_param($stmt2, $types, ...$params);
             mysqli_stmt_execute($stmt2);
 
             $stmt3 = mysqli_prepare($conn, "DELETE FROM guru_mapel WHERE guru_id = ?");
@@ -136,6 +165,7 @@ require_once __DIR__ . '/../includes/header.php';
         <table class="w-full text-left border-collapse">
             <thead>
                 <tr class="bg-slate-50 border-b border-slate-100">
+                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Foto</th>
                     <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">NIP / Username</th>
                     <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Nama Lengkap</th>
                     <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Mata Pelajaran</th>
@@ -145,6 +175,15 @@ require_once __DIR__ . '/../includes/header.php';
             <tbody class="divide-y divide-slate-50">
                 <?php while ($row = mysqli_fetch_assoc($result)): ?>
                 <tr class="hover:bg-slate-50/50 transition-colors">
+                    <td class="px-6 py-4">
+                        <div class="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 overflow-hidden shadow-sm flex items-center justify-center">
+                            <?php if(!empty($row['foto'])): ?>
+                                <img src="<?= BASE_URL ?>uploads/guru/<?= $row['foto'] ?>" class="w-full h-full object-cover">
+                            <?php else: ?>
+                                <i class="fa fa-user text-slate-300"></i>
+                            <?php endif; ?>
+                        </div>
+                    </td>
                     <td class="px-6 py-4 font-mono text-sm text-indigo-600 font-bold"><?= htmlspecialchars($row['nip']) ?></td>
                     <td class="px-6 py-4 font-semibold text-slate-700"><?= htmlspecialchars($row['nama_lengkap']) ?></td>
                     <td class="px-6 py-4 text-sm text-slate-500">
@@ -183,7 +222,7 @@ require_once __DIR__ . '/../includes/header.php';
 <!-- Tambah Modal -->
 <div id="tambahModal" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl bg-white rounded-3xl shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0 overflow-hidden">
     <div class="bg-indigo-600 px-8 py-6 text-white"><h3 class="text-2xl font-bold italic">Tambah Guru</h3></div>
-    <form action="" method="POST" class="p-8 space-y-5">
+    <form action="" method="POST" enctype="multipart/form-data" class="p-8 space-y-5">
         <input type="hidden" name="csrf_token" value="<?= get_csrf_token() ?>">
         <div class="grid grid-cols-2 gap-4">
             <div><label class="block text-sm font-bold text-slate-700 mb-2">Nama Lengkap</label><input type="text" name="nama_lengkap" required class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50"></div>
@@ -199,7 +238,10 @@ require_once __DIR__ . '/../includes/header.php';
                 <?php endwhile; ?>
             </select>
         </div>
-        <div><label class="block text-sm font-bold text-slate-700 mb-2">Alamat</label><textarea name="alamat" rows="2" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50"></textarea></div>
+        <div class="grid grid-cols-2 gap-4">
+            <div><label class="block text-sm font-bold text-slate-700 mb-2">Alamat</label><textarea name="alamat" rows="2" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50"></textarea></div>
+            <div><label class="block text-sm font-bold text-slate-700 mb-2">Foto Guru</label><input type="file" name="foto" accept="image/*" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 bg-white shadow-sm"></div>
+        </div>
         <div class="pt-4 flex gap-4">
             <button type="button" onclick="closeModal('tambahModal')" class="flex-1 px-6 py-3 rounded-xl border border-slate-200 font-bold text-slate-600 hover:bg-slate-50 transition-all">Batal</button>
             <button type="submit" name="tambah" class="flex-[2] px-6 py-3 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all">Simpan Data</button>
@@ -210,7 +252,7 @@ require_once __DIR__ . '/../includes/header.php';
 <!-- Edit Modal -->
 <div id="editModal" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl bg-white rounded-3xl shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0 overflow-hidden">
     <div class="bg-amber-500 px-8 py-6 text-white"><h3 class="text-2xl font-bold italic">Edit Data Guru</h3></div>
-    <form action="" method="POST" class="p-8 space-y-5">
+    <form action="" method="POST" enctype="multipart/form-data" class="p-8 space-y-5">
         <input type="hidden" name="csrf_token" value="<?= get_csrf_token() ?>">
         <input type="hidden" name="id" id="edit_id"><input type="hidden" name="user_id" id="edit_user_id">
         <div class="grid grid-cols-2 gap-4">
@@ -227,7 +269,10 @@ require_once __DIR__ . '/../includes/header.php';
                 <?php endwhile; ?>
             </select>
         </div>
-        <div><label class="block text-sm font-bold text-slate-700 mb-2">Alamat</label><textarea name="alamat" id="edit_alamat" rows="2" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"></textarea></div>
+        <div class="grid grid-cols-2 gap-4">
+            <div><label class="block text-sm font-bold text-slate-700 mb-2">Alamat</label><textarea name="alamat" id="edit_alamat" rows="2" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"></textarea></div>
+            <div><label class="block text-sm font-bold text-slate-700 mb-2">Foto Guru</label><input type="file" name="foto" accept="image/*" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50 bg-white shadow-sm"></div>
+        </div>
         <div class="pt-4 flex gap-4">
             <button type="button" onclick="closeModal('editModal')" class="flex-1 px-6 py-3 rounded-xl border border-slate-200 font-bold text-slate-600 hover:bg-slate-50 transition-all">Batal</button>
             <button type="submit" name="edit" class="flex-[2] px-6 py-3 rounded-xl bg-amber-500 text-white font-bold hover:bg-amber-600 shadow-lg shadow-amber-100 transition-all">Simpan Perubahan</button>
@@ -262,17 +307,29 @@ function closeModal(id) {
 }
 function closeAllModals() { document.querySelectorAll('.modal-content').forEach(m => { if(!m.classList.contains('hidden')) closeModal(m.id); }); }
 function openEditModal(data) {
-    document.getElementById('edit_id').value = data.id; document.getElementById('edit_user_id').value = data.user_id;
-    document.getElementById('edit_nama').value = data.nama_lengkap; document.getElementById('edit_nip').value = data.nip;
-    document.getElementById('edit_alamat').value = data.alamat || ''; document.getElementById('edit_telp').value = data.no_telp || '';
+    // Basic fields
+    document.getElementById('edit_id').value = data.id || '';
+    document.getElementById('edit_user_id').value = data.user_id || '';
+    document.getElementById('edit_nama').value = data.nama_lengkap || '';
+    document.getElementById('edit_nip').value = data.nip || '';
+    document.getElementById('edit_alamat').value = data.alamat || '';
+    document.getElementById('edit_telp').value = data.no_telp || '';
 
-    // Set mapel selects if available
+    // Set mapel selects
     const select = document.querySelector('#editModal select[name="mapel_ids[]"]');
-    if (select && data.mapel_diampu) {
-        const mapels = data.mapel_diampu.split(', ');
-        Array.from(select.options).forEach(opt => {
-            opt.selected = mapels.includes(opt.text);
-        });
+    if (select) {
+        // Clear all selections first
+        Array.from(select.options).forEach(opt => opt.selected = false);
+
+        if (data.mapel_diampu) {
+            const mapels = data.mapel_diampu.split(', ');
+            Array.from(select.options).forEach(opt => {
+                // Trim to match precisely
+                if (mapels.includes(opt.text.trim())) {
+                    opt.selected = true;
+                }
+            });
+        }
     }
 
     openModal('editModal');

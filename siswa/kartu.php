@@ -37,37 +37,44 @@ require_once __DIR__ . '/../includes/header.php';
     }
 
     .card-id {
-        width: 340px;
-        height: 520px;
+        width: 320px;
+        height: 500px;
         background: white;
-        border-radius: 30px;
+        border-radius: 24px;
         position: relative;
         overflow: hidden;
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-        border: 1px solid #e2e8f0;
+        box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.15);
+        border: 1px solid #f1f5f9;
+        display: flex;
+        flex-direction: column;
     }
 
     .card-header-bg {
-        height: 140px;
+        height: 150px;
         background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%);
-        border-radius: 0 0 50% 50% / 0 0 20% 20%;
+        flex-shrink: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding-top: 20px;
+        z-index: 1;
     }
 
     .photo-frame {
-        width: 130px;
-        height: 160px;
+        width: 110px;
+        height: 140px;
         background: #f1f5f9;
         border: 4px solid white;
-        border-radius: 20px;
-        position: absolute;
-        top: 60px;
-        left: 50%;
-        transform: translateX(-50%);
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        border-radius: 16px;
+        margin-top: -55px;
+        align-self: center;
+        box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.1);
         display: flex;
         align-items: center;
         justify-content: center;
         z-index: 10;
+        overflow: hidden;
+        flex-shrink: 0;
     }
 
     @media print {
@@ -107,35 +114,35 @@ require_once __DIR__ . '/../includes/header.php';
     </div>
 
     <div id="printableCard" class="card-id-wrapper animate-in zoom-in duration-500">
-        <div class="card-id flex flex-col items-center">
+        <div class="card-id">
             <!-- Background & Logo -->
-            <div class="card-header-bg w-full flex flex-col items-center pt-4">
-                <div class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30 mb-2">
+            <div class="card-header-bg">
+                <div class="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30 mb-2 shadow-inner">
                     <?php if(!empty($sets['favicon'])): ?>
                         <img src="<?= BASE_URL ?>uploads/<?= $sets['favicon'] ?>" class="max-w-[70%] max-h-[70%] object-contain">
                     <?php else: ?>
-                        <i class="fa fa-graduation-cap text-white text-lg"></i>
+                        <i class="fa fa-graduation-cap text-white text-xl"></i>
                     <?php endif; ?>
                 </div>
-                <h3 class="text-white font-black text-[8px] uppercase tracking-[0.4em] mb-1">Kartu Pelajar Digital</h3>
-                <h2 class="text-white font-black text-[10px] uppercase tracking-wider text-center px-4 leading-tight"><?= htmlspecialchars($sets['nama_sekolah'] ?? 'SMK Negeri CAKRA') ?></h2>
+                <h3 class="text-white font-black text-[9px] uppercase tracking-[0.4em] mb-1">Kartu Pelajar Digital</h3>
+                <h2 class="text-white font-black text-[11px] uppercase tracking-wider text-center px-8 leading-tight mb-2"><?= htmlspecialchars($sets['nama_sekolah'] ?? 'SMK Negeri CAKRA') ?></h2>
             </div>
 
             <!-- Photo -->
-            <div class="photo-frame overflow-hidden">
+            <div class="photo-frame">
                 <?php if (!empty($siswa['foto'])): ?>
                     <img src="<?= BASE_URL ?>uploads/siswa/<?= $siswa['foto'] ?>" class="w-full h-full object-cover">
                 <?php else: ?>
-                    <i class="fa fa-user text-6xl text-slate-300"></i>
+                    <i class="fa fa-user text-5xl text-slate-300"></i>
                 <?php endif; ?>
             </div>
 
             <!-- Name Below Photo -->
-            <div class="mt-24 w-full px-6 text-center">
+            <div class="mt-4 w-full px-6 text-center flex-1">
                 <h2 class="text-xl font-black text-slate-900 uppercase tracking-tighter italic leading-tight mb-0.5"><?= htmlspecialchars($siswa['nama_siswa']) ?></h2>
-                <p class="text-indigo-600 font-black text-[10px] tracking-[0.2em] mb-4 uppercase"><?= htmlspecialchars($siswa['nama_kelas']) ?></p>
+                <p class="text-indigo-600 font-black text-[10px] tracking-[0.2em] mb-3 uppercase"><?= htmlspecialchars($siswa['nama_kelas']) ?></p>
 
-                <div class="grid grid-cols-2 gap-4 text-left border-t border-slate-100 pt-4">
+                <div class="grid grid-cols-2 gap-3 text-left border-t border-slate-100 pt-3">
                     <div>
                         <span class="text-[7px] font-black text-slate-400 uppercase tracking-widest block">NIS</span>
                         <span class="text-[11px] font-bold text-slate-700"><?= htmlspecialchars($siswa['nis']) ?></span>
@@ -152,23 +159,28 @@ require_once __DIR__ . '/../includes/header.php';
             </div>
 
             <!-- QR Code -->
-            <div class="mt-6 flex flex-col items-center relative">
-                <p class="text-[7px] font-black text-slate-400 uppercase tracking-[0.3em] mb-2 italic">Verifikasi CAKRA</p>
-                <div id="qrcode" class="p-1.5 bg-white border border-slate-100 rounded-xl shadow-sm"></div>
-            </div>
+            <div class="mt-auto flex flex-col items-center relative pb-8">
+                <div class="flex items-center gap-4 mb-4">
+                    <div id="qrcode" class="p-1 bg-white border border-slate-100 rounded-lg shadow-sm"></div>
+                    <div class="text-left">
+                        <p class="text-[7px] font-black text-slate-400 uppercase tracking-[0.2em] mb-0.5">Verifikasi</p>
+                        <p class="text-[9px] font-black text-indigo-600 italic tracking-tighter leading-none">CAKRA SYSTEM</p>
+                    </div>
+                </div>
 
-            <div class="mt-4 text-center">
-                <p class="text-[7px] font-black text-indigo-100 bg-indigo-600 inline-block px-4 py-1.5 rounded-full uppercase tracking-[0.2em] shadow-lg shadow-indigo-200">Official Academic ID</p>
+                <div>
+                    <p class="text-[7px] font-black text-indigo-100 bg-indigo-600 inline-block px-4 py-1 rounded-full uppercase tracking-[0.2em] shadow-lg shadow-indigo-200">Official Academic ID</p>
+                </div>
             </div>
         </div>
     </div>
 
     <div class="mt-12 max-w-xs text-center no-print">
-        <button onclick="window.print()" class="px-8 py-4 bg-slate-900 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-xl hover:bg-indigo-600 transition-all flex items-center justify-center mx-auto group">
-            <i class="fa fa-print mr-2 group-hover:scale-110 transition-transform"></i> Cetak Kartu Saja
-        </button>
+        <a href="<?= BASE_URL ?>siswa/download_kartu_pdf.php" class="px-8 py-4 bg-indigo-600 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-xl hover:bg-indigo-700 transition-all flex items-center justify-center mx-auto group">
+            <i class="fa fa-file-pdf mr-2 group-hover:scale-110 transition-transform"></i> Unduh PDF Kartu
+        </a>
         <p class="mt-4 text-[10px] text-slate-400 font-bold italic leading-relaxed px-4">
-            "Klik tombol di atas untuk mencetak kartu. Printer akan otomatis menyesuaikan area cetak hanya pada bagian kartu."
+            "Unduh kartu dalam format PDF berkualitas tinggi untuk dicetak. Format PDF memastikan tata letak tetap presisi saat dicetak."
         </p>
     </div>
 </div>
