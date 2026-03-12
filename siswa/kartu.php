@@ -30,63 +30,142 @@ require_once __DIR__ . '/../includes/header.php';
 <style>
     #sidebar, header { display: none; }
     .lg\:ml-64 { margin-left: 0; }
-    body { background-color: #F8FAFC; }
+    body { background-color: #f1f5f9; }
 
     .card-id-wrapper {
         perspective: 1000px;
     }
 
     .card-id {
-        width: 320px;
-        height: 500px;
-        background: white;
-        border-radius: 24px;
+        width: 340px;
+        height: 600px;
+        background: #002d5b;
+        border-radius: 12px;
         position: relative;
         overflow: hidden;
-        box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.15);
-        border: 1px solid #f1f5f9;
+        box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.4);
         display: flex;
         flex-direction: column;
     }
 
-    .card-header-bg {
-        height: 180px;
-        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-        flex-shrink: 0;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding-top: 10px;
-        z-index: 1;
-        position: relative;
-    }
-
-    .card-header-bg::after {
-        content: '';
+    /* Template Shapes */
+    .shape-top-orange {
         position: absolute;
-        bottom: -1px;
-        left: 0;
-        right: 0;
-        height: 30px;
-        background: white;
-        clip-path: ellipse(60% 100% at 50% 100%);
+        top: -150px;
+        left: -150px;
+        width: 400px;
+        height: 380px;
+        background: #f59e0b;
+        transform: rotate(35deg);
+        z-index: 1;
     }
 
-    .photo-frame {
-        width: 140px;
-        height: 140px;
-        background: #f1f5f9;
-        border: 6px solid white;
-        border-radius: 50%;
-        margin-top: -50px;
-        align-self: center;
-        box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.2);
+    .bottom-orange-bar {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 15px;
+        background: #f59e0b;
+        z-index: 5;
+    }
+
+    .card-content {
+        position: relative;
+        z-index: 10;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+
+    .header-logo {
+        padding-top: 25px;
+        padding-left: 25px;
         display: flex;
         align-items: center;
+        gap: 12px;
+        color: white;
+    }
+
+    .photo-area {
+        margin-top: 30px;
+        display: flex;
         justify-content: center;
-        z-index: 10;
+        position: relative;
+    }
+
+    .photo-circle {
+        width: 180px;
+        height: 180px;
+        border-radius: 50%;
+        border: 6px solid white;
         overflow: hidden;
-        flex-shrink: 0;
+        background: #f1f5f9;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+    }
+
+    .photo-circle img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .info-area {
+        padding: 30px;
+        color: white;
+        text-align: center;
+    }
+
+    .label-gold {
+        color: #f59e0b;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-size: 14px;
+        margin-top: 5px;
+        display: block;
+    }
+
+    .details-table {
+        margin-top: 30px;
+        width: 100%;
+        text-align: left;
+    }
+
+    .details-table td {
+        padding: 4px 0;
+        font-size: 13px;
+        vertical-align: top;
+    }
+
+    .details-label {
+        color: white;
+        width: 80px;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 11px;
+    }
+
+    .details-separator {
+        width: 20px;
+    }
+
+    .details-value {
+        font-weight: 400;
+        word-break: break-word;
+    }
+
+    .qr-footer {
+        margin-top: auto;
+        padding-bottom: 40px;
+        display: flex;
+        justify-content: center;
+    }
+
+    .qr-container {
+        padding: 8px;
+        background: white;
+        border-radius: 4px;
     }
 
     @media print {
@@ -127,61 +206,62 @@ require_once __DIR__ . '/../includes/header.php';
 
     <div id="printableCard" class="card-id-wrapper animate-in zoom-in duration-500">
         <div class="card-id">
-            <!-- Background & Logo -->
-            <div class="card-header-bg">
-                <div class="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-xl flex items-center justify-center border border-white/20 mb-3 shadow-2xl">
-                    <?php if(!empty($sets['favicon'])): ?>
-                        <img src="<?= BASE_URL ?>uploads/<?= $sets['favicon'] ?>" class="max-w-[70%] max-h-[70%] object-contain drop-shadow-lg">
-                    <?php else: ?>
-                        <i class="fa fa-graduation-cap text-white text-2xl"></i>
-                    <?php endif; ?>
+            <div class="shape-top-orange"></div>
+            <div class="bottom-orange-bar"></div>
+
+            <div class="card-content">
+                <div class="header-logo">
+                    <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center">
+                        <?php if(!empty($sets['favicon'])): ?>
+                            <img src="<?= BASE_URL ?>uploads/<?= $sets['favicon'] ?>" class="w-6 h-6 object-contain">
+                        <?php else: ?>
+                            <i class="fa fa-graduation-cap text-[#002d5b] text-xl"></i>
+                        <?php endif; ?>
+                    </div>
+                    <h2 class="font-black text-lg tracking-wider uppercase leading-tight"><?= htmlspecialchars($sets['nama_sekolah'] ?? 'GOLDEN SUN') ?></h2>
                 </div>
-                <h3 class="text-white/80 font-bold text-[8px] uppercase tracking-[0.5em] mb-1">Kartu Pelajar Digital</h3>
-                <h2 class="text-white font-black text-[12px] uppercase tracking-wider text-center px-10 leading-tight mb-2 drop-shadow-md"><?= htmlspecialchars($sets['nama_sekolah'] ?? 'SMK Negeri CAKRA') ?></h2>
-            </div>
 
-            <!-- Photo -->
-            <div class="photo-frame">
-                <?php if (!empty($siswa['foto'])): ?>
-                    <img src="<?= BASE_URL ?>uploads/siswa/<?= $siswa['foto'] ?>" class="w-full h-full object-cover scale-110">
-                <?php else: ?>
-                    <i class="fa fa-user text-6xl text-slate-200"></i>
-                <?php endif; ?>
-            </div>
-
-            <!-- Name Below Photo -->
-            <div class="mt-2 w-full px-8 text-center flex-1">
-                <h2 class="text-2xl font-black text-slate-900 uppercase tracking-tighter italic leading-none mb-1"><?= htmlspecialchars($siswa['nama_siswa']) ?></h2>
-                <p class="text-indigo-600 font-black text-[11px] tracking-[0.3em] mb-4 uppercase"><?= htmlspecialchars($siswa['nama_kelas']) ?></p>
-
-                <div class="grid grid-cols-2 gap-4 text-left border-t border-slate-100 pt-3">
-                    <div>
-                        <span class="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-0.5">NIS</span>
-                        <span class="text-[12px] font-bold text-slate-800 tracking-tight"><?= htmlspecialchars($siswa['nis']) ?></span>
-                    </div>
-                    <div>
-                        <span class="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-0.5">NISN</span>
-                        <span class="text-[12px] font-bold text-slate-800 tracking-tight"><?= htmlspecialchars($siswa['nisn'] ?? '-') ?></span>
-                    </div>
-                    <div class="col-span-2">
-                        <span class="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-0.5">Tahun Pelajaran</span>
-                        <span class="text-[12px] font-bold text-indigo-600 italic"><?= htmlspecialchars($siswa['tahun_pelajaran']) ?></span>
+                <div class="photo-area">
+                    <div class="photo-circle">
+                        <?php if (!empty($siswa['foto'])): ?>
+                            <img src="<?= BASE_URL ?>uploads/siswa/<?= $siswa['foto'] ?>">
+                        <?php else: ?>
+                            <div class="w-full h-full flex items-center justify-center text-slate-400"><i class="fa fa-user text-7xl"></i></div>
+                        <?php endif; ?>
                     </div>
                 </div>
-            </div>
 
-            <!-- QR Code Section -->
-            <div class="mt-auto bg-slate-50/80 backdrop-blur-sm border-t border-slate-100 px-8 py-6">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <div id="qrcode" class="p-1.5 bg-white border border-slate-200 rounded-xl shadow-sm scale-110"></div>
-                        <div class="ml-2">
-                            <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Verified by</p>
-                            <p class="text-[10px] font-black text-indigo-600 italic tracking-tighter uppercase leading-none">CAKRA SYSTEM</p>
-                        </div>
-                    </div>
-                    <div class="text-right">
-                        <span class="text-[8px] font-black text-white bg-indigo-600 px-3 py-1.5 rounded-full uppercase tracking-widest shadow-lg shadow-indigo-200">Official ID</span>
+                <div class="info-area">
+                    <h1 class="text-2xl font-black uppercase leading-tight"><?= htmlspecialchars($siswa['nama_siswa']) ?></h1>
+                    <span class="label-gold"><?= htmlspecialchars($siswa['nama_kelas']) ?></span>
+
+                    <table class="details-table">
+                        <tr>
+                            <td class="details-label">NIS</td>
+                            <td class="details-separator">:</td>
+                            <td class="details-value"><?= htmlspecialchars($siswa['nis']) ?></td>
+                        </tr>
+                        <tr>
+                            <td class="details-label">NISN</td>
+                            <td class="details-separator">:</td>
+                            <td class="details-value"><?= htmlspecialchars($siswa['nisn'] ?? '-') ?></td>
+                        </tr>
+                        <tr>
+                            <td class="details-label">Alamat</td>
+                            <td class="details-separator">:</td>
+                            <td class="details-value"><?= htmlspecialchars($siswa['alamat'] ?? '-') ?></td>
+                        </tr>
+                        <tr>
+                            <td class="details-label">Telp/HP</td>
+                            <td class="details-separator">:</td>
+                            <td class="details-value"><?= htmlspecialchars($siswa['no_telp'] ?? '-') ?></td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="qr-footer">
+                    <div class="qr-container">
+                        <div id="qrcode"></div>
                     </div>
                 </div>
             </div>
@@ -201,9 +281,9 @@ require_once __DIR__ . '/../includes/header.php';
 <script>
     new QRCode(document.getElementById("qrcode"), {
         text: "<?= $siswa['nis'] ?>",
-        width: 64,
-        height: 64,
-        colorDark : "#1e293b",
+        width: 100,
+        height: 100,
+        colorDark : "#002d5b",
         colorLight : "#ffffff",
         correctLevel : QRCode.CorrectLevel.H
     });
