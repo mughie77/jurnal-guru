@@ -199,7 +199,7 @@ require_once __DIR__ . '/../includes/header.php';
                     </td>
                     <td class="px-6 py-4">
                         <div class="flex justify-center gap-2">
-                            <button onclick="openEditModal(<?= htmlspecialchars(json_encode($row)) ?>)" class="w-9 h-9 flex items-center justify-center rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-600 hover:text-white transition-all shadow-sm">
+                            <button onclick='openEditModal(this.getAttribute("data-guru"))' data-guru='<?= htmlspecialchars(json_encode($row), ENT_QUOTES, "UTF-8") ?>' class="w-9 h-9 flex items-center justify-center rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-600 hover:text-white transition-all shadow-sm">
                                 <i class="fa fa-edit"></i>
                             </button>
                             <button onclick="openDeleteModal(<?= $row['id'] ?>, <?= $row['user_id'] ?>, '<?= addslashes($row['nama_lengkap']) ?>')" class="w-9 h-9 flex items-center justify-center rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white transition-all shadow-sm">
@@ -228,19 +228,23 @@ require_once __DIR__ . '/../includes/header.php';
             <div><label class="block text-sm font-bold text-slate-700 mb-2">Nama Lengkap</label><input type="text" name="nama_lengkap" required class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50"></div>
             <div><label class="block text-sm font-bold text-slate-700 mb-2">NIP (Username)</label><input type="text" name="nip" required class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50"></div>
         </div>
-        <div class="grid grid-cols-2 gap-4">
-            <div><label class="block text-sm font-bold text-slate-700 mb-2">No. Telp/HP</label><input type="text" name="no_telp" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50"></div>
-            <div class="row-span-2">
+        <div class="grid grid-cols-2 gap-6">
+            <div class="space-y-4">
+                <div><label class="block text-sm font-bold text-slate-700 mb-2">No. Telp/HP</label><input type="text" name="no_telp" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50"></div>
+                <div><label class="block text-sm font-bold text-slate-700 mb-2">Alamat</label><textarea name="alamat" rows="3" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50"></textarea></div>
+            </div>
+            <div>
                 <label class="block text-sm font-bold text-slate-700 mb-2">Mata Pelajaran</label>
-            <select name="mapel_ids[]" multiple class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 h-40">
-                <?php mysqli_data_seek($mapel_list, 0); while($m = mysqli_fetch_assoc($mapel_list)): ?>
-                    <option value="<?= $m['id'] ?>"><?= htmlspecialchars($m['nama_mapel']) ?></option>
-                <?php endwhile; ?>
-            </select>
+                <select name="mapel_ids[]" multiple class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 h-[180px]">
+                    <?php mysqli_data_seek($mapel_list, 0); while($m = mysqli_fetch_assoc($mapel_list)): ?>
+                        <option value="<?= $m['id'] ?>"><?= htmlspecialchars($m['nama_mapel']) ?></option>
+                    <?php endwhile; ?>
+                </select>
+            </div>
         </div>
-        <div class="grid grid-cols-2 gap-4">
-            <div><label class="block text-sm font-bold text-slate-700 mb-2">Alamat</label><textarea name="alamat" rows="2" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50"></textarea></div>
-            <div><label class="block text-sm font-bold text-slate-700 mb-2">Foto Guru</label><input type="file" name="foto" accept="image/*" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 bg-white shadow-sm"></div>
+        <div>
+            <label class="block text-sm font-bold text-slate-700 mb-2">Foto Guru</label>
+            <input type="file" name="foto" accept="image/*" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 bg-white shadow-sm">
         </div>
         <div class="pt-4 flex gap-4">
             <button type="button" onclick="closeModal('tambahModal')" class="flex-1 px-6 py-3 rounded-xl border border-slate-200 font-bold text-slate-600 hover:bg-slate-50 transition-all">Batal</button>
@@ -259,19 +263,23 @@ require_once __DIR__ . '/../includes/header.php';
             <div><label class="block text-sm font-bold text-slate-700 mb-2">Nama Lengkap</label><input type="text" name="nama_lengkap" id="edit_nama" required class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"></div>
             <div><label class="block text-sm font-bold text-slate-700 mb-2">NIP</label><input type="text" name="nip" id="edit_nip" required class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"></div>
         </div>
-        <div class="grid grid-cols-2 gap-4">
-            <div><label class="block text-sm font-bold text-slate-700 mb-2">No. Telp/HP</label><input type="text" name="no_telp" id="edit_telp" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"></div>
-            <div class="row-span-2">
+        <div class="grid grid-cols-2 gap-6">
+            <div class="space-y-4">
+                <div><label class="block text-sm font-bold text-slate-700 mb-2">No. Telp/HP</label><input type="text" name="no_telp" id="edit_telp" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"></div>
+                <div><label class="block text-sm font-bold text-slate-700 mb-2">Alamat</label><textarea name="alamat" id="edit_alamat" rows="3" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"></textarea></div>
+            </div>
+            <div>
                 <label class="block text-sm font-bold text-slate-700 mb-2">Mata Pelajaran</label>
-            <select name="mapel_ids[]" multiple class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50 h-40">
-                <?php mysqli_data_seek($mapel_list, 0); while($m = mysqli_fetch_assoc($mapel_list)): ?>
-                    <option value="<?= $m['id'] ?>"><?= htmlspecialchars($m['nama_mapel']) ?></option>
-                <?php endwhile; ?>
-            </select>
+                <select name="mapel_ids[]" multiple class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50 h-[180px]">
+                    <?php mysqli_data_seek($mapel_list, 0); while($m = mysqli_fetch_assoc($mapel_list)): ?>
+                        <option value="<?= $m['id'] ?>"><?= htmlspecialchars($m['nama_mapel']) ?></option>
+                    <?php endwhile; ?>
+                </select>
+            </div>
         </div>
-        <div class="grid grid-cols-2 gap-4">
-            <div><label class="block text-sm font-bold text-slate-700 mb-2">Alamat</label><textarea name="alamat" id="edit_alamat" rows="2" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"></textarea></div>
-            <div><label class="block text-sm font-bold text-slate-700 mb-2">Foto Guru</label><input type="file" name="foto" accept="image/*" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50 bg-white shadow-sm"></div>
+        <div>
+            <label class="block text-sm font-bold text-slate-700 mb-2">Foto Guru</label>
+            <input type="file" name="foto" accept="image/*" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50 bg-white shadow-sm">
         </div>
         <div class="pt-4 flex gap-4">
             <button type="button" onclick="closeModal('editModal')" class="flex-1 px-6 py-3 rounded-xl border border-slate-200 font-bold text-slate-600 hover:bg-slate-50 transition-all">Batal</button>
@@ -307,6 +315,10 @@ function closeModal(id) {
 }
 function closeAllModals() { document.querySelectorAll('.modal-content').forEach(m => { if(!m.classList.contains('hidden')) closeModal(m.id); }); }
 function openEditModal(data) {
+    if (typeof data === 'string') {
+        try { data = JSON.parse(data); } catch(e) { console.error("Invalid JSON", e); return; }
+    }
+
     // Basic fields
     document.getElementById('edit_id').value = data.id || '';
     document.getElementById('edit_user_id').value = data.user_id || '';

@@ -1851,7 +1851,7 @@ protected function _put($s)
 	$this->buffer .= $s."\n";
 }
 
-protected function _out($s)
+public function _out($s)
 {
 	if($this->state==2)
 		$this->pages[$this->page] .= $s."\n";
