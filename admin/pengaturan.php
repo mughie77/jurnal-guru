@@ -17,7 +17,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $settings = [
             'nama_sekolah' => $_POST['nama_sekolah'],
             'alamat_sekolah' => $_POST['alamat_sekolah'],
-            'jam_masuk_sekolah' => $_POST['jam_masuk_sekolah']
+            'jam_masuk_sekolah' => $_POST['jam_masuk_sekolah'],
+            'dapodik_url' => $_POST['dapodik_url'],
+            'dapodik_token' => $_POST['dapodik_token']
         ];
 
         foreach ($settings as $key => $val) {
@@ -100,6 +102,17 @@ require_once __DIR__ . '/../includes/header.php';
                     <textarea name="alamat_sekolah" rows="3" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 transition-all"><?= htmlspecialchars($sets['alamat_sekolah'] ?? '') ?></textarea>
                 </div>
 
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-2">
+                        <label class="block text-sm font-bold text-slate-700">URL Web Service Dapodik</label>
+                        <input type="text" name="dapodik_url" value="<?= htmlspecialchars($sets['dapodik_url'] ?? '') ?>" placeholder="http://localhost:5774" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50 transition-all">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="block text-sm font-bold text-slate-700">Token Dapodik</label>
+                        <input type="password" name="dapodik_token" value="<?= htmlspecialchars($sets['dapodik_token'] ?? '') ?>" placeholder="Masukkan Token..." class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50 transition-all">
+                    </div>
+                </div>
+
                 <div class="p-6 rounded-2xl bg-slate-50 border border-slate-100 space-y-4">
                     <label class="block text-sm font-bold text-slate-700 flex items-center">
                         <i class="fa fa-image mr-2 text-indigo-500"></i> Favicon / Logo Sekolah
@@ -125,6 +138,31 @@ require_once __DIR__ . '/../includes/header.php';
                     </button>
                 </div>
             </form>
+        </div>
+
+        <div class="lux-card p-8 mt-8 border-t-4 border-amber-500">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h3 class="text-xl font-bold text-slate-800 italic">Integrasi Dapodik</h3>
+                    <p class="text-slate-500 text-sm">Konfigurasi koneksi ke Web Service Dapodik Lokal.</p>
+                </div>
+                <div class="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center text-amber-500 text-xl">
+                    <i class="fa fa-sync-alt"></i>
+                </div>
+            </div>
+
+            <div class="space-y-6">
+                <p class="text-sm text-slate-600">Pastikan Web Service Dapodik sudah diaktifkan di komputer yang terinstall Dapodik dan Token sudah digenerate.</p>
+
+                <div class="flex gap-3">
+                    <button type="button" onclick="checkDapodikConnection()" class="px-6 py-3 bg-slate-800 text-white font-bold rounded-xl hover:bg-slate-900 transition-all flex items-center shadow-lg shadow-slate-200">
+                        <i class="fa fa-plug mr-2"></i> Cek Koneksi
+                    </button>
+                    <div id="conn_status" class="flex-1 flex items-center px-4 rounded-xl border border-dashed border-slate-200 text-sm font-bold text-slate-400 italic">
+                        Klik tombol untuk memeriksa status koneksi...
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 

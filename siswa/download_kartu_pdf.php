@@ -36,48 +36,48 @@ class IDCardPDF extends FPDF {
     }
 
     function IDCard($siswa, $sets) {
-        $this->AddPage('P', [85, 150]);
+        $this->AddPage('P', [54, 86]); // CR-80 Standard Credit Card Size (54x86mm)
         $this->SetAutoPageBreak(false);
 
         // Corporate Blue Background
         $this->SetFillColor(0, 45, 91);
-        $this->Rect(0, 0, 85, 150, 'F');
+        $this->Rect(0, 0, 54, 86, 'F');
 
         // Top Orange Shape (Matching Web Template)
         $this->SetFillColor(245, 158, 11);
         $this->_out('q 1 0 0 1 0 0 cm');
         $this->_out('0.961 0.620 0.043 rg');
-        $this->_out('-40 0 m 65 0 l -40 105 l f'); // Simulate the tilted top shape
+        $this->_out('-25 0 m 40 0 l -25 65 l f'); // Scaled down shape
         $this->_out('Q');
 
-        // Bottom Orange Bar
-        $this->SetFillColor(245, 158, 11);
-        $this->Rect(0, 146, 85, 4, 'F');
+        // Bottom Orange Bar (Hidden according to template visual)
+        // $this->SetFillColor(245, 158, 11);
+        // $this->Rect(0, 84, 54, 2, 'F');
 
         // Logo Section
-        $this->SetXY(8, 8);
+        $this->SetXY(5, 5);
         $this->SetFillColor(255, 255, 255);
-        $this->ClippingCircle(13, 13, 5, true); // Circle background for logo
+        $this->ClippingCircle(8, 8, 3, true);
         $logo_path = __DIR__ . '/../uploads/' . ($sets['favicon'] ?? '');
         if (!empty($sets['favicon']) && file_exists($logo_path)) {
-            $this->Image($logo_path, 9, 9, 8, 8);
+            $this->Image($logo_path, 6, 6, 4, 4);
         }
         $this->_out('Q');
 
         $this->SetTextColor(255, 255, 255);
-        $this->SetFont('Helvetica', 'B', 10);
-        $this->SetXY(19, 11);
-        $this->Cell(0, 5, strtoupper($sets['nama_sekolah'] ?? 'GOLDEN SUN'), 0, 0, 'L');
+        $this->SetFont('Helvetica', 'B', 7);
+        $this->SetXY(12, 6.5);
+        $this->Cell(0, 3, strtoupper($sets['nama_sekolah'] ?? 'GOLDEN SUN'), 0, 0, 'L');
 
         // Photo (Circular Clipping)
         $foto_path = __DIR__ . '/../uploads/siswa/' . ($siswa['foto'] ?? '');
-        $photo_x = 42.5;
-        $photo_y = 45;
-        $photo_r = 22;
+        $photo_x = 27;
+        $photo_y = 25;
+        $photo_r = 14;
 
         // Outer Circle (White border)
         $this->SetDrawColor(255, 255, 255);
-        $this->SetLineWidth(2);
+        $this->SetLineWidth(1.5);
         $this->ClippingCircle($photo_x, $photo_y, $photo_r, true);
 
         if (!empty($siswa['foto']) && file_exists($foto_path)) {
@@ -90,43 +90,41 @@ class IDCardPDF extends FPDF {
 
         // Name & Class
         $this->SetTextColor(255, 255, 255);
-        $this->SetXY(5, 72);
-        $this->SetFont('Helvetica', 'B', 15);
-        $this->MultiCell(75, 6, strtoupper($siswa['nama_siswa']), 0, 'C');
+        $this->SetXY(2, 42);
+        $this->SetFont('Helvetica', 'B', 11);
+        $this->MultiCell(50, 4, strtoupper($siswa['nama_siswa']), 0, 'C');
 
-        $this->SetFont('Helvetica', 'B', 10);
+        $this->SetFont('Helvetica', 'B', 8);
         $this->SetTextColor(245, 158, 11);
-        $this->SetX(5);
-        $this->Cell(75, 6, strtoupper($siswa['nama_kelas']), 0, 1, 'C');
+        $this->SetX(2);
+        $this->Cell(50, 4, strtoupper($siswa['nama_kelas']), 0, 1, 'C');
 
         // Details Table
         $this->SetTextColor(255, 255, 255);
-        $this->SetFont('Helvetica', 'B', 8);
-        $start_y = 92;
-        $labels = ['NIS', 'NISN', 'Alamat', 'Telp/HP'];
+        $start_y = 52;
+        $labels = ['NIS', 'NISN', 'Alamat', 'Telp'];
         $values = [$siswa['nis'], $siswa['nisn'] ?? '-', $siswa['alamat'] ?? '-', $siswa['no_telp'] ?? '-'];
 
         foreach ($labels as $i => $label) {
-            $this->SetXY(15, $start_y);
-            $this->SetFont('Helvetica', 'B', 7);
-            $this->Cell(15, 5, strtoupper($label), 0, 0);
-            $this->Cell(3, 5, ':', 0, 0);
-            $this->SetFont('Helvetica', '', 8);
+            $this->SetXY(6, $start_y);
+            $this->SetFont('Helvetica', 'B', 6);
+            $this->Cell(12, 3, strtoupper($label), 0, 0);
+            $this->Cell(2, 3, ':', 0, 0);
+            $this->SetFont('Helvetica', '', 6);
             if ($label == 'Alamat') {
-                 $this->MultiCell(45, 4, $values[$i], 0, 'L');
-                 $current_h = $this->GetY() - $start_y;
-                 $start_y += max(5, $current_h);
+                 $this->MultiCell(28, 3, $values[$i], 0, 'L');
+                 $start_y = $this->GetY() + 0.5;
             } else {
-                 $this->Cell(45, 5, $values[$i], 0, 1);
-                 $start_y += 6;
+                 $this->Cell(28, 3, $values[$i], 0, 1);
+                 $start_y += 3.5;
             }
         }
 
         // QR Code Section
         $qr_url = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" . $siswa['nis'];
         $this->SetFillColor(255, 255, 255);
-        $this->Rect(33, 122, 19, 19, 'F');
-        $this->Image($qr_url, 35, 124, 15, 15, 'png');
+        $this->Rect(22, 70, 10, 10, 'F');
+        $this->Image($qr_url, 22.5, 70.5, 9, 9, 'png');
     }
 }
 

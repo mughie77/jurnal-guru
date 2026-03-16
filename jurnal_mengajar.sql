@@ -222,7 +222,9 @@ INSERT INTO `pengaturan` (`nama_setting`, `nilai_setting`) VALUES
 ('nama_sekolah', 'SMKN 2 Bondowoso'),
 ('alamat_sekolah', 'Jl. Jend. Ahmad Yani No. 1, Bondowoso'),
 ('favicon', 'favicon.png'),
-('jam_masuk_sekolah', '07:00:00');
+('jam_masuk_sekolah', '07:00:00'),
+('dapodik_url', ''),
+('dapodik_token', '');
 
 -- --------------------------------------------------------
 

@@ -132,7 +132,10 @@ require_once __DIR__ . '/../includes/header.php';
         <p class="text-slate-500">Kelola database siswa dan penempatan kelas.</p>
     </div>
     <?php if($_SESSION['role'] == 'admin'): ?>
-    <div class="flex gap-3">
+    <div class="flex flex-wrap gap-3">
+        <button onclick="syncDapodik()" class="bg-amber-500 hover:bg-amber-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-amber-200 transition-all flex items-center">
+            <i class="fa fa-sync-alt mr-2"></i> Sinkron Dapodik
+        </button>
         <button onclick="openModal('tambahModal')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-indigo-200 transition-all flex items-center">
             <i class="fa fa-plus mr-2"></i> Tambah Siswa
         </button>
@@ -311,6 +314,41 @@ require_once __DIR__ . '/../includes/header.php';
 <?php endwhile; ?>
 
 <script>
+function syncDapodik() {
+    Swal.fire({
+        title: 'Sinkronisasi Dapodik',
+        text: "Sistem akan mengambil data siswa terbaru dari Web Service Dapodik Lokal. Lanjutkan?",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#f59e0b',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Ya, Sinkronkan!',
+        cancelButtonText: 'Batal'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            Swal.fire({
+                title: 'Sedang Sinkronisasi...',
+                html: 'Mohon tunggu, proses ini mungkin memakan waktu beberapa menit.',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            fetch('sinkron_dapodik_siswa.php')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire('Berhasil', data.message, 'success').then(() => { location.reload(); });
+                    } else {
+                        Swal.fire('Gagal', data.message, 'error');
+                    }
+                })
+                .catch(err => {
+                    Swal.fire('Error', 'Terjadi kesalahan sistem atau koneksi terputus.', 'error');
+                });
+        }
+    });
+}
+
 const overlay = document.getElementById('modalOverlay');
 function openModal(id) { const m = document.getElementById(id); if(!m) return; overlay.classList.remove('hidden'); m.classList.remove('hidden'); setTimeout(() => { overlay.classList.add('opacity-100'); m.classList.add('opacity-100', 'scale-100'); }, 10); }
 function closeModal(id) { const m = document.getElementById(id); overlay.classList.remove('opacity-100'); m.classList.remove('opacity-100', 'scale-100'); setTimeout(() => { overlay.classList.add('hidden'); m.classList.add('hidden'); }, 300); }
