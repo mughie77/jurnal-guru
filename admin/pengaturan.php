@@ -105,11 +105,11 @@ require_once __DIR__ . '/../includes/header.php';
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="space-y-2">
                         <label class="block text-sm font-bold text-slate-700">URL Web Service Dapodik</label>
-                        <input type="text" name="dapodik_url" value="<?= htmlspecialchars($sets['dapodik_url'] ?? '') ?>" placeholder="http://localhost:5774" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50 transition-all">
+                        <input type="text" id="dapodik_url" name="dapodik_url" value="<?= htmlspecialchars($sets['dapodik_url'] ?? '') ?>" placeholder="http://localhost:5774" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50 transition-all">
                     </div>
                     <div class="space-y-2">
                         <label class="block text-sm font-bold text-slate-700">Token Dapodik</label>
-                        <input type="password" name="dapodik_token" value="<?= htmlspecialchars($sets['dapodik_token'] ?? '') ?>" placeholder="Masukkan Token..." class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50 transition-all">
+                        <input type="password" id="dapodik_token" name="dapodik_token" value="<?= htmlspecialchars($sets['dapodik_token'] ?? '') ?>" placeholder="Masukkan Token..." class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50 transition-all">
                     </div>
                 </div>
 
@@ -193,5 +193,52 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
     </div>
 </div>
+
+<script>
+function checkDapodikConnection() {
+    const url = document.getElementById('dapodik_url').value;
+    const token = document.getElementById('dapodik_token').value;
+    const statusDiv = document.getElementById('conn_status');
+
+    if(!url || !token) {
+        Swal.fire('Peringatan', 'URL dan Token harus diisi!', 'warning');
+        return;
+    }
+
+    statusDiv.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i> Menghubungkan ke Dapodik...';
+    statusDiv.className = "flex-1 flex items-center px-4 rounded-xl border border-dashed border-amber-200 text-sm font-bold text-amber-500 bg-amber-50";
+
+    fetch('cek_koneksi_dapodik.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `url=${encodeURIComponent(url)}&token=${encodeURIComponent(token)}&csrf_token=<?= get_csrf_token() ?>`
+    })
+    .then(async response => {
+        const text = await response.text();
+        try {
+            return JSON.parse(text);
+        } catch (e) {
+            console.error("Malformed JSON:", text);
+            throw new Error("Server mengembalikan format non-JSON. Periksa logs.");
+        }
+    })
+    .then(data => {
+        if(data.success) {
+            statusDiv.innerHTML = '<i class="fa fa-check-circle mr-2"></i> Koneksi Berhasil: ' + data.message;
+            statusDiv.className = "flex-1 flex items-center px-4 rounded-xl border border-dashed border-emerald-200 text-sm font-bold text-emerald-600 bg-emerald-50";
+            Swal.fire('Berhasil', 'Koneksi ke Dapodik berhasil terjalin!', 'success');
+        } else {
+            statusDiv.innerHTML = '<i class="fa fa-times-circle mr-2"></i> Gagal: ' + data.message;
+            statusDiv.className = "flex-1 flex items-center px-4 rounded-xl border border-dashed border-rose-200 text-sm font-bold text-rose-600 bg-rose-50";
+            Swal.fire('Gagal', data.message, 'error');
+        }
+    })
+    .catch(err => {
+        statusDiv.innerHTML = '<i class="fa fa-exclamation-triangle mr-2"></i> Terjadi kesalahan jaringan.';
+        statusDiv.className = "flex-1 flex items-center px-4 rounded-xl border border-dashed border-rose-200 text-sm font-bold text-rose-600 bg-rose-50";
+        Swal.fire('Error', 'Gagal melakukan request ke server.', 'error');
+    });
+}
+</script>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

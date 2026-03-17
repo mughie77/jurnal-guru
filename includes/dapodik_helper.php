@@ -21,6 +21,7 @@ class DapodikHelper {
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $this->url . $endpoint);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
         curl_setopt($ch, CURLOPT_TIMEOUT, 30);
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
             "Authorization: Bearer " . $this->token,

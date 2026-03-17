@@ -326,7 +326,7 @@ function syncDapodik() {
                 didOpen: () => { Swal.showLoading(); }
             });
 
-            fetch('sinkron_dapodik_guru.php')
+            fetch('sinkron_dapodik_guru.php?csrf_token=<?= get_csrf_token() ?>')
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {

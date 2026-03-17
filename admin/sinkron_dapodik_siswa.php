@@ -6,6 +6,11 @@ require_once __DIR__ . '/../includes/dapodik_helper.php';
 header('Content-Type: application/json');
 authorize_role(['admin']);
 
+if (!verify_csrf_token($_GET['csrf_token'] ?? '')) {
+    echo json_encode(['success' => false, 'message' => 'CSRF Token Invalid']);
+    exit;
+}
+
 try {
     $dapodik = new DapodikHelper($conn);
     $rows = $dapodik->getSiswa();
