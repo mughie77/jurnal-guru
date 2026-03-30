@@ -155,7 +155,7 @@ require_once __DIR__ . '/../includes/header.php';
                 <p class="text-sm text-slate-600">Pastikan Web Service Dapodik sudah diaktifkan di komputer yang terinstall Dapodik dan Token sudah digenerate.</p>
 
                 <div class="flex gap-3">
-                    <button type="button" onclick="checkDapodikConnection()" class="px-6 py-3 bg-slate-800 text-white font-bold rounded-xl hover:bg-slate-900 transition-all flex items-center shadow-lg shadow-slate-200">
+                    <button type="button" onclick="checkDapodikConnection('<?= get_csrf_token() ?>')" class="px-6 py-3 bg-slate-800 text-white font-bold rounded-xl hover:bg-slate-900 transition-all flex items-center shadow-lg shadow-slate-200">
                         <i class="fa fa-plug mr-2"></i> Cek Koneksi
                     </button>
                     <div id="conn_status" class="flex-1 flex items-center px-4 rounded-xl border border-dashed border-slate-200 text-sm font-bold text-slate-400 italic">
@@ -194,51 +194,7 @@ require_once __DIR__ . '/../includes/header.php';
     </div>
 </div>
 
-<script>
-function checkDapodikConnection() {
-    const url = document.getElementById('dapodik_url').value;
-    const token = document.getElementById('dapodik_token').value;
-    const statusDiv = document.getElementById('conn_status');
-
-    if(!url || !token) {
-        Swal.fire('Peringatan', 'URL dan Token harus diisi!', 'warning');
-        return;
-    }
-
-    statusDiv.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i> Menghubungkan ke Dapodik...';
-    statusDiv.className = "flex-1 flex items-center px-4 rounded-xl border border-dashed border-amber-200 text-sm font-bold text-amber-500 bg-amber-50";
-
-    fetch('cek_koneksi_dapodik.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `url=${encodeURIComponent(url)}&token=${encodeURIComponent(token)}&csrf_token=<?= get_csrf_token() ?>`
-    })
-    .then(async response => {
-        const text = await response.text();
-        try {
-            return JSON.parse(text);
-        } catch (e) {
-            console.error("Malformed JSON:", text);
-            throw new Error("Server mengembalikan format non-JSON. Periksa logs.");
-        }
-    })
-    .then(data => {
-        if(data.success) {
-            statusDiv.innerHTML = '<i class="fa fa-check-circle mr-2"></i> Koneksi Berhasil: ' + data.message;
-            statusDiv.className = "flex-1 flex items-center px-4 rounded-xl border border-dashed border-emerald-200 text-sm font-bold text-emerald-600 bg-emerald-50";
-            Swal.fire('Berhasil', 'Koneksi ke Dapodik berhasil terjalin!', 'success');
-        } else {
-            statusDiv.innerHTML = '<i class="fa fa-times-circle mr-2"></i> Gagal: ' + data.message;
-            statusDiv.className = "flex-1 flex items-center px-4 rounded-xl border border-dashed border-rose-200 text-sm font-bold text-rose-600 bg-rose-50";
-            Swal.fire('Gagal', data.message, 'error');
-        }
-    })
-    .catch(err => {
-        statusDiv.innerHTML = '<i class="fa fa-exclamation-triangle mr-2"></i> Terjadi kesalahan jaringan.';
-        statusDiv.className = "flex-1 flex items-center px-4 rounded-xl border border-dashed border-rose-200 text-sm font-bold text-rose-600 bg-rose-50";
-        Swal.fire('Error', 'Gagal melakukan request ke server.', 'error');
-    });
-}
-</script>
+<!-- Page Specific Scripts -->
+<script src="<?= BASE_URL ?>assets/js/pengaturan.js"></script>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

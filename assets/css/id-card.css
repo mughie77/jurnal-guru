@@ -1,0 +1,162 @@
+/* Corporate ID Card Template Styles */
+.card-id-wrapper {
+    perspective: 1000px;
+}
+
+.card-id {
+    width: 340px;
+    height: 600px;
+    background: #002d5b;
+    border-radius: 12px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.4);
+    display: flex;
+    flex-direction: column;
+}
+
+/* Template Shapes */
+.shape-top-orange {
+    position: absolute;
+    top: -150px;
+    left: -150px;
+    width: 400px;
+    height: 380px;
+    background: #f59e0b;
+    transform: rotate(35deg);
+    z-index: 1;
+}
+
+.bottom-orange-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 15px;
+    background: #f59e0b;
+    z-index: 5;
+}
+
+.card-content {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.header-logo {
+    padding-top: 25px;
+    padding-left: 25px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: white;
+}
+
+.photo-area {
+    margin-top: 30px;
+    display: flex;
+    justify-content: center;
+    position: relative;
+}
+
+.photo-circle {
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    border: 6px solid white;
+    overflow: hidden;
+    background: #f1f5f9;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+}
+
+.photo-circle img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.info-area {
+    padding: 30px;
+    color: white;
+    text-align: center;
+}
+
+.label-gold {
+    color: #f59e0b;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 14px;
+    margin-top: 5px;
+    display: block;
+}
+
+.details-table {
+    margin-top: 30px;
+    width: 100%;
+    text-align: left;
+}
+
+.details-table td {
+    padding: 4px 0;
+    font-size: 13px;
+    vertical-align: top;
+}
+
+.details-label {
+    color: white;
+    width: 80px;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 11px;
+}
+
+.details-separator {
+    width: 20px;
+}
+
+.details-value {
+    font-weight: 400;
+    word-break: break-word;
+}
+
+.qr-footer {
+    margin-top: auto;
+    padding-bottom: 40px;
+    display: flex;
+    justify-content: center;
+}
+
+.qr-container {
+    padding: 8px;
+    background: white;
+    border-radius: 4px;
+}
+
+@media print {
+    body { background: none !important; }
+    #sidebar, header, .no-print, .mb-8 { display: none !important; }
+    .bg-slate-50 { background: none !important; }
+    .lg\:ml-64 { margin: 0 !important; }
+    main { padding: 0 !important; }
+
+    .card-id-wrapper {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .card-id {
+        box-shadow: none !important;
+        border: 1px solid #eee !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+}

@@ -46,16 +46,8 @@ $favicon = !empty($app_sets['favicon']) ? BASE_URL . 'uploads/' . $app_sets['fav
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    <style>
-        body { font-family: 'Poppins', sans-serif; @apply bg-slate-50; }
-        .glass { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); }
-        .lux-card { @apply bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-100; }
-        .sidebar-transition { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        #sidebar::-webkit-scrollbar { width: 4px; }
-        #sidebar::-webkit-scrollbar-track { background: transparent; }
-        #sidebar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
-        #sidebar::-webkit-scrollbar-thumb:hover { background: #475569; }
-    </style>
+    <!-- App Styles -->
+    <link rel="stylesheet" href="<?= BASE_URL ?>assets/css/style.css">
 </head>
 <body class="bg-slate-50 text-slate-800">
     <div class="flex h-screen overflow-hidden">
