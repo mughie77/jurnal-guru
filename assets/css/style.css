@@ -1,3 +1,9 @@
-/* Custom CSS styles for the application will go here. */
-/* This file is intentionally left empty for now. */
-/* It's linked in header.php to be used for global styles. */
+body { font-family: 'Poppins', sans-serif; }
+.bg-slate-50 { background-color: #f8fafc; }
+.glass { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); }
+.lux-card { background-color: white; border-radius: 1rem; box-shadow: 0 20px 25px -5px rgba(226, 232, 240, 0.5); border: 1px solid #f1f5f9; }
+.sidebar-transition { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+#sidebar::-webkit-scrollbar { width: 4px; }
+#sidebar::-webkit-scrollbar-track { background: transparent; }
+#sidebar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+#sidebar::-webkit-scrollbar-thumb:hover { background: #475569; }

@@ -21,6 +21,9 @@ switch ($role) {
     case 'guru':
         header('Location: ' . BASE_URL . 'guru/index.php');
         break;
+    case 'siswa':
+        header('Location: ' . BASE_URL . 'siswa/index.php');
+        break;
     default:
         // Jika role tidak dikenali, logout dan redirect ke login
         header('Location: ' . BASE_URL . 'logout.php');

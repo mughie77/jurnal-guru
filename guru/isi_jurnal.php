@@ -2,214 +2,116 @@
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../config/database.php';
 
-// Otorisasi hanya untuk guru
 authorize_role(['guru', 'admin']);
 
-$page_title = "Isi Jurnal Baru";
-$message = '';
-$message_type = '';
-
-// Dapatkan guru_id dari user_id yang login
-$user_id = $_SESSION['user_id'];
-$guru_result = mysqli_query($conn, "SELECT id FROM guru WHERE user_id = $user_id");
-if(mysqli_num_rows($guru_result) == 0) {
-    // Handle jika data guru tidak ditemukan untuk user ini
-    die("Error: Data guru tidak ditemukan untuk user ini. Silakan hubungi admin.");
+$jurnal_id = (int)($_GET['jid'] ?? 0);
+if ($jurnal_id <= 0) {
+    // If accessed directly without ID, redirect to attendance
+    header("Location: isi_absensi.php");
+    exit;
 }
-$guru_id = mysqli_fetch_assoc($guru_result)['id'];
 
-// Dapatkan tahun pelajaran yang aktif
-$tahun_aktif_result = mysqli_query($conn, "SELECT id FROM tahun_pelajaran WHERE status = 'aktif' LIMIT 1");
-if(mysqli_num_rows($tahun_aktif_result) == 0) {
-    die("Error: Tidak ada tahun pelajaran yang aktif. Silakan hubungi admin untuk mengaturnya.");
+$res_j = mysqli_query($conn, "SELECT j.*, mp.nama_mapel, k.nama_kelas
+                               FROM jurnal j
+                               JOIN mata_pelajaran mp ON j.mapel_id = mp.id
+                               JOIN kelas k ON j.kelas_id = k.id
+                               WHERE j.id = $jurnal_id");
+$j = mysqli_fetch_assoc($res_j);
+
+// Ambil siswa yang tidak hadir (S/I/A)
+$res_abs = mysqli_query($conn, "SELECT s.nama_siswa, aj.status
+                                 FROM absensi_jurnal aj
+                                 JOIN siswa s ON aj.siswa_id = s.id
+                                 WHERE aj.jurnal_id = $jurnal_id AND aj.status != 'H'
+                                 ORDER BY aj.status ASC, s.nama_siswa ASC");
+$tidak_hadir = [];
+while ($row = mysqli_fetch_assoc($res_abs)) {
+    $tidak_hadir[] = $row;
 }
-$tahun_pelajaran_id = mysqli_fetch_assoc($tahun_aktif_result)['id'];
 
-// Ambil data untuk dropdown
-// HANYA mapel yang diampu oleh guru yang login
-$mapels_query = "SELECT mp.id, mp.nama_mapel
-                 FROM mata_pelajaran mp
-                 JOIN guru_mapel gm ON mp.id = gm.mapel_id
-                 WHERE gm.guru_id = $guru_id
-                 ORDER BY mp.nama_mapel";
-$mapels = mysqli_query($conn, $mapels_query);
-$kelases = mysqli_query($conn, "SELECT id, nama_kelas FROM kelas ORDER BY nama_kelas");
-
-// Proses form jika disubmit
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $mapel_id = $_POST['mapel_id'];
-    $kelas_id = $_POST['kelas_id'];
-    $tanggal = $_POST['tanggal'];
-    $jam_ke = mysqli_real_escape_string($conn, $_POST['jam_ke']);
+$message = ''; $message_type = '';
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['simpan_jurnal'])) {
+    if (!verify_csrf_token($_POST['csrf_token'] ?? '')) die("CSRF Token Invalid");
     $materi = mysqli_real_escape_string($conn, $_POST['materi']);
-    $jml_hadir = (int)$_POST['jml_hadir'];
-    $jml_sakit = (int)$_POST['jml_sakit'];
-    $jml_izin = (int)$_POST['jml_izin'];
-    $jml_alfa = (int)$_POST['jml_alfa'];
     $keterangan = mysqli_real_escape_string($conn, $_POST['keterangan']);
 
-    // Validasi dasar
-    if (empty($mapel_id) || empty($kelas_id) || empty($tanggal) || empty($jam_ke) || empty($materi)) {
-        $message = "Harap lengkapi semua field yang wajib diisi.";
-        $message_type = 'error';
+    if (mysqli_query($conn, "UPDATE jurnal SET materi = '$materi', keterangan = '$keterangan' WHERE id = $jurnal_id")) {
+        $message = "Jurnal berhasil disimpan!"; $message_type = 'success';
+        header("Location: riwayat.php?success=1");
+        exit;
     } else {
-        $stmt = mysqli_prepare($conn, "INSERT INTO jurnal (guru_id, mapel_id, kelas_id, tahun_pelajaran_id, tanggal, jam_ke, materi, jml_hadir, jml_sakit, jml_izin, jml_alfa, keterangan) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        mysqli_stmt_bind_param($stmt, "iiiisssiiiis", $guru_id, $mapel_id, $kelas_id, $tahun_pelajaran_id, $tanggal, $jam_ke, $materi, $jml_hadir, $jml_sakit, $jml_izin, $jml_alfa, $keterangan);
-
-        if (mysqli_stmt_execute($stmt)) {
-            $message = "Jurnal berhasil disimpan!";
-            $message_type = 'success';
-            // Kosongkan beberapa field setelah berhasil
-            $_POST = [];
-        } else {
-            $message = "Gagal menyimpan jurnal: " . mysqli_stmt_error($stmt);
-            $message_type = 'error';
-        }
-        mysqli_stmt_close($stmt);
+        $message = "Error: " . mysqli_error($conn); $message_type = 'error';
     }
 }
 
 require_once __DIR__ . '/../includes/header.php';
 ?>
 
-<style>
-/* Override sidebar style untuk dashboard guru */
-.main-content { margin-left: 0; }
-</style>
+<style>#sidebar, header, nav.navbar { display: none !important; } .lg\:ml-64 { margin-left: 0 !important; } .main-content { margin-left: 0 !important; padding-top: 2rem !important; }</style>
 
-<div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Formulir Jurnal Mengajar</h1>
-        <a href="<?= BASE_URL ?>guru/index.php" class="btn btn-secondary"><i class="fa fa-arrow-left"></i> Kembali ke Dashboard</a>
+<div class="max-w-4xl mx-auto pb-32 px-2 sm:px-4">
+    <!-- Progress Indicator -->
+    <div class="flex items-center gap-2 mb-6 sm:mb-10 overflow-hidden rounded-full bg-slate-200 h-2">
+        <div class="w-1/2 h-full bg-emerald-500"></div>
+        <div class="w-1/2 h-full bg-indigo-500 animate-pulse"></div>
     </div>
 
-    <?php if ($message): ?>
-    <script>
-        Swal.fire({
-            icon: '<?= $message_type ?>',
-            title: '<?= ucfirst($message_type) ?>',
-            text: '<?= addslashes(htmlspecialchars($message)) ?>',
-            timer: 3000,
-            showConfirmButton: false
-        });
-    </script>
-    <?php endif; ?>
+    <div class="flex items-center justify-between mb-6 sm:mb-8">
+        <div>
+            <h1 class="text-2xl sm:text-3xl font-black text-slate-800 tracking-tight italic">Langkah 2: Isi Jurnal</h1>
+            <p class="text-slate-500 font-medium tracking-wide uppercase text-[8px] sm:text-[10px] tracking-[0.2em] sm:tracking-[0.3em]">Finalisasi Catatan Mengajar</p>
+        </div>
+        <a href="index.php" class="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center rounded-xl sm:rounded-2xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition-all shadow-sm">
+            <i class="fa fa-arrow-left"></i>
+        </a>
+    </div>
 
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Isi Jurnal Baru</h6>
+    <div class="lux-card p-6 sm:p-10 bg-white shadow-2xl relative overflow-hidden">
+        <div class="absolute top-0 left-0 w-1 h-full bg-indigo-600"></div>
+
+        <div class="mb-8 sm:mb-10 grid grid-cols-1 xs:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 pb-6 sm:pb-8 border-b border-slate-50">
+            <div><p class="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5 sm:mb-1">Mata Pelajaran</p><p class="text-sm sm:text-base font-bold text-slate-800 italic"><?= htmlspecialchars($j['nama_mapel']) ?></p></div>
+            <div><p class="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5 sm:mb-1">Kelas</p><p class="text-sm sm:text-base font-bold text-slate-800"><?= htmlspecialchars($j['nama_kelas']) ?></p></div>
+            <div><p class="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5 sm:mb-1">Jam Ke-</p><p class="text-sm sm:text-base font-bold text-slate-800"><?= htmlspecialchars($j['jam_ke']) ?></p></div>
+            <div><p class="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5 sm:mb-1">Kehadiran</p><p class="text-sm sm:text-base font-bold text-emerald-600"><?= $j['jml_hadir'] ?> Siswa</p></div>
         </div>
-        <div class="card-body">
-            <form action="" method="POST">
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label for="tanggal" class="form-label">Tanggal Mengajar <span class="text-danger">*</span></label>
-                        <input type="date" class="form-control" id="tanggal" name="tanggal" value="<?= date('Y-m-d') ?>" required>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label for="jam_ke" class="form-label">Jam Mengajar Ke- <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="jam_ke" name="jam_ke" placeholder="Contoh: 1-2" required>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label for="mapel_id" class="form-label">Mata Pelajaran <span class="text-danger">*</span></label>
-                        <select class="form-select" id="mapel_id" name="mapel_id" required>
-                            <option value="">-- Pilih Mata Pelajaran --</option>
-                            <?php while($m = mysqli_fetch_assoc($mapels)): ?>
-                                <option value="<?= $m['id'] ?>"><?= htmlspecialchars($m['nama_mapel']) ?></option>
-                            <?php endwhile; ?>
-                        </select>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label for="kelas_id" class="form-label">Kelas yang Diajar <span class="text-danger">*</span></label>
-                        <select class="form-select" id="kelas_id" name="kelas_id" required>
-                            <option value="">-- Pilih Kelas --</option>
-                            <?php while($k = mysqli_fetch_assoc($kelases)): ?>
-                                <option value="<?= $k['id'] ?>"><?= htmlspecialchars($k['nama_kelas']) ?></option>
-                            <?php endwhile; ?>
-                        </select>
-                    </div>
-                </div>
-                <div class="mb-3">
-                    <label for="materi" class="form-label">Materi Pembahasan <span class="text-danger">*</span></label>
-                    <textarea class="form-control" id="materi" name="materi" rows="4" required></textarea>
-                </div>
-                <hr>
-                <p class="font-weight-bold">Kehadiran Siswa</p>
-                <div class="row">
-                    <div class="col-md-3 mb-3">
-                        <label for="jml_hadir" class="form-label">Jumlah Hadir (Otomatis)</label>
-                        <input type="number" class="form-control" id="jml_hadir" name="jml_hadir" value="0" min="0" required readonly>
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <label for="jml_sakit" class="form-label">Sakit</label>
-                        <input type="number" class="form-control" id="jml_sakit" name="jml_sakit" value="0" min="0">
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <label for="jml_izin" class="form-label">Izin</label>
-                        <input type="number" class="form-control" id="jml_izin" name="jml_izin" value="0" min="0">
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <label for="jml_alfa" class="form-label">Alfa</label>
-                        <input type="number" class="form-control" id="jml_alfa" name="jml_alfa" value="0" min="0">
-                    </div>
-                </div>
-                 <div class="mb-3">
-                    <label for="keterangan" class="form-label">Catatan/Keterangan Tambahan</label>
-                    <textarea class="form-control" id="keterangan" name="keterangan" rows="3"></textarea>
-                </div>
-                <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Simpan Jurnal</button>
-            </form>
+
+        <?php if (!empty($tidak_hadir)): ?>
+        <div class="mb-10 p-6 rounded-2xl bg-rose-50 border border-rose-100">
+            <h3 class="text-xs font-black text-rose-700 uppercase tracking-widest mb-4 flex items-center">
+                <i class="fa fa-user-times mr-2"></i> Siswa Tidak Hadir
+            </h3>
+            <div class="flex flex-wrap gap-2">
+                <?php foreach ($tidak_hadir as $th): ?>
+                    <span class="px-3 py-1.5 bg-white rounded-xl border border-rose-200 shadow-sm text-sm font-bold text-slate-700">
+                        <span class="inline-flex items-center justify-center w-5 h-5 rounded-md text-[10px] font-black mr-2
+                            <?= $th['status'] == 'S' ? 'bg-amber-500 text-white' : ($th['status'] == 'I' ? 'bg-blue-500 text-white' : 'bg-rose-500 text-white') ?>">
+                            <?= $th['status'] ?>
+                        </span>
+                        <?= htmlspecialchars($th['nama_siswa']) ?>
+                    </span>
+                <?php endforeach; ?>
+            </div>
         </div>
+        <?php endif; ?>
+
+        <form action="" method="POST" class="space-y-6 sm:space-y-8">
+            <input type="hidden" name="csrf_token" value="<?= get_csrf_token() ?>">
+            <div>
+                <label class="block text-[10px] sm:text-xs font-black text-slate-400 uppercase tracking-widest mb-2 sm:mb-3 ml-1">Materi Pembahasan Hari Ini</label>
+                <textarea name="materi" rows="5" required placeholder="Jelaskan pokok bahasan, kompetensi dasar, atau aktivitas yang dilakukan..." class="w-full px-4 sm:px-6 py-3 sm:py-4 rounded-2xl sm:rounded-3xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-100 font-medium text-slate-600 text-base sm:text-lg transition-all"></textarea>
+            </div>
+
+            <div>
+                <label class="block text-[10px] sm:text-xs font-black text-slate-400 uppercase tracking-widest mb-2 sm:mb-3 ml-1">Catatan Tambahan (Opsional)</label>
+                <input type="text" name="keterangan" placeholder="Media pembelajaran, kendala, dll." class="w-full px-4 sm:px-6 py-3 sm:py-4 rounded-xl sm:rounded-2xl border border-slate-200 outline-none focus:ring-4 focus:ring-slate-100 font-medium text-slate-500 text-sm sm:text-base">
+            </div>
+
+            <button type="submit" name="simpan_jurnal" class="w-full py-4 sm:py-5 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-2xl sm:rounded-3xl shadow-2xl shadow-indigo-200 transition-all transform hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-2 sm:gap-3 tracking-[0.1em] sm:tracking-widest text-base sm:text-lg">
+                <i class="fa fa-save text-lg sm:text-xl"></i> SELESAIKAN JURNAL
+            </button>
+        </form>
     </div>
 </div>
 
-</div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const kelasSelect = document.getElementById('kelas_id');
-    const hadirInput = document.getElementById('jml_hadir');
-    const sakitInput = document.getElementById('jml_sakit');
-    const izinInput = document.getElementById('jml_izin');
-    const alfaInput = document.getElementById('jml_alfa');
-
-    let totalSiswa = 0;
-
-    const calculateHadir = () => {
-        const sakit = parseInt(sakitInput.value) || 0;
-        const izin = parseInt(izinInput.value) || 0;
-        const alfa = parseInt(alfaInput.value) || 0;
-        const tidakHadir = sakit + izin + alfa;
-        const hadir = totalSiswa - tidakHadir;
-        hadirInput.value = Math.max(0, hadir); // Pastikan tidak negatif
-    };
-
-    kelasSelect.addEventListener('change', function() {
-        const kelasId = this.value;
-        if (kelasId) {
-            fetch(`<?= BASE_URL ?>api/get_jumlah_siswa.php?kelas_id=${kelasId}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.total_siswa !== undefined) {
-                        totalSiswa = data.total_siswa;
-                        calculateHadir();
-                    }
-                })
-                .catch(error => console.error('Error fetching student count:', error));
-        } else {
-            totalSiswa = 0;
-            calculateHadir();
-        }
-    });
-
-    [sakitInput, izinInput, alfaInput].forEach(input => {
-        input.addEventListener('input', calculateHadir);
-    });
-});
-</script>
-
-<?php
-require_once __DIR__ . '/../includes/footer.php';
-?>
+<?php require_once __DIR__ . '/../includes/footer.php'; ?>

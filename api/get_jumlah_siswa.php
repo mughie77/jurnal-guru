@@ -1,10 +1,13 @@
 <?php
 header('Content-Type: application/json');
-require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../config/database.php';
 
-// Hanya user yang sudah login (guru) yang bisa akses
-authorize_role(['guru', 'admin']);
+// Hanya user yang sudah login (guru/admin) yang bisa akses
+if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['admin', 'guru'])) {
+    http_response_code(403);
+    echo json_encode(['error' => 'Akses ditolak']);
+    exit();
+}
 
 if (!isset($_GET['kelas_id'])) {
     echo json_encode(['error' => 'ID Kelas tidak disediakan']);

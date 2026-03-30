@@ -2,119 +2,100 @@
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../config/database.php';
 
-// Otorisasi hanya untuk guru
 authorize_role(['guru', 'admin']);
-
 $page_title = "Riwayat Jurnal Saya";
 
-// Dapatkan guru_id dari user_id yang login
 $user_id = $_SESSION['user_id'];
-$guru_result = mysqli_query($conn, "SELECT id FROM guru WHERE user_id = $user_id");
-if(mysqli_num_rows($guru_result) == 0) {
-    die("Error: Data guru tidak ditemukan untuk user ini. Silakan hubungi admin.");
-}
-$guru_id = mysqli_fetch_assoc($guru_result)['id'];
+$guru_res = mysqli_query($conn, "SELECT id FROM guru WHERE user_id = $user_id");
+if(mysqli_num_rows($guru_res) == 0) die("Error: Data guru tidak ditemukan.");
+$guru_id = mysqli_fetch_assoc($guru_res)['id'];
 
-// Logika Filter
 $where_clause = "jurnal.guru_id = $guru_id";
-
-// Tambahkan filter berdasarkan tahun pelajaran aktif
-if ($active_tahun_id) {
-    $where_clause .= " AND jurnal.tahun_pelajaran_id = " . $active_tahun_id;
-}
-
+if ($active_tahun_id) $where_clause .= " AND jurnal.tahun_pelajaran_id = $active_tahun_id";
 if (!empty($_GET['tanggal'])) {
-    $tanggal_filter = mysqli_real_escape_string($conn, $_GET['tanggal']);
-    $where_clause .= " AND jurnal.tanggal = '$tanggal_filter'";
+    $tgl = mysqli_real_escape_string($conn, $_GET['tanggal']);
+    $where_clause .= " AND jurnal.tanggal = '$tgl'";
 }
 
-$sql = "SELECT jurnal.*, mata_pelajaran.nama_mapel, kelas.nama_kelas
+$sql = "SELECT jurnal.*, mp.nama_mapel, k.nama_kelas
         FROM jurnal
-        JOIN mata_pelajaran ON jurnal.mapel_id = mata_pelajaran.id
-        JOIN kelas ON jurnal.kelas_id = kelas.id
+        JOIN mata_pelajaran mp ON jurnal.mapel_id = mp.id
+        JOIN kelas k ON jurnal.kelas_id = k.id
         WHERE $where_clause
         ORDER BY jurnal.tanggal DESC, jurnal.created_at DESC";
-
 $result = mysqli_query($conn, $sql);
 
 require_once __DIR__ . '/../includes/header.php';
 ?>
 
-<style>
-/* Override sidebar style untuk dashboard guru */
-.main-content { margin-left: 0; }
-</style>
+<style>#sidebar, header, nav.navbar { display: none !important; } .lg\:ml-64 { margin-left: 0 !important; } .main-content { margin-left: 0 !important; padding-top: 2rem !important; }</style>
 
-<div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Riwayat Jurnal Mengajar Saya</h1>
-        <a href="<?= BASE_URL ?>guru/index.php" class="btn btn-secondary"><i class="fa fa-arrow-left"></i> Kembali ke Dashboard</a>
-    </div>
-
-    <!-- Filter Form -->
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary"><i class="fa fa-search"></i> Cari Jurnal Berdasarkan Tanggal</h6>
+<div class="max-w-6xl mx-auto pb-20">
+    <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+        <div>
+            <h1 class="text-3xl font-bold text-slate-800 tracking-tight">Riwayat Jurnal</h1>
+            <p class="text-slate-500">Kumpulan catatan aktivitas mengajar Anda.</p>
         </div>
-        <div class="card-body">
-            <form action="" method="GET" class="row g-3 align-items-end">
-                <div class="col-md-4">
-                    <label for="tanggal" class="form-label">Pilih Tanggal</label>
-                    <input type="date" id="tanggal" name="tanggal" class="form-control" value="<?= htmlspecialchars($_GET['tanggal'] ?? '') ?>">
-                </div>
-                <div class="col-md-4">
-                    <button type="submit" class="btn btn-primary">Cari</button>
-                    <a href="riwayat.php" class="btn btn-secondary ms-2">Reset</a>
-                </div>
-            </form>
+        <div class="flex gap-3">
+            <a href="index.php" class="px-6 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-50 transition-all bg-white shadow-sm flex items-center">
+                <i class="fa fa-arrow-left mr-2"></i> Kembali
+            </a>
         </div>
     </div>
 
-    <!-- Data Table -->
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Daftar Jurnal yang Pernah Diisi</h6>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
-                    <thead>
-                        <tr>
-                            <th>Tanggal</th>
-                            <th>Mata Pelajaran</th>
-                            <th>Kelas</th>
-                            <th>Jam Ke-</th>
-                            <th>Materi Pembahasan</th>
-                            <th>Kehadiran (H/S/I/A)</th>
-                            <th>Keterangan</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php if(mysqli_num_rows($result) > 0): ?>
-                            <?php while ($row = mysqli_fetch_assoc($result)): ?>
-                            <tr>
-                                <td><?= htmlspecialchars(date('d-m-Y', strtotime($row['tanggal']))) ?></td>
-                                <td><?= htmlspecialchars($row['nama_mapel']) ?></td>
-                                <td><?= htmlspecialchars($row['nama_kelas']) ?></td>
-                                <td><?= htmlspecialchars($row['jam_ke']) ?></td>
-                                <td style="min-width: 250px;"><?= nl2br(htmlspecialchars($row['materi'])) ?></td>
-                                <td><?= "{$row['jml_hadir']}/{$row['jml_sakit']}/{$row['jml_izin']}/{$row['jml_alfa']}" ?></td>
-                                <td style="min-width: 200px;"><?= nl2br(htmlspecialchars($row['keterangan'])) ?></td>
-                            </tr>
-                            <?php endwhile; ?>
-                        <?php else: ?>
-                            <tr>
-                                <td colspan="7" class="text-center">Tidak ada riwayat jurnal yang ditemukan.</td>
-                            </tr>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
+    <div class="lux-card p-6 mb-8 bg-gradient-to-br from-emerald-50/50 to-white">
+        <form action="" method="GET" class="flex flex-wrap items-end gap-4">
+            <div class="flex-1 min-w-[200px]">
+                <label class="block text-xs font-bold text-slate-500 uppercase mb-2 tracking-widest">Filter Tanggal</label>
+                <input type="date" name="tanggal" value="<?= htmlspecialchars($_GET['tanggal'] ?? '') ?>" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-emerald-100 bg-white">
             </div>
+            <button type="submit" class="px-8 py-2.5 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100">Cari Jurnal</button>
+            <a href="riwayat.php" class="px-6 py-2.5 bg-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-300 transition-all">Reset</a>
+        </form>
+    </div>
+
+    <div class="lux-card overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50 border-b border-slate-100">
+                        <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Tanggal</th>
+                        <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Mata Pelajaran</th>
+                        <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Kelas</th>
+                        <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Materi</th>
+                        <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Kehadiran</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-50">
+                    <?php if(mysqli_num_rows($result) > 0): ?>
+                        <?php while ($row = mysqli_fetch_assoc($result)): ?>
+                        <tr class="hover:bg-slate-50/50 transition-colors">
+                            <td class="px-6 py-4 text-sm font-bold text-slate-700 whitespace-nowrap"><?= date('d/m/Y', strtotime($row['tanggal'])) ?></td>
+                            <td class="px-6 py-4">
+                                <span class="text-sm font-semibold text-indigo-600"><?= htmlspecialchars($row['nama_mapel']) ?></span>
+                                <div class="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Jam: <?= htmlspecialchars($row['jam_ke']) ?></div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="px-2 py-1 rounded bg-slate-100 text-slate-600 text-[10px] font-extrabold uppercase border border-slate-200"><?= htmlspecialchars($row['nama_kelas']) ?></span>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-slate-600 max-w-xs truncate" title="<?= htmlspecialchars($row['materi']) ?>">
+                                <?= htmlspecialchars($row['materi']) ?>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex justify-center gap-1">
+                                    <span class="px-2 py-1 rounded-md bg-emerald-50 text-emerald-600 text-[10px] font-black border border-emerald-100">H:<?= $row['jml_hadir'] ?></span>
+                                    <span class="px-2 py-1 rounded-md bg-rose-50 text-rose-600 text-[10px] font-black border border-rose-100">A:<?= $row['jml_alfa'] ?></span>
+                                </div>
+                            </td>
+                        </tr>
+                        <?php endwhile; ?>
+                    <?php else: ?>
+                        <tr><td colspan="5" class="px-6 py-20 text-center text-slate-400 font-medium italic">Tidak ada data riwayat jurnal.</td></tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
 
-</div>
-<?php
-require_once __DIR__ . '/../includes/footer.php';
-?>
+<?php require_once __DIR__ . '/../includes/footer.php'; ?>

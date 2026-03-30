@@ -1,6 +1,8 @@
 <?php
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/SimpleXLSXGen.php';
+use Shuchkin\SimpleXLSXGen;
 
 // Otorisasi untuk admin dan waka
 authorize_role(['admin', 'waka']);
@@ -26,6 +28,10 @@ if (!empty($_GET['kelas_id'])) {
 if (!empty($_GET['tahun_id'])) {
     $where_clauses[] = "jurnal.tahun_pelajaran_id = " . (int)$_GET['tahun_id'];
 }
+if (!empty($_GET['search'])) {
+    $search = mysqli_real_escape_string($conn, $_GET['search']);
+    $where_clauses[] = "(jurnal.materi LIKE '%$search%' OR users.nama_lengkap LIKE '%$search%')";
+}
 
 $sql = "SELECT jurnal.tanggal, users.nama_lengkap, mata_pelajaran.nama_mapel, kelas.nama_kelas, jurnal.jam_ke,
                jurnal.materi, jurnal.jml_hadir, jurnal.jml_sakit, jurnal.jml_izin, jurnal.jml_alfa, jurnal.keterangan
@@ -41,21 +47,24 @@ $sql .= " ORDER BY jurnal.tanggal ASC, jurnal.created_at ASC";
 
 $result = mysqli_query($conn, $sql);
 
-// Set header untuk download file CSV
-$filename = "Laporan_Jurnal_Mengajar_" . date('Ymd') . ".csv";
-header('Content-Type: text/csv');
-header('Content-Disposition: attachment; filename="' . $filename . '"');
+$data = [];
+// Header with styling
+$data[] = [
+    '<b>Tanggal</b>',
+    '<b>Nama Guru</b>',
+    '<b>Mapel</b>',
+    '<b>Kelas</b>',
+    '<b>Jam Ke</b>',
+    '<b>Materi</b>',
+    '<b>Hadir</b>',
+    '<b>Sakit</b>',
+    '<b>Izin</b>',
+    '<b>Alfa</b>',
+    '<b>Keterangan</b>'
+];
 
-// Buka output stream
-$output = fopen('php://output', 'w');
-
-// Header Tabel
-$header = array('Tanggal', 'Nama Guru', 'Mapel', 'Kelas', 'Jam Ke', 'Materi', 'Hadir', 'Sakit', 'Izin', 'Alfa', 'Keterangan');
-fputcsv($output, $header);
-
-// Tulis data ke CSV
 while($row = mysqli_fetch_assoc($result)) {
-    $csv_row = [
+    $data[] = [
         date('d-m-Y', strtotime($row['tanggal'])),
         $row['nama_lengkap'],
         $row['nama_mapel'],
@@ -68,9 +77,21 @@ while($row = mysqli_fetch_assoc($result)) {
         $row['jml_alfa'],
         $row['keterangan']
     ];
-    fputcsv($output, $csv_row);
 }
 
-fclose($output);
+// Add borders to all cells
+foreach ($data as $rowIndex => &$row) {
+    foreach ($row as $colIndex => &$cell) {
+        if ($rowIndex === 0) {
+            $cell = '<style bgcolor="#E2E8F0" border="thin">'.$cell.'</style>';
+        } else {
+            $cell = '<style border="thin">'.$cell.'</style>';
+        }
+    }
+}
+
+$xlsx = SimpleXLSXGen::fromArray($data);
+$filename = "Laporan_Jurnal_Mengajar_" . date('Ymd') . ".xlsx";
+$xlsx->downloadAs($filename);
 exit();
 ?>

@@ -2,231 +2,129 @@
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../config/database.php';
 
-// Otorisasi hanya untuk admin
 authorize_role(['admin']);
+$page_title = "Tahun Pelajaran";
+$message = ''; $message_type = '';
 
-$page_title = "Manajemen Tahun Pelajaran";
-$message = '';
-$message_type = '';
-
-// Proses Aksi (Tambah, Edit, Hapus, Set Aktif)
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    // Aksi: Tambah Tahun Pelajaran
+    if (!verify_csrf_token($_POST['csrf_token'] ?? '')) die("CSRF Token Invalid");
     if (isset($_POST['tambah'])) {
         $tahun = mysqli_real_escape_string($conn, $_POST['tahun']);
-        $query = "INSERT INTO tahun_pelajaran (tahun) VALUES ('$tahun')";
-        if (mysqli_query($conn, $query)) {
-            $message = "Tahun pelajaran berhasil ditambahkan!";
-            $message_type = 'success';
-        } else {
-            $message = "Gagal menambahkan tahun pelajaran: " . mysqli_error($conn);
-            $message_type = 'error';
-        }
-    }
-    // Aksi: Edit Tahun Pelajaran
-    elseif (isset($_POST['edit'])) {
+        mysqli_query($conn, "INSERT INTO tahun_pelajaran (tahun) VALUES ('$tahun')");
+        $message = "Tahun pelajaran ditambahkan!"; $message_type = 'success';
+    } elseif (isset($_POST['set_aktif'])) {
         $id = $_POST['id'];
-        $tahun = mysqli_real_escape_string($conn, $_POST['tahun']);
-        $query = "UPDATE tahun_pelajaran SET tahun = '$tahun' WHERE id = $id";
-        if (mysqli_query($conn, $query)) {
-            $message = "Tahun pelajaran berhasil diperbarui!";
-            $message_type = 'success';
-        } else {
-            $message = "Gagal memperbarui tahun pelajaran: " . mysqli_error($conn);
-            $message_type = 'error';
-        }
-    }
-    // Aksi: Hapus Tahun Pelajaran
-    elseif (isset($_POST['hapus'])) {
-        $id = $_POST['id'];
-        // Cek dulu apakah ada jurnal terkait
-        $check_query = "SELECT COUNT(*) as total FROM jurnal WHERE tahun_pelajaran_id = $id";
-        $check_result = mysqli_query($conn, $check_query);
-        $total_jurnal = mysqli_fetch_assoc($check_result)['total'];
-
-        if ($total_jurnal > 0) {
-            $message = "Gagal menghapus: Tahun pelajaran ini sudah digunakan di jurnal.";
-            $message_type = 'error';
-        } else {
-            $query = "DELETE FROM tahun_pelajaran WHERE id = $id";
-            if (mysqli_query($conn, $query)) {
-                $message = "Tahun pelajaran berhasil dihapus!";
-                $message_type = 'success';
-            } else {
-                $message = "Gagal menghapus tahun pelajaran: " . mysqli_error($conn);
-                $message_type = 'error';
-            }
-        }
-    }
-    // Aksi: Set Aktif
-    elseif (isset($_POST['set_aktif'])) {
-        $id = $_POST['id'];
-        // Mulai transaksi
         mysqli_begin_transaction($conn);
         try {
-            // 1. Set semua menjadi 'tidak aktif'
             mysqli_query($conn, "UPDATE tahun_pelajaran SET status = 'tidak aktif'");
-            // 2. Set yang dipilih menjadi 'aktif'
             mysqli_query($conn, "UPDATE tahun_pelajaran SET status = 'aktif' WHERE id = $id");
-            // Commit transaksi
             mysqli_commit($conn);
-            $message = "Status tahun pelajaran berhasil diubah!";
-            $message_type = 'success';
-        } catch (mysqli_sql_exception $exception) {
-            mysqli_rollback($conn);
-            $message = "Gagal mengubah status: " . $exception->getMessage();
-            $message_type = 'error';
-        }
+            $message = "Status tahun pelajaran diperbarui!"; $message_type = 'success';
+        } catch (Exception $e) { mysqli_rollback($conn); $message = "Error: " . $e->getMessage(); $message_type = 'error'; }
+    } elseif (isset($_POST['hapus'])) {
+        mysqli_query($conn, "DELETE FROM tahun_pelajaran WHERE id = " . (int)$_POST['id']);
+        $message = "Tahun pelajaran dihapus!"; $message_type = 'success';
     }
 }
 
-// Ambil semua data tahun pelajaran untuk ditampilkan
 $result = mysqli_query($conn, "SELECT * FROM tahun_pelajaran ORDER BY tahun DESC");
-
 require_once __DIR__ . '/../includes/header.php';
-require_once __DIR__ . '/../includes/sidebar_admin.php';
 ?>
 
-<h1 class="h3 mb-4 text-gray-800">Manajemen Tahun Pelajaran</h1>
+<div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+    <div>
+        <h1 class="text-3xl font-bold text-slate-800 tracking-tight">Tahun Pelajaran</h1>
+        <p class="text-slate-500">Kelola periode akademik aktif dan riwayat tahun ajaran.</p>
+    </div>
+    <button onclick="openModal('tambahModal')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-indigo-200 transition-all flex items-center">
+        <i class="fa fa-plus mr-2"></i> Tambah Tahun
+    </button>
+</div>
 
 <?php if ($message): ?>
 <script>
-    Swal.fire({
-        icon: '<?= $message_type ?>',
-        title: '<?= ucfirst($message_type) ?>',
-        text: '<?= addslashes($message) ?>',
-        timer: 3000,
-        showConfirmButton: false
-    });
+    Swal.fire({ icon: '<?= $message_type ?>', title: '<?= ucfirst($message_type) ?>', text: '<?= addslashes(htmlspecialchars($message)) ?>' });
 </script>
 <?php endif; ?>
 
-<!-- Tombol untuk memunculkan modal tambah -->
-<button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#tambahModal">
-    <i class="fa fa-plus"></i> Tambah Tahun Pelajaran
-</button>
-
-<!-- Tabel Data -->
-<div class="card shadow mb-4">
-    <div class="card-header py-3">
-        <h6 class="m-0 font-weight-bold text-primary">Daftar Tahun Pelajaran</h6>
-    </div>
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
-                <thead>
-                    <tr>
-                        <th>Tahun Pelajaran</th>
-                        <th>Status</th>
-                        <th>Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php while ($row = mysqli_fetch_assoc($result)): ?>
-                    <tr>
-                        <td><?= htmlspecialchars($row['tahun']) ?></td>
-                        <td>
-                            <?php if ($row['status'] == 'aktif'): ?>
-                                <span class="badge bg-success">Aktif</span>
-                            <?php else: ?>
-                                <span class="badge bg-secondary">Tidak Aktif</span>
-                            <?php endif; ?>
-                        </td>
-                        <td>
-                            <form action="" method="POST" class="d-inline">
+<div class="lux-card overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-slate-50 border-b border-slate-100">
+                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Tahun Pelajaran</th>
+                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Status</th>
+                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Aksi</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-50">
+                <?php while ($row = mysqli_fetch_assoc($result)): ?>
+                <tr class="hover:bg-slate-50/50 transition-colors">
+                    <td class="px-6 py-4 font-bold text-slate-700"><?= htmlspecialchars($row['tahun']) ?></td>
+                    <td class="px-6 py-4 text-center">
+                        <?php if ($row['status'] == 'aktif'): ?>
+                            <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold uppercase tracking-widest border border-emerald-200 inline-flex items-center">
+                                <span class="w-2 h-2 bg-emerald-500 rounded-full mr-2 animate-pulse"></span> Aktif
+                            </span>
+                        <?php else: ?>
+                            <span class="px-3 py-1 rounded-full bg-slate-100 text-slate-500 text-xs font-bold uppercase tracking-widest border border-slate-200">Tidak Aktif</span>
+                        <?php endif; ?>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex justify-center gap-2">
+                            <?php if ($row['status'] != 'aktif'): ?>
+                            <form action="" method="POST">
+                                <input type="hidden" name="csrf_token" value="<?= get_csrf_token() ?>">
                                 <input type="hidden" name="id" value="<?= $row['id'] ?>">
-                                <?php if ($row['status'] != 'aktif'): ?>
-                                <button type="submit" name="set_aktif" class="btn btn-success btn-sm" title="Jadikan Aktif">
+                                <button type="submit" name="set_aktif" class="w-9 h-9 flex items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all" title="Aktifkan">
                                     <i class="fa fa-check"></i>
                                 </button>
-                                <?php endif; ?>
                             </form>
-                            <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#editModal-<?= $row['id'] ?>" title="Edit">
-                                <i class="fa fa-edit"></i>
-                            </button>
-                            <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#hapusModal-<?= $row['id'] ?>" title="Hapus">
+                            <?php endif; ?>
+                            <button onclick="openModal('hapusModal-<?= $row['id'] ?>')" class="w-9 h-9 flex items-center justify-center rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white transition-all">
                                 <i class="fa fa-trash"></i>
                             </button>
-                        </td>
-                    </tr>
-
-                    <!-- Modal Edit -->
-                    <div class="modal fade" id="editModal-<?= $row['id'] ?>" tabindex="-1" aria-labelledby="editModalLabel-<?= $row['id'] ?>" aria-hidden="true">
-                        <div class="modal-dialog">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title" id="editModalLabel-<?= $row['id'] ?>">Edit Tahun Pelajaran</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                </div>
-                                <form action="" method="POST">
-                                    <div class="modal-body">
-                                        <input type="hidden" name="id" value="<?= $row['id'] ?>">
-                                        <div class="mb-3">
-                                            <label for="tahun-<?= $row['id'] ?>" class="form-label">Tahun Pelajaran</label>
-                                            <input type="text" class="form-control" id="tahun-<?= $row['id'] ?>" name="tahun" value="<?= htmlspecialchars($row['tahun']) ?>" required>
-                                        </div>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                                        <button type="submit" name="edit" class="btn btn-primary">Simpan Perubahan</button>
-                                    </div>
-                                </form>
-                            </div>
                         </div>
-                    </div>
-
-                    <!-- Modal Hapus -->
-                    <div class="modal fade" id="hapusModal-<?= $row['id'] ?>" tabindex="-1" aria-labelledby="hapusModalLabel-<?= $row['id'] ?>" aria-hidden="true">
-                        <div class="modal-dialog">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title" id="hapusModalLabel-<?= $row['id'] ?>">Konfirmasi Hapus</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                </div>
-                                <div class="modal-body">
-                                    Anda yakin ingin menghapus tahun pelajaran "<?= htmlspecialchars($row['tahun']) ?>"?
-                                </div>
-                                <div class="modal-footer">
-                                    <form action="" method="POST">
-                                        <input type="hidden" name="id" value="<?= $row['id'] ?>">
-                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                                        <button type="submit" name="hapus" class="btn btn-danger">Hapus</button>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <?php endwhile; ?>
-                </tbody>
-            </table>
-        </div>
+                    </td>
+                </tr>
+                <?php endwhile; ?>
+            </tbody>
+        </table>
     </div>
 </div>
 
-<!-- Modal Tambah -->
-<div class="modal fade" id="tambahModal" tabindex="-1" aria-labelledby="tambahModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="tambahModalLabel">Tambah Tahun Pelajaran</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form action="" method="POST">
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="tahun" class="form-label">Tahun Pelajaran</label>
-                        <input type="text" class="form-control" id="tahun" name="tahun" placeholder="Contoh: 2024/2025" required>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" name="tambah" class="btn btn-primary">Simpan</button>
-                </div>
-            </form>
-        </div>
-    </div>
+<div id="modalOverlay" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] hidden transition-opacity duration-300 opacity-0" onclick="closeAllModals()"></div>
+
+<div id="tambahModal" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-white rounded-3xl shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0 overflow-hidden">
+    <div class="bg-indigo-600 px-8 py-6 text-white font-bold italic text-2xl">Tambah Tahun Pelajaran</div>
+    <form action="" method="POST" class="p-8 space-y-4">
+        <input type="hidden" name="csrf_token" value="<?= get_csrf_token() ?>">
+        <div><label class="block text-sm font-bold text-slate-700 mb-1">Tahun Pelajaran</label><input type="text" name="tahun" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50" placeholder="Contoh: 2024/2025"></div>
+        <div class="pt-4 flex gap-3"><button type="button" onclick="closeModal('tambahModal')" class="flex-1 px-6 py-2.5 rounded-xl border border-slate-200 font-bold text-slate-600">Batal</button><button type="submit" name="tambah" class="flex-1 px-6 py-2.5 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-100">Simpan</button></div>
+    </form>
 </div>
 
-<?php
-require_once __DIR__ . '/../includes/footer.php';
-?>
+<?php mysqli_data_seek($result, 0); while ($row = mysqli_fetch_assoc($result)): ?>
+<div id="hapusModal-<?= $row['id'] ?>" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-sm bg-white rounded-3xl shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0 overflow-hidden">
+    <div class="p-8 text-center">
+        <div class="w-16 h-16 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl"><i class="fa fa-calendar-times"></i></div>
+        <h3 class="text-xl font-bold text-slate-800 mb-2 italic">Hapus Tahun?</h3>
+        <p class="text-sm text-slate-500 mb-8">Hapus periode <span class="font-bold text-slate-800"><?= htmlspecialchars($row['tahun']) ?></span>?</p>
+        <form action="" method="POST" class="flex gap-2">
+            <input type="hidden" name="csrf_token" value="<?= get_csrf_token() ?>">
+            <input type="hidden" name="id" value="<?= $row['id'] ?>">
+            <button type="button" onclick="closeModal('hapusModal-<?= $row['id'] ?>')" class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 font-bold text-slate-600">Batal</button>
+            <button type="submit" name="hapus" class="flex-1 px-4 py-2.5 rounded-xl bg-rose-600 text-white font-bold hover:bg-rose-700 transition-all">Hapus</button>
+        </form>
+    </div>
+</div>
+<?php endwhile; ?>
+
+<script>
+const overlay = document.getElementById('modalOverlay');
+function openModal(id) { const m = document.getElementById(id); if(!m) return; overlay.classList.remove('hidden'); m.classList.remove('hidden'); setTimeout(() => { overlay.classList.add('opacity-100'); m.classList.add('opacity-100', 'scale-100'); }, 10); }
+function closeModal(id) { const m = document.getElementById(id); overlay.classList.remove('opacity-100'); m.classList.remove('opacity-100', 'scale-100'); setTimeout(() => { overlay.classList.add('hidden'); m.classList.add('hidden'); }, 300); }
+function closeAllModals() { document.querySelectorAll('.modal-content').forEach(m => { if(!m.classList.contains('hidden')) closeModal(m.id); }); }
+</script>
+
+<?php require_once __DIR__ . '/../includes/footer.php'; ?>

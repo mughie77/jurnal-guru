@@ -1,60 +1,81 @@
 <?php
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/pagination.php';
 
-// Otorisasi untuk waka dan admin
 authorize_role(['waka', 'admin']);
-
 $page_title = "Data Kelas";
 
-// Ambil semua data kelas, join dengan guru dan users untuk nama wali kelas
-$query = "SELECT kelas.id, kelas.nama_kelas, kelas.jumlah_siswa_L, kelas.jumlah_siswa_P, users.nama_lengkap as nama_wali_kelas
-          FROM kelas
-          LEFT JOIN guru ON kelas.wali_kelas_id = guru.id
+// Search Logic
+$search = mysqli_real_escape_string($conn, $_GET['search'] ?? '');
+$where_sql = "";
+if (!empty($search)) {
+    $where_sql = " WHERE (kelas.nama_kelas LIKE '%$search%' OR users.nama_lengkap LIKE '%$search%')";
+}
+
+$pagin = get_pagination_data($conn, "kelas LEFT JOIN guru ON kelas.wali_kelas_id = guru.id LEFT JOIN users ON guru.user_id = users.id", 15, $where_sql);
+
+$query = "SELECT kelas.*, users.nama_lengkap as nama_wali_kelas
+          FROM kelas LEFT JOIN guru ON kelas.wali_kelas_id = guru.id
           LEFT JOIN users ON guru.user_id = users.id
-          ORDER BY kelas.nama_kelas ASC";
+          $where_sql
+          ORDER BY kelas.nama_kelas ASC LIMIT {$pagin['limit']} OFFSET {$pagin['offset']}";
 $result = mysqli_query($conn, $query);
 
 require_once __DIR__ . '/../includes/header.php';
-require_once __DIR__ . '/../includes/sidebar_waka.php';
 ?>
 
-<h1 class="h3 mb-4 text-gray-800">Data Kelas</h1>
-
-<div class="card shadow mb-4">
-    <div class="card-header py-3">
-        <h6 class="m-0 font-weight-bold text-primary">Daftar Kelas</h6>
-    </div>
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
-                <thead>
-                    <tr>
-                        <th>Nama Kelas</th>
-                        <th>Wali Kelas</th>
-                        <th>Jumlah Siswa (L/P/Total)</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if (mysqli_num_rows($result) > 0): ?>
-                        <?php while ($row = mysqli_fetch_assoc($result)): ?>
-                        <tr>
-                            <td><?= htmlspecialchars($row['nama_kelas']) ?></td>
-                            <td><?= htmlspecialchars($row['nama_wali_kelas'] ?? 'Belum Diatur') ?></td>
-                            <td><?= $row['jumlah_siswa_L'] ?> / <?= $row['jumlah_siswa_P'] ?> / <strong><?= $row['jumlah_siswa_L'] + $row['jumlah_siswa_P'] ?></strong></td>
-                        </tr>
-                        <?php endwhile; ?>
-                    <?php else: ?>
-                        <tr>
-                            <td colspan="3" class="text-center">Belum ada data kelas.</td>
-                        </tr>
-                    <?php endif; ?>
-                </tbody>
-            </table>
-        </div>
+<div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+    <div>
+        <h1 class="text-3xl font-bold text-slate-800 tracking-tight italic">Data Kelas</h1>
+        <p class="text-slate-500">Informasi kelas dan kapasitas siswa.</p>
     </div>
 </div>
 
-<?php
-require_once __DIR__ . '/../includes/footer.php';
-?>
+<div class="lux-card p-6 mb-8 bg-gradient-to-br from-indigo-50/50 to-white">
+    <form action="" method="GET" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="space-y-1">
+            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Cari Kelas</label>
+            <input type="text" name="search" value="<?= htmlspecialchars($search) ?>" placeholder="Nama Kelas atau Wali..." class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-100 bg-white shadow-sm">
+        </div>
+        <div class="lg:col-span-2 flex items-end gap-3">
+            <button type="submit" class="px-8 py-2.5 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100">Cari</button>
+            <a href="kelas.php" class="px-6 py-2.5 bg-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-300 transition-all">Reset</a>
+        </div>
+    </form>
+</div>
+
+<div class="lux-card overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-slate-50 border-b border-slate-100">
+                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Nama Kelas</th>
+                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Wali Kelas</th>
+                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Laki-laki</th>
+                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Perempuan</th>
+                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Total</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-50">
+                <?php while ($row = mysqli_fetch_assoc($result)): ?>
+                <tr class="hover:bg-slate-50/50 transition-colors">
+                    <td class="px-6 py-4 font-bold text-slate-700"><?= htmlspecialchars($row['nama_kelas']) ?></td>
+                    <td class="px-6 py-4 text-sm text-slate-600"><?= htmlspecialchars($row['nama_wali_kelas'] ?? 'Belum Diatur') ?></td>
+                    <td class="px-6 py-4 text-center font-bold text-blue-600"><?= $row['jumlah_siswa_L'] ?></td>
+                    <td class="px-6 py-4 text-center font-bold text-pink-600"><?= $row['jumlah_siswa_P'] ?></td>
+                    <td class="px-6 py-4 text-center">
+                        <span class="px-3 py-1 rounded-lg bg-slate-100 text-slate-800 font-extrabold text-sm border border-slate-200">
+                            <?= $row['jumlah_siswa_L'] + $row['jumlah_siswa_P'] ?>
+                        </span>
+                    </td>
+                </tr>
+                <?php endwhile; ?>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<?= render_pagination($pagin['page'], $pagin['total_pages'], $_GET) ?>
+
+<?php require_once __DIR__ . '/../includes/footer.php'; ?>
