@@ -27,11 +27,11 @@
 
 .photo-area-new {
     position: absolute;
-    left: 18px;
-    top: 83px;
-    width: 172px;
-    height: 216px;
-    border-radius: 10px;
+    left: 24px;
+    top: 95px;
+    width: 120px;
+    height: 151px;
+    border-radius: 8px;
     overflow: hidden;
     background: #f8fafc;
     border: 1px solid #e2e8f0;
@@ -45,10 +45,10 @@
 
 .barcode-area {
     position: absolute;
-    left: 18px;
-    bottom: 22px;
-    width: 172px;
-    height: 60px;
+    left: 24px;
+    bottom: 35px;
+    width: 120px;
+    height: 42px;
     background: white;
     display: flex;
     align-items: center;
@@ -77,6 +77,12 @@
     flex-direction: column;
     justify-content: flex-end; /* Align value to bottom of the 40px group */
     padding-bottom: 6px;
+}
+
+/* Specifically lift the last two values */
+.info-group:nth-child(4),
+.info-group:nth-child(5) {
+    padding-bottom: 12px;
 }
 
 .info-label {

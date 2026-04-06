@@ -25,8 +25,8 @@ $siswa = [
         <div class="card-id">
             <div class="card-content">
                 <div class="photo-area-new">
-                    <div style="width:100%; height:100%; background:#ddd; display:flex; align-items:center; justify-content:center; color:#999; font-weight:bold; text-align:center;">
-                        PHOTO AREA<br>(172x220px)
+                    <div style="width:100%; height:100%; background:#ddd; display:flex; align-items:center; justify-content:center; color:#999; font-weight:bold; text-align:center; font-size: 10px;">
+                        PHOTO AREA<br>(120x151px)
                     </div>
                 </div>
 
@@ -64,10 +64,10 @@ $siswa = [
     <script>
         JsBarcode("#barcode", "<?= $siswa['nis'] ?>", {
             format: "CODE128",
-            width: 2,
-            height: 45,
+            width: 1.5,
+            height: 30,
             displayValue: true,
-            fontSize: 12,
+            fontSize: 8,
             fontOptions: "bold",
             margin: 0
         });

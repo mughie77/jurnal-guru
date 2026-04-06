@@ -107,3 +107,30 @@
 [Mon Apr  6 03:28:28 2026] 127.0.0.1:45676 Accepted
 [Mon Apr  6 03:28:28 2026] 127.0.0.1:45676 [200]: GET /assets/img/karpel.jpg
 [Mon Apr  6 03:28:28 2026] 127.0.0.1:45676 Closing
+[Mon Apr  6 03:56:03 2026] 127.0.0.1:53612 Accepted
+[Mon Apr  6 03:56:03 2026] 127.0.0.1:53612 [404]: GET /home/jules/verification/verify_card_standalone.php - No such file or directory
+[Mon Apr  6 03:56:03 2026] 127.0.0.1:53612 Closing
+[Mon Apr  6 03:56:57 2026] 127.0.0.1:41072 Accepted
+[Mon Apr  6 03:56:57 2026] 127.0.0.1:41072 [200]: GET /verify_card_standalone.php
+[Mon Apr  6 03:56:57 2026] 127.0.0.1:41072 Closing
+[Mon Apr  6 03:56:57 2026] 127.0.0.1:41078 Accepted
+[Mon Apr  6 03:56:57 2026] 127.0.0.1:41078 [200]: GET /assets/css/id-card.css
+[Mon Apr  6 03:56:57 2026] 127.0.0.1:41078 Closing
+[Mon Apr  6 03:56:57 2026] 127.0.0.1:41080 Accepted
+[Mon Apr  6 03:56:57 2026] 127.0.0.1:41080 [200]: GET /assets/img/karpel.jpg
+[Mon Apr  6 03:56:57 2026] 127.0.0.1:41080 Closing
+[Mon Apr  6 03:58:19 2026] 127.0.0.1:41708 Accepted
+[Mon Apr  6 03:58:19 2026] 127.0.0.1:41708 [200]: GET /verify_card_standalone.php
+[Mon Apr  6 03:58:19 2026] 127.0.0.1:41708 Closing
+[Mon Apr  6 03:58:19 2026] 127.0.0.1:41716 Accepted
+[Mon Apr  6 03:58:19 2026] 127.0.0.1:41716 [200]: GET /assets/css/id-card.css
+[Mon Apr  6 03:58:19 2026] 127.0.0.1:41716 Closing
+[Mon Apr  6 03:58:19 2026] 127.0.0.1:41730 Accepted
+[Mon Apr  6 03:58:19 2026] 127.0.0.1:41730 [200]: GET /assets/img/karpel.jpg
+[Mon Apr  6 03:58:19 2026] 127.0.0.1:41730 Closing
+[Mon Apr  6 04:01:08 2026] 127.0.0.1:33838 Accepted
+[Mon Apr  6 04:01:08 2026] 127.0.0.1:33838 [404]: GET /home/jules/verification/verify_card_standalone.php - No such file or directory
+[Mon Apr  6 04:01:08 2026] 127.0.0.1:33838 Closing
+[Mon Apr  6 04:03:16 2026] 127.0.0.1:48202 Accepted
+[Mon Apr  6 04:03:16 2026] 127.0.0.1:48202 [404]: GET /home/jules/verification/verify_card_standalone.php - No such file or directory
+[Mon Apr  6 04:03:16 2026] 127.0.0.1:48202 Closing

@@ -1,0 +1,10 @@
+[Mon Apr  6 04:05:40 2026] PHP 8.3.6 Development Server (http://localhost:8001) started
+[Mon Apr  6 04:05:43 2026] [::1]:44850 Accepted
+[Mon Apr  6 04:05:43 2026] [::1]:44850 [200]: GET /verify_card_standalone.php
+[Mon Apr  6 04:05:43 2026] [::1]:44850 Closing
+[Mon Apr  6 04:05:43 2026] [::1]:44864 Accepted
+[Mon Apr  6 04:05:43 2026] [::1]:44864 [200]: GET /assets/css/id-card.css
+[Mon Apr  6 04:05:43 2026] [::1]:44864 Closing
+[Mon Apr  6 04:05:43 2026] [::1]:44876 Accepted
+[Mon Apr  6 04:05:43 2026] [::1]:44876 [200]: GET /assets/img/karpel.jpg
+[Mon Apr  6 04:05:43 2026] [::1]:44876 Closing
