@@ -105,10 +105,11 @@ require_once __DIR__ . '/../includes/header.php';
 <script>
     JsBarcode("#barcode", "<?= $siswa['nis'] ?>", {
         format: "CODE128",
-        width: 1,
-        height: 35,
+        width: 2,
+        height: 45,
         displayValue: true,
         fontSize: 10,
+        fontOptions: "bold",
         margin: 0,
         background: "#ffffff"
     });

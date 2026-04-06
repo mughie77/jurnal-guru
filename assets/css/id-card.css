@@ -31,7 +31,7 @@
     top: 105px;
     width: 184px;
     height: 230px;
-    border-radius: 15px;
+    border-radius: 12px; /* Precision matching background radius */
     overflow: hidden;
     background: #eee;
 }
@@ -45,14 +45,19 @@
 .barcode-area {
     position: absolute;
     left: 42px;
-    bottom: 45px;
+    bottom: 42px; /* Precision matching bottom gap */
     width: 190px;
-    height: 60px;
+    height: 62px; /* Precision matching white box height */
     background: white;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 5px;
+    padding: 2px; /* Minimize padding to maximize barcode fill */
+}
+
+.barcode-area svg {
+    width: 100% !important;
+    height: 100% !important;
 }
 
 .info-area-new {
