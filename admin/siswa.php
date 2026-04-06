@@ -22,6 +22,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $jenis_kelamin = $_POST['jenis_kelamin'];
             $alamat = $_POST['alamat'] ?: null;
             $no_telp = $_POST['no_telp'] ?: null;
+            $tempat_lahir = $_POST['tempat_lahir'] ?: null;
+            $tanggal_lahir = $_POST['tanggal_lahir'] ?: null;
 
             $foto = null;
             if (!empty($_FILES['foto']['name'])) {
@@ -32,8 +34,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 }
             }
 
-            $stmt = mysqli_prepare($conn, "INSERT INTO siswa (nis, nisn, nama_siswa, jenis_kelamin, alamat, no_telp, foto) VALUES (?, ?, ?, ?, ?, ?, ?)");
-            mysqli_stmt_bind_param($stmt, "sssssss", $nis, $nisn, $nama_siswa, $jenis_kelamin, $alamat, $no_telp, $foto);
+            $stmt = mysqli_prepare($conn, "INSERT INTO siswa (nis, nisn, nama_siswa, jenis_kelamin, alamat, no_telp, foto, tempat_lahir, tanggal_lahir) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            mysqli_stmt_bind_param($stmt, "sssssssss", $nis, $nisn, $nama_siswa, $jenis_kelamin, $alamat, $no_telp, $foto, $tempat_lahir, $tanggal_lahir);
             if (mysqli_stmt_execute($stmt)) {
                 $message = "Siswa berhasil ditambahkan!";
                 $message_type = 'success';
@@ -46,10 +48,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $jenis_kelamin = $_POST['jenis_kelamin'];
             $alamat = $_POST['alamat'] ?: null;
             $no_telp = $_POST['no_telp'] ?: null;
+            $tempat_lahir = $_POST['tempat_lahir'] ?: null;
+            $tanggal_lahir = $_POST['tanggal_lahir'] ?: null;
 
             $q_foto = "";
-            $params = [$nis, $nisn, $nama_siswa, $jenis_kelamin, $alamat, $no_telp];
-            $types = "ssssss";
+            $params = [$nis, $nisn, $nama_siswa, $jenis_kelamin, $alamat, $no_telp, $tempat_lahir, $tanggal_lahir];
+            $types = "ssssssss";
 
             if (!empty($_FILES['foto']['name'])) {
                 $ext = strtolower(pathinfo($_FILES['foto']['name'], PATHINFO_EXTENSION));
@@ -65,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $params[] = $id;
             $types .= "i";
 
-            $stmt = mysqli_prepare($conn, "UPDATE siswa SET nis = ?, nisn = ?, nama_siswa = ?, jenis_kelamin = ?, alamat = ?, no_telp = ? $q_foto WHERE id = ?");
+            $stmt = mysqli_prepare($conn, "UPDATE siswa SET nis = ?, nisn = ?, nama_siswa = ?, jenis_kelamin = ?, alamat = ?, no_telp = ?, tempat_lahir = ?, tanggal_lahir = ? $q_foto WHERE id = ?");
             mysqli_stmt_bind_param($stmt, $types, ...$params);
             if (mysqli_stmt_execute($stmt)) {
                 $message = "Data siswa diperbarui!";
@@ -257,6 +261,10 @@ require_once __DIR__ . '/../includes/header.php';
             <div><label class="block text-sm font-bold text-slate-700 mb-1">No. Telp/HP</label><input type="text" name="no_telp" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50"></div>
         </div>
         <div class="grid grid-cols-2 gap-4">
+            <div><label class="block text-sm font-bold text-slate-700 mb-1">Tempat Lahir</label><input type="text" name="tempat_lahir" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50"></div>
+            <div><label class="block text-sm font-bold text-slate-700 mb-1">Tanggal Lahir</label><input type="date" name="tanggal_lahir" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 bg-white"></div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
             <div><label class="block text-sm font-bold text-slate-700 mb-1">Alamat</label><textarea name="alamat" rows="2" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50"></textarea></div>
             <div><label class="block text-sm font-bold text-slate-700 mb-1">Foto Siswa</label><input type="file" name="foto" accept="image/*" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 bg-white"></div>
         </div>
@@ -283,6 +291,10 @@ require_once __DIR__ . '/../includes/header.php';
                 </select>
             </div>
             <div><label class="block text-sm font-bold text-slate-700 mb-1">No. Telp/HP</label><input type="text" name="no_telp" value="<?= htmlspecialchars($row['no_telp'] ?? '') ?>" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"></div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+            <div><label class="block text-sm font-bold text-slate-700 mb-1">Tempat Lahir</label><input type="text" name="tempat_lahir" value="<?= htmlspecialchars($row['tempat_lahir'] ?? '') ?>" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"></div>
+            <div><label class="block text-sm font-bold text-slate-700 mb-1">Tanggal Lahir</label><input type="date" name="tanggal_lahir" value="<?= htmlspecialchars($row['tanggal_lahir'] ?? '') ?>" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50 bg-white"></div>
         </div>
         <div class="grid grid-cols-2 gap-4">
             <div><label class="block text-sm font-bold text-slate-700 mb-1">Alamat</label><textarea name="alamat" rows="2" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"><?= htmlspecialchars($row['alamat'] ?? '') ?></textarea></div>

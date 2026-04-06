@@ -22,109 +22,114 @@ $sets = [];
 while ($r = mysqli_fetch_assoc($res_set)) $sets[$r['nama_setting']] = $r['nilai_setting'];
 
 class IDCardPDF extends FPDF {
-    function ClippingCircle($x, $y, $r, $outline=false) {
-        $x *= $this->k;
-        $y = ($this->h-$y)*$this->k;
-        $r *= $this->k;
-        $b = $r*0.552284749831;
-        $this->_out(sprintf('q %.2F %.2F m %.2F %.2F %.2F %.2F %.2F %.2F c %.2F %.2F %.2F %.2F %.2F %.2F c %.2F %.2F %.2F %.2F %.2F %.2F c %.2F %.2F %.2F %.2F %.2F %.2F c W %s',
-            $x+$r,$y, $x+$r,$y+$b, $x+$b,$y+$r, $x,$y+$r,
-            $x-$b,$y+$r, $x-$r,$y+$b, $x-$r,$y,
-            $x-$r,$y-$b, $x-$b,$y-$r, $x,$y-$r,
-            $x+$b,$y-$r, $x+$r,$y-$b, $x+$r,$y,
-            $outline ? 'S' : 'n'));
+    // Code 128 barcode function
+    function Code128($x, $y, $code, $w, $h) {
+        $v = array(' '=>0, '!'=>1, '"'=>2, '#'=>3, '$'=>4, '%'=>5, '&'=>6, "'"=>7, '('=>8, ')'=>9, '*'=>10, '+'=>11, ','=>12, '-'=>13, '.'=>14, '/'=>15, '0'=>16, '1'=>17, '2'=>18, '3'=>19, '4'=>20, '5'=>21, '6'=>22, '7'=>23, '8'=>24, '9'=>25, ':'=>26, ';'=>27, '<'=>28, '='=>29, '>'=>30, '?'=>31, '@'=>32, 'A'=>33, 'B'=>34, 'C'=>35, 'D'=>36, 'E'=>37, 'F'=>38, 'G'=>39, 'H'=>40, 'I'=>41, 'J'=>42, 'K'=>43, 'L'=>44, 'M'=>45, 'N'=>46, 'O'=>47, 'P'=>48, 'Q'=>49, 'R'=>50, 'S'=>51, 'T'=>52, 'U'=>53, 'V'=>54, 'W'=>55, 'X'=>56, 'Y'=>57, 'Z'=>58, '['=>59, '\\'=>60, ']'=>61, '^'=>62, '_'=>63, '`'=>64, 'a'=>65, 'b'=>66, 'c'=>67, 'd'=>68, 'e'=>69, 'f'=>70, 'g'=>71, 'h'=>72, 'i'=>73, 'j'=>74, 'k'=>75, 'l'=>76, 'm'=>77, 'n'=>78, 'o'=>79, 'p'=>80, 'q'=>81, 'r'=>82, 's'=>83, 't'=>84, 'u'=>85, 'v'=>86, 'w'=>87, 'x'=>88, 'y'=>89, 'z'=>90, '{'=>91, '|'=>92, '}'=>93, '~'=>94, 'DEL'=>95, 'FNC 3'=>96, 'FNC 2'=>97, 'SHIFT'=>98, 'CODE C'=>99, 'CODE B'=>100, 'FNC 4'=>101, 'FNC 1'=>102, 'Start A'=>103, 'Start B'=>104, 'Start C'=>105, 'STOP'=>106);
+        $t = array(array(2,1,2,2,2,2), array(2,2,2,1,2,2), array(2,2,2,2,2,1), array(1,2,1,2,2,3), array(1,2,1,3,2,2), array(1,3,1,2,2,2), array(1,2,2,2,1,3), array(1,2,2,3,1,2), array(1,3,2,2,1,2), array(2,2,1,2,1,3), array(2,2,1,3,1,2), array(2,3,1,2,1,2), array(1,1,2,2,3,2), array(1,2,2,1,3,2), array(1,2,2,2,3,1), array(1,1,3,2,2,2), array(1,2,3,1,2,2), array(1,2,3,2,2,1), array(2,2,3,2,1,1), array(2,2,1,1,3,2), array(2,2,1,2,3,1), array(2,1,3,2,1,2), array(2,2,3,1,1,2), array(3,1,2,1,3,1), array(3,1,1,2,2,2), array(3,2,1,1,2,2), array(3,2,1,2,2,1), array(3,1,2,2,1,2), array(3,2,2,1,1,2), array(3,2,2,2,1,1), array(2,1,2,1,2,3), array(2,1,2,3,2,1), array(2,3,2,1,2,1), array(1,1,1,3,2,3), array(1,3,1,1,2,3), array(1,3,1,3,2,1), array(1,1,2,3,1,3), array(1,3,2,1,1,3), array(1,3,2,3,1,1), array(2,1,1,3,1,3), array(2,3,1,1,1,3), array(2,3,1,3,1,1), array(1,1,2,1,3,3), array(1,1,2,3,3,1), array(1,3,2,1,3,1), array(1,1,3,1,2,3), array(1,1,3,3,2,1), array(1,3,3,1,2,1), array(3,1,3,1,2,1), array(2,1,1,3,3,1), array(2,3,1,1,3,1), array(2,1,3,1,1,3), array(2,1,3,3,1,1), array(2,1,3,1,3,1), array(3,1,1,1,2,3), array(3,1,1,3,2,1), array(3,3,1,1,2,1), array(3,1,2,1,1,3), array(3,1,2,3,1,1), array(3,3,2,1,1,1), array(3,1,4,1,1,1), array(2,2,1,4,1,1), array(4,3,1,1,1,1), array(1,1,1,2,2,4), array(1,1,1,4,2,2), array(1,2,1,1,2,4), array(1,2,1,4,2,1), array(1,4,1,1,2,2), array(1,4,1,2,2,1), array(1,1,2,2,1,4), array(1,1,2,4,1,2), array(1,2,2,1,1,4), array(1,2,2,4,1,1), array(1,4,2,1,1,2), array(1,4,2,2,1,1), array(2,4,1,2,1,1), array(2,2,1,1,1,4), array(4,1,3,1,1,1), array(2,4,1,1,1,2), array(1,3,4,1,1,1), array(1,1,1,2,4,2), array(1,2,1,1,4,2), array(1,2,1,2,4,1), array(1,1,4,2,1,2), array(1,2,4,1,1,2), array(1,2,4,2,1,1), array(4,1,1,2,1,2), array(4,2,1,1,1,2), array(4,2,1,2,1,1), array(2,1,2,1,4,1), array(2,1,4,1,2,1), array(4,1,2,1,2,1), array(1,1,1,1,4,3), array(1,1,1,3,4,1), array(1,3,1,1,4,1), array(1,1,4,1,1,3), array(1,1,4,3,1,1), array(4,1,1,1,1,3), array(4,1,1,3,1,1), array(1,1,3,1,4,1), array(1,1,4,1,3,1), array(3,1,1,1,4,1), array(4,1,1,1,3,1), array(2,1,1,4,1,2), array(2,1,1,2,1,4), array(2,1,1,2,3,2), array(2,3,3,1,1,1,2));
+
+        $code = (string)$code;
+        $len = strlen($code);
+        $char = array();
+        $char[] = $t[$v['Start B']];
+        $sum = $v['Start B'];
+        for($i=0;$i<$len;$i++){
+            $char[] = $t[$v[$code[$i]]];
+            $sum += ($i+1)*$v[$code[$i]];
+        }
+        $check = $sum % 103;
+        $char[] = $t[$check];
+        $char[] = $t[$v['STOP']];
+
+        $total_width = 0;
+        foreach($char as $c) foreach($c as $bar) $total_width += $bar;
+        $unit_w = $w / $total_width;
+
+        $this->SetFillColor(0,0,0);
+        $curr_x = $x;
+        foreach($char as $c){
+            foreach($c as $i=>$bar){
+                if($i % 2 == 0) $this->Rect($curr_x, $y, $bar*$unit_w, $h, 'F');
+                $curr_x += $bar*$unit_w;
+            }
+        }
     }
 
     function IDCard($siswa, $sets) {
-        $this->AddPage('P', [54, 86]); // CR-80 Standard Credit Card Size (54x86mm)
+        // Landscape ID Card Size (86x54mm)
+        $this->AddPage('L', [86, 54]);
         $this->SetAutoPageBreak(false);
 
-        // Corporate Blue Background
-        $this->SetFillColor(0, 45, 91);
-        $this->Rect(0, 0, 54, 86, 'F');
-
-        // Top Orange Shape (Matching Web Template)
-        $this->SetFillColor(245, 158, 11);
-        $this->_out('q 1 0 0 1 0 0 cm');
-        $this->_out('0.961 0.620 0.043 rg');
-        $this->_out('-25 0 m 40 0 l -25 65 l f'); // Scaled down shape
-        $this->_out('Q');
-
-        // Bottom Orange Bar (Hidden according to template visual)
-        // $this->SetFillColor(245, 158, 11);
-        // $this->Rect(0, 84, 54, 2, 'F');
-
-        // Logo Section
-        $this->SetXY(5, 5);
-        $this->SetFillColor(255, 255, 255);
-        $this->ClippingCircle(8, 8, 3, true);
-        $logo_path = __DIR__ . '/../uploads/' . ($sets['favicon'] ?? '');
-        if (!empty($sets['favicon']) && file_exists($logo_path)) {
-            $this->Image($logo_path, 6, 6, 4, 4);
+        // Background Template
+        $bg_path = __DIR__ . '/../assets/img/karpel.jpg';
+        if (file_exists($bg_path)) {
+            $this->Image($bg_path, 0, 0, 86, 54);
         }
-        $this->_out('Q');
 
-        $this->SetTextColor(255, 255, 255);
-        $this->SetFont('Helvetica', 'B', 7);
-        $this->SetXY(12, 6.5);
-        $this->Cell(0, 3, strtoupper($sets['nama_sekolah'] ?? 'GOLDEN SUN'), 0, 0, 'L');
-
-        // Photo (Circular Clipping)
+        // Student Photo
         $foto_path = __DIR__ . '/../uploads/siswa/' . ($siswa['foto'] ?? '');
-        $photo_x = 27;
-        $photo_y = 25;
-        $photo_r = 14;
-
-        // Outer Circle (White border)
-        $this->SetDrawColor(255, 255, 255);
-        $this->SetLineWidth(1.5);
-        $this->ClippingCircle($photo_x, $photo_y, $photo_r, true);
+        $photo_x = 6.4;
+        $photo_y = 15;
+        $photo_w = 26.3;
+        $photo_h = 32.8;
 
         if (!empty($siswa['foto']) && file_exists($foto_path)) {
-            $this->Image($foto_path, $photo_x - $photo_r, $photo_y - $photo_r, $photo_r * 2, $photo_r * 2.5);
+            $this->Image($foto_path, $photo_x, $photo_y, $photo_w, $photo_h);
         } else {
             $this->SetFillColor(226, 232, 240);
-            $this->Rect($photo_x - $photo_r, $photo_y - $photo_r, $photo_r * 2, $photo_r * 2, 'F');
-        }
-        $this->_out('Q'); // End Clipping
-
-        // Name & Class
-        $this->SetTextColor(255, 255, 255);
-        $this->SetXY(2, 42);
-        $this->SetFont('Helvetica', 'B', 11);
-        $this->MultiCell(50, 4, strtoupper($siswa['nama_siswa']), 0, 'C');
-
-        $this->SetFont('Helvetica', 'B', 8);
-        $this->SetTextColor(245, 158, 11);
-        $this->SetX(2);
-        $this->Cell(50, 4, strtoupper($siswa['nama_kelas']), 0, 1, 'C');
-
-        // Details Table
-        $this->SetTextColor(255, 255, 255);
-        $start_y = 52;
-        $labels = ['NIS', 'NISN', 'Alamat', 'Telp'];
-        $values = [$siswa['nis'], $siswa['nisn'] ?? '-', $siswa['alamat'] ?? '-', $siswa['no_telp'] ?? '-'];
-
-        foreach ($labels as $i => $label) {
-            $this->SetXY(6, $start_y);
-            $this->SetFont('Helvetica', 'B', 6);
-            $this->Cell(12, 3, strtoupper($label), 0, 0);
-            $this->Cell(2, 3, ':', 0, 0);
-            $this->SetFont('Helvetica', '', 6);
-            if ($label == 'Alamat') {
-                 $this->MultiCell(28, 3, $values[$i], 0, 'L');
-                 $start_y = $this->GetY() + 0.5;
-            } else {
-                 $this->Cell(28, 3, $values[$i], 0, 1);
-                 $start_y += 3.5;
-            }
+            $this->Rect($photo_x, $photo_y, $photo_w, $photo_h, 'F');
         }
 
-        // QR Code Section
-        $qr_url = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" . $siswa['nis'];
+        // Barcode
+        $barcode_x = 6;
+        $barcode_y = 44.5;
+        $barcode_w = 27;
+        $barcode_h = 7;
         $this->SetFillColor(255, 255, 255);
-        $this->Rect(22, 70, 10, 10, 'F');
-        $this->Image($qr_url, 22.5, 70.5, 9, 9, 'png');
+        $this->Rect($barcode_x, $barcode_y, $barcode_w, $barcode_h, 'F');
+        $this->Code128($barcode_x + 1, $barcode_y + 0.5, $siswa['nis'], $barcode_w - 2, $barcode_h - 2.5);
+
+        // Barcode Text
+        $this->SetFont('Helvetica', 'B', 4);
+        $this->SetTextColor(0, 0, 0);
+        $this->SetXY($barcode_x, $barcode_y + 5);
+        $this->Cell($barcode_w, 2, $siswa['nis'], 0, 0, 'C');
+
+        // Info Area
+        $info_x = 50.5;
+        $start_y = 12.5;
+        $line_h = 7.5;
+
+        $this->SetTextColor(192, 38, 211); // Purple color
+        $this->SetFont('Helvetica', 'B', 4.5);
+
+        // Name
+        $this->SetTextColor(30, 41, 59);
+        $this->SetFont('Helvetica', 'B', 6);
+        $this->SetXY($info_x, $start_y + 1.5);
+        $this->MultiCell(33, 2.5, strtoupper($siswa['nama_siswa']), 0, 'L');
+
+        // NIS | NISN
+        $start_y += $line_h;
+        $this->SetXY($info_x, $start_y + 1.5);
+        $this->Cell(33, 2.5, $siswa['nis'] . ' | ' . ($siswa['nisn'] ?? '-'), 0, 1, 'L');
+
+        // Birth
+        $start_y += $line_h;
+        $this->SetXY($info_x, $start_y + 1.5);
+        $ttl = ($siswa['tempat_lahir'] ?? '-') . ', ' . (!empty($siswa['tanggal_lahir']) ? date('d-m-Y', strtotime($siswa['tanggal_lahir'])) : '-');
+        $this->Cell(33, 2.5, strtoupper($ttl), 0, 1, 'L');
+
+        // Gender
+        $start_y += $line_h;
+        $this->SetXY($info_x, $start_y + 1.5);
+        $jk = ($siswa['jenis_kelamin'] == 'P') ? 'PEREMPUAN' : 'LAKI-LAKI';
+        $this->Cell(33, 2.5, $jk, 0, 1, 'L');
+
+        // Address
+        $start_y += $line_h;
+        $this->SetXY($info_x, $start_y + 1.5);
+        $this->SetFont('Helvetica', 'B', 5.5);
+        $this->MultiCell(33, 2.2, strtoupper($siswa['alamat'] ?? '-'), 0, 'L');
     }
 }
 

@@ -33,8 +33,8 @@ require_once __DIR__ . '/../includes/header.php';
     .lg\:ml-64 { margin-left: 0; }
 </style>
 
-<!-- QRCode Generator -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<!-- JsBarcode Generator -->
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
 
 <div class="bg-slate-50 min-h-screen pb-24 flex flex-col items-center p-6 no-print">
     <div class="mb-8 text-center">
@@ -44,62 +44,48 @@ require_once __DIR__ . '/../includes/header.php';
 
     <div id="printableCard" class="card-id-wrapper animate-in zoom-in duration-500">
         <div class="card-id">
-            <div class="shape-top-orange"></div>
-            <div class="bottom-orange-bar"></div>
-
             <div class="card-content">
-                <div class="header-logo">
-                    <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center">
-                        <?php if(!empty($sets['favicon'])): ?>
-                            <img src="<?= BASE_URL ?>uploads/<?= $sets['favicon'] ?>" class="w-6 h-6 object-contain">
-                        <?php else: ?>
-                            <i class="fa fa-graduation-cap text-[#002d5b] text-xl"></i>
-                        <?php endif; ?>
+                <div class="photo-area-new">
+                    <?php if (!empty($siswa['foto'])): ?>
+                        <img src="<?= BASE_URL ?>uploads/siswa/<?= $siswa['foto'] ?>">
+                    <?php else: ?>
+                        <div class="w-full h-full flex items-center justify-center text-slate-400 border border-dashed border-slate-300">
+                            <i class="fa fa-user text-5xl"></i>
+                        </div>
+                    <?php endif; ?>
+                </div>
+
+                <div class="barcode-area">
+                    <svg id="barcode"></svg>
+                </div>
+
+                <div class="info-area-new">
+                    <div class="info-group">
+                        <span class="info-label">NAMA</span>
+                        <span class="info-value"><?= htmlspecialchars($siswa['nama_siswa']) ?></span>
                     </div>
-                    <h2 class="font-black text-lg tracking-wider uppercase leading-tight"><?= htmlspecialchars($sets['nama_sekolah'] ?? 'GOLDEN SUN') ?></h2>
-                </div>
 
-                <div class="photo-area">
-                    <div class="photo-circle">
-                        <?php if (!empty($siswa['foto'])): ?>
-                            <img src="<?= BASE_URL ?>uploads/siswa/<?= $siswa['foto'] ?>">
-                        <?php else: ?>
-                            <div class="w-full h-full flex items-center justify-center text-slate-400"><i class="fa fa-user text-7xl"></i></div>
-                        <?php endif; ?>
+                    <div class="info-group">
+                        <span class="info-label">NIS | NISN</span>
+                        <span class="info-value"><?= htmlspecialchars($siswa['nis']) ?> | <?= htmlspecialchars($siswa['nisn'] ?? '-') ?></span>
                     </div>
-                </div>
 
-                <div class="info-area">
-                    <h1 class="text-2xl font-black uppercase leading-tight"><?= htmlspecialchars($siswa['nama_siswa']) ?></h1>
-                    <span class="label-gold"><?= htmlspecialchars($siswa['nama_kelas']) ?></span>
+                    <div class="info-group">
+                        <span class="info-label">TEMPAT. TANGGAL LAHIR</span>
+                        <span class="info-value">
+                            <?= htmlspecialchars($siswa['tempat_lahir'] ?? '-') ?>,
+                            <?= !empty($siswa['tanggal_lahir']) ? date('d-m-Y', strtotime($siswa['tanggal_lahir'])) : '-' ?>
+                        </span>
+                    </div>
 
-                    <table class="details-table">
-                        <tr>
-                            <td class="details-label">NIS</td>
-                            <td class="details-separator">:</td>
-                            <td class="details-value"><?= htmlspecialchars($siswa['nis']) ?></td>
-                        </tr>
-                        <tr>
-                            <td class="details-label">NISN</td>
-                            <td class="details-separator">:</td>
-                            <td class="details-value"><?= htmlspecialchars($siswa['nisn'] ?? '-') ?></td>
-                        </tr>
-                        <tr>
-                            <td class="details-label">Alamat</td>
-                            <td class="details-separator">:</td>
-                            <td class="details-value"><?= htmlspecialchars($siswa['alamat'] ?? '-') ?></td>
-                        </tr>
-                        <tr>
-                            <td class="details-label">Telp/HP</td>
-                            <td class="details-separator">:</td>
-                            <td class="details-value"><?= htmlspecialchars($siswa['no_telp'] ?? '-') ?></td>
-                        </tr>
-                    </table>
-                </div>
+                    <div class="info-group">
+                        <span class="info-label">JENIS KELAMIN</span>
+                        <span class="info-value"><?= ($siswa['jenis_kelamin'] == 'P') ? 'PEREMPUAN' : 'LAKI-LAKI' ?></span>
+                    </div>
 
-                <div class="qr-footer">
-                    <div class="qr-container">
-                        <div id="qrcode"></div>
+                    <div class="info-group">
+                        <span class="info-label">ALAMAT</span>
+                        <span class="info-value"><?= htmlspecialchars($siswa['alamat'] ?? '-') ?></span>
                     </div>
                 </div>
             </div>
@@ -117,13 +103,14 @@ require_once __DIR__ . '/../includes/header.php';
 </div>
 
 <script>
-    new QRCode(document.getElementById("qrcode"), {
-        text: "<?= $siswa['nis'] ?>",
-        width: 100,
-        height: 100,
-        colorDark : "#002d5b",
-        colorLight : "#ffffff",
-        correctLevel : QRCode.CorrectLevel.H
+    JsBarcode("#barcode", "<?= $siswa['nis'] ?>", {
+        format: "CODE128",
+        width: 1,
+        height: 35,
+        displayValue: true,
+        fontSize: 10,
+        margin: 0,
+        background: "#ffffff"
     });
 </script>
 

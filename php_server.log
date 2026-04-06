@@ -1,32 +1,84 @@
-[Tue Mar 10 07:13:21 2026] PHP 8.3.6 Development Server (http://0.0.0.0:8006) started
-[Tue Mar 10 07:15:17 2026] 127.0.0.1:34010 Accepted
-[Tue Mar 10 07:15:17 2026] PHP Fatal error:  Uncaught mysqli_sql_exception: No such file or directory in /app/config/database.php:8
+[Mon Apr  6 02:02:49 2026] PHP 8.3.6 Development Server (http://localhost:8000) started
+[Mon Apr  6 02:03:44 2026] [::1]:50472 Accepted
+[Mon Apr  6 02:03:44 2026] PHP Fatal error:  Uncaught Error: Undefined constant "BASE_URL" in /app/includes/auth.php:29
+Stack trace:
+#0 /app/siswa/kartu.php(2): require_once()
+#1 /app/verify_bypass.php(4): require_once('...')
+#2 {main}
+  thrown in /app/includes/auth.php on line 29
+[Mon Apr  6 02:03:44 2026] [::1]:50472 [500]: GET /verify_bypass.php - Uncaught Error: Undefined constant "BASE_URL" in /app/includes/auth.php:29
+Stack trace:
+#0 /app/siswa/kartu.php(2): require_once()
+#1 /app/verify_bypass.php(4): require_once('...')
+#2 {main}
+  thrown in /app/includes/auth.php on line 29
+[Mon Apr  6 02:03:44 2026] [::1]:50472 Closing
+[Mon Apr  6 02:04:19 2026] [::1]:48112 Accepted
+[Mon Apr  6 02:04:19 2026] [::1]:48112 [200]: GET /verify_card_standalone.php
+[Mon Apr  6 02:04:19 2026] [::1]:48112 Closing
+[Mon Apr  6 02:04:19 2026] [::1]:48114 Accepted
+[Mon Apr  6 02:04:19 2026] [::1]:48114 [200]: GET /assets/css/id-card.css
+[Mon Apr  6 02:04:19 2026] [::1]:48114 Closing
+[Mon Apr  6 02:04:19 2026] [::1]:48122 Accepted
+[Mon Apr  6 02:04:19 2026] [::1]:48122 [200]: GET /assets/img/karpel.jpg
+[Mon Apr  6 02:04:19 2026] [::1]:48122 Closing
+[Mon Apr  6 02:04:52 2026] [::1]:45198 Accepted
+[Mon Apr  6 02:04:52 2026] [::1]:45198 [200]: GET /verify_card_standalone.php
+[Mon Apr  6 02:04:52 2026] [::1]:45198 Closing
+[Mon Apr  6 02:04:52 2026] [::1]:45208 Accepted
+[Mon Apr  6 02:04:52 2026] [::1]:45208 [200]: GET /assets/css/id-card.css
+[Mon Apr  6 02:04:52 2026] [::1]:45208 Closing
+[Mon Apr  6 02:04:52 2026] [::1]:45212 Accepted
+[Mon Apr  6 02:04:52 2026] [::1]:45212 [200]: GET /assets/img/karpel.jpg
+[Mon Apr  6 02:04:52 2026] [::1]:45212 Closing
+[Mon Apr  6 02:08:24 2026] [::1]:38346 Accepted
+[Mon Apr  6 02:08:24 2026] PHP Fatal error:  Uncaught Error: Undefined constant "BASE_URL" in /app/includes/auth.php:29
+Stack trace:
+#0 /app/siswa/kartu.php(2): require_once()
+#1 /app/verify_bypass.php(4): require_once('...')
+#2 {main}
+  thrown in /app/includes/auth.php on line 29
+[Mon Apr  6 02:08:24 2026] [::1]:38346 [500]: GET /verify_bypass.php - Uncaught Error: Undefined constant "BASE_URL" in /app/includes/auth.php:29
+Stack trace:
+#0 /app/siswa/kartu.php(2): require_once()
+#1 /app/verify_bypass.php(4): require_once('...')
+#2 {main}
+  thrown in /app/includes/auth.php on line 29
+[Mon Apr  6 02:08:24 2026] [::1]:38346 Closing
+[Mon Apr  6 02:09:09 2026] [::1]:55978 Accepted
+[Mon Apr  6 02:09:09 2026] PHP Fatal error:  Uncaught mysqli_sql_exception: No such file or directory in /app/config/database.php:8
 Stack trace:
 #0 /app/config/database.php(8): mysqli_connect()
-#1 /app/login.php(2): require_once('...')
+#1 /app/verify_card_v3.php(3): require_once('...')
 #2 {main}
   thrown in /app/config/database.php on line 8
-[Tue Mar 10 07:15:17 2026] 127.0.0.1:34010 [500]: GET /login.php - Uncaught mysqli_sql_exception: No such file or directory in /app/config/database.php:8
+[Mon Apr  6 02:09:09 2026] [::1]:55978 [500]: GET /verify_card_v3.php - Uncaught mysqli_sql_exception: No such file or directory in /app/config/database.php:8
 Stack trace:
 #0 /app/config/database.php(8): mysqli_connect()
-#1 /app/login.php(2): require_once('...')
+#1 /app/verify_card_v3.php(3): require_once('...')
 #2 {main}
   thrown in /app/config/database.php on line 8
-[Tue Mar 10 07:15:17 2026] 127.0.0.1:34010 Closing
-[Tue Mar 10 07:15:35 2026] 127.0.0.1:56100 Accepted
-[Tue Mar 10 07:15:35 2026] PHP Fatal error:  Uncaught mysqli_sql_exception: No such file or directory in /app/config/database.php:8
+[Mon Apr  6 02:09:09 2026] [::1]:55978 Closing
+[Mon Apr  6 02:09:55 2026] [::1]:34008 Accepted
+[Mon Apr  6 02:09:55 2026] PHP Fatal error:  Uncaught mysqli_sql_exception: No such file or directory in /app/config/database.php:8
 Stack trace:
 #0 /app/config/database.php(8): mysqli_connect()
-#1 /app/login.php(2): require_once('...')
+#1 /app/verify_card_v3.php(3): require_once('...')
 #2 {main}
   thrown in /app/config/database.php on line 8
-[Tue Mar 10 07:15:35 2026] 127.0.0.1:56100 [500]: GET /login.php - Uncaught mysqli_sql_exception: No such file or directory in /app/config/database.php:8
+[Mon Apr  6 02:09:55 2026] [::1]:34008 [500]: HEAD /verify_card_v3.php - Uncaught mysqli_sql_exception: No such file or directory in /app/config/database.php:8
 Stack trace:
 #0 /app/config/database.php(8): mysqli_connect()
-#1 /app/login.php(2): require_once('...')
+#1 /app/verify_card_v3.php(3): require_once('...')
 #2 {main}
   thrown in /app/config/database.php on line 8
-[Tue Mar 10 07:15:35 2026] 127.0.0.1:56100 Closing
-[Tue Mar 10 07:19:19 2026] 127.0.0.1:37528 Accepted
-[Tue Mar 10 07:19:19 2026] 127.0.0.1:37528 [200]: GET /login_remember_test.php
-[Tue Mar 10 07:19:19 2026] 127.0.0.1:37528 Closing
+[Mon Apr  6 02:09:55 2026] [::1]:34008 Closing
+[Mon Apr  6 02:10:21 2026] [::1]:55740 Accepted
+[Mon Apr  6 02:10:21 2026] [::1]:55740 [200]: GET /verify_card_v3.php
+[Mon Apr  6 02:10:21 2026] [::1]:55740 Closing
+[Mon Apr  6 02:10:21 2026] [::1]:55746 Accepted
+[Mon Apr  6 02:10:21 2026] [::1]:55746 [200]: GET /assets/css/id-card.css
+[Mon Apr  6 02:10:21 2026] [::1]:55746 Closing
+[Mon Apr  6 02:10:21 2026] [::1]:55758 Accepted
+[Mon Apr  6 02:10:21 2026] [::1]:55758 [200]: GET /assets/img/karpel.jpg
+[Mon Apr  6 02:10:21 2026] [::1]:55758 Closing

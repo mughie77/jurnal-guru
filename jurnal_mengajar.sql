@@ -36,6 +36,8 @@ CREATE TABLE `guru` (
   `alamat` text DEFAULT NULL,
   `no_telp` varchar(20) DEFAULT NULL,
   `foto` varchar(255) DEFAULT NULL,
+  `tempat_lahir` varchar(100) DEFAULT NULL,
+  `tanggal_lahir` date DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `nip` (`nip`),
   KEY `user_id` (`user_id`),
@@ -113,6 +115,8 @@ CREATE TABLE `siswa` (
   `alamat` text DEFAULT NULL,
   `no_telp` varchar(20) DEFAULT NULL,
   `foto` varchar(255) DEFAULT NULL,
+  `tempat_lahir` varchar(100) DEFAULT NULL,
+  `tanggal_lahir` date DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `nis` (`nis`),
   UNIQUE KEY `nisn` (`nisn`)
