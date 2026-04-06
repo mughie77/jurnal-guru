@@ -56,38 +56,19 @@ require_once __DIR__ . '/../includes/header.php';
                     <?php endif; ?>
                 </div>
 
-                <div class="barcode-area">
+                <div class="barcode-area-new">
                     <canvas id="barcode"></canvas>
                 </div>
 
                 <div class="info-area-new">
-                    <div class="info-group">
-                        <span class="info-label">NAMA</span>
-                        <span class="info-value"><?= htmlspecialchars($siswa['nama_siswa']) ?></span>
+                    <div class="info-value val-nama"><?= htmlspecialchars($siswa['nama_siswa']) ?></div>
+                    <div class="info-value val-nis"><?= htmlspecialchars($siswa['nis']) ?> / <?= htmlspecialchars($siswa['nisn'] ?? '-') ?></div>
+                    <div class="info-value val-ttl">
+                        <?= htmlspecialchars($siswa['tempat_lahir'] ?? '-') ?>,
+                        <?= !empty($siswa['tanggal_lahir']) ? date('d-m-Y', strtotime($siswa['tanggal_lahir'])) : '-' ?>
                     </div>
-
-                    <div class="info-group">
-                        <span class="info-label">NIS | NISN</span>
-                        <span class="info-value"><?= htmlspecialchars($siswa['nis']) ?> | <?= htmlspecialchars($siswa['nisn'] ?? '-') ?></span>
-                    </div>
-
-                    <div class="info-group">
-                        <span class="info-label">TEMPAT. TANGGAL LAHIR</span>
-                        <span class="info-value">
-                            <?= htmlspecialchars($siswa['tempat_lahir'] ?? '-') ?>,
-                            <?= !empty($siswa['tanggal_lahir']) ? date('d-m-Y', strtotime($siswa['tanggal_lahir'])) : '-' ?>
-                        </span>
-                    </div>
-
-                    <div class="info-group">
-                        <span class="info-label">JENIS KELAMIN</span>
-                        <span class="info-value"><?= ($siswa['jenis_kelamin'] == 'P') ? 'PEREMPUAN' : 'LAKI-LAKI' ?></span>
-                    </div>
-
-                    <div class="info-group">
-                        <span class="info-label">ALAMAT</span>
-                        <span class="info-value"><?= htmlspecialchars($siswa['alamat'] ?? '-') ?></span>
-                    </div>
+                    <div class="info-value val-jk"><?= ($siswa['jenis_kelamin'] == 'P') ? 'PEREMPUAN' : 'LAKI-LAKI' ?></div>
+                    <div class="info-value val-alamat"><?= htmlspecialchars($siswa['alamat'] ?? '-') ?></div>
                 </div>
             </div>
         </div>
@@ -108,11 +89,11 @@ require_once __DIR__ . '/../includes/header.php';
     JsBarcode("#barcode", "<?= $siswa['nis'] ?>", {
         format: "CODE128",
         width: 1.5,
-        height: 30,
+        height: 35,
         displayValue: true,
-        fontSize: 8,
+        fontSize: 10,
         fontOptions: "bold",
-        margin: 0,
+        margin: 2,
         background: "#ffffff"
     });
 
@@ -129,13 +110,13 @@ require_once __DIR__ . '/../includes/header.php';
 
         // Use html2canvas to capture the card
         html2canvas(card, {
-            scale: 3, // Higher scale for better quality
+            scale: 5, // Even higher scale for 86x54mm high quality print
             useCORS: true,
             allowTaint: true,
             backgroundColor: null
         }).then(canvas => {
             // Convert to JPG
-            const imgData = canvas.toDataURL('image/jpeg', 0.9);
+            const imgData = canvas.toDataURL('image/jpeg', 0.95);
 
             // Create download link
             const link = document.createElement('a');

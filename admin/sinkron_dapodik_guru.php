@@ -32,6 +32,8 @@ try {
         $nama = $row['nama'] ?? '';
         $alamat = $row['alamat_jalan'] ?? null;
         $telp = $row['nomor_telepon_seluler'] ?? $row['nomor_telepon_rumah'] ?? null;
+        $tempat_lahir = $row['tempat_lahir'] ?? null;
+        $tanggal_lahir = $row['tanggal_lahir'] ?? null;
         $pass = password_hash($nip, PASSWORD_DEFAULT);
 
         // 1. Ensure user exists
@@ -47,12 +49,14 @@ try {
         $uid = mysqli_fetch_assoc($uid_res)['id'];
 
         // 2. Ensure guru exists
-        $stmt_guru = mysqli_prepare($conn, "INSERT INTO guru (user_id, nip, alamat, no_telp)
-                                           VALUES (?, ?, ?, ?)
+        $stmt_guru = mysqli_prepare($conn, "INSERT INTO guru (user_id, nip, alamat, no_telp, tempat_lahir, tanggal_lahir)
+                                           VALUES (?, ?, ?, ?, ?, ?)
                                            ON DUPLICATE KEY UPDATE
                                            alamat = VALUES(alamat),
-                                           no_telp = VALUES(no_telp)");
-        mysqli_stmt_bind_param($stmt_guru, "isss", $uid, $nip, $alamat, $telp);
+                                           no_telp = VALUES(no_telp),
+                                           tempat_lahir = VALUES(tempat_lahir),
+                                           tanggal_lahir = VALUES(tanggal_lahir)");
+        mysqli_stmt_bind_param($stmt_guru, "isssss", $uid, $nip, $alamat, $telp, $tempat_lahir, $tanggal_lahir);
         mysqli_stmt_execute($stmt_guru);
 
         $count++;

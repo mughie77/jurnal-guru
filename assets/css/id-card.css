@@ -1,40 +1,41 @@
-/* Corporate ID Card Template Styles Updated for 2026 Template */
+/* Corporate ID Card Template Styles Updated for 2026 Template (CR-80) */
 .card-id-wrapper {
     perspective: 1000px;
 }
 
 .card-id {
     width: 600px;
-    height: 380px;
+    height: 380px; /* ~86mm x 54mm ratio */
     background-image: url('../img/karpel.jpg');
-    background-size: cover;
-    background-position: center;
-    border-radius: 20px;
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    border-radius: 12px;
     position: relative;
     overflow: hidden;
-    box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
     display: flex;
     font-family: 'Plus Jakarta Sans', sans-serif;
+    background-color: white;
 }
 
 .card-content {
     position: relative;
     z-index: 10;
-    display: flex;
     width: 100%;
     height: 100%;
 }
 
 .photo-area-new {
     position: absolute;
-    left: 24px;
-    top: 95px;
-    width: 120px;
-    height: 151px;
-    border-radius: 8px;
+    left: 20px;
+    top: 105px;
+    width: 135px;
+    height: 175px;
+    border-radius: 6px;
     overflow: hidden;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
+    background: #f1f5f9;
+    border: 2px solid white;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 .photo-area-new img {
@@ -43,60 +44,56 @@
     object-fit: cover;
 }
 
-.barcode-area {
+.barcode-area-new {
     position: absolute;
-    left: 24px;
-    bottom: 35px;
-    width: 120px;
-    height: 42px;
+    left: 20px;
+    bottom: 25px;
+    width: 135px;
+    height: 60px;
     background: white;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 2px;
+    padding: 4px;
     border-radius: 4px;
 }
 
-.barcode-area canvas {
+.barcode-area-new canvas {
     max-width: 100%;
     max-height: 100%;
 }
 
 .info-area-new {
     position: absolute;
-    left: 242px;
-    top: 66px;
-    color: #333;
-    width: 340px;
-}
-
-.info-group {
-    height: 40px;
-    margin-bottom: 0px;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end; /* Align value to bottom of the 40px group */
-    padding-bottom: 6px;
-}
-
-/* Specifically lift the last two values */
-.info-group:nth-child(4),
-.info-group:nth-child(5) {
-    padding-bottom: 12px;
-}
-
-.info-label {
-    display: none; /* Background already has labels */
+    left: 224px; /* Scaled from ~410px in original */
+    top: 0;
+    width: 350px;
+    height: 100%;
+    color: #1e293b;
 }
 
 .info-value {
+    position: absolute;
     font-weight: 800;
     font-size: 11px;
-    color: #002D5B;
-    word-break: break-word;
-    display: block;
-    line-height: 1.2;
+    color: #000;
     text-transform: uppercase;
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Precise Y positions based on grid analysis (scaled 0.543x + 5px offset) */
+.val-nama { top: 111px; }
+.val-nis { top: 171px; }
+.val-ttl { top: 231px; }
+.val-jk { top: 293px; }
+.val-alamat { top: 356px; }
+
+.info-label {
+    display: none; /* Labels are pre-printed on background */
 }
 
 @media print {

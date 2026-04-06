@@ -11,8 +11,8 @@ switch ($type) {
     case 'guru':
         $filename = 'Template_Import_Guru.xlsx';
         $data = [
-            ['Nama Lengkap', 'NIP', 'Alamat', 'No. Telp'],
-            ['Ahmad Fauzi, S.Pd', '198501012010011001', 'Jl. Merdeka No. 10', '08123456789'],
+            ['Nama Lengkap', 'NIP', 'Alamat', 'No. Telp', 'Tempat Lahir', 'Tanggal Lahir'],
+            ['Ahmad Fauzi, S.Pd', '198501012010011001', 'Jl. Merdeka No. 10', '08123456789', 'Bondowoso', '1985-01-01'],
         ];
         break;
     case 'siswa':
