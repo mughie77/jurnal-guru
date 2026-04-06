@@ -85,13 +85,26 @@
     text-overflow: ellipsis;
 }
 
-/* Precise Y positions adjusted to be below labels on the background */
-.val-nama { top: 142px; }
-.val-nis { top: 197px; }
-.val-ttl { top: 252px; }
-.val-jk { top: 307px; }
+/* Precise positions adjusted to be below labels on the background */
+.val-nama {
+    top: 88px;
+    left: 17px;
+}
+.val-nis {
+    top: 130px;
+    left: 17px;
+}
+.val-ttl {
+    top: 176px;
+    left: 17px;
+}
+.val-jk {
+    top: 221px;
+    left: 17px;
+}
 .val-alamat {
-    top: 362px;
+    top: 268px;
+    left: 17px;
     white-space: normal;
     line-height: 1.1;
     font-size: 11px;
