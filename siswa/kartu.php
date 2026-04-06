@@ -67,7 +67,7 @@ require_once __DIR__ . '/../includes/header.php';
                         <?= htmlspecialchars($siswa['tempat_lahir'] ?? '-') ?>,
                         <?= !empty($siswa['tanggal_lahir']) ? date('d-m-Y', strtotime($siswa['tanggal_lahir'])) : '-' ?>
                     </div>
-                    <div class="info-value val-jk"><?= ($siswa['jenis_kelamin'] == 'P') ? 'PEREMPUAN' : 'LAKI-LAKI' ?></div>
+                    <div class="info-value val-jk"><?= ($siswa['jenis_kelamin'] == 'P') ? 'Perempuan' : 'Laki-Laki' ?></div>
                     <div class="info-value val-alamat"><?= htmlspecialchars($siswa['alamat'] ?? '-') ?></div>
                 </div>
             </div>

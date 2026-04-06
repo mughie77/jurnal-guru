@@ -76,21 +76,26 @@
 .info-value {
     position: absolute;
     font-weight: 800;
-    font-size: 11px;
+    font-size: 13px;
     color: #000;
     text-transform: uppercase;
-    width: 100%;
+    width: 350px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-/* Precise Y positions based on grid analysis (scaled 0.543x + 5px offset) */
-.val-nama { top: 111px; }
-.val-nis { top: 171px; }
-.val-ttl { top: 231px; }
-.val-jk { top: 293px; }
-.val-alamat { top: 356px; }
+/* Precise Y positions adjusted to be below labels on the background */
+.val-nama { top: 142px; }
+.val-nis { top: 197px; }
+.val-ttl { top: 252px; }
+.val-jk { top: 307px; }
+.val-alamat {
+    top: 362px;
+    white-space: normal;
+    line-height: 1.1;
+    font-size: 11px;
+}
 
 .info-label {
     display: none; /* Labels are pre-printed on background */
