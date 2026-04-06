@@ -33,8 +33,9 @@ require_once __DIR__ . '/../includes/header.php';
     .lg\:ml-64 { margin-left: 0; }
 </style>
 
-<!-- JsBarcode Generator -->
+<!-- JsBarcode & html2canvas -->
 <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
 <div class="bg-slate-50 min-h-screen pb-24 flex flex-col items-center p-6 no-print">
     <div class="mb-8 text-center">
@@ -56,7 +57,7 @@ require_once __DIR__ . '/../includes/header.php';
                 </div>
 
                 <div class="barcode-area">
-                    <svg id="barcode"></svg>
+                    <canvas id="barcode"></canvas>
                 </div>
 
                 <div class="info-area-new">
@@ -93,16 +94,17 @@ require_once __DIR__ . '/../includes/header.php';
     </div>
 
     <div class="mt-12 max-w-xs text-center no-print">
-        <a href="<?= BASE_URL ?>siswa/download_kartu_pdf.php" class="px-8 py-4 bg-indigo-600 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-xl hover:bg-indigo-700 transition-all flex items-center justify-center mx-auto group">
-            <i class="fa fa-file-pdf mr-2 group-hover:scale-110 transition-transform"></i> Unduh PDF Kartu
-        </a>
+        <button id="downloadJpg" class="w-full px-8 py-4 bg-indigo-600 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-xl hover:bg-indigo-700 transition-all flex items-center justify-center mx-auto group">
+            <i class="fa fa-image mr-2 group-hover:scale-110 transition-transform"></i> Unduh Kartu (JPG)
+        </button>
         <p class="mt-4 text-[10px] text-slate-400 font-bold italic leading-relaxed px-4">
-            "Unduh kartu dalam format PDF berkualitas tinggi untuk dicetak. Format PDF memastikan tata letak tetap presisi saat dicetak."
+            "Unduh kartu dalam format gambar (JPG) berkualitas tinggi. Kartu ini dapat Anda simpan di ponsel atau dicetak langsung."
         </p>
     </div>
 </div>
 
 <script>
+    // Generate Barcode
     JsBarcode("#barcode", "<?= $siswa['nis'] ?>", {
         format: "CODE128",
         width: 2,
@@ -112,6 +114,44 @@ require_once __DIR__ . '/../includes/header.php';
         fontOptions: "bold",
         margin: 0,
         background: "#ffffff"
+    });
+
+    // Handle Download JPG
+    document.getElementById('downloadJpg').addEventListener('click', function() {
+        const btn = this;
+        const originalContent = btn.innerHTML;
+
+        // Show loading state
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i> Memproses...';
+
+        const card = document.querySelector('.card-id');
+
+        // Use html2canvas to capture the card
+        html2canvas(card, {
+            scale: 3, // Higher scale for better quality
+            useCORS: true,
+            allowTaint: true,
+            backgroundColor: null
+        }).then(canvas => {
+            // Convert to JPG
+            const imgData = canvas.toDataURL('image/jpeg', 0.9);
+
+            // Create download link
+            const link = document.createElement('a');
+            link.download = 'Kartu_Pelajar_<?= $siswa['nis'] ?>.jpg';
+            link.href = imgData;
+            link.click();
+
+            // Restore button state
+            btn.disabled = false;
+            btn.innerHTML = originalContent;
+        }).catch(err => {
+            console.error('Export failed:', err);
+            alert('Gagal mengunduh kartu. Silakan coba lagi.');
+            btn.disabled = false;
+            btn.innerHTML = originalContent;
+        });
     });
 </script>
 

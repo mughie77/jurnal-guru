@@ -27,13 +27,14 @@
 
 .photo-area-new {
     position: absolute;
-    left: 45px;
-    top: 105px;
-    width: 184px;
-    height: 230px;
-    border-radius: 12px; /* Precision matching background radius */
+    left: 18px;
+    top: 83px;
+    width: 172px;
+    height: 216px;
+    border-radius: 10px;
     overflow: hidden;
-    background: #eee;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
 }
 
 .photo-area-new img {
@@ -44,45 +45,52 @@
 
 .barcode-area {
     position: absolute;
-    left: 42px;
-    bottom: 42px; /* Precision matching bottom gap */
-    width: 190px;
-    height: 62px; /* Precision matching white box height */
+    left: 18px;
+    bottom: 22px;
+    width: 172px;
+    height: 60px;
     background: white;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 2px; /* Minimize padding to maximize barcode fill */
+    padding: 2px;
+    border-radius: 4px;
 }
 
-.barcode-area svg {
-    width: 100% !important;
-    height: 100% !important;
+.barcode-area canvas {
+    max-width: 100%;
+    max-height: 100%;
 }
 
 .info-area-new {
     position: absolute;
-    left: 350px;
-    top: 104px;
+    left: 242px;
+    top: 66px;
     color: #333;
-    width: 230px;
+    width: 340px;
 }
 
 .info-group {
-    margin-bottom: 23px;
+    height: 40px;
+    margin-bottom: 0px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end; /* Align value to bottom of the 40px group */
+    padding-bottom: 6px;
 }
 
 .info-label {
-    display: none;
+    display: none; /* Background already has labels */
 }
 
 .info-value {
-    font-weight: 700;
-    font-size: 14px;
-    color: #1e293b;
+    font-weight: 800;
+    font-size: 11px;
+    color: #002D5B;
     word-break: break-word;
     display: block;
-    line-height: 1;
+    line-height: 1.2;
+    text-transform: uppercase;
 }
 
 @media print {
