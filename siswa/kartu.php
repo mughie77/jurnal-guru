@@ -108,13 +108,21 @@ require_once __DIR__ . '/../includes/header.php';
 
         const card = document.querySelector('.card-id');
 
+        // Temporarily reset transform for clean capture
+        const originalTransform = card.style.transform;
+        card.style.transform = 'none';
+
         // Use html2canvas to capture the card
         html2canvas(card, {
             scale: 5, // Even higher scale for 86x54mm high quality print
             useCORS: true,
             allowTaint: true,
-            backgroundColor: null
+            backgroundColor: null,
+            width: 600,
+            height: 380
         }).then(canvas => {
+            // Restore original transform
+            card.style.transform = originalTransform;
             // Convert to JPG
             const imgData = canvas.toDataURL('image/jpeg', 0.95);
 

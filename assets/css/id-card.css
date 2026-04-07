@@ -33,7 +33,16 @@
         transform: scale(0.5);
     }
     .card-responsive-container {
-        height: 230px; /* 380 * 0.5 + some padding */
+        height: 210px; /* Adjusted height for 0.5 scale */
+    }
+}
+
+@media (max-width: 400px) {
+    .card-id {
+        transform: scale(0.45);
+    }
+    .card-responsive-container {
+        height: 190px;
     }
 }
 
@@ -42,7 +51,7 @@
         transform: scale(0.8);
     }
     .card-responsive-container {
-        height: 340px;
+        height: 320px;
     }
 }
 

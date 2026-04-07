@@ -6,8 +6,8 @@ require_once __DIR__ . '/../includes/pagination.php';
 authorize_role(['admin', 'waka']);
 $page_title = "Rekap Absensi GPS";
 
-$tanggal = $_GET['tanggal'] ?? date('Y-m-d');
-$search = $_GET['search'] ?? '';
+$tanggal = mysqli_real_escape_string($conn, $_GET['tanggal'] ?? date('Y-m-d'));
+$search = mysqli_real_escape_string($conn, $_GET['search'] ?? '');
 $kelas_id = (int)($_GET['kelas_id'] ?? 0);
 
 $kelases = mysqli_query($conn, "SELECT id, nama_kelas FROM kelas ORDER BY nama_kelas");

@@ -1,4 +1,5 @@
 <?php
+ob_start();
 header('Content-Type: application/json');
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/auth.php';
@@ -75,7 +76,9 @@ $stmt = mysqli_prepare($conn, "INSERT INTO absensi_harian (siswa_id, tanggal, wa
 mysqli_stmt_bind_param($stmt, "isssss", $siswa_id, $today, $now_time, $status, $keterangan_full, $filename);
 
 if (mysqli_stmt_execute($stmt)) {
+    ob_clean();
     echo json_encode(['success' => true, 'message' => "Pengajuan $status berhasil dikirim."]);
 } else {
+    ob_clean();
     echo json_encode(['success' => false, 'message' => 'Gagal menyimpan data pengajuan.']);
 }
