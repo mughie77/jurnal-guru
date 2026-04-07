@@ -33,9 +33,10 @@ require_once __DIR__ . '/../includes/header.php';
     .lg\:ml-64 { margin-left: 0; }
 </style>
 
-<!-- JsBarcode & html2canvas -->
+<!-- JsBarcode, html2canvas & jsPDF -->
 <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <div class="bg-slate-50 min-h-screen pb-24 flex flex-col items-center p-6 no-print">
     <div class="mb-8 text-center">
@@ -75,11 +76,11 @@ require_once __DIR__ . '/../includes/header.php';
     </div>
 
     <div class="mt-12 max-w-xs text-center no-print">
-        <button id="downloadJpg" class="w-full px-8 py-4 bg-indigo-600 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-xl hover:bg-indigo-700 transition-all flex items-center justify-center mx-auto group">
-            <i class="fa fa-image mr-2 group-hover:scale-110 transition-transform"></i> Unduh Kartu (JPG)
+        <button id="downloadPdf" class="w-full px-8 py-4 bg-indigo-600 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-xl hover:bg-indigo-700 transition-all flex items-center justify-center mx-auto group">
+            <i class="fa fa-file-pdf mr-2 group-hover:scale-110 transition-transform"></i> Unduh Kartu (PDF)
         </button>
         <p class="mt-4 text-[10px] text-slate-400 font-bold italic leading-relaxed px-4">
-            "Unduh kartu dalam format gambar (JPG) berkualitas tinggi. Kartu ini dapat Anda simpan di ponsel atau dicetak langsung."
+            "Unduh kartu dalam format PDF berkualitas tinggi (CR-80). Format ini sangat disarankan untuk pencetakan kartu fisik yang tajam."
         </p>
     </div>
 </div>
@@ -97,8 +98,9 @@ require_once __DIR__ . '/../includes/header.php';
         background: "#ffffff"
     });
 
-    // Handle Download JPG
-    document.getElementById('downloadJpg').addEventListener('click', function() {
+    // Handle Download PDF
+    document.getElementById('downloadPdf').addEventListener('click', function() {
+        const { jsPDF } = window.jspdf;
         const btn = this;
         const originalContent = btn.innerHTML;
 
@@ -114,7 +116,7 @@ require_once __DIR__ . '/../includes/header.php';
 
         // Use html2canvas to capture the card
         html2canvas(card, {
-            scale: 5, // Even higher scale for 86x54mm high quality print
+            scale: 5, // Higher scale for high quality PDF
             useCORS: true,
             allowTaint: true,
             backgroundColor: null,
@@ -123,14 +125,18 @@ require_once __DIR__ . '/../includes/header.php';
         }).then(canvas => {
             // Restore original transform
             card.style.transform = originalTransform;
-            // Convert to JPG
-            const imgData = canvas.toDataURL('image/jpeg', 0.95);
 
-            // Create download link
-            const link = document.createElement('a');
-            link.download = 'Kartu_Pelajar_<?= $siswa['nis'] ?>.jpg';
-            link.href = imgData;
-            link.click();
+            const imgData = canvas.toDataURL('image/jpeg', 1.0);
+
+            // CR-80 Standard Size: 85.6mm x 53.98mm
+            const pdf = new jsPDF({
+                orientation: 'landscape',
+                unit: 'mm',
+                format: [85.6, 53.98]
+            });
+
+            pdf.addImage(imgData, 'JPEG', 0, 0, 85.6, 53.98);
+            pdf.save('Kartu_Pelajar_<?= $siswa['nis'] ?>.pdf');
 
             // Restore button state
             btn.disabled = false;

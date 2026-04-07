@@ -13,10 +13,10 @@
     position: relative;
     overflow: hidden;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-    display: flex;
+    display: block;
     font-family: 'Plus Jakarta Sans', sans-serif;
     background-color: white;
-    transform-origin: top left;
+    transform-origin: center top;
 }
 
 /* Responsive Scaling Wrapper */
@@ -64,15 +64,14 @@
 
 .photo-area-new {
     position: absolute;
-    left: 20px;
-    top: 105px;
-    width: 135px;
-    height: 175px;
-    border-radius: 6px;
+    left: 21px;
+    top: 75px;
+    width: 142px;
+    height: 195px;
+    border-radius: 8px;
     overflow: hidden;
     background: #f1f5f9;
-    border: 2px solid white;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    border: 3px solid #fff;
 }
 
 .photo-area-new img {
@@ -83,16 +82,16 @@
 
 .barcode-area-new {
     position: absolute;
-    left: 20px;
-    bottom: 25px;
-    width: 135px;
-    height: 60px;
+    left: 21px;
+    top: 285px;
+    width: 142px;
+    height: 75px;
     background: white;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 4px;
+    padding: 5px;
     border-radius: 4px;
 }
 
@@ -103,48 +102,47 @@
 
 .info-area-new {
     position: absolute;
-    left: 224px; /* Scaled from ~410px in original */
+    left: 410px;
     top: 0;
-    width: 350px;
+    width: 180px;
     height: 100%;
-    color: #1e293b;
+    color: #000;
 }
 
 .info-value {
     position: absolute;
-    font-weight: 800;
-    font-size: 13px;
+    font-weight: 700;
+    font-size: 11.5px;
     color: #000;
     text-transform: uppercase;
-    width: 350px;
+    width: 100%;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    left: 0;
 }
 
-/* Precise positions adjusted to be below labels on the background */
+/* Precise positions adjusted to align with labels on the background template */
 .val-nama {
-    top: 88px;
-    left: 17px;
+    top: 118px;
+    font-size: 13px;
 }
 .val-nis {
-    top: 130px;
-    left: 17px;
+    top: 165px;
 }
 .val-ttl {
-    top: 176px;
-    left: 17px;
+    top: 212px;
 }
 .val-jk {
-    top: 221px;
-    left: 17px;
+    top: 259px;
 }
 .val-alamat {
-    top: 268px;
-    left: 17px;
+    top: 306px;
     white-space: normal;
     line-height: 1.1;
-    font-size: 11px;
+    font-size: 10px;
+    width: 175px;
+    text-transform: none;
 }
 
 .info-label {
