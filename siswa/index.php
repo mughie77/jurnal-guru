@@ -48,6 +48,28 @@ require_once __DIR__ . '/../includes/header.php';
 <div class="bg-slate-50 min-h-screen pb-24">
     <div class="p-4 lg:p-8 max-w-4xl mx-auto">
         <!-- Header Profil -->
+        <!-- Quick Actions -->
+        <div class="grid grid-cols-2 gap-4 mb-8 no-print">
+            <a href="absensi.php" class="lux-card p-6 flex flex-col items-center justify-center text-center gap-3 group hover:bg-indigo-600 transition-all duration-500">
+                <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl group-hover:bg-white/20 group-hover:text-white transition-all duration-500 shadow-sm">
+                    <i class="fa fa-fingerprint"></i>
+                </div>
+                <div>
+                    <div class="text-sm font-black text-slate-800 italic uppercase tracking-tighter group-hover:text-white transition-colors">Absen GPS</div>
+                    <div class="text-[8px] font-bold text-slate-400 uppercase tracking-widest group-hover:text-indigo-200 transition-colors">Presensi Lokasi</div>
+                </div>
+            </a>
+            <a href="kartu.php" class="lux-card p-6 flex flex-col items-center justify-center text-center gap-3 group hover:bg-emerald-600 transition-all duration-500">
+                <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl group-hover:bg-white/20 group-hover:text-white transition-all duration-500 shadow-sm">
+                    <i class="fa fa-id-card"></i>
+                </div>
+                <div>
+                    <div class="text-sm font-black text-slate-800 italic uppercase tracking-tighter group-hover:text-white transition-colors">Kartu Pelajar</div>
+                    <div class="text-[8px] font-bold text-slate-400 uppercase tracking-widest group-hover:text-emerald-100 transition-colors">Identitas Digital</div>
+                </div>
+            </a>
+        </div>
+
         <div class="lux-card p-6 mb-8 bg-gradient-to-br from-indigo-600 to-indigo-800 text-white relative overflow-hidden">
             <div class="relative z-10 flex items-center gap-6">
                 <div class="w-24 h-24 rounded-2xl bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center text-3xl font-black italic shadow-inner overflow-hidden">

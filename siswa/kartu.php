@@ -43,7 +43,7 @@ require_once __DIR__ . '/../includes/header.php';
         <p class="text-slate-400 font-bold text-xs uppercase tracking-[0.3em] mt-1">Verifikasi Sistem CAKRA</p>
     </div>
 
-    <div id="printableCard" class="card-id-wrapper animate-in zoom-in duration-500">
+    <div id="printableCard" class="card-id-wrapper card-responsive-container animate-in zoom-in duration-500">
         <div class="card-id">
             <div class="card-content">
                 <div class="photo-area-new">

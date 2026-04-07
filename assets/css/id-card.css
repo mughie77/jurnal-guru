@@ -16,6 +16,34 @@
     display: flex;
     font-family: 'Plus Jakarta Sans', sans-serif;
     background-color: white;
+    transform-origin: top left;
+}
+
+/* Responsive Scaling Wrapper */
+.card-responsive-container {
+    width: 100%;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    padding: 20px 0;
+}
+
+@media (max-width: 640px) {
+    .card-id {
+        transform: scale(0.5);
+    }
+    .card-responsive-container {
+        height: 230px; /* 380 * 0.5 + some padding */
+    }
+}
+
+@media (min-width: 641px) and (max-width: 768px) {
+    .card-id {
+        transform: scale(0.8);
+    }
+    .card-responsive-container {
+        height: 340px;
+    }
 }
 
 .card-content {

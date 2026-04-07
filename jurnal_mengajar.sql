@@ -228,7 +228,9 @@ INSERT INTO `pengaturan` (`nama_setting`, `nilai_setting`) VALUES
 ('favicon', 'favicon.png'),
 ('jam_masuk_sekolah', '07:00:00'),
 ('dapodik_url', ''),
-('dapodik_token', '');
+('dapodik_token', ''),
+('school_lat', '-7.9135'),
+('school_lng', '113.8217');
 
 -- --------------------------------------------------------
 

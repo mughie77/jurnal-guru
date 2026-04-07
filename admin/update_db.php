@@ -33,7 +33,7 @@ authorize_role(['admin']);
                     'tanggal_lahir' => "DATE DEFAULT NULL AFTER tempat_lahir"
                 ],
                 'guru' => [
-                    'tempat_lahir' => "VARCHAR(100) DEFAULT NULL AFTER nama",
+                    'tempat_lahir' => "VARCHAR(100) DEFAULT NULL AFTER foto",
                     'tanggal_lahir' => "DATE DEFAULT NULL AFTER tempat_lahir"
                 ]
             ];
@@ -53,6 +53,26 @@ authorize_role(['admin']);
                     } else {
                         $logs[] = ['status' => 'info', 'msg' => "Column <b>$column</b> already exists in <b>$table</b>"];
                     }
+                }
+            }
+
+            // New settings migration
+            $new_settings = [
+                'school_lat' => '-7.9135',
+                'school_lng' => '113.8217'
+            ];
+
+            foreach ($new_settings as $key => $val) {
+                $check = mysqli_query($conn, "SELECT 1 FROM pengaturan WHERE nama_setting = '$key'");
+                if (mysqli_num_rows($check) == 0) {
+                    $ins = mysqli_query($conn, "INSERT INTO pengaturan (nama_setting, nilai_setting) VALUES ('$key', '$val')");
+                    if ($ins) {
+                        $logs[] = ['status' => 'success', 'msg' => "Added setting <b>$key</b>"];
+                    } else {
+                        $logs[] = ['status' => 'error', 'msg' => "Failed adding setting <b>$key</b>"];
+                    }
+                } else {
+                    $logs[] = ['status' => 'info', 'msg' => "Setting <b>$key</b> already exists"];
                 }
             }
 
