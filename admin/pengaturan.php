@@ -21,7 +21,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             'dapodik_url' => $_POST['dapodik_url'],
             'dapodik_token' => $_POST['dapodik_token'],
             'school_lat' => $_POST['school_lat'],
-            'school_lng' => $_POST['school_lng']
+            'school_lng' => $_POST['school_lng'],
+            'radius_absen' => $_POST['radius_absen']
         ];
 
         foreach ($settings as $key => $val) {
@@ -117,6 +118,11 @@ require_once __DIR__ . '/../includes/header.php';
                         <div>
                             <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Longitude</label>
                             <input type="text" id="school_lng" name="school_lng" value="<?= htmlspecialchars($sets['school_lng'] ?? '113.8217') ?>" readonly class="w-full px-4 py-2 bg-slate-50 rounded-xl border border-slate-200 text-sm font-mono font-bold text-slate-600">
+                        </div>
+                        <div class="col-span-2">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Radius Absensi (Meter)</label>
+                            <input type="number" name="radius_absen" value="<?= htmlspecialchars($sets['radius_absen'] ?? '30') ?>" required class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 transition-all font-bold">
+                            <p class="text-[10px] text-slate-400 font-bold italic mt-1 uppercase tracking-wider">Jarak maksimal siswa dari koordinat sekolah untuk dapat melakukan absensi.</p>
                         </div>
                     </div>
                     <p class="text-[10px] text-slate-400 font-bold italic uppercase tracking-wider">Geser penanda pada peta untuk menentukan lokasi presisi sekolah.</p>

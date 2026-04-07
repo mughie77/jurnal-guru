@@ -59,7 +59,8 @@ authorize_role(['admin']);
             // New settings migration
             $new_settings = [
                 'school_lat' => '-7.9135',
-                'school_lng' => '113.8217'
+                'school_lng' => '113.8217',
+                'radius_absen' => '30'
             ];
 
             foreach ($new_settings as $key => $val) {

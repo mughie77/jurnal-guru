@@ -230,7 +230,8 @@ INSERT INTO `pengaturan` (`nama_setting`, `nilai_setting`) VALUES
 ('dapodik_url', ''),
 ('dapodik_token', ''),
 ('school_lat', '-7.9135'),
-('school_lng', '113.8217');
+('school_lng', '113.8217'),
+('radius_absen', '30');
 
 -- --------------------------------------------------------
 

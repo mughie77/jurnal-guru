@@ -13,6 +13,7 @@ while ($r = mysqli_fetch_assoc($res_set)) $sets[$r['nama_setting']] = $r['nilai_
 
 $school_lat = $sets['school_lat'] ?? '-7.9135';
 $school_lng = $sets['school_lng'] ?? '113.8217';
+$radius_absen = (int)($sets['radius_absen'] ?? 30);
 
 $page_title = "Absensi GPS Siswa";
 require_once __DIR__ . '/../includes/header.php';
@@ -59,7 +60,7 @@ require_once __DIR__ . '/../includes/header.php';
             </div>
 
             <p id="hint-text" class="text-[11px] text-slate-400 italic font-medium leading-relaxed mb-6">
-                Pastikan GPS aktif dan Anda berada dalam radius 30 meter dari lokasi sekolah untuk melakukan absensi.
+                Pastikan GPS aktif dan Anda berada dalam radius <?= $radius_absen ?> meter dari lokasi sekolah untuk melakukan absensi.
             </p>
 
             <button id="btn-absen" disabled class="w-full py-4 bg-slate-200 text-slate-400 font-black rounded-2xl shadow-xl transition-all flex items-center justify-center gap-3 cursor-not-allowed">
@@ -83,19 +84,20 @@ require_once __DIR__ . '/../includes/header.php';
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script>
     const schoolPos = [<?= $school_lat ?>, <?= $school_lng ?>];
+    const radiusAbsen = <?= $radius_absen ?>;
     const map = L.map('map-absensi').setView(schoolPos, 17);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap'
     }).addTo(map);
 
-    // School Marker with 30m Radius
+    // School Marker with Radius
     L.marker(schoolPos).addTo(map).bindPopup('Lokasi Sekolah').openPopup();
     L.circle(schoolPos, {
         color: '#4F46E5',
         fillColor: '#4F46E5',
         fillOpacity: 0.1,
-        radius: 30
+        radius: radiusAbsen
     }).addTo(map);
 
     let userMarker, userCircle;
@@ -139,7 +141,7 @@ require_once __DIR__ . '/../includes/header.php';
                 userCircle = L.circle([lat, lng], {radius: accuracy}).addTo(map);
             }
 
-            if (distance <= 30) {
+            if (distance <= radiusAbsen) {
                 statusLoc.innerHTML = `
                     <div class="inline-flex items-center px-4 py-2 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-100">
                         <i class="fa fa-check-circle mr-2"></i> Anda di Area Sekolah
@@ -158,7 +160,7 @@ require_once __DIR__ . '/../includes/header.php';
                 btnAbsen.classList.add('bg-slate-200', 'text-slate-400', 'cursor-not-allowed');
                 btnAbsen.classList.remove('bg-indigo-600', 'text-white', 'hover:bg-indigo-700', 'shadow-indigo-200');
                 hintText.classList.remove('text-indigo-500');
-                hintText.textContent = "Anda harus berada dalam radius 30 meter dari sekolah.";
+                hintText.textContent = `Anda harus berada dalam radius ${radiusAbsen} meter dari sekolah.`;
             }
 
         }, function(error) {

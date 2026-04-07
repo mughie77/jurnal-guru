@@ -26,6 +26,7 @@ while ($r = mysqli_fetch_assoc($res_set)) $sets[$r['nama_setting']] = $r['nilai_
 
 $school_lat = $sets['school_lat'] ?? '-7.9135';
 $school_lng = $sets['school_lng'] ?? '113.8217';
+$radius_absen = (int)($sets['radius_absen'] ?? 30);
 $jam_masuk = $sets['jam_masuk_sekolah'] ?? '07:00:00';
 
 // Calculate Distance (Server-side validation)
@@ -45,7 +46,7 @@ function vincentyGreatCircleDistance($lat1, $lon1, $lat2, $lon2, $earthRadius = 
 
 $distance = vincentyGreatCircleDistance($lat, $lng, $school_lat, $school_lng);
 
-if ($distance > 35) { // 5m buffer for GPS jitter
+if ($distance > ($radius_absen + 5)) { // 5m buffer for GPS jitter
     echo json_encode(['success' => false, 'message' => 'Anda berada di luar radius sekolah (' . round($distance) . 'm).']);
     exit;
 }
