@@ -59,13 +59,13 @@ require_once __DIR__ . '/../includes/header.php';
                     <div class="text-[8px] font-bold text-slate-400 uppercase tracking-widest group-hover:text-indigo-200 transition-colors">Presensi Lokasi</div>
                 </div>
             </a>
-            <a href="kartu.php" class="lux-card p-6 flex flex-col items-center justify-center text-center gap-3 group hover:bg-emerald-600 transition-all duration-500">
+            <a href="izin.php" class="lux-card p-6 flex flex-col items-center justify-center text-center gap-3 group hover:bg-emerald-600 transition-all duration-500">
                 <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl group-hover:bg-white/20 group-hover:text-white transition-all duration-500 shadow-sm">
-                    <i class="fa fa-id-card"></i>
+                    <i class="fa fa-envelope-open-text"></i>
                 </div>
                 <div>
-                    <div class="text-sm font-black text-slate-800 italic uppercase tracking-tighter group-hover:text-white transition-colors">Kartu Pelajar</div>
-                    <div class="text-[8px] font-bold text-slate-400 uppercase tracking-widest group-hover:text-emerald-100 transition-colors">Identitas Digital</div>
+                    <div class="text-sm font-black text-slate-800 italic uppercase tracking-tighter group-hover:text-white transition-colors">Pengajuan Izin</div>
+                    <div class="text-[8px] font-bold text-slate-400 uppercase tracking-widest group-hover:text-emerald-100 transition-colors">Sakit / Keperluan</div>
                 </div>
             </a>
         </div>

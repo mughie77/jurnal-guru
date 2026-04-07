@@ -6,6 +6,11 @@ authorize_role(['siswa']);
 
 $siswa_id = $_SESSION['user_id'];
 
+// Check if already checked in today
+$today = date('Y-m-d');
+$check_abs = mysqli_query($conn, "SELECT id FROM absensi_harian WHERE siswa_id = $siswa_id AND tanggal = '$today'");
+$is_already_absen = mysqli_num_rows($check_abs) > 0;
+
 // Get School Info for GPS
 $res_set = mysqli_query($conn, "SELECT * FROM pengaturan");
 $sets = [];
@@ -63,9 +68,15 @@ require_once __DIR__ . '/../includes/header.php';
                 Pastikan GPS aktif dan Anda berada dalam radius <?= $radius_absen ?> meter dari lokasi sekolah untuk melakukan absensi.
             </p>
 
-            <button id="btn-absen" disabled class="w-full py-4 bg-slate-200 text-slate-400 font-black rounded-2xl shadow-xl transition-all flex items-center justify-center gap-3 cursor-not-allowed">
-                <i class="fa fa-fingerprint text-xl"></i> ABSEN SEKARANG
-            </button>
+            <?php if ($is_already_absen): ?>
+                <button disabled class="w-full py-4 bg-emerald-500 text-white font-black rounded-2xl shadow-xl transition-all flex items-center justify-center gap-3">
+                    <i class="fa fa-check-double text-xl"></i> ANDA SUDAH ABSEN
+                </button>
+            <?php else: ?>
+                <button id="btn-absen" disabled class="w-full py-4 bg-slate-200 text-slate-400 font-black rounded-2xl shadow-xl transition-all flex items-center justify-center gap-3 cursor-not-allowed">
+                    <i class="fa fa-fingerprint text-xl"></i> ABSEN SEKARANG
+                </button>
+            <?php endif; ?>
         </div>
 
         <div class="lux-card p-4 bg-indigo-50 border border-indigo-100 flex items-start gap-4">
@@ -146,21 +157,25 @@ require_once __DIR__ . '/../includes/header.php';
                     <div class="inline-flex items-center px-4 py-2 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-100">
                         <i class="fa fa-check-circle mr-2"></i> Anda di Area Sekolah
                     </div>`;
-                btnAbsen.disabled = false;
-                btnAbsen.classList.remove('bg-slate-200', 'text-slate-400', 'cursor-not-allowed');
-                btnAbsen.classList.add('bg-indigo-600', 'text-white', 'hover:bg-indigo-700', 'shadow-indigo-200');
-                hintText.classList.add('text-indigo-500');
-                hintText.textContent = "Silakan tekan tombol di bawah untuk melakukan absensi.";
+                if (btnAbsen) {
+                    btnAbsen.disabled = false;
+                    btnAbsen.classList.remove('bg-slate-200', 'text-slate-400', 'cursor-not-allowed');
+                    btnAbsen.classList.add('bg-indigo-600', 'text-white', 'hover:bg-indigo-700', 'shadow-indigo-200');
+                    hintText.classList.add('text-indigo-500');
+                    hintText.textContent = "Silakan tekan tombol di bawah untuk melakukan absensi.";
+                }
             } else {
                 statusLoc.innerHTML = `
                     <div class="inline-flex items-center px-4 py-2 bg-rose-50 text-rose-600 rounded-full text-[10px] font-black uppercase tracking-widest border border-rose-100">
                         <i class="fa fa-exclamation-circle mr-2"></i> Terlalu Jauh
                     </div>`;
-                btnAbsen.disabled = true;
-                btnAbsen.classList.add('bg-slate-200', 'text-slate-400', 'cursor-not-allowed');
-                btnAbsen.classList.remove('bg-indigo-600', 'text-white', 'hover:bg-indigo-700', 'shadow-indigo-200');
-                hintText.classList.remove('text-indigo-500');
-                hintText.textContent = `Anda harus berada dalam radius ${radiusAbsen} meter dari sekolah.`;
+                if (btnAbsen) {
+                    btnAbsen.disabled = true;
+                    btnAbsen.classList.add('bg-slate-200', 'text-slate-400', 'cursor-not-allowed');
+                    btnAbsen.classList.remove('bg-indigo-600', 'text-white', 'hover:bg-indigo-700', 'shadow-indigo-200');
+                    hintText.classList.remove('text-indigo-500');
+                    hintText.textContent = `Anda harus berada dalam radius ${radiusAbsen} meter dari sekolah.`;
+                }
             }
 
         }, function(error) {
@@ -174,12 +189,27 @@ require_once __DIR__ . '/../includes/header.php';
         Swal.fire('Error', 'Browser Anda tidak mendukung Geolocation.', 'error');
     }
 
-    btnAbsen.addEventListener('click', function() {
-        btnAbsen.disabled = true;
-        btnAbsen.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i> Memproses...';
+    if (btnAbsen) {
+        btnAbsen.addEventListener('click', function() {
+            btnAbsen.disabled = true;
+            btnAbsen.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i> Memproses...';
 
-        navigator.geolocation.getCurrentPosition(function(pos) {
-            const data = new FormData();
+            navigator.geolocation.getCurrentPosition(function(pos) {
+                // Anti Fake GPS: Accuracy must be better than 100m
+                if (pos.coords.accuracy > 100) {
+                    Swal.fire('GPS Tidak Akurat', 'Akurasi GPS Anda terlalu rendah (' + Math.round(pos.coords.accuracy) + 'm). Pastikan Anda berada di luar ruangan.', 'error');
+                    btnAbsen.disabled = false;
+                    btnAbsen.innerHTML = '<i class="fa fa-fingerprint text-xl"></i> ABSEN SEKARANG';
+                    return;
+                }
+
+                // Check for Mock Location (if supported by browser/platform)
+                if (pos.mocked) {
+                    Swal.fire('Fake GPS Terdeteksi', 'Dilarang menggunakan aplikasi manipulasi lokasi!', 'error');
+                    return;
+                }
+
+                const data = new FormData();
             data.append('lat', pos.coords.latitude);
             data.append('lng', pos.coords.longitude);
 
@@ -197,7 +227,11 @@ require_once __DIR__ . '/../includes/header.php';
                         timer: 2000,
                         showConfirmButton: false
                     }).then(() => {
-                        window.location.href = 'index.php';
+                        btnAbsen.disabled = true;
+                        btnAbsen.innerHTML = '<i class="fa fa-check-double text-xl"></i> SUDAH ABSEN';
+                        btnAbsen.classList.remove('bg-indigo-600', 'hover:bg-indigo-700');
+                        btnAbsen.classList.add('bg-emerald-500');
+                        setTimeout(() => window.location.href = 'index.php', 1000);
                     });
                 } else {
                     Swal.fire('Gagal', res.message, 'error');

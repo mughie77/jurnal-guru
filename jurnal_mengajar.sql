@@ -203,6 +203,7 @@ CREATE TABLE `absensi_harian` (
   `waktu_masuk` time DEFAULT NULL,
   `status` enum('Hadir','Sakit','Izin','Alfa','Terlambat') NOT NULL DEFAULT 'Hadir',
   `keterangan` text DEFAULT NULL,
+  `file_surat` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `siswa_id` (`siswa_id`),
   KEY `tanggal` (`tanggal`),

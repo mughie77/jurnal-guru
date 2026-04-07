@@ -35,6 +35,9 @@ authorize_role(['admin']);
                 'guru' => [
                     'tempat_lahir' => "VARCHAR(100) DEFAULT NULL AFTER foto",
                     'tanggal_lahir' => "DATE DEFAULT NULL AFTER tempat_lahir"
+                ],
+                'absensi_harian' => [
+                    'file_surat' => "VARCHAR(255) DEFAULT NULL AFTER keterangan"
                 ]
             ];
 
