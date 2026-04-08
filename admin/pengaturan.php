@@ -225,8 +225,8 @@ require_once __DIR__ . '/../includes/header.php';
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    var lat = <?= $sets['school_lat'] ?? '-7.9135' ?>;
-    var lng = <?= $sets['school_lng'] ?? '113.8217' ?>;
+    var lat = <?= (isset($sets['school_lat']) && $sets['school_lat'] !== '') ? $sets['school_lat'] : '-7.9135' ?>;
+    var lng = <?= (isset($sets['school_lng']) && $sets['school_lng'] !== '') ? $sets['school_lng'] : '113.8217' ?>;
 
     var map = L.map('map').setView([lat, lng], 15);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
