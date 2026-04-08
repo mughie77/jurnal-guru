@@ -1,1 +1,0 @@
-<?php session_start(); $_SESSION["user_id"]=1; $_SESSION["nama_lengkap"]="Test User"; $_SESSION["role"]="admin"; require "includes/header.php"; ?> <div class="p-8">Clock test page</div> <?php require "includes/footer.php"; ?>

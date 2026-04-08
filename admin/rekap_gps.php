@@ -101,8 +101,13 @@ require_once __DIR__ . '/../includes/header.php';
                         <span class="px-3 py-1 <?= $color ?> rounded-full text-[10px] font-black uppercase tracking-widest border border-current opacity-80"><?= $r['status'] ?></span>
                     </td>
                     <td class="px-6 py-4">
-                        <div class="text-xs text-slate-500 italic truncate max-w-xs" title="<?= htmlspecialchars($r['keterangan']) ?>">
-                            <?= htmlspecialchars($r['keterangan']) ?>
+                        <div class="flex items-center gap-2">
+                            <div class="text-xs text-slate-500 italic truncate max-w-[200px]" title="<?= htmlspecialchars($r['keterangan']) ?>">
+                                <?= htmlspecialchars($r['keterangan']) ?>
+                            </div>
+                            <button onclick="viewDetail('<?= addslashes(htmlspecialchars($r['nama_siswa'])) ?>', '<?= addslashes(htmlspecialchars($r['keterangan'])) ?>', '<?= $r['file_surat'] ?>')" class="text-indigo-600 hover:text-indigo-800 text-[10px] font-bold underline whitespace-nowrap">
+                                Detail
+                            </button>
                         </div>
                     </td>
                 </tr>
@@ -118,5 +123,42 @@ require_once __DIR__ . '/../includes/header.php';
 </div>
 
 <?= render_pagination($pagin['page'], $pagin['total_pages'], $_GET) ?>
+
+<script>
+function viewDetail(nama, ket, file) {
+    let content = `<div class="text-left space-y-4">
+        <div>
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Nama Siswa</p>
+            <p class="font-bold text-slate-800">${nama}</p>
+        </div>
+        <div>
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Keterangan / Log GPS</p>
+            <p class="text-sm text-slate-600 italic leading-relaxed">${ket}</p>
+        </div>`;
+
+    if (file && file !== 'null' && file !== '') {
+        content += `<div>
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Lampiran Surat / Bukti</p>
+            <a href="<?= BASE_URL ?>uploads/surat/${file}" target="_blank" class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-xs font-bold rounded-lg hover:bg-indigo-700 transition-all">
+                <i class="fa fa-file-alt mr-2"></i> Lihat Dokumen Lampiran
+            </a>
+        </div>`;
+    }
+
+    content += `</div>`;
+
+    Swal.fire({
+        title: 'Detail Kehadiran',
+        html: content,
+        showCloseButton: true,
+        showConfirmButton: false,
+        width: '450px',
+        customClass: {
+            popup: 'rounded-3xl',
+            title: 'text-xl font-black italic text-slate-800'
+        }
+    });
+}
+</script>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

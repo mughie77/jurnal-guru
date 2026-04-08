@@ -1,4 +1,5 @@
 <?php
+ob_start();
 header('Content-Type: application/json');
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/auth.php';
@@ -68,7 +69,9 @@ $keterangan = "Absensi GPS (Lat: $lat, Lng: $lng, Dist: " . round($distance, 2) 
 mysqli_stmt_bind_param($stmt, "issss", $siswa_id, $today, $now_time, $status, $keterangan);
 
 if (mysqli_stmt_execute($stmt)) {
+    ob_clean();
     echo json_encode(['success' => true, 'message' => "Berhasil absen. Status: $status pada $now_time"]);
 } else {
+    ob_clean();
     echo json_encode(['success' => false, 'message' => 'Gagal menyimpan data absensi.']);
 }
