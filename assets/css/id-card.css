@@ -29,7 +29,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 20px;
+    padding: 10px;
     -webkit-overflow-scrolling: touch;
 }
 
@@ -132,45 +132,41 @@
     color: #000;
     text-transform: uppercase;
     width: 355px;
-    white-space: nowrap;
+    white-space: normal;
     overflow: visible; /* Prevent truncation in PDF capture */
     text-overflow: clip;
 }
 
 /* Precise positions adjusted to be below labels on the background */
 .val-nama {
-    top: 88px;
+    top: 84px;
     left: 17px;
-    font-weight: 700;
+    font-weight: 900;
     font-size: 14px; /* Slightly larger for name */
 }
 .val-nis {
-    top: 131px;
+    top: 128px;
     left: 17px;
     font-weight: 500;
 }
 .val-ttl {
-    top: 177px;
+    top: 173px;
     left: 17px;
     font-weight: 500;
 }
 .val-jk {
-    top: 223px;
+    top: 215px;
     left: 17px;
     font-weight: 500;
 }
 .val-alamat {
-    top: 269px;
+    top: 261px;
     left: 17px;
     width: 350px;
-    white-space: normal;
-    line-height: 1.2;
-    font-size: 11px;
+
+    font-size: 10px;
     font-weight: 500;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+
 }
 
 .info-label {
