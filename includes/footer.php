@@ -58,5 +58,24 @@
 
     <!-- App Scripts -->
     <script src="<?= BASE_URL ?>assets/js/app.js"></script>
+    <script>
+        function updateClock() {
+            const now = new Date();
+            const options = {
+                timeZone: 'Asia/Jakarta',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            };
+            const timeString = new Intl.DateTimeFormat('id-ID', options).format(now);
+            const clockElement = document.getElementById('digital-clock');
+            if (clockElement) {
+                clockElement.textContent = timeString.replace(/\./g, ':');
+            }
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+    </script>
 </body>
 </html>

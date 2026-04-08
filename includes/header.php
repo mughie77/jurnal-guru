@@ -75,6 +75,11 @@ $favicon = !empty($app_sets['favicon']) ? BASE_URL . 'uploads/' . $app_sets['fav
                 </button>
 
                 <div class="flex items-center space-x-4">
+                    <div class="flex items-center bg-slate-50 border border-slate-100 px-3 py-1.5 rounded-xl mr-2">
+                        <i class="fa fa-clock text-indigo-500 mr-2 text-xs"></i>
+                        <span id="digital-clock" class="text-sm font-black text-slate-700 italic tracking-tighter"><?= date('H:i:s') ?></span>
+                    </div>
+
                     <div class="hidden md:flex flex-col text-right">
                         <span class="text-sm font-semibold text-slate-700"><?= htmlspecialchars($_SESSION['nama_lengkap']); ?></span>
                         <span class="text-xs text-slate-500 uppercase tracking-wider font-bold"><?= htmlspecialchars($_SESSION['role']); ?></span>

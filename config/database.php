@@ -1,4 +1,7 @@
 <?php
+// Set Timezone to UTC+7 (Asia/Jakarta)
+date_default_timezone_set('Asia/Jakarta');
+
 // --- Koneksi Database ---
 $db_host = 'localhost';
 $db_user = 'root'; // Sesuaikan dengan username database Anda
