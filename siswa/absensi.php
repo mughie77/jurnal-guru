@@ -43,15 +43,18 @@ require_once __DIR__ . '/../includes/header.php';
             </a>
         </div>
 
-        <div id="map-absensi" class="shadow-xl shadow-indigo-100 border-4 border-white"></div>
+        <div id="map-absensi" class="shadow-xl shadow-indigo-100 border-4 border-white overflow-hidden" style="min-height: 300px; background: #f1f5f9;"></div>
 
         <div class="lux-card p-6 mb-6 text-center">
             <div id="status-location" class="mb-4 flex flex-col items-center gap-3">
-                <div class="inline-flex items-center px-4 py-2 bg-amber-50 text-amber-600 rounded-full text-[10px] font-black uppercase tracking-widest border border-amber-100 animate-pulse">
+                <div id="loc-indicator" class="inline-flex items-center px-4 py-2 bg-amber-50 text-amber-600 rounded-full text-[10px] font-black uppercase tracking-widest border border-amber-100 animate-pulse">
                     <i class="fa fa-location-dot mr-2"></i> Mencari Lokasi Anda...
                 </div>
-                <button type="button" onclick="window.location.reload()" class="text-[9px] font-bold text-indigo-600 hover:text-indigo-800 underline">
-                    <i class="fa fa-sync-alt mr-1"></i> Muat Ulang Halaman jika Terlalu Lama
+                <button type="button" id="btn-manual-loc" class="px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl text-[10px] font-black uppercase tracking-widest border border-indigo-100 hover:bg-indigo-600 hover:text-white transition-all">
+                    <i class="fa fa-crosshairs mr-2"></i> Deteksi Lokasi Manual
+                </button>
+                <button type="button" onclick="window.location.reload()" class="text-[9px] font-bold text-slate-400 hover:text-slate-600 underline">
+                    <i class="fa fa-sync-alt mr-1"></i> Refresh Halaman
                 </button>
             </div>
 
@@ -121,10 +124,18 @@ require_once __DIR__ . '/../includes/header.php';
         }).addTo(map);
 
         // Force layout recalculation
-        setTimeout(() => map.invalidateSize(), 500);
+        setTimeout(() => {
+            map.invalidateSize();
+            // Sometimes one invalidate is not enough for dynamic layouts
+            window.dispatchEvent(new Event('resize'));
+        }, 500);
     }
 
+    // Multiple triggers for map init to be safe
     window.addEventListener('load', initMap);
+    document.addEventListener('DOMContentLoaded', initMap);
+    // Trigger immediately just in case
+    initMap();
 
     let userMarker, userCircle;
     const btnAbsen = document.getElementById('btn-absen');
@@ -148,11 +159,18 @@ require_once __DIR__ . '/../includes/header.php';
         return R * c; // in metres
     }
 
-    if ("geolocation" in navigator) {
-        // Initial fly to user position once
-        let initialZoomed = false;
+    let watchId = null;
+    let initialZoomed = false;
 
-        navigator.geolocation.watchPosition(function(position) {
+    function startGeolocation() {
+        if (!("geolocation" in navigator)) {
+            Swal.fire('Error', 'Browser Anda tidak mendukung Geolocation.', 'error');
+            return;
+        }
+
+        if (watchId) navigator.geolocation.clearWatch(watchId);
+
+        watchId = navigator.geolocation.watchPosition(function(position) {
             const lat = position.coords.latitude;
             const lng = position.coords.longitude;
             const accuracy = position.coords.accuracy;
@@ -211,23 +229,23 @@ require_once __DIR__ . '/../includes/header.php';
             let errorMsg = 'Gagal mendapatkan lokasi GPS.';
             if (error.code == 1) errorMsg = 'Izin lokasi ditolak. Silakan aktifkan GPS di browser Anda.';
             else if (error.code == 2) errorMsg = 'Posisi tidak tersedia. Coba keluar ruangan atau restart GPS.';
-            else if (error.code == 3) errorMsg = 'Waktu permintaan GPS habis. Coba refresh halaman.';
+            else if (error.code == 3) errorMsg = 'Waktu permintaan GPS habis. Klik tombol deteksi manual.';
 
-            statusLoc.innerHTML = `
-                <div class="inline-flex items-center px-4 py-2 bg-rose-50 text-rose-600 rounded-full text-[10px] font-black uppercase tracking-widest border border-rose-100">
-                    <i class="fa fa-times-circle mr-2"></i> ${errorMsg}
-                </div>
-                <button type="button" onclick="window.location.reload()" class="text-[9px] font-bold text-indigo-600 hover:text-indigo-800 underline">
-                    <i class="fa fa-sync-alt mr-1"></i> Coba Lagi
-                </button>`;
+            document.getElementById('loc-indicator').innerHTML = `<i class="fa fa-times-circle mr-2"></i> ${errorMsg}`;
+            document.getElementById('loc-indicator').className = "inline-flex items-center px-4 py-2 bg-rose-50 text-rose-600 rounded-full text-[10px] font-black uppercase tracking-widest border border-rose-100";
+
+            console.error("Geolocation Error:", error);
         }, {
             enableHighAccuracy: true,
-            maximumAge: 30000,
-            timeout: 20000 // Further increased timeout for slower GPS
+            maximumAge: 10000,
+            timeout: 15000
         });
-    } else {
-        Swal.fire('Error', 'Browser Anda tidak mendukung Geolocation.', 'error');
     }
+
+    document.getElementById('btn-manual-loc').addEventListener('click', startGeolocation);
+
+    // Auto-start on load
+    startGeolocation();
 
     if (btnAbsen) {
         btnAbsen.addEventListener('click', function() {

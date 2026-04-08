@@ -112,28 +112,39 @@ require_once __DIR__ . '/../includes/header.php';
 
         const card = document.querySelector('.card-id');
 
-        // Temporarily reset transform for clean capture
-        const originalTransform = card.style.transform;
-        card.style.transform = 'none';
+        // Wait for all images and fonts to be ready
+        Promise.all([
+            document.fonts.ready,
+            new Promise(resolve => {
+                if (card.querySelector('img')) {
+                    const img = card.querySelector('img');
+                    if (img.complete) resolve();
+                    else img.onload = resolve;
+                } else resolve();
+            })
+        ]).then(() => {
+            // Temporarily reset transform for clean capture
+            const originalTransform = card.style.transform;
+            card.style.transform = 'none';
 
-        // Use html2canvas to capture the card
-        html2canvas(card, {
-            scale: 3, // Slightly lower scale to avoid memory issues on some devices, but still high quality
-            useCORS: true,
-            allowTaint: true,
-            backgroundColor: null,
-            logging: false,
-            width: 600,
-            height: 380,
-            x: 0,
-            y: 0,
-            scrollX: 0,
-            scrollY: 0,
-            windowWidth: 600,
-            windowHeight: 380
-        }).then(canvas => {
-            // Restore original transform
-            card.style.transform = originalTransform;
+            // Use html2canvas to capture the card
+            html2canvas(card, {
+                scale: 3,
+                useCORS: true,
+                allowTaint: true,
+                backgroundColor: null,
+                logging: false,
+                width: 600,
+                height: 380,
+                x: 0,
+                y: 0,
+                scrollX: 0,
+                scrollY: 0,
+                windowWidth: 800, // Larger window width to prevent clipping
+                windowHeight: 600
+            }).then(canvas => {
+                // Restore original transform
+                card.style.transform = originalTransform;
 
             const imgData = canvas.toDataURL('image/jpeg', 1.0);
 
@@ -145,16 +156,17 @@ require_once __DIR__ . '/../includes/header.php';
             });
 
             pdf.addImage(imgData, 'JPEG', 0, 0, 85.6, 53.98);
-            pdf.save('Kartu_Pelajar_<?= $siswa['nis'] ?>.pdf');
+                pdf.save('Kartu_Pelajar_<?= $siswa['nis'] ?>.pdf');
 
-            // Restore button state
-            btn.disabled = false;
-            btn.innerHTML = originalContent;
-        }).catch(err => {
-            console.error('Export failed:', err);
-            alert('Gagal mengunduh kartu. Silakan coba lagi.');
-            btn.disabled = false;
-            btn.innerHTML = originalContent;
+                // Restore button state
+                btn.disabled = false;
+                btn.innerHTML = originalContent;
+            }).catch(err => {
+                console.error('Export failed:', err);
+                alert('Gagal mengunduh kartu. Silakan coba lagi.');
+                btn.disabled = false;
+                btn.innerHTML = originalContent;
+            });
         });
     });
 </script>

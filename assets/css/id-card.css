@@ -133,8 +133,8 @@
     text-transform: uppercase;
     width: 355px;
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    overflow: visible; /* Prevent truncation in PDF capture */
+    text-overflow: clip;
 }
 
 /* Precise positions adjusted to be below labels on the background */
