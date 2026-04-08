@@ -46,10 +46,13 @@ require_once __DIR__ . '/../includes/header.php';
         <div id="map-absensi" class="shadow-xl shadow-indigo-100 border-4 border-white"></div>
 
         <div class="lux-card p-6 mb-6 text-center">
-            <div id="status-location" class="mb-4">
+            <div id="status-location" class="mb-4 flex flex-col items-center gap-3">
                 <div class="inline-flex items-center px-4 py-2 bg-amber-50 text-amber-600 rounded-full text-[10px] font-black uppercase tracking-widest border border-amber-100 animate-pulse">
                     <i class="fa fa-location-dot mr-2"></i> Mencari Lokasi Anda...
                 </div>
+                <button type="button" onclick="window.location.reload()" class="text-[9px] font-bold text-indigo-600 hover:text-indigo-800 underline">
+                    <i class="fa fa-sync-alt mr-1"></i> Muat Ulang Halaman jika Terlalu Lama
+                </button>
             </div>
 
             <div class="flex items-center justify-center gap-8 mb-6">
@@ -96,20 +99,32 @@ require_once __DIR__ . '/../includes/header.php';
 <script>
     const schoolPos = [<?= $school_lat ?>, <?= $school_lng ?>];
     const radiusAbsen = <?= $radius_absen ?>;
-    const map = L.map('map-absensi').setView(schoolPos, 17);
+    let map;
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap'
-    }).addTo(map);
+    // Initialize map with a slight delay to ensure container is ready
+    function initMap() {
+        if (map) return;
+        map = L.map('map-absensi').setView(schoolPos, 17);
 
-    // School Marker with Radius
-    L.marker(schoolPos).addTo(map).bindPopup('Lokasi Sekolah').openPopup();
-    L.circle(schoolPos, {
-        color: '#4F46E5',
-        fillColor: '#4F46E5',
-        fillOpacity: 0.1,
-        radius: radiusAbsen
-    }).addTo(map);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap',
+            maxZoom: 19
+        }).addTo(map);
+
+        // School Marker with Radius
+        L.marker(schoolPos).addTo(map).bindPopup('Lokasi Sekolah').openPopup();
+        L.circle(schoolPos, {
+            color: '#4F46E5',
+            fillColor: '#4F46E5',
+            fillOpacity: 0.1,
+            radius: radiusAbsen
+        }).addTo(map);
+
+        // Force layout recalculation
+        setTimeout(() => map.invalidateSize(), 500);
+    }
+
+    window.addEventListener('load', initMap);
 
     let userMarker, userCircle;
     const btnAbsen = document.getElementById('btn-absen');
@@ -134,6 +149,9 @@ require_once __DIR__ . '/../includes/header.php';
     }
 
     if ("geolocation" in navigator) {
+        // Initial fly to user position once
+        let initialZoomed = false;
+
         navigator.geolocation.watchPosition(function(position) {
             const lat = position.coords.latitude;
             const lng = position.coords.longitude;
@@ -149,7 +167,18 @@ require_once __DIR__ . '/../includes/header.php';
                 userCircle.setLatLng([lat, lng]).setRadius(accuracy);
             } else {
                 userMarker = L.marker([lat, lng]).addTo(map).bindPopup('Lokasi Anda');
-                userCircle = L.circle([lat, lng], {radius: accuracy}).addTo(map);
+                userCircle = L.circle([lat, lng], {
+                    radius: accuracy,
+                    color: '#10b981',
+                    fillColor: '#10b981',
+                    fillOpacity: 0.15
+                }).addTo(map);
+            }
+
+            if (!initialZoomed) {
+                const group = new L.featureGroup([L.marker(schoolPos), userMarker]);
+                map.fitBounds(group.getBounds().pad(0.1));
+                initialZoomed = true;
             }
 
             if (distance <= radiusAbsen) {
@@ -179,11 +208,22 @@ require_once __DIR__ . '/../includes/header.php';
             }
 
         }, function(error) {
-            Swal.fire('Gagal GPS', 'Pastikan izin lokasi diaktifkan pada browser Anda.', 'error');
+            let errorMsg = 'Gagal mendapatkan lokasi GPS.';
+            if (error.code == 1) errorMsg = 'Izin lokasi ditolak. Silakan aktifkan GPS di browser Anda.';
+            else if (error.code == 2) errorMsg = 'Posisi tidak tersedia. Coba keluar ruangan atau restart GPS.';
+            else if (error.code == 3) errorMsg = 'Waktu permintaan GPS habis. Coba refresh halaman.';
+
+            statusLoc.innerHTML = `
+                <div class="inline-flex items-center px-4 py-2 bg-rose-50 text-rose-600 rounded-full text-[10px] font-black uppercase tracking-widest border border-rose-100">
+                    <i class="fa fa-times-circle mr-2"></i> ${errorMsg}
+                </div>
+                <button type="button" onclick="window.location.reload()" class="text-[9px] font-bold text-indigo-600 hover:text-indigo-800 underline">
+                    <i class="fa fa-sync-alt mr-1"></i> Coba Lagi
+                </button>`;
         }, {
             enableHighAccuracy: true,
-            maximumAge: 0,
-            timeout: 5000
+            maximumAge: 30000,
+            timeout: 20000 // Further increased timeout for slower GPS
         });
     } else {
         Swal.fire('Error', 'Browser Anda tidak mendukung Geolocation.', 'error');

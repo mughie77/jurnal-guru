@@ -120,7 +120,7 @@
     position: absolute;
     left: 224px;
     top: 0;
-    width: 350px;
+    width: 365px;
     height: 100%;
     color: #1e293b;
 }
@@ -131,7 +131,7 @@
     font-size: 13px;
     color: #000;
     text-transform: uppercase;
-    width: 350px;
+    width: 355px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -142,29 +142,35 @@
     top: 88px;
     left: 17px;
     font-weight: 700;
+    font-size: 14px; /* Slightly larger for name */
 }
 .val-nis {
-    top: 130px;
+    top: 131px;
     left: 17px;
     font-weight: 500;
 }
 .val-ttl {
-    top: 176px;
+    top: 177px;
     left: 17px;
     font-weight: 500;
 }
 .val-jk {
-    top: 221px;
+    top: 223px;
     left: 17px;
     font-weight: 500;
 }
 .val-alamat {
-    top: 268px;
+    top: 269px;
     left: 17px;
+    width: 350px;
     white-space: normal;
     line-height: 1.2;
     font-size: 11px;
     font-weight: 500;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
 .info-label {

@@ -118,12 +118,19 @@ require_once __DIR__ . '/../includes/header.php';
 
         // Use html2canvas to capture the card
         html2canvas(card, {
-            scale: 5, // Higher scale for high quality PDF
+            scale: 3, // Slightly lower scale to avoid memory issues on some devices, but still high quality
             useCORS: true,
             allowTaint: true,
             backgroundColor: null,
+            logging: false,
             width: 600,
-            height: 380
+            height: 380,
+            x: 0,
+            y: 0,
+            scrollX: 0,
+            scrollY: 0,
+            windowWidth: 600,
+            windowHeight: 380
         }).then(canvas => {
             // Restore original transform
             card.style.transform = originalTransform;
