@@ -44,9 +44,10 @@ require_once __DIR__ . '/../includes/header.php';
         <p class="text-slate-400 font-bold text-xs uppercase tracking-[0.3em] mt-1">Verifikasi Sistem CAKRA</p>
     </div>
 
-    <div id="printableCard" class="card-id-wrapper card-responsive-container animate-in zoom-in duration-500">
-        <div class="card-id">
-            <div class="card-content">
+    <div id="printableCard" class="card-responsive-container animate-in zoom-in duration-500">
+        <div class="card-id-wrapper">
+            <div class="card-id">
+                <div class="card-content">
                 <div class="photo-area-new">
                     <?php if (!empty($siswa['foto'])): ?>
                         <img src="<?= BASE_URL ?>uploads/siswa/<?= $siswa['foto'] ?>">
@@ -61,15 +62,16 @@ require_once __DIR__ . '/../includes/header.php';
                     <canvas id="barcode"></canvas>
                 </div>
 
-                <div class="info-area-new">
-                    <div class="info-value val-nama"><?= htmlspecialchars($siswa['nama_siswa']) ?></div>
-                    <div class="info-value val-nis"><?= htmlspecialchars($siswa['nis']) ?> / <?= htmlspecialchars($siswa['nisn'] ?? '-') ?></div>
-                    <div class="info-value val-ttl">
-                        <?= htmlspecialchars($siswa['tempat_lahir'] ?? '-') ?>,
-                        <?= !empty($siswa['tanggal_lahir']) ? date('d-m-Y', strtotime($siswa['tanggal_lahir'])) : '-' ?>
+                    <div class="info-area-new">
+                        <div class="info-value val-nama"><?= htmlspecialchars($siswa['nama_siswa']) ?></div>
+                        <div class="info-value val-nis"><?= htmlspecialchars($siswa['nis']) ?> / <?= htmlspecialchars($siswa['nisn'] ?? '-') ?></div>
+                        <div class="info-value val-ttl">
+                            <?= htmlspecialchars($siswa['tempat_lahir'] ?? '-') ?>,
+                            <?= !empty($siswa['tanggal_lahir']) ? date('d-m-Y', strtotime($siswa['tanggal_lahir'])) : '-' ?>
+                        </div>
+                        <div class="info-value val-jk"><?= ($siswa['jenis_kelamin'] == 'P') ? 'Perempuan' : 'Laki-Laki' ?></div>
+                        <div class="info-value val-alamat"><?= htmlspecialchars($siswa['alamat'] ?? '-') ?></div>
                     </div>
-                    <div class="info-value val-jk"><?= ($siswa['jenis_kelamin'] == 'P') ? 'Perempuan' : 'Laki-Laki' ?></div>
-                    <div class="info-value val-alamat"><?= htmlspecialchars($siswa['alamat'] ?? '-') ?></div>
                 </div>
             </div>
         </div>
