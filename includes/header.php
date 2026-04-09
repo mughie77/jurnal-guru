@@ -76,6 +76,10 @@ $favicon = !empty($app_sets['favicon']) ? BASE_URL . 'uploads/' . $app_sets['fav
 
                 <div class="flex items-center space-x-4">
                     <div class="flex items-center bg-slate-50 border border-slate-100 px-3 py-1.5 rounded-xl mr-2">
+                        <div class="flex items-center border-r border-slate-200 pr-3 mr-3">
+                            <i class="fa fa-calendar-day text-indigo-500 mr-2 text-[10px]"></i>
+                            <span id="header-date" class="text-[11px] font-black text-slate-500 uppercase tracking-widest"><?= date('d M Y') ?></span>
+                        </div>
                         <i class="fa fa-clock text-indigo-500 mr-2 text-xs"></i>
                         <span id="digital-clock" class="text-sm font-black text-slate-700 italic tracking-tighter"><?= date('H:i:s') ?></span>
                     </div>

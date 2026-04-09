@@ -61,18 +61,28 @@
     <script>
         function updateClock() {
             const now = new Date();
-            const options = {
+            const timeOptions = {
                 timeZone: 'Asia/Jakarta',
                 hour: '2-digit',
                 minute: '2-digit',
                 second: '2-digit',
                 hour12: false
             };
-            const timeString = new Intl.DateTimeFormat('id-ID', options).format(now);
+            const dateOptions = {
+                timeZone: 'Asia/Jakarta',
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric'
+            };
+
+            const timeString = new Intl.DateTimeFormat('id-ID', timeOptions).format(now);
+            const dateString = new Intl.DateTimeFormat('id-ID', dateOptions).format(now);
+
             const clockElement = document.getElementById('digital-clock');
-            if (clockElement) {
-                clockElement.textContent = timeString.replace(/\./g, ':');
-            }
+            const dateElement = document.getElementById('header-date');
+
+            if (clockElement) clockElement.textContent = timeString.replace(/\./g, ':');
+            if (dateElement) dateElement.textContent = dateString;
         }
         setInterval(updateClock, 1000);
         updateClock();

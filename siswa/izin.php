@@ -117,11 +117,22 @@ require_once __DIR__ . '/../includes/header.php';
             .then(res => res.json())
             .then(res => {
                 if (res.success) {
+                    const now = new Date();
+                    const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+                    const dateStr = now.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+
                     Swal.fire({
                         icon: 'success',
                         title: 'Berhasil!',
-                        text: res.message,
-                        timer: 2000,
+                        html: `<div class="space-y-2">
+                            <p class="text-slate-600">${res.message}</p>
+                            <div class="p-3 bg-slate-50 rounded-2xl border border-slate-100">
+                                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Waktu Pengajuan</p>
+                                <p class="text-lg font-black text-indigo-600">${timeStr} WIB</p>
+                                <p class="text-xs font-bold text-slate-500">${dateStr}</p>
+                            </div>
+                        </div>`,
+                        timer: 3500,
                         showConfirmButton: false
                     }).then(() => {
                         window.location.href = 'index.php';

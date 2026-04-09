@@ -124,8 +124,20 @@ require_once __DIR__ . '/../includes/header.php';
 
 <?= render_pagination($pagin['page'], $pagin['total_pages'], $_GET) ?>
 
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 function viewDetail(nama, ket, file) {
+    // Extract coordinates from keterangan
+    // Format: "Absensi GPS (Lat: -7.9135, Lng: 113.8217, Dist: 0m)" or for izin: "(GPS: -7.9135, 113.8217)"
+    let lat = null, lng = null;
+    let match = ket.match(/Lat:\s*([-.\d]+),\s*Lng:\s*([-.\d]+)/) || ket.match(/GPS:\s*([-.\d]+),\s*([-.\d]+)/);
+
+    if (match) {
+        lat = match[1];
+        lng = match[2];
+    }
+
     let content = `<div class="text-left space-y-4">
         <div>
             <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Nama Siswa</p>
@@ -133,7 +145,8 @@ function viewDetail(nama, ket, file) {
         </div>
         <div>
             <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Keterangan / Log GPS</p>
-            <p class="text-sm text-slate-600 italic leading-relaxed">${ket}</p>
+            <p class="text-sm text-slate-600 italic leading-relaxed mb-3">${ket}</p>
+            ${lat && lng ? `<div id="map-detail" class="w-full h-48 rounded-2xl border border-slate-200 shadow-inner"></div>` : ''}
         </div>`;
 
     if (file && file !== 'null' && file !== '') {
@@ -156,6 +169,28 @@ function viewDetail(nama, ket, file) {
         customClass: {
             popup: 'rounded-3xl',
             title: 'text-xl font-black italic text-slate-800'
+        },
+        didOpen: () => {
+            if (lat && lng) {
+                setTimeout(() => {
+                    const map = L.map('map-detail', {
+                        zoomControl: false,
+                        attributionControl: false
+                    }).setView([lat, lng], 16);
+
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+                    const icon = L.divIcon({
+                        html: '<div class="w-6 h-6 bg-indigo-600 rounded-full border-4 border-white shadow-lg flex items-center justify-center text-white"><i class="fa fa-map-marker-alt text-[10px]"></i></div>',
+                        className: 'custom-marker',
+                        iconSize: [24, 24],
+                        iconAnchor: [12, 12]
+                    });
+
+                    L.marker([lat, lng], {icon: icon}).addTo(map);
+                    map.invalidateSize();
+                }, 100);
+            }
         }
     });
 }
