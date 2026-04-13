@@ -80,45 +80,45 @@ require_once __DIR__ . '/../includes/header.php';
             <i class="fa fa-user-graduate absolute -bottom-6 -right-6 text-9xl opacity-10"></i>
         </div>
 
-        <!-- Detail Data -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="lux-card p-5">
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Jenis Kelamin</p>
-                <p class="font-bold text-slate-800"><?= $siswa['jenis_kelamin'] == 'L' ? 'Laki-laki' : 'Perempuan' ?></p>
-            </div>
-            <div class="lux-card p-5">
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">No. Telp/HP</p>
-                <p class="font-bold text-slate-800"><?= htmlspecialchars($siswa['no_telp'] ?? '-') ?></p>
-            </div>
-            <div class="lux-card p-5">
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Tahun Pelajaran</p>
-                <p class="font-bold text-slate-800 italic"><?= htmlspecialchars($siswa['tahun_pelajaran']) ?></p>
-            </div>
-        </div>
-
-        <div class="lux-card p-6 mb-8">
-            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Alamat Lengkap</p>
-            <p class="text-slate-700 italic"><?= nl2br(htmlspecialchars($siswa['alamat'] ?? 'Belum diisi')) ?></p>
-        </div>
-
-        <!-- Quick Actions -->
+        <!-- Quick Actions Grid Design -->
         <div class="grid grid-cols-2 gap-4 mb-8 no-print">
-            <a href="absensi.php" class="lux-card p-6 flex flex-col items-center justify-center text-center gap-3 group hover:bg-indigo-600 transition-all duration-500">
-                <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl group-hover:bg-white/20 group-hover:text-white transition-all duration-500 shadow-sm">
+            <a href="absensi.php" class="p-6 rounded-[32px] bg-indigo-600 text-white shadow-xl shadow-indigo-200 flex flex-col gap-4 group transition-all hover:scale-[1.02] active:scale-95">
+                <div class="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-xl shadow-inner group-hover:bg-white/30 transition-all">
                     <i class="fa fa-fingerprint"></i>
                 </div>
                 <div>
-                    <div class="text-sm font-black text-slate-800 italic uppercase tracking-tighter group-hover:text-white transition-colors">Absen GPS</div>
-                    <div class="text-[8px] font-bold text-slate-400 uppercase tracking-widest group-hover:text-indigo-200 transition-colors">Presensi Lokasi</div>
+                    <div class="text-lg font-black italic tracking-tighter uppercase leading-none">Absensi</div>
+                    <div class="text-[9px] font-bold text-indigo-100 uppercase tracking-widest mt-1 opacity-70">Log Lokasi GPS</div>
                 </div>
             </a>
-            <a href="izin.php" class="lux-card p-6 flex flex-col items-center justify-center text-center gap-3 group hover:bg-emerald-600 transition-all duration-500">
-                <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl group-hover:bg-white/20 group-hover:text-white transition-all duration-500 shadow-sm">
+
+            <a href="izin.php" class="p-6 rounded-[32px] bg-emerald-600 text-white shadow-xl shadow-emerald-200 flex flex-col gap-4 group transition-all hover:scale-[1.02] active:scale-95">
+                <div class="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-xl shadow-inner group-hover:bg-white/30 transition-all">
                     <i class="fa fa-envelope-open-text"></i>
                 </div>
                 <div>
-                    <div class="text-sm font-black text-slate-800 italic uppercase tracking-tighter group-hover:text-white transition-colors">Pengajuan Izin</div>
-                    <div class="text-[8px] font-bold text-slate-400 uppercase tracking-widest group-hover:text-emerald-100 transition-colors">Sakit / Keperluan</div>
+                    <div class="text-lg font-black italic tracking-tighter uppercase leading-none">Pengajuan Izin</div>
+                    <div class="text-[9px] font-bold text-emerald-100 uppercase tracking-widest mt-1 opacity-70">Sakit & Keperluan</div>
+                </div>
+            </a>
+
+            <a href="barcode.php" class="p-6 rounded-[32px] bg-amber-500 text-white shadow-xl shadow-amber-200 flex flex-col gap-4 group transition-all hover:scale-[1.02] active:scale-95">
+                <div class="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-xl shadow-inner group-hover:bg-white/30 transition-all">
+                    <i class="fa fa-barcode"></i>
+                </div>
+                <div>
+                    <div class="text-lg font-black italic tracking-tighter uppercase leading-none">Barcode</div>
+                    <div class="text-[9px] font-bold text-amber-100 uppercase tracking-widest mt-1 opacity-70">Digital Identity Scan</div>
+                </div>
+            </a>
+
+            <a href="kartu.php" class="p-6 rounded-[32px] bg-rose-500 text-white shadow-xl shadow-rose-200 flex flex-col gap-4 group transition-all hover:scale-[1.02] active:scale-95">
+                <div class="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-xl shadow-inner group-hover:bg-white/30 transition-all">
+                    <i class="fa fa-id-card"></i>
+                </div>
+                <div>
+                    <div class="text-lg font-black italic tracking-tighter uppercase leading-none">Kartu Pelajar</div>
+                    <div class="text-[9px] font-bold text-rose-100 uppercase tracking-widest mt-1 opacity-70">Download E-Card</div>
                 </div>
             </a>
         </div>
