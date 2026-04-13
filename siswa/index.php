@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/pagination.php';
 
 authorize_role(['siswa']);
 
@@ -32,19 +33,30 @@ mysqli_stmt_bind_param($stmt_gps, "i", $siswa_id);
 mysqli_stmt_execute($stmt_gps);
 $gps_recap = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt_gps));
 
-// Digital Media for this student's class
+// Digital Media for this student's class (with Pagination and Search)
+$media_search = mysqli_real_escape_string($conn, $_GET['media_search'] ?? '');
+$media_page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+
+$where_media = " WHERE sk.siswa_id = $siswa_id AND sk.tahun_pelajaran_id = (SELECT id FROM tahun_pelajaran WHERE status = 'aktif' LIMIT 1)";
+if ($media_search) {
+    $where_media .= " AND (p.nama_perangkat LIKE '%$media_search%' OR u.nama_lengkap LIKE '%$media_search%')";
+}
+
+$query_base_media = "perangkat p
+                     JOIN guru g ON p.guru_id = g.id
+                     JOIN users u ON g.user_id = u.id
+                     JOIN perangkat_kelas pk ON p.id = pk.perangkat_id
+                     JOIN siswa_kelas sk ON pk.kelas_id = sk.kelas_id";
+
+$pagin_media = get_pagination_data($conn, $query_base_media, 4, $where_media, "DISTINCT p.id");
+
 $query_media = "SELECT p.*, u.nama_lengkap as nama_guru
-                FROM perangkat p
-                JOIN guru g ON p.guru_id = g.id
-                JOIN users u ON g.user_id = u.id
-                JOIN perangkat_kelas pk ON p.id = pk.perangkat_id
-                JOIN siswa_kelas sk ON pk.kelas_id = sk.kelas_id
-                WHERE sk.siswa_id = ? AND sk.tahun_pelajaran_id = (SELECT id FROM tahun_pelajaran WHERE status = 'aktif' LIMIT 1)
-                ORDER BY p.created_at DESC";
-$stmt_media = mysqli_prepare($conn, $query_media);
-mysqli_stmt_bind_param($stmt_media, "i", $siswa_id);
-mysqli_stmt_execute($stmt_media);
-$media_list = mysqli_stmt_get_result($stmt_media);
+                FROM $query_base_media
+                $where_media
+                GROUP BY p.id
+                ORDER BY p.created_at DESC
+                LIMIT {$pagin_media['limit']} OFFSET {$pagin_media['offset']}";
+$media_list = mysqli_query($conn, $query_media);
 
 $page_title = "Dashboard Siswa";
 require_once __DIR__ . '/../includes/header.php';
@@ -152,11 +164,22 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
 
         <!-- Digital Media Section -->
-        <h3 class="text-lg font-black text-slate-800 italic uppercase tracking-widest mb-4 flex items-center">
-            <i class="fa fa-book-reader mr-2 text-indigo-500"></i> Media & Buku Digital
-        </h3>
+        <div class="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-4">
+            <h3 class="text-lg font-black text-slate-800 italic uppercase tracking-widest flex items-center">
+                <i class="fa fa-book-reader mr-2 text-indigo-500"></i> Media & Buku Digital
+            </h3>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <form action="" method="GET" class="relative group max-w-xs w-full">
+                <input type="text" name="media_search" value="<?= htmlspecialchars($media_search) ?>" placeholder="Cari media atau guru..."
+                    class="w-full pl-10 pr-4 py-2 bg-white rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-100 transition-all text-xs font-bold shadow-sm">
+                <i class="fa fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors"></i>
+                <?php if ($media_search): ?>
+                    <a href="index.php" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-rose-500"><i class="fa fa-times-circle"></i></a>
+                <?php endif; ?>
+            </form>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <?php if (mysqli_num_rows($media_list) > 0): ?>
                 <?php while ($m = mysqli_fetch_assoc($media_list)): ?>
                     <div class="lux-card p-5 bg-white border-none shadow-xl flex items-center gap-4 hover:scale-[1.02] transition-all group">
@@ -187,6 +210,11 @@ require_once __DIR__ . '/../includes/header.php';
                     <p class="text-slate-400 font-bold italic tracking-widest text-[10px] uppercase">Belum ada media dibagikan ke kelas Anda</p>
                 </div>
             <?php endif; ?>
+        </div>
+
+        <!-- Media Pagination -->
+        <div id="media-pagination">
+            <?= render_pagination($pagin_media['page'], $pagin_media['total_pages'], $_GET) ?>
         </div>
     </div>
 </div>

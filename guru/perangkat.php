@@ -30,7 +30,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['upload'])) {
             mysqli_begin_transaction($conn);
             try {
                 $path = 'uploads/perangkat/' . $filename;
-                mysqli_query($conn, "INSERT INTO perangkat (guru_id, nama_perangkat, jenis_perangkat, file_path) VALUES ($guru_id, '$nama', '$jenis', '$path')");
+                $stmt_p = mysqli_prepare($conn, "INSERT INTO perangkat (guru_id, nama_perangkat, jenis_perangkat, file_path) VALUES (?, ?, ?, ?)");
+                mysqli_stmt_bind_param($stmt_p, "isss", $guru_id, $nama, $jenis, $path);
+                mysqli_stmt_execute($stmt_p);
                 $perangkat_id = mysqli_insert_id($conn);
 
                 $stmt_pk = mysqli_prepare($conn, "INSERT INTO perangkat_kelas (perangkat_id, kelas_id) VALUES (?, ?)");
@@ -52,10 +54,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['upload'])) {
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['hapus'])) {
     if (!verify_csrf_token($_POST['csrf_token'] ?? '')) die("CSRF Token Invalid");
     $id = (int)$_POST['id'];
-    $res = mysqli_query($conn, "SELECT file_path FROM perangkat WHERE id = $id AND guru_id = $guru_id");
+    $stmt_sel = mysqli_prepare($conn, "SELECT file_path FROM perangkat WHERE id = ? AND guru_id = ?");
+    mysqli_stmt_bind_param($stmt_sel, "ii", $id, $guru_id);
+    mysqli_stmt_execute($stmt_sel);
+    $res = mysqli_stmt_get_result($stmt_sel);
     if ($row = mysqli_fetch_assoc($res)) {
         if(file_exists(__DIR__ . '/../' . $row['file_path'])) unlink(__DIR__ . '/../' . $row['file_path']);
-        mysqli_query($conn, "DELETE FROM perangkat WHERE id = $id");
+        $stmt_del = mysqli_prepare($conn, "DELETE FROM perangkat WHERE id = ? AND guru_id = ?");
+        mysqli_stmt_bind_param($stmt_del, "ii", $id, $guru_id);
+        mysqli_stmt_execute($stmt_del);
         $message = "Perangkat dihapus!"; $message_type = 'success';
     }
 }
