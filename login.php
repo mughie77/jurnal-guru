@@ -18,7 +18,7 @@ if (isset($_SESSION['user_id'])) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $username = $_POST['username'];
+    $username = mysqli_real_escape_string($conn, $_POST['username']);
     $password = $_POST['password'];
 
     if (empty($username) || empty($password)) {
@@ -32,15 +32,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         if ($user = mysqli_fetch_assoc($result)) {
             if (password_verify($password, $user['password'])) {
-                // If "Remember Me" is checked, set cookie for 30 days
                 if (isset($_POST['remember_me'])) {
-                    $lifetime = 30 * 24 * 60 * 60; // 30 days
+                    $lifetime = 30 * 24 * 60 * 60;
                     ini_set('session.gc_maxlifetime', $lifetime);
                     session_set_cookie_params($lifetime, '/');
                     session_regenerate_id(true);
                     $_SESSION['remember_me'] = true;
                 }
-
                 $_SESSION['user_id'] = $user['id'];
                 $_SESSION['nama_lengkap'] = $user['nama_lengkap'];
                 $_SESSION['username'] = $user['username'];
@@ -51,7 +49,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $error_message = "Username atau Password salah.";
             }
         } else {
-            // Check student table
             $sql_siswa = "SELECT id, nis, nama_siswa FROM siswa WHERE nis = ?";
             $stmt_s = mysqli_prepare($conn, $sql_siswa);
             mysqli_stmt_bind_param($stmt_s, "s", $username);
@@ -59,7 +56,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $res_s = mysqli_stmt_get_result($stmt_s);
 
             if ($siswa = mysqli_fetch_assoc($res_s)) {
-                // Student password is their NIS
                 if ($password === $siswa['nis']) {
                     $_SESSION['user_id'] = $siswa['id'];
                     $_SESSION['nama_lengkap'] = $siswa['nama_siswa'];
@@ -84,7 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - <?= htmlspecialchars($app_name) ?></title>
+    <title>Masuk - <?= htmlspecialchars($app_name) ?></title>
     <?php if ($favicon): ?>
     <link rel="icon" type="image/png" href="<?= $favicon ?>">
     <?php endif; ?>
@@ -93,90 +89,24 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
-        .glass-bg {
-            background: rgba(255, 255, 255, 0.7);
+        .bg-mesh {
+            background-color: #4f46e5;
+            background-image:
+                radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%),
+                radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%),
+                radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.8);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
         }
-    </style>
-</head>
-<body class="bg-[#F8FAFC] min-h-screen flex items-center justify-center p-6 relative overflow-hidden">
-    <!-- Decorative Elements -->
-    <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-100/50 rounded-full blur-[120px]"></div>
-    <div class="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-emerald-100/50 rounded-full blur-[120px]"></div>
-
-    <div class="max-w-[420px] w-full relative">
-        <div class="text-center mb-10 animate-in fade-in slide-in-from-top-4 duration-700">
-            <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white shadow-xl shadow-indigo-100 mb-6 group transition-transform hover:scale-110 overflow-hidden">
-                <?php if ($favicon): ?>
-                    <img src="<?= $favicon ?>" class="max-w-full max-h-full object-contain p-2">
-                <?php else: ?>
-                    <i class="fa fa-book-open text-3xl text-indigo-600"></i>
-                <?php endif; ?>
-            </div>
-            <h1 class="text-4xl font-black text-slate-900 tracking-tighter">CAKRA</h1>
-            <p class="text-[8px] text-slate-400 font-bold uppercase tracking-[0.2em] mb-4">Central Academic Knowledge & Record Application</p>
-            <p class="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] mb-1"><?= htmlspecialchars($app_name) ?></p>
-            <p class="text-slate-500 mt-2 font-medium">Selamat datang kembali, silakan login.</p>
-        </div>
-
-        <div class="bg-white rounded-[32px] shadow-[0_20px_50px_rgba(0,0,0,0.04)] border border-slate-100 p-10 animate-in fade-in zoom-in duration-500">
-            <?php if ($error_message): ?>
-                <div class="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-100 text-rose-600 text-sm font-bold flex items-center animate-shake">
-                    <i class="fa fa-circle-exclamation mr-3 text-lg"></i>
-                    <?= htmlspecialchars($error_message) ?>
-                </div>
-            <?php endif; ?>
-
-            <form action="" method="POST" class="space-y-6">
-                <div>
-                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 ml-1">Username / NIP</label>
-                    <div class="group relative">
-                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors group-focus-within:text-indigo-600 text-slate-400">
-                            <i class="fa fa-user"></i>
-                        </div>
-                        <input type="text" name="username" required
-                            class="w-full pl-11 pr-4 py-4 rounded-2xl bg-slate-50 border-2 border-transparent focus:border-indigo-100 focus:bg-white focus:ring-4 focus:ring-indigo-50 outline-none transition-all font-semibold text-slate-700 placeholder:text-slate-300"
-                            placeholder="Username Anda">
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 ml-1">Password</label>
-                    <div class="group relative">
-                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors group-focus-within:text-indigo-600 text-slate-400">
-                            <i class="fa fa-lock"></i>
-                        </div>
-                        <input type="password" name="password" required
-                            class="w-full pl-11 pr-4 py-4 rounded-2xl bg-slate-50 border-2 border-transparent focus:border-indigo-100 focus:bg-white focus:ring-4 focus:ring-indigo-50 outline-none transition-all font-semibold text-slate-700 placeholder:text-slate-300"
-                            placeholder="••••••••">
-                    </div>
-                </div>
-
-                <div class="flex items-center ml-1">
-                    <input type="checkbox" name="remember_me" id="remember_me" class="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500 cursor-pointer">
-                    <label for="remember_me" class="ml-2 text-xs font-bold text-slate-500 cursor-pointer hover:text-indigo-600 transition-colors">Ingat Saya (Terus Login)</label>
-                </div>
-
-                <div class="pt-2">
-                    <button type="submit"
-                        class="w-full bg-slate-900 hover:bg-indigo-600 text-white font-bold py-4 rounded-2xl shadow-xl shadow-slate-200 hover:shadow-indigo-100 transition-all active:scale-[0.98] flex items-center justify-center gap-3 group">
-                        <span>Masuk Sekarang</span>
-                        <i class="fa fa-arrow-right transition-transform group-hover:translate-x-1"></i>
-                    </button>
-                </div>
-            </form>
-        </div>
-
-        <div class="mt-8 text-center">
-            <a href="index.php" class="text-slate-400 hover:text-indigo-600 font-bold text-sm transition-colors flex items-center justify-center gap-2 group">
-                <i class="fa fa-arrow-left text-xs transition-transform group-hover:-translate-x-1"></i>
-                Kembali ke Halaman Utama
-            </a>
-        </div>
-    </div>
-
-    <style>
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+            100% { transform: translateY(0px); }
+        }
+        .animate-float { animation: float 6s ease-in-out infinite; }
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
             25% { transform: translateX(-4px); }
@@ -184,5 +114,172 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
         .animate-shake { animation: shake 0.4s ease-in-out 0s 2; }
     </style>
+</head>
+<body class="bg-slate-50 min-h-screen flex items-center justify-center lg:p-6">
+    <div class="flex flex-col lg:flex-row w-full max-w-[1100px] min-h-[600px] lg:min-h-[700px] bg-white lg:rounded-[40px] shadow-2xl overflow-hidden relative">
+
+        <!-- Left Side: Visual/Branding (Hidden on small screens) -->
+        <div class="hidden lg:flex lg:w-1/2 bg-mesh p-16 flex-col justify-between relative overflow-hidden">
+            <!-- Decorative Abstract -->
+            <div class="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl"></div>
+            <div class="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500/20 rounded-full -ml-32 -mb-32 blur-3xl"></div>
+
+            <div class="relative z-10">
+                <div class="flex items-center gap-4 mb-12">
+                    <div class="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20 shadow-xl">
+                        <?php if ($favicon): ?>
+                            <img src="<?= $favicon ?>" class="w-7 h-7 object-contain">
+                        <?php else: ?>
+                            <i class="fa fa-book-open text-white text-xl"></i>
+                        <?php endif; ?>
+                    </div>
+                    <div>
+                        <h2 class="text-white font-black text-2xl tracking-tighter">CAKRA</h2>
+                        <p class="text-white/50 text-[10px] font-bold uppercase tracking-[0.2em]">Academic Ecosystem</p>
+                    </div>
+                </div>
+
+                <div class="animate-float">
+                    <h1 class="text-5xl font-black text-white leading-[1.1] tracking-tight mb-6 italic">
+                        Transformasi <br>
+                        Digital <br>
+                        <span class="text-indigo-400">Pendidikan.</span>
+                    </h1>
+                    <p class="text-indigo-100/70 font-medium leading-relaxed max-w-sm">
+                        Kelola jurnal mengajar, absensi siswa, dan administrasi sekolah dalam satu platform terintegrasi yang modern dan responsif.
+                    </p>
+                </div>
+            </div>
+
+            <div class="relative z-10 flex items-center gap-4">
+                <div class="flex -space-x-3">
+                    <div class="w-10 h-10 rounded-full border-2 border-slate-900 bg-indigo-500 flex items-center justify-center text-[10px] font-bold text-white">G</div>
+                    <div class="w-10 h-10 rounded-full border-2 border-slate-900 bg-emerald-500 flex items-center justify-center text-[10px] font-bold text-white">S</div>
+                    <div class="w-10 h-10 rounded-full border-2 border-slate-900 bg-rose-500 flex items-center justify-center text-[10px] font-bold text-white">A</div>
+                </div>
+                <p class="text-indigo-200/50 text-xs font-bold uppercase tracking-widest italic">Terpercaya untuk Semua Peran</p>
+            </div>
+        </div>
+
+        <!-- Right Side: Login Form -->
+        <div class="w-full lg:w-1/2 p-8 sm:p-12 lg:p-20 flex flex-col justify-center bg-white relative">
+            <!-- Mobile Header (Visible only on small screens) -->
+            <div class="lg:hidden flex flex-col items-center mb-10 text-center">
+                <div class="w-16 h-16 rounded-2xl bg-indigo-600 flex items-center justify-center shadow-2xl shadow-indigo-200 mb-6">
+                    <?php if ($favicon): ?>
+                        <img src="<?= $favicon ?>" class="w-9 h-9 object-contain">
+                    <?php else: ?>
+                        <i class="fa fa-book-open text-white text-3xl"></i>
+                    <?php endif; ?>
+                </div>
+                <h2 class="text-3xl font-black text-slate-900 tracking-tighter italic">CAKRA</h2>
+                <p class="text-slate-400 text-[9px] font-bold uppercase tracking-[0.3em]"><?= htmlspecialchars($app_name) ?></p>
+            </div>
+
+            <div class="max-w-md mx-auto w-full">
+                <div class="mb-10 lg:block hidden">
+                    <h3 class="text-4xl font-black text-slate-800 tracking-tighter mb-2 italic">Selamat Datang.</h3>
+                    <p class="text-slate-500 font-medium italic">Masukkan kredensial Anda untuk melanjutkan.</p>
+                </div>
+
+                <?php if ($error_message): ?>
+                <div class="mb-8 p-4 rounded-2xl bg-rose-50 border border-rose-100 text-rose-600 text-sm font-bold flex items-center animate-shake">
+                    <i class="fa fa-circle-exclamation mr-3 text-lg"></i>
+                    <?= htmlspecialchars($error_message) ?>
+                </div>
+                <?php endif; ?>
+
+                <form action="" method="POST" class="space-y-6">
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 ml-1 italic">Username / NIP / NIS</label>
+                        <div class="group relative">
+                            <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none transition-colors group-focus-within:text-indigo-600 text-slate-300">
+                                <i class="fa fa-user-circle"></i>
+                            </div>
+                            <input type="text" name="username" required autocomplete="username"
+                                class="w-full pl-12 pr-5 py-4 rounded-2xl bg-slate-50 border-2 border-transparent focus:border-indigo-100 focus:bg-white focus:ring-4 focus:ring-indigo-50/50 outline-none transition-all font-bold text-slate-700 placeholder:text-slate-300 placeholder:italic"
+                                placeholder="Masukkan username anda...">
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-center mb-2 ml-1">
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] italic">Password</label>
+                        </div>
+                        <div class="group relative">
+                            <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none transition-colors group-focus-within:text-indigo-600 text-slate-300">
+                                <i class="fa fa-fingerprint"></i>
+                            </div>
+                            <input type="password" name="password" id="passwordInput" required autocomplete="current-password"
+                                class="w-full pl-12 pr-12 py-4 rounded-2xl bg-slate-50 border-2 border-transparent focus:border-indigo-100 focus:bg-white focus:ring-4 focus:ring-indigo-50/50 outline-none transition-all font-bold text-slate-700 placeholder:text-slate-300 placeholder:italic"
+                                placeholder="••••••••••••">
+                            <button type="button" onclick="togglePassword()" class="absolute inset-y-0 right-0 pr-5 flex items-center text-slate-300 hover:text-indigo-600 transition-colors">
+                                <i class="fa fa-eye" id="eyeIcon"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between px-1">
+                        <label class="flex items-center cursor-pointer group">
+                            <div class="relative">
+                                <input type="checkbox" name="remember_me" class="sr-only">
+                                <div class="w-10 h-6 bg-slate-200 rounded-full transition-colors group-hover:bg-slate-300 peer-checked:bg-indigo-600"></div>
+                                <div class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform"></div>
+                            </div>
+                            <span class="ml-3 text-xs font-bold text-slate-500 italic">Ingat Saya</span>
+                        </label>
+                        <a href="#" class="text-xs font-bold text-indigo-500 hover:text-indigo-700 italic transition-colors">Lupa Password?</a>
+                    </div>
+
+                    <div class="pt-4">
+                        <button type="submit"
+                            class="w-full bg-slate-900 hover:bg-indigo-600 text-white font-black py-4 rounded-2xl shadow-xl shadow-slate-200 hover:shadow-indigo-200 transition-all active:scale-[0.98] flex items-center justify-center gap-3 group tracking-widest italic">
+                            <span>MASUK KE SISTEM</span>
+                            <i class="fa fa-bolt transition-transform group-hover:scale-125"></i>
+                        </button>
+                    </div>
+                </form>
+
+                <div class="mt-12 text-center">
+                    <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-4">Butuh bantuan akses?</p>
+                    <div class="flex justify-center gap-4">
+                        <a href="absen.php" class="px-6 py-2 rounded-full border border-slate-100 text-[10px] font-black text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-100 transition-all italic uppercase">Halaman Absen</a>
+                        <a href="index.php" class="px-6 py-2 rounded-full border border-slate-100 text-[10px] font-black text-slate-600 hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-all italic uppercase">Beranda</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function togglePassword() {
+            const input = document.getElementById('passwordInput');
+            const icon = document.getElementById('eyeIcon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
+        // Custom Toggle Style logic
+        const toggleInput = document.querySelector('input[name="remember_me"]');
+        const toggleDot = document.querySelector('.dot');
+        const toggleBg = document.querySelector('.w-10');
+
+        toggleInput.addEventListener('change', function() {
+            if (this.checked) {
+                toggleDot.style.transform = 'translateX(16px)';
+                toggleBg.classList.replace('bg-slate-200', 'bg-indigo-600');
+            } else {
+                toggleDot.style.transform = 'translateX(0px)';
+                toggleBg.classList.replace('bg-indigo-600', 'bg-slate-200');
+            }
+        });
+    </script>
 </body>
 </html>
