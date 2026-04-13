@@ -135,7 +135,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     </div>
                     <div>
                         <h2 class="text-white font-black text-2xl tracking-tighter">CAKRA</h2>
-                        <p class="text-white/50 text-[10px] font-bold uppercase tracking-[0.2em]">Academic Ecosystem</p>
+                        <p class="text-white/50 text-[10px] font-bold uppercase tracking-[0.1em]">Central Academic Knowledge & Record Application</p>
                     </div>
                 </div>
 
@@ -173,7 +173,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <?php endif; ?>
                 </div>
                 <h2 class="text-3xl font-black text-slate-900 tracking-tighter italic">CAKRA</h2>
-                <p class="text-slate-400 text-[9px] font-bold uppercase tracking-[0.3em]"><?= htmlspecialchars($app_name) ?></p>
+                <p class="text-slate-400 text-[8px] font-bold uppercase tracking-[0.1em] mb-1">Central Academic Knowledge & Record Application</p>
+                <p class="text-indigo-600 text-[9px] font-black uppercase tracking-[0.3em]"><?= htmlspecialchars($app_name) ?></p>
             </div>
 
             <div class="max-w-md mx-auto w-full">
