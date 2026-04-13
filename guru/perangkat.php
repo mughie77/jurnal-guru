@@ -20,14 +20,33 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['upload'])) {
     $filename = time() . '_' . uniqid() . '.' . $ext;
     $target = __DIR__ . '/../uploads/perangkat/' . $filename;
 
-    if (in_array($ext, ['pdf', 'doc', 'docx'])) {
+    if (in_array($ext, ['pdf', 'doc', 'docx', 'mp4'])) {
         if (!is_dir(__DIR__ . '/../uploads/perangkat/')) mkdir(__DIR__ . '/../uploads/perangkat/', 0777, true);
-        if (move_uploaded_file($file['tmp_name'], $target)) {
-            $path = 'uploads/perangkat/' . $filename;
-            mysqli_query($conn, "INSERT INTO perangkat (guru_id, nama_perangkat, jenis_perangkat, file_path) VALUES ($guru_id, '$nama', '$jenis', '$path')");
-            $message = "Perangkat berhasil diunggah!"; $message_type = 'success';
+
+        $kelas_ids = $_POST['kelas_ids'] ?? [];
+        if (empty($kelas_ids)) {
+            $message = "Harap pilih minimal satu kelas tujuan."; $message_type = 'error';
+        } elseif (move_uploaded_file($file['tmp_name'], $target)) {
+            mysqli_begin_transaction($conn);
+            try {
+                $path = 'uploads/perangkat/' . $filename;
+                mysqli_query($conn, "INSERT INTO perangkat (guru_id, nama_perangkat, jenis_perangkat, file_path) VALUES ($guru_id, '$nama', '$jenis', '$path')");
+                $perangkat_id = mysqli_insert_id($conn);
+
+                $stmt_pk = mysqli_prepare($conn, "INSERT INTO perangkat_kelas (perangkat_id, kelas_id) VALUES (?, ?)");
+                foreach ($kelas_ids as $kid) {
+                    $kid = (int)$kid;
+                    mysqli_stmt_bind_param($stmt_pk, "ii", $perangkat_id, $kid);
+                    mysqli_stmt_execute($stmt_pk);
+                }
+                mysqli_commit($conn);
+                $message = "Media pembelajaran berhasil diunggah!"; $message_type = 'success';
+            } catch (Exception $e) {
+                mysqli_rollback($conn);
+                $message = "Gagal menyimpan data: " . $e->getMessage(); $message_type = 'error';
+            }
         } else { $message = "Gagal mengunggah file."; $message_type = 'error'; }
-    } else { $message = "Format file tidak didukung (PDF/Word)."; $message_type = 'error'; }
+    } else { $message = "Format file tidak didukung (PDF/Word/MP4)."; $message_type = 'error'; }
 }
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['hapus'])) {
@@ -41,7 +60,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['hapus'])) {
     }
 }
 
-$perangkats = mysqli_query($conn, "SELECT * FROM perangkat WHERE guru_id = $guru_id ORDER BY created_at DESC");
+$query_p = "SELECT p.*, GROUP_CONCAT(k.nama_kelas SEPARATOR ', ') as target_kelas
+            FROM perangkat p
+            LEFT JOIN perangkat_kelas pk ON p.id = pk.perangkat_id
+            LEFT JOIN kelas k ON pk.kelas_id = k.id
+            WHERE p.guru_id = $guru_id
+            GROUP BY p.id
+            ORDER BY p.created_at DESC";
+$perangkats = mysqli_query($conn, $query_p);
+
+$kelases = mysqli_query($conn, "SELECT id, nama_kelas FROM kelas ORDER BY nama_kelas ASC");
+
 require_once __DIR__ . '/../includes/header.php';
 ?>
 
@@ -76,8 +105,25 @@ require_once __DIR__ . '/../includes/header.php';
                     <div>
                         <label class="block text-[9px] sm:text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-1">Jenis</label>
                         <select name="jenis_perangkat" required class="w-full px-4 py-3 rounded-xl border border-slate-100 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-indigo-50 bg-white font-bold text-slate-700 text-sm appearance-none cursor-pointer transition-all">
-                            <option value="RPP">RPP</option><option value="Silabus">Silabus</option><option value="Modul Ajar">Modul Ajar</option><option value="Lainnya">Lainnya</option>
+                            <option value="RPP">RPP</option>
+                            <option value="Silabus">Silabus</option>
+                            <option value="Modul Ajar">Modul Ajar</option>
+                            <option value="Buku Digital">Buku Digital</option>
+                            <option value="Video Pembelajaran">Video Pembelajaran</option>
+                            <option value="Lainnya">Lainnya</option>
                         </select>
+                    </div>
+                    <div>
+                        <label class="block text-[9px] sm:text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-1">Ditujukan Untuk Kelas</label>
+                        <div class="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto p-3 bg-slate-50 rounded-xl border border-slate-100">
+                            <?php while($k = mysqli_fetch_assoc($kelases)): ?>
+                                <label class="flex items-center gap-2 cursor-pointer group">
+                                    <input type="checkbox" name="kelas_ids[]" value="<?= $k['id'] ?>" class="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500">
+                                    <span class="text-[10px] font-bold text-slate-600 group-hover:text-indigo-600 transition-colors"><?= htmlspecialchars($k['nama_kelas']) ?></span>
+                                </label>
+                            <?php endwhile; ?>
+                        </div>
+                        <p class="text-[8px] text-slate-400 font-bold italic mt-1 uppercase tracking-wider">*Bisa pilih lebih dari satu</p>
                     </div>
                     <div>
                         <label class="block text-[9px] sm:text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-1">File Berkas</label>
@@ -86,7 +132,7 @@ require_once __DIR__ . '/../includes/header.php';
                             <label for="file_perangkat" class="flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 group-hover:border-indigo-300 group-hover:bg-indigo-50 transition-all cursor-pointer">
                                 <div class="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-indigo-500 shadow-sm"><i class="fa fa-file-import"></i></div>
                                 <div class="flex-1 overflow-hidden">
-                                    <p id="file-chosen" class="text-[10px] font-bold text-slate-400 truncate">Pilih PDF/Word...</p>
+                                    <p id="file-chosen" class="text-[10px] font-bold text-slate-400 truncate">Pilih PDF/Word/MP4...</p>
                                 </div>
                             </label>
                         </div>
@@ -98,7 +144,7 @@ require_once __DIR__ . '/../includes/header.php';
 
         <script>
         function updateFileName(input) {
-            const fileName = input.files[0] ? input.files[0].name : "Pilih PDF/Word...";
+            const fileName = input.files[0] ? input.files[0].name : "Pilih PDF/Word/MP4...";
             document.getElementById('file-chosen').textContent = fileName;
             document.getElementById('file-chosen').classList.add('text-indigo-600');
         }
@@ -110,13 +156,27 @@ require_once __DIR__ . '/../includes/header.php';
                 <div class="lux-card p-6 bg-white border-none shadow-xl flex flex-col justify-between hover:scale-[1.02] transition-all group">
                     <div class="flex items-start justify-between mb-6">
                         <div class="w-12 h-12 rounded-2xl bg-slate-50 text-slate-300 flex items-center justify-center text-xl group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-all duration-500">
-                            <i class="fa <?= strpos($p['file_path'], '.pdf') !== false ? 'fa-file-pdf' : 'fa-file-word' ?>"></i>
+                            <?php
+                            $icon = 'fa-file-alt';
+                            if (strpos($p['file_path'], '.pdf') !== false) $icon = 'fa-file-pdf';
+                            elseif (strpos($p['file_path'], '.mp4') !== false) $icon = 'fa-file-video';
+                            elseif (strpos($p['file_path'], '.doc') !== false) $icon = 'fa-file-word';
+                            ?>
+                            <i class="fa <?= $icon ?>"></i>
                         </div>
                         <span class="px-2 py-0.5 rounded-lg bg-slate-100 text-slate-500 text-[9px] font-black uppercase border border-slate-200"><?= $p['jenis_perangkat'] ?></span>
                     </div>
                     <div class="mb-6">
                         <h4 class="font-bold text-slate-800 line-clamp-2 italic" title="<?= htmlspecialchars($p['nama_perangkat']) ?>"><?= htmlspecialchars($p['nama_perangkat']) ?></h4>
-                        <p class="text-[9px] text-slate-400 font-bold uppercase mt-2 tracking-widest"><?= date('d M Y', strtotime($p['created_at'])) ?></p>
+                        <div class="mt-3 flex flex-col gap-1">
+                            <div class="flex items-center gap-1.5">
+                                <i class="fa fa-users text-[8px] text-slate-400"></i>
+                                <p class="text-[8px] font-black text-slate-500 uppercase tracking-tighter truncate" title="<?= htmlspecialchars($p['target_kelas'] ?? 'Semua Kelas') ?>">
+                                    <?= htmlspecialchars($p['target_kelas'] ?? 'Semua Kelas') ?>
+                                </p>
+                            </div>
+                            <p class="text-[8px] text-slate-400 font-bold uppercase tracking-widest"><?= date('d M Y', strtotime($p['created_at'])) ?></p>
+                        </div>
                     </div>
                     <div class="flex gap-2 pt-4 border-t border-slate-50">
                         <a href="<?= BASE_URL . $p['file_path'] ?>" target="_blank" class="flex-1 flex items-center justify-center py-2 bg-indigo-50 text-indigo-600 text-[10px] font-black rounded-xl hover:bg-indigo-600 hover:text-white transition-all italic">BUKA FILE</a>

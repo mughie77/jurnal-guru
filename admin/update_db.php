@@ -80,6 +80,21 @@ authorize_role(['admin']);
                 }
             }
 
+            // Create perangkat_kelas table for many-to-many relationship
+            $create_pk = "CREATE TABLE IF NOT EXISTS `perangkat_kelas` (
+                `perangkat_id` int(11) NOT NULL,
+                `kelas_id` int(11) NOT NULL,
+                PRIMARY KEY (`perangkat_id`,`kelas_id`),
+                CONSTRAINT `perangkat_kelas_ibfk_1` FOREIGN KEY (`perangkat_id`) REFERENCES `perangkat` (`id`) ON DELETE CASCADE,
+                CONSTRAINT `perangkat_kelas_ibfk_2` FOREIGN KEY (`kelas_id`) REFERENCES `kelas` (`id`) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
+
+            if (mysqli_query($conn, $create_pk)) {
+                $logs[] = ['status' => 'success', 'msg' => "Table <b>perangkat_kelas</b> created successfully"];
+            } else {
+                $logs[] = ['status' => 'error', 'msg' => "Failed creating <b>perangkat_kelas</b>: " . mysqli_error($conn)];
+            }
+
             foreach ($logs as $log) {
                 $color = 'text-blue-600 bg-blue-50';
                 $icon = 'info-circle';

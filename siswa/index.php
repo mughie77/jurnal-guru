@@ -32,6 +32,20 @@ mysqli_stmt_bind_param($stmt_gps, "i", $siswa_id);
 mysqli_stmt_execute($stmt_gps);
 $gps_recap = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt_gps));
 
+// Digital Media for this student's class
+$query_media = "SELECT p.*, u.nama_lengkap as nama_guru
+                FROM perangkat p
+                JOIN guru g ON p.guru_id = g.id
+                JOIN users u ON g.user_id = u.id
+                JOIN perangkat_kelas pk ON p.id = pk.perangkat_id
+                JOIN siswa_kelas sk ON pk.kelas_id = sk.kelas_id
+                WHERE sk.siswa_id = ? AND sk.tahun_pelajaran_id = (SELECT id FROM tahun_pelajaran WHERE status = 'aktif' LIMIT 1)
+                ORDER BY p.created_at DESC";
+$stmt_media = mysqli_prepare($conn, $query_media);
+mysqli_stmt_bind_param($stmt_media, "i", $siswa_id);
+mysqli_stmt_execute($stmt_media);
+$media_list = mysqli_stmt_get_result($stmt_media);
+
 $page_title = "Dashboard Siswa";
 require_once __DIR__ . '/../includes/header.php';
 ?>
@@ -135,6 +149,44 @@ require_once __DIR__ . '/../includes/header.php';
                 <div class="text-2xl font-black text-rose-500 italic"><?= $gps_recap['alfa'] ?? 0 ?></div>
                 <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest">Alfa</p>
             </div>
+        </div>
+
+        <!-- Digital Media Section -->
+        <h3 class="text-lg font-black text-slate-800 italic uppercase tracking-widest mb-4 flex items-center">
+            <i class="fa fa-book-reader mr-2 text-indigo-500"></i> Media & Buku Digital
+        </h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <?php if (mysqli_num_rows($media_list) > 0): ?>
+                <?php while ($m = mysqli_fetch_assoc($media_list)): ?>
+                    <div class="lux-card p-5 bg-white border-none shadow-xl flex items-center gap-4 hover:scale-[1.02] transition-all group">
+                        <div class="w-14 h-14 rounded-2xl bg-slate-50 text-slate-400 flex items-center justify-center text-2xl group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-all duration-500 shrink-0">
+                            <?php
+                            $icon = 'fa-file-alt';
+                            if (strpos($m['file_path'], '.pdf') !== false) $icon = 'fa-file-pdf';
+                            elseif (strpos($m['file_path'], '.mp4') !== false) $icon = 'fa-file-video';
+                            ?>
+                            <i class="fa <?= $icon ?>"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h4 class="font-black text-slate-800 text-sm truncate italic"><?= htmlspecialchars($m['nama_perangkat']) ?></h4>
+                            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1"><?= htmlspecialchars($m['nama_guru']) ?></p>
+                            <div class="flex items-center gap-2 mt-2">
+                                <span class="px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-600 text-[8px] font-black uppercase"><?= $m['jenis_perangkat'] ?></span>
+                                <span class="text-[8px] text-slate-300 font-bold uppercase"><?= date('d M Y', strtotime($m['created_at'])) ?></span>
+                            </div>
+                        </div>
+                        <a href="<?= BASE_URL . $m['file_path'] ?>" target="_blank" class="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center hover:bg-indigo-600 transition-all shadow-lg">
+                            <i class="fa <?= strpos($m['file_path'], '.mp4') !== false ? 'fa-play' : 'fa-download' ?> text-xs"></i>
+                        </a>
+                    </div>
+                <?php endwhile; ?>
+            <?php else: ?>
+                <div class="col-span-full py-12 text-center lux-card bg-slate-100/50 border-dashed border-2 border-slate-200 shadow-none">
+                    <i class="fa fa-folder-open text-3xl text-slate-200 mb-3"></i>
+                    <p class="text-slate-400 font-bold italic tracking-widest text-[10px] uppercase">Belum ada media dibagikan ke kelas Anda</p>
+                </div>
+            <?php endif; ?>
         </div>
     </div>
 </div>

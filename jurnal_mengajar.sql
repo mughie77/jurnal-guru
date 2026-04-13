@@ -250,3 +250,17 @@ CREATE TABLE `perangkat` (
   KEY `guru_id` (`guru_id`),
   CONSTRAINT `perangkat_ibfk_1` FOREIGN KEY (`guru_id`) REFERENCES `guru` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `perangkat_kelas`
+--
+CREATE TABLE `perangkat_kelas` (
+  `perangkat_id` int(11) NOT NULL,
+  `kelas_id` int(11) NOT NULL,
+  PRIMARY KEY (`perangkat_id`,`kelas_id`),
+  KEY `kelas_id` (`kelas_id`),
+  CONSTRAINT `perangkat_kelas_ibfk_1` FOREIGN KEY (`perangkat_id`) REFERENCES `perangkat` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `perangkat_kelas_ibfk_2` FOREIGN KEY (`kelas_id`) REFERENCES `kelas` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

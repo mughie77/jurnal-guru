@@ -1,10 +1,10 @@
 <?php
-function get_pagination_data($conn, $table, $limit, $where = "") {
+function get_pagination_data($conn, $table, $limit, $where = "", $count_col = "*") {
     $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
     if ($page < 1) $page = 1;
     $offset = ($page - 1) * $limit;
 
-    $count_query = "SELECT COUNT(*) as total FROM $table $where";
+    $count_query = "SELECT COUNT($count_col) as total FROM $table $where";
     $count_res = mysqli_query($conn, $count_query);
     $total_data = mysqli_fetch_assoc($count_res)['total'];
     $total_pages = ceil($total_data / $limit);
