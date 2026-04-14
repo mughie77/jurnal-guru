@@ -8,8 +8,19 @@ $siswa_id = $_SESSION['user_id'];
 $success_msg = '';
 $error_msg = '';
 
+// Check if face_image column exists to prevent fatal errors
+$check_col = mysqli_query($conn, "SHOW COLUMNS FROM `siswa` LIKE 'face_image'");
+$col_exists = (mysqli_num_rows($check_col) > 0);
+
+if (!$col_exists && $_SESSION['role'] === 'admin') {
+    // This shouldn't happen for a student, but good for debugging if an admin mimics a student
+    $error_msg = "Database belum diperbarui. Silakan jalankan <a href='../admin/update_db.php' class='underline'>Update Database</a>.";
+} elseif (!$col_exists) {
+    $error_msg = "Fitur pendaftaran wajah sedang dalam pemeliharaan. Silakan hubungi Administrator.";
+}
+
 // Handle Image Upload/Capture
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $col_exists) {
     if (!empty($_POST['face_data'])) {
         $img = $_POST['face_data'];
         $img = str_replace('data:image/jpeg;base64,', '', $img);
@@ -17,11 +28,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $data = base64_decode($img);
 
         $filename = 'face_' . $siswa_id . '_' . time() . '.jpg';
-        $filepath = __DIR__ . '/../uploads/siswa/face/' . $filename;
+        $dir = __DIR__ . '/../uploads/siswa/face/';
+        $filepath = $dir . $filename;
 
         // Ensure directory exists
-        if (!is_dir(__DIR__ . '/../uploads/siswa/face/')) {
-            mkdir(__DIR__ . '/../uploads/siswa/face/', 0777, true);
+        if (!is_dir($dir)) {
+            mkdir($dir, 0777, true);
         }
 
         if (file_put_contents($filepath, $data)) {
@@ -41,10 +53,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // Get Current Data
-$stmt = mysqli_prepare($conn, "SELECT face_image, nama_siswa FROM siswa WHERE id = ?");
-mysqli_stmt_bind_param($stmt, "i", $siswa_id);
-mysqli_stmt_execute($stmt);
-$siswa = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
+$siswa = ['face_image' => null, 'nama_siswa' => $_SESSION['nama_lengkap']];
+if ($col_exists) {
+    $stmt = mysqli_prepare($conn, "SELECT face_image, nama_siswa FROM siswa WHERE id = ?");
+    mysqli_stmt_bind_param($stmt, "i", $siswa_id);
+    mysqli_stmt_execute($stmt);
+    $res = mysqli_stmt_get_result($stmt);
+    if ($row = mysqli_fetch_assoc($res)) {
+        $siswa = $row;
+    }
+}
 
 $page_title = "Pendaftaran Wajah";
 require_once __DIR__ . '/../includes/header.php';
@@ -80,10 +98,11 @@ require_once __DIR__ . '/../includes/header.php';
 
         <?php if ($error_msg): ?>
         <div class="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-100 text-rose-600 text-xs font-bold flex items-center italic">
-            <i class="fa fa-exclamation-circle mr-3"></i> <?= $error_msg ?>
+            <i class="fa fa-exclamation-circle mr-3 text-lg"></i> <?= $error_msg ?>
         </div>
         <?php endif; ?>
 
+        <?php if ($col_exists): ?>
         <!-- Instructions Card -->
         <div class="lux-card p-6 mb-8 border-l-4 border-amber-400">
             <h3 class="font-black text-slate-800 italic uppercase tracking-widest text-xs mb-4 flex items-center">
@@ -165,9 +184,11 @@ require_once __DIR__ . '/../includes/header.php';
             </div>
         </div>
         <?php endif; ?>
+        <?php endif; ?>
     </div>
 </div>
 
+<?php if ($col_exists): ?>
 <script>
     const video = document.getElementById('video');
     const canvas = document.getElementById('canvas');
@@ -218,9 +239,11 @@ require_once __DIR__ . '/../includes/header.php';
         faceForm.classList.remove('hidden');
 
         // Stop the camera stream to save battery
-        const stream = video.srcObject;
-        const tracks = stream.getTracks();
-        tracks.forEach(track => track.stop());
+        if (video.srcObject) {
+            const stream = video.srcObject;
+            const tracks = stream.getTracks();
+            tracks.forEach(track => track.stop());
+        }
     });
 
     // Retake Photo
@@ -231,5 +254,6 @@ require_once __DIR__ . '/../includes/header.php';
         initCamera();
     });
 </script>
+<?php endif; ?>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>
