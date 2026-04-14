@@ -1,7 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../includes/pagination.php';
 
 authorize_role(['siswa']);
 
@@ -32,31 +31,6 @@ $stmt_gps = mysqli_prepare($conn, $query_gps);
 mysqli_stmt_bind_param($stmt_gps, "i", $siswa_id);
 mysqli_stmt_execute($stmt_gps);
 $gps_recap = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt_gps));
-
-// Digital Media for this student's class (with Pagination and Search)
-$media_search = mysqli_real_escape_string($conn, $_GET['media_search'] ?? '');
-$media_page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-
-$where_media = " WHERE sk.siswa_id = $siswa_id AND sk.tahun_pelajaran_id = (SELECT id FROM tahun_pelajaran WHERE status = 'aktif' LIMIT 1)";
-if ($media_search) {
-    $where_media .= " AND (p.nama_perangkat LIKE '%$media_search%' OR u.nama_lengkap LIKE '%$media_search%')";
-}
-
-$query_base_media = "perangkat p
-                     JOIN guru g ON p.guru_id = g.id
-                     JOIN users u ON g.user_id = u.id
-                     JOIN perangkat_kelas pk ON p.id = pk.perangkat_id
-                     JOIN siswa_kelas sk ON pk.kelas_id = sk.kelas_id";
-
-$pagin_media = get_pagination_data($conn, $query_base_media, 4, $where_media, "DISTINCT p.id");
-
-$query_media = "SELECT p.*, u.nama_lengkap as nama_guru
-                FROM $query_base_media
-                $where_media
-                GROUP BY p.id
-                ORDER BY p.created_at DESC
-                LIMIT {$pagin_media['limit']} OFFSET {$pagin_media['offset']}";
-$media_list = mysqli_query($conn, $query_media);
 
 $page_title = "Dashboard Siswa";
 require_once __DIR__ . '/../includes/header.php';
@@ -92,45 +66,68 @@ require_once __DIR__ . '/../includes/header.php';
             <i class="fa fa-user-graduate absolute -bottom-6 -right-6 text-9xl opacity-10"></i>
         </div>
 
-        <!-- Quick Actions Grid Design -->
-        <div class="grid grid-cols-2 gap-4 mb-8 no-print">
-            <a href="absensi.php" class="p-6 rounded-[32px] bg-indigo-600 text-white shadow-xl shadow-indigo-200 flex flex-col gap-4 group transition-all hover:scale-[1.02] active:scale-95">
-                <div class="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-xl shadow-inner group-hover:bg-white/30 transition-all">
+        <!-- Quick Actions Grid Design (2x3) -->
+        <div class="grid grid-cols-2 gap-4 mb-10 no-print">
+            <!-- Row 1 -->
+            <a href="absensi.php" class="p-5 rounded-[32px] bg-sky-500 text-white shadow-xl shadow-sky-100 flex flex-col gap-3 group transition-all hover:scale-[1.02] active:scale-95">
+                <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-lg shadow-inner group-hover:bg-white/30 transition-all">
                     <i class="fa fa-fingerprint"></i>
                 </div>
                 <div>
-                    <div class="text-lg font-black italic tracking-tighter uppercase leading-none">Absensi</div>
-                    <div class="text-[9px] font-bold text-indigo-100 uppercase tracking-widest mt-1 opacity-70">Log Lokasi GPS</div>
+                    <div class="text-base font-black italic tracking-tighter uppercase leading-none">Absensi</div>
+                    <div class="text-[8px] font-bold text-sky-100 uppercase tracking-widest mt-1 opacity-80">Log Lokasi GPS</div>
                 </div>
             </a>
 
-            <a href="izin.php" class="p-6 rounded-[32px] bg-emerald-600 text-white shadow-xl shadow-emerald-200 flex flex-col gap-4 group transition-all hover:scale-[1.02] active:scale-95">
-                <div class="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-xl shadow-inner group-hover:bg-white/30 transition-all">
+            <a href="izin.php" class="p-5 rounded-[32px] bg-violet-500 text-white shadow-xl shadow-violet-100 flex flex-col gap-3 group transition-all hover:scale-[1.02] active:scale-95">
+                <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-lg shadow-inner group-hover:bg-white/30 transition-all">
                     <i class="fa fa-envelope-open-text"></i>
                 </div>
                 <div>
-                    <div class="text-lg font-black italic tracking-tighter uppercase leading-none">Pengajuan Izin</div>
-                    <div class="text-[9px] font-bold text-emerald-100 uppercase tracking-widest mt-1 opacity-70">Sakit & Keperluan</div>
+                    <div class="text-base font-black italic tracking-tighter uppercase leading-none">Pengajuan Izin</div>
+                    <div class="text-[8px] font-bold text-violet-100 uppercase tracking-widest mt-1 opacity-80">Sakit & Keperluan</div>
                 </div>
             </a>
 
-            <a href="barcode.php" class="p-6 rounded-[32px] bg-amber-500 text-white shadow-xl shadow-amber-200 flex flex-col gap-4 group transition-all hover:scale-[1.02] active:scale-95">
-                <div class="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-xl shadow-inner group-hover:bg-white/30 transition-all">
-                    <i class="fa fa-barcode"></i>
+            <!-- Row 2 -->
+            <a href="media.php" class="p-5 rounded-[32px] bg-amber-500 text-white shadow-xl shadow-amber-100 flex flex-col gap-3 group transition-all hover:scale-[1.02] active:scale-95">
+                <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-lg shadow-inner group-hover:bg-white/30 transition-all">
+                    <i class="fa fa-book-reader"></i>
                 </div>
                 <div>
-                    <div class="text-lg font-black italic tracking-tighter uppercase leading-none">Barcode</div>
-                    <div class="text-[9px] font-bold text-amber-100 uppercase tracking-widest mt-1 opacity-70">Digital Identity Scan</div>
+                    <div class="text-base font-black italic tracking-tighter uppercase leading-none">Media & Buku</div>
+                    <div class="text-[8px] font-bold text-amber-100 uppercase tracking-widest mt-1 opacity-80">Digital Learning</div>
                 </div>
             </a>
 
-            <a href="kartu.php" class="p-6 rounded-[32px] bg-rose-500 text-white shadow-xl shadow-rose-200 flex flex-col gap-4 group transition-all hover:scale-[1.02] active:scale-95">
-                <div class="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-xl shadow-inner group-hover:bg-white/30 transition-all">
+            <a href="kartu.php" class="p-5 rounded-[32px] bg-rose-500 text-white shadow-xl shadow-rose-100 flex flex-col gap-3 group transition-all hover:scale-[1.02] active:scale-95">
+                <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-lg shadow-inner group-hover:bg-white/30 transition-all">
                     <i class="fa fa-id-card"></i>
                 </div>
                 <div>
-                    <div class="text-lg font-black italic tracking-tighter uppercase leading-none">Kartu Pelajar</div>
-                    <div class="text-[9px] font-bold text-rose-100 uppercase tracking-widest mt-1 opacity-70">Download E-Card</div>
+                    <div class="text-base font-black italic tracking-tighter uppercase leading-none">Kartu Pelajar</div>
+                    <div class="text-[8px] font-bold text-rose-100 uppercase tracking-widest mt-1 opacity-80">Digital E-Card</div>
+                </div>
+            </a>
+
+            <!-- Row 3 -->
+            <a href="barcode.php" class="p-5 rounded-[32px] bg-indigo-500 text-white shadow-xl shadow-indigo-100 flex flex-col gap-3 group transition-all hover:scale-[1.02] active:scale-95">
+                <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-lg shadow-inner group-hover:bg-white/30 transition-all">
+                    <i class="fa fa-barcode"></i>
+                </div>
+                <div>
+                    <div class="text-base font-black italic tracking-tighter uppercase leading-none">Barcode</div>
+                    <div class="text-[8px] font-bold text-indigo-100 uppercase tracking-widest mt-1 opacity-80">Digital Identity</div>
+                </div>
+            </a>
+
+            <a href="profil.php" class="p-5 rounded-[32px] bg-emerald-500 text-white shadow-xl shadow-emerald-100 flex flex-col gap-3 group transition-all hover:scale-[1.02] active:scale-95">
+                <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-lg shadow-inner group-hover:bg-white/30 transition-all">
+                    <i class="fa fa-user-circle"></i>
+                </div>
+                <div>
+                    <div class="text-base font-black italic tracking-tighter uppercase leading-none">Profil Saya</div>
+                    <div class="text-[8px] font-bold text-emerald-100 uppercase tracking-widest mt-1 opacity-80">Informasi Pribadi</div>
                 </div>
             </a>
         </div>
@@ -161,60 +158,6 @@ require_once __DIR__ . '/../includes/header.php';
                 <div class="text-2xl font-black text-rose-500 italic"><?= $gps_recap['alfa'] ?? 0 ?></div>
                 <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest">Alfa</p>
             </div>
-        </div>
-
-        <!-- Digital Media Section -->
-        <div class="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-4">
-            <h3 class="text-lg font-black text-slate-800 italic uppercase tracking-widest flex items-center">
-                <i class="fa fa-book-reader mr-2 text-indigo-500"></i> Media & Buku Digital
-            </h3>
-
-            <form action="" method="GET" class="relative group max-w-xs w-full">
-                <input type="text" name="media_search" value="<?= htmlspecialchars($media_search) ?>" placeholder="Cari media atau guru..."
-                    class="w-full pl-10 pr-4 py-2 bg-white rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-100 transition-all text-xs font-bold shadow-sm">
-                <i class="fa fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors"></i>
-                <?php if ($media_search): ?>
-                    <a href="index.php" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-rose-500"><i class="fa fa-times-circle"></i></a>
-                <?php endif; ?>
-            </form>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <?php if (mysqli_num_rows($media_list) > 0): ?>
-                <?php while ($m = mysqli_fetch_assoc($media_list)): ?>
-                    <div class="lux-card p-5 bg-white border-none shadow-xl flex items-center gap-4 hover:scale-[1.02] transition-all group">
-                        <div class="w-14 h-14 rounded-2xl bg-slate-50 text-slate-400 flex items-center justify-center text-2xl group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-all duration-500 shrink-0">
-                            <?php
-                            $icon = 'fa-file-alt';
-                            if (strpos($m['file_path'], '.pdf') !== false) $icon = 'fa-file-pdf';
-                            elseif (strpos($m['file_path'], '.mp4') !== false) $icon = 'fa-file-video';
-                            ?>
-                            <i class="fa <?= $icon ?>"></i>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <h4 class="font-black text-slate-800 text-sm truncate italic"><?= htmlspecialchars($m['nama_perangkat']) ?></h4>
-                            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1"><?= htmlspecialchars($m['nama_guru']) ?></p>
-                            <div class="flex items-center gap-2 mt-2">
-                                <span class="px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-600 text-[8px] font-black uppercase"><?= $m['jenis_perangkat'] ?></span>
-                                <span class="text-[8px] text-slate-300 font-bold uppercase"><?= date('d M Y', strtotime($m['created_at'])) ?></span>
-                            </div>
-                        </div>
-                        <a href="<?= BASE_URL . $m['file_path'] ?>" target="_blank" class="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center hover:bg-indigo-600 transition-all shadow-lg">
-                            <i class="fa <?= strpos($m['file_path'], '.mp4') !== false ? 'fa-play' : 'fa-download' ?> text-xs"></i>
-                        </a>
-                    </div>
-                <?php endwhile; ?>
-            <?php else: ?>
-                <div class="col-span-full py-12 text-center lux-card bg-slate-100/50 border-dashed border-2 border-slate-200 shadow-none">
-                    <i class="fa fa-folder-open text-3xl text-slate-200 mb-3"></i>
-                    <p class="text-slate-400 font-bold italic tracking-widest text-[10px] uppercase">Belum ada media dibagikan ke kelas Anda</p>
-                </div>
-            <?php endif; ?>
-        </div>
-
-        <!-- Media Pagination -->
-        <div id="media-pagination">
-            <?= render_pagination($pagin_media['page'], $pagin_media['total_pages'], $_GET) ?>
         </div>
     </div>
 </div>
