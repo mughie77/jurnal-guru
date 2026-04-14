@@ -66,7 +66,7 @@ require_once __DIR__ . '/../includes/header.php';
             <i class="fa fa-user-graduate absolute -bottom-6 -right-6 text-9xl opacity-10"></i>
         </div>
 
-        <!-- Quick Actions Grid Design (2x3) -->
+        <!-- Quick Actions Grid Design (2x4) -->
         <div class="grid grid-cols-2 gap-4 mb-10 no-print">
             <!-- Row 1 -->
             <a href="absensi.php" class="p-5 rounded-[32px] bg-sky-500 text-white shadow-xl shadow-sky-100 flex flex-col gap-3 group transition-all hover:scale-[1.02] active:scale-95">
@@ -121,13 +121,26 @@ require_once __DIR__ . '/../includes/header.php';
                 </div>
             </a>
 
-            <a href="profil.php" class="p-5 rounded-[32px] bg-emerald-500 text-white shadow-xl shadow-emerald-100 flex flex-col gap-3 group transition-all hover:scale-[1.02] active:scale-95">
+            <a href="face_registration.php" class="p-5 rounded-[32px] bg-cyan-500 text-white shadow-xl shadow-cyan-100 flex flex-col gap-3 group transition-all hover:scale-[1.02] active:scale-95">
                 <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-lg shadow-inner group-hover:bg-white/30 transition-all">
-                    <i class="fa fa-user-circle"></i>
+                    <i class="fa fa-face-smile"></i>
                 </div>
                 <div>
-                    <div class="text-base font-black italic tracking-tighter uppercase leading-none">Profil Saya</div>
-                    <div class="text-[8px] font-bold text-emerald-100 uppercase tracking-widest mt-1 opacity-80">Informasi Pribadi</div>
+                    <div class="text-base font-black italic tracking-tighter uppercase leading-none">Daftar Wajah</div>
+                    <div class="text-[8px] font-bold text-cyan-100 uppercase tracking-widest mt-1 opacity-80">Face Registration</div>
+                </div>
+            </a>
+
+            <!-- Row 4 -->
+            <a href="profil.php" class="p-5 rounded-[32px] bg-emerald-500 text-white shadow-xl shadow-emerald-100 flex flex-col gap-3 group transition-all hover:scale-[1.02] active:scale-95 col-span-2">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-lg shadow-inner group-hover:bg-white/30 transition-all">
+                        <i class="fa fa-user-circle"></i>
+                    </div>
+                    <div>
+                        <div class="text-base font-black italic tracking-tighter uppercase leading-none">Profil Saya</div>
+                        <div class="text-[8px] font-bold text-emerald-100 uppercase tracking-widest mt-1 opacity-80">Informasi Pribadi & Pengaturan Akun</div>
+                    </div>
                 </div>
             </a>
         </div>

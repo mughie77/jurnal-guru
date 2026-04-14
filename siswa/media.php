@@ -19,13 +19,17 @@ mysqli_stmt_bind_param($stmt, "i", $siswa_id);
 mysqli_stmt_execute($stmt);
 $siswa = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
 
-// Search and Pagination
+// Search, Filter and Pagination
 $media_search = mysqli_real_escape_string($conn, $_GET['media_search'] ?? '');
+$media_type = mysqli_real_escape_string($conn, $_GET['media_type'] ?? '');
 $media_page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 
 $where_media = " WHERE sk.siswa_id = $siswa_id AND sk.tahun_pelajaran_id = (SELECT id FROM tahun_pelajaran WHERE status = 'aktif' LIMIT 1)";
 if ($media_search) {
     $where_media .= " AND (p.nama_perangkat LIKE '%$media_search%' OR u.nama_lengkap LIKE '%$media_search%')";
+}
+if ($media_type) {
+    $where_media .= " AND p.jenis_perangkat = '$media_type'";
 }
 
 $query_base_media = "perangkat p
@@ -48,63 +52,104 @@ $page_title = "Media & Buku Digital";
 require_once __DIR__ . '/../includes/header.php';
 ?>
 
-<div class="p-4 lg:p-8 max-w-4xl mx-auto">
-    <!-- Header Section -->
-    <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
-        <div>
-            <h1 class="text-2xl font-black italic text-slate-800 uppercase tracking-widest">Media & Buku Digital</h1>
-            <p class="text-slate-400 font-bold text-[10px] uppercase tracking-[0.3em] mt-1">Materi Pembelajaran Kelas <?= htmlspecialchars($siswa['nama_kelas']) ?></p>
-        </div>
+<style>
+    #sidebar, header { display: none; }
+    .lg\:ml-64 { margin-left: 0; }
+    body { background-color: #F8FAFC; }
+</style>
 
-        <form action="" method="GET" class="relative group max-w-xs w-full">
-            <input type="text" name="media_search" value="<?= htmlspecialchars($media_search) ?>" placeholder="Cari materi..."
-                class="w-full pl-10 pr-4 py-3 bg-white rounded-2xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-100 transition-all text-xs font-bold shadow-sm">
-            <i class="fa fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors"></i>
-            <?php if ($media_search): ?>
-                <a href="media.php" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-rose-500"><i class="fa fa-times-circle"></i></a>
-            <?php endif; ?>
-        </form>
+<div class="p-4 lg:p-8 max-w-4xl mx-auto pb-24">
+    <!-- Header Section -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-black italic text-slate-800 uppercase tracking-tighter">Media & Buku Digital</h1>
+        <p class="text-slate-400 font-bold text-[10px] uppercase tracking-[0.3em] mt-2">Pusat Belajar Kelas <?= htmlspecialchars($siswa['nama_kelas']) ?></p>
     </div>
 
+    <!-- Enhanced Filter Form -->
+    <form action="" method="GET" class="mb-10 space-y-4">
+        <div class="flex flex-col md:flex-row gap-4">
+            <div class="relative group flex-1">
+                <input type="text" name="media_search" value="<?= htmlspecialchars($media_search) ?>" placeholder="Cari materi atau nama guru..."
+                    class="w-full pl-12 pr-4 py-4 bg-white rounded-[24px] border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-100 transition-all text-sm font-bold shadow-sm">
+                <i class="fa fa-search absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors"></i>
+            </div>
+
+            <div class="flex gap-2">
+                <select name="media_type" onchange="this.form.submit()"
+                    class="px-6 py-4 bg-white rounded-[24px] border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-100 transition-all text-xs font-black uppercase tracking-widest shadow-sm appearance-none cursor-pointer pr-12 relative">
+                    <option value="">Semua Jenis</option>
+                    <option value="Buku Digital" <?= $media_type == 'Buku Digital' ? 'selected' : '' ?>>Buku Digital</option>
+                    <option value="Media Pembelajaran" <?= $media_type == 'Media Pembelajaran' ? 'selected' : '' ?>>Media Pembelajaran</option>
+                </select>
+
+                <?php if ($media_search || $media_type): ?>
+                    <a href="media.php" class="w-14 h-14 bg-rose-50 text-rose-500 rounded-[20px] flex items-center justify-center hover:bg-rose-100 transition-all shadow-sm">
+                        <i class="fa fa-times-circle text-xl"></i>
+                    </a>
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <div class="flex flex-wrap gap-2 px-2">
+            <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest italic mr-2">Filter Populer:</span>
+            <button type="button" onclick="document.querySelector('select[name=media_type]').value='Buku Digital'; this.form.submit();"
+                class="px-4 py-1.5 rounded-full border border-slate-200 text-[9px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-900 hover:text-white transition-all">PDF Books</button>
+            <button type="button" onclick="document.querySelector('select[name=media_type]').value='Media Pembelajaran'; this.form.submit();"
+                class="px-4 py-1.5 rounded-full border border-slate-200 text-[9px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-900 hover:text-white transition-all">Video MP4</button>
+        </div>
+    </form>
+
     <!-- Media List -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
         <?php if (mysqli_num_rows($media_list) > 0): ?>
             <?php while ($m = mysqli_fetch_assoc($media_list)): ?>
-                <div class="lux-card p-5 bg-white border-none shadow-xl flex items-center gap-4 hover:scale-[1.02] transition-all group">
-                    <div class="w-16 h-16 rounded-2xl bg-slate-50 text-slate-400 flex items-center justify-center text-3xl group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-all duration-500 shrink-0 shadow-inner">
-                        <?php
-                        $icon = 'fa-file-alt';
-                        if (strpos($m['file_path'], '.pdf') !== false) $icon = 'fa-file-pdf';
-                        elseif (strpos($m['file_path'], '.mp4') !== false) $icon = 'fa-file-video';
-                        ?>
-                        <i class="fa <?= $icon ?>"></i>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <h4 class="font-black text-slate-800 text-sm truncate italic uppercase"><?= htmlspecialchars($m['nama_perangkat']) ?></h4>
-                        <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Guru: <?= htmlspecialchars($m['nama_guru']) ?></p>
-                        <div class="flex items-center gap-2 mt-2">
-                            <span class="px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-600 text-[8px] font-black uppercase"><?= $m['jenis_perangkat'] ?></span>
-                            <span class="text-[8px] text-slate-300 font-bold uppercase"><?= date('d M Y', strtotime($m['created_at'])) ?></span>
+                <div class="lux-card p-6 bg-white border-none shadow-2xl shadow-slate-100/50 flex flex-col gap-5 hover:translate-y-[-4px] transition-all group rounded-[32px]">
+                    <div class="flex items-start justify-between">
+                        <div class="w-16 h-16 rounded-[24px] bg-slate-50 text-slate-400 flex items-center justify-center text-3xl group-hover:bg-indigo-600 group-hover:text-white transition-all duration-500 shrink-0 shadow-inner">
+                            <?php
+                            $icon = 'fa-file-alt';
+                            if (strpos($m['file_path'], '.pdf') !== false) $icon = 'fa-file-pdf';
+                            elseif (strpos($m['file_path'], '.mp4') !== false) $icon = 'fa-file-video';
+                            ?>
+                            <i class="fa <?= $icon ?>"></i>
+                        </div>
+                        <div class="text-right">
+                            <span class="px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-[8px] font-black uppercase tracking-widest"><?= date('d M Y', strtotime($m['created_at'])) ?></span>
                         </div>
                     </div>
-                    <a href="<?= BASE_URL . $m['file_path'] ?>" target="_blank" class="w-12 h-12 rounded-2xl bg-slate-900 text-white flex items-center justify-center hover:bg-indigo-600 transition-all shadow-lg active:scale-90">
-                        <i class="fa <?= strpos($m['file_path'], '.mp4') !== false ? 'fa-play' : 'fa-download' ?> text-sm"></i>
-                    </a>
+
+                    <div class="flex-1">
+                        <h4 class="font-black text-slate-800 text-lg leading-tight italic uppercase tracking-tighter"><?= htmlspecialchars($m['nama_perangkat']) ?></h4>
+                        <div class="flex items-center gap-2 mt-3">
+                            <div class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-[10px] font-black italic">G</div>
+                            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest"><?= htmlspecialchars($m['nama_guru']) ?></p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between pt-4 border-t border-slate-50">
+                        <span class="px-4 py-1.5 rounded-xl bg-indigo-50 text-indigo-600 text-[9px] font-black uppercase tracking-widest"><?= $m['jenis_perangkat'] ?></span>
+                        <a href="<?= BASE_URL . $m['file_path'] ?>" target="_blank"
+                           class="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-900 text-white hover:bg-indigo-600 transition-all shadow-xl active:scale-90">
+                            <span class="text-[10px] font-black uppercase tracking-widest">Buka</span>
+                            <i class="fa <?= strpos($m['file_path'], '.mp4') !== false ? 'fa-play' : 'fa-download' ?> text-[10px]"></i>
+                        </a>
+                    </div>
                 </div>
             <?php endwhile; ?>
         <?php else: ?>
-            <div class="col-span-full py-20 text-center lux-card bg-white/50 border-dashed border-2 border-slate-200 shadow-none rounded-[40px]">
-                <div class="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <i class="fa fa-folder-open text-4xl text-slate-300"></i>
+            <div class="col-span-full py-24 text-center lux-card bg-white border-dashed border-2 border-slate-200 shadow-none rounded-[40px]">
+                <div class="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
+                    <i class="fa fa-folder-open text-5xl text-slate-200"></i>
                 </div>
-                <h3 class="text-slate-800 font-black italic text-lg uppercase tracking-widest">Tidak Ditemukan</h3>
-                <p class="text-slate-400 font-bold italic tracking-widest text-[10px] uppercase mt-2">Belum ada media dibagikan ke kelas Anda</p>
+                <h3 class="text-slate-800 font-black italic text-xl uppercase tracking-widest">Kosong</h3>
+                <p class="text-slate-400 font-bold italic tracking-widest text-[10px] uppercase mt-2">Tidak ada materi yang sesuai dengan filter Anda</p>
+                <a href="media.php" class="inline-block mt-6 px-8 py-3 bg-slate-900 text-white rounded-full text-[10px] font-black uppercase tracking-widest">Reset Filter</a>
             </div>
         <?php endif; ?>
     </div>
 
     <!-- Pagination -->
-    <div class="no-print">
+    <div class="no-print flex justify-center mt-12">
         <?= render_pagination($pagin_media['page'], $pagin_media['total_pages'], $_GET) ?>
     </div>
 </div>

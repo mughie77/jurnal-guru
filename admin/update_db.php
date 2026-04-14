@@ -30,7 +30,8 @@ authorize_role(['admin']);
             $tables = [
                 'siswa' => [
                     'tempat_lahir' => "VARCHAR(100) DEFAULT NULL AFTER foto",
-                    'tanggal_lahir' => "DATE DEFAULT NULL AFTER tempat_lahir"
+                    'tanggal_lahir' => "DATE DEFAULT NULL AFTER tempat_lahir",
+                    'face_image' => "VARCHAR(255) DEFAULT NULL AFTER tanggal_lahir"
                 ],
                 'guru' => [
                     'tempat_lahir' => "VARCHAR(100) DEFAULT NULL AFTER foto",
