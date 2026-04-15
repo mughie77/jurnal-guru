@@ -130,7 +130,7 @@ $favicon = !empty($sets['favicon']) ? BASE_URL . 'uploads/' . $sets['favicon'] :
         const detectionResult = document.getElementById('detectionResult');
         const scannerLine = document.getElementById('scannerLine');
 
-        const MODEL_URL = 'https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights';
+        const MODEL_URL = 'https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights';
 
         async function init() {
             try {
