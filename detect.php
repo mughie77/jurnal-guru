@@ -135,20 +135,20 @@ $favicon = !empty($sets['favicon']) ? BASE_URL . 'uploads/' . $sets['favicon'] :
         // 2. https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights (Raw GitHub - sometimes blocked)
         // 3. Hosting locally (best but requires assets in the repo)
 
-        const MODEL_URL = '<?= BASE_URL ?>models';
+        // Use relative path to avoid BASE_URL issues on some servers
+        const MODEL_URL = 'models';
 
         async function init() {
             try {
                 statusIndicator.innerHTML = '<div class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></div><span class="text-white/80 text-[10px] font-black uppercase tracking-widest">Memuat AI...</span>';
 
-                console.log("Loading Models from:", MODEL_URL);
+                console.log("Loading Models from relative path:", MODEL_URL);
 
-                await Promise.all([
-                    faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
-                    faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
-                    faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
-                    faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL)
-                ]);
+                // Loading sequentially helps in identifying which specific model fails and is more stable
+                await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
+                await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+                await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+                await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
 
                 statusIndicator.innerHTML = '<div class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></div><span class="text-white/80 text-[10px] font-black uppercase tracking-widest">Memulai Kamera...</span>';
 
@@ -156,7 +156,23 @@ $favicon = !empty($sets['favicon']) ? BASE_URL . 'uploads/' . $sets['favicon'] :
             } catch (err) {
                 console.error("Initialization failed:", err);
                 statusIndicator.innerHTML = '<div class="w-2 h-2 rounded-full bg-rose-500"></div><span class="text-white/80 text-[10px] font-black uppercase tracking-widest">Gagal Memuat AI</span>';
-                detectionResult.innerText = 'Error: Cek File Model';
+                // Show more detailed error info for the user
+                detectionResult.innerText = 'Error: ' + err.message.substring(0, 35);
+
+                // Retry once with absolute URL as fallback
+                if (MODEL_URL === 'models') {
+                    console.log("Retrying with absolute BASE_URL...");
+                    const ABS_URL = '<?= BASE_URL ?>models';
+                    try {
+                        await faceapi.nets.ssdMobilenetv1.loadFromUri(ABS_URL);
+                        await faceapi.nets.faceLandmark68Net.loadFromUri(ABS_URL);
+                        await faceapi.nets.faceRecognitionNet.loadFromUri(ABS_URL);
+                        await faceapi.nets.tinyFaceDetector.loadFromUri(ABS_URL);
+                        startVideo();
+                    } catch (e) {
+                        console.error("Absolute path fallback failed also.");
+                    }
+                }
             }
         }
 
