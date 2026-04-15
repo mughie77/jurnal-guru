@@ -23,6 +23,21 @@ $favicon = !empty($sets['favicon']) ? BASE_URL . 'uploads/' . $sets['favicon'] :
     <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
 
     <style>
+        @keyframes scan {
+            0% { top: 0%; opacity: 0; }
+            50% { opacity: 1; }
+            100% { top: 100%; opacity: 0; }
+        }
+        .scanner-line {
+            position: absolute;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(to right, transparent, #4f46e5, transparent);
+            box-shadow: 0 0 15px #4f46e5;
+            z-index: 15;
+            animation: scan 3s ease-in-out infinite;
+            display: none;
+        }
         body { font-family: 'Plus Jakarta Sans', sans-serif; overflow: hidden; background: #000; }
         .video-container {
             position: relative;
@@ -75,7 +90,8 @@ $favicon = !empty($sets['favicon']) ? BASE_URL . 'uploads/' . $sets['favicon'] :
 <body>
 
     <div class="video-container">
-        <video id="video" autoplay muted playsinline></video>
+        <video id="video" autoplay muted playsinline class="transform scale-x-[-1]"></video>
+        <div class="scanner-line" id="scannerLine"></div>
 
         <div class="ui-overlay">
             <div class="flex items-center justify-between">
@@ -112,27 +128,59 @@ $favicon = !empty($sets['favicon']) ? BASE_URL . 'uploads/' . $sets['favicon'] :
         const video = document.getElementById('video');
         const statusIndicator = document.getElementById('statusIndicator');
         const detectionResult = document.getElementById('detectionResult');
+        const scannerLine = document.getElementById('scannerLine');
 
-        // Load Models
-        Promise.all([
-            faceapi.nets.tinyFaceDetector.loadFromUri('https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights'),
-            faceapi.nets.faceLandmark68Net.loadFromUri('https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights'),
-            faceapi.nets.faceRecognitionNet.loadFromUri('https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights'),
-            faceapi.nets.faceExpressionNet.loadFromUri('https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights'),
-            faceapi.nets.ssdMobilenetv1.loadFromUri('https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights')
-        ]).then(startVideo);
+        const MODEL_URL = 'https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights';
+
+        async function init() {
+            try {
+                statusIndicator.innerHTML = '<div class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></div><span class="text-white/80 text-[10px] font-black uppercase tracking-widest">Memuat AI...</span>';
+
+                await Promise.all([
+                    faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+                    faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+                    faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
+                    faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL)
+                ]);
+
+                statusIndicator.innerHTML = '<div class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></div><span class="text-white/80 text-[10px] font-black uppercase tracking-widest">Memulai Kamera...</span>';
+
+                startVideo();
+            } catch (err) {
+                console.error("Initialization failed:", err);
+                statusIndicator.innerHTML = '<div class="w-2 h-2 rounded-full bg-rose-500"></div><span class="text-white/80 text-[10px] font-black uppercase tracking-widest">Gagal Memuat AI</span>';
+                detectionResult.innerText = 'Error: Cek Koneksi Internet';
+            }
+        }
 
         function startVideo() {
-            navigator.mediaDevices.getUserMedia({ video: {} })
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: "user",
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    }
+                })
                 .then(stream => {
                     video.srcObject = stream;
-                    statusIndicator.innerHTML = '<div class="w-2 h-2 rounded-full bg-emerald-400"></div><span class="text-white/80 text-[10px] font-black uppercase tracking-widest">Sistem Aktif</span>';
+                    video.onloadedmetadata = () => {
+                        video.play();
+                        scannerLine.style.display = 'block';
+                        statusIndicator.innerHTML = '<div class="w-2 h-2 rounded-full bg-emerald-400"></div><span class="text-white/80 text-[10px] font-black uppercase tracking-widest">Sistem Aktif</span>';
+                    };
                 })
                 .catch(err => {
-                    console.error(err);
-                    statusIndicator.innerHTML = '<div class="w-2 h-2 rounded-full bg-rose-500"></div><span class="text-white/80 text-[10px] font-black uppercase tracking-widest">Akses Kamera Ditolak</span>';
+                    console.error("Camera access denied:", err);
+                    statusIndicator.innerHTML = '<div class="w-2 h-2 rounded-full bg-rose-500"></div><span class="text-white/80 text-[10px] font-black uppercase tracking-widest">Kamera Tidak Diakses</span>';
+                    detectionResult.innerText = 'Izinkan Akses Kamera';
                 });
+            } else {
+                statusIndicator.innerHTML = '<div class="w-2 h-2 rounded-full bg-rose-500"></div><span class="text-white/80 text-[10px] font-black uppercase tracking-widest">Browser Tidak Support</span>';
+            }
         }
+
+        init();
 
         video.addEventListener('play', async () => {
             const canvas = faceapi.createCanvasFromMedia(video);
