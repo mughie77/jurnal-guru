@@ -1,5 +1,5 @@
 <?php
-require_once 'config/database.php';
+require_once __DIR__ . '/../config/database.php';
 
 // Get Settings
 $res_set = mysqli_query($conn, "SELECT * FROM pengaturan");

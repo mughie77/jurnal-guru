@@ -20,7 +20,7 @@ $favicon = !empty($sets['favicon']) ? BASE_URL . 'uploads/' . $sets['favicon'] :
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <!-- Face-API.js -->
-    <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
 
     <style>
         @keyframes scan {
@@ -130,18 +130,29 @@ $favicon = !empty($sets['favicon']) ? BASE_URL . 'uploads/' . $sets['favicon'] :
         const detectionResult = document.getElementById('detectionResult');
         const scannerLine = document.getElementById('scannerLine');
 
+        // Alternative CDNs:
+        // 1. https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights
+        // 2. https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights (Raw GitHub - sometimes blocked)
+        // 3. Hosting locally (best but requires assets in the repo)
+
         const MODEL_URL = 'https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights';
 
         async function init() {
             try {
                 statusIndicator.innerHTML = '<div class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></div><span class="text-white/80 text-[10px] font-black uppercase tracking-widest">Memuat AI...</span>';
 
-                await Promise.all([
-                    faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
-                    faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
-                    faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
-                    faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL)
-                ]);
+                // Load sequentially to avoid overwhelming the connection and better error tracking
+                console.log("Loading SSD Mobilenet V1...");
+                await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
+
+                console.log("Loading Face Landmark 68...");
+                await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+
+                console.log("Loading Face Recognition...");
+                await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+
+                console.log("Loading Tiny Face Detector...");
+                await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
 
                 statusIndicator.innerHTML = '<div class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></div><span class="text-white/80 text-[10px] font-black uppercase tracking-widest">Memulai Kamera...</span>';
 
@@ -149,7 +160,25 @@ $favicon = !empty($sets['favicon']) ? BASE_URL . 'uploads/' . $sets['favicon'] :
             } catch (err) {
                 console.error("Initialization failed:", err);
                 statusIndicator.innerHTML = '<div class="w-2 h-2 rounded-full bg-rose-500"></div><span class="text-white/80 text-[10px] font-black uppercase tracking-widest">Gagal Memuat AI</span>';
-                detectionResult.innerText = 'Error: Cek Koneksi Internet';
+                detectionResult.innerText = 'Error: ' + err.message.substring(0, 30);
+
+                // Fallback attempt with a different CDN if first one fails
+                if (MODEL_URL.includes('jsdelivr')) {
+                    console.log("Retrying with raw.githubusercontent.com...");
+                    const FALLBACK_URL = 'https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights';
+                    try {
+                        await faceapi.nets.ssdMobilenetv1.loadFromUri(FALLBACK_URL);
+                        // If one works, try the rest
+                        await Promise.all([
+                            faceapi.nets.faceLandmark68Net.loadFromUri(FALLBACK_URL),
+                            faceapi.nets.faceRecognitionNet.loadFromUri(FALLBACK_URL),
+                            faceapi.nets.tinyFaceDetector.loadFromUri(FALLBACK_URL)
+                        ]);
+                        startVideo();
+                    } catch (e) {
+                        console.error("Fallback also failed");
+                    }
+                }
             }
         }
 
@@ -180,7 +209,7 @@ $favicon = !empty($sets['favicon']) ? BASE_URL . 'uploads/' . $sets['favicon'] :
             }
         }
 
-        init();
+        window.addEventListener('load', init);
 
         video.addEventListener('play', async () => {
             const canvas = faceapi.createCanvasFromMedia(video);
