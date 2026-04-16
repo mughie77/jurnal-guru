@@ -135,16 +135,16 @@ $favicon = !empty($sets['favicon']) ? BASE_URL . 'uploads/' . $sets['favicon'] :
         // 2. https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights (Raw GitHub - sometimes blocked)
         // 3. Hosting locally (best but requires assets in the repo)
 
-        // Use relative path to avoid BASE_URL issues on some servers
-        const MODEL_URL = 'models';
+        // Selalu gunakan BASE_URL absolut agar file model ditemukan dari folder mana pun
+        const MODEL_URL = '<?= BASE_URL ?>models';
 
         async function init() {
             try {
                 statusIndicator.innerHTML = '<div class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></div><span class="text-white/80 text-[10px] font-black uppercase tracking-widest">Memuat AI...</span>';
 
-                console.log("Loading Models from relative path:", MODEL_URL);
+                console.log("Loading Models from:", MODEL_URL);
 
-                // Loading sequentially helps in identifying which specific model fails and is more stable
+                // Load models secara berurutan untuk kestabilan koneksi di beberapa browser
                 await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
                 await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
                 await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
@@ -154,23 +154,21 @@ $favicon = !empty($sets['favicon']) ? BASE_URL . 'uploads/' . $sets['favicon'] :
 
                 startVideo();
             } catch (err) {
-                console.error("Initialization failed:", err);
+                console.error("AI Initialization failed:", err);
                 statusIndicator.innerHTML = '<div class="w-2 h-2 rounded-full bg-rose-500"></div><span class="text-white/80 text-[10px] font-black uppercase tracking-widest">Gagal Memuat AI</span>';
-                // Show more detailed error info for the user
-                detectionResult.innerText = 'Error: ' + err.message.substring(0, 35);
+                detectionResult.innerText = 'Error: ' + err.message.substring(0, 40);
 
-                // Retry once with absolute URL as fallback
-                if (MODEL_URL === 'models') {
-                    console.log("Retrying with absolute BASE_URL...");
-                    const ABS_URL = '<?= BASE_URL ?>models';
+                // Coba fallback ke path relatif jika absolut gagal (beberapa setup server lokal unik)
+                if (MODEL_URL.startsWith('http')) {
+                    console.log("Retrying with relative path...");
                     try {
-                        await faceapi.nets.ssdMobilenetv1.loadFromUri(ABS_URL);
-                        await faceapi.nets.faceLandmark68Net.loadFromUri(ABS_URL);
-                        await faceapi.nets.faceRecognitionNet.loadFromUri(ABS_URL);
-                        await faceapi.nets.tinyFaceDetector.loadFromUri(ABS_URL);
+                        await faceapi.nets.ssdMobilenetv1.loadFromUri('models');
+                        await faceapi.nets.faceLandmark68Net.loadFromUri('models');
+                        await faceapi.nets.faceRecognitionNet.loadFromUri('models');
+                        await faceapi.nets.tinyFaceDetector.loadFromUri('models');
                         startVideo();
                     } catch (e) {
-                        console.error("Absolute path fallback failed also.");
+                        console.error("Relative path fallback failed also.");
                     }
                 }
             }

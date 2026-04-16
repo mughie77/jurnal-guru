@@ -4,7 +4,12 @@ require_once 'config/database.php';
 // Cek apakah user sudah login
 if (!isset($_SESSION['user_id'])) {
     // Jika belum, redirect ke halaman login
-    header('Location: ' . BASE_URL . 'login.php');
+    // Gunakan file login.php secara langsung untuk menghindari masalah redirect loop jika .htaccess belum aktif
+    if (file_exists('login.php')) {
+        include 'login.php';
+    } else {
+        header('Location: ' . BASE_URL . 'login');
+    }
     exit();
 }
 
@@ -13,20 +18,19 @@ $role = $_SESSION['role'];
 
 switch ($role) {
     case 'admin':
-        header('Location: ' . BASE_URL . 'admin/index.php');
+        header('Location: ' . BASE_URL . 'admin/');
         break;
     case 'waka':
-        header('Location: ' . BASE_URL . 'waka/index.php');
+        header('Location: ' . BASE_URL . 'waka/');
         break;
     case 'guru':
-        header('Location: ' . BASE_URL . 'guru/index.php');
+        header('Location: ' . BASE_URL . 'guru/');
         break;
     case 'siswa':
-        header('Location: ' . BASE_URL . 'siswa/index.php');
+        header('Location: ' . BASE_URL . 'siswa/');
         break;
     default:
-        // Jika role tidak dikenali, logout dan redirect ke login
-        header('Location: ' . BASE_URL . 'logout.php');
+        header('Location: ' . BASE_URL . 'logout');
         break;
 }
 exit();

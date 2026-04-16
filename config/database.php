@@ -15,26 +15,23 @@ if (!$conn) {
 }
 
 // --- URL Konfigurasi ---
-// Deteksi URL dasar secara otomatis
-$protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
-$domainName = $_SERVER['HTTP_HOST'];
-$scriptName = str_replace(basename($_SERVER['SCRIPT_NAME']), '', $_SERVER['SCRIPT_NAME']);
-// Jika script dipanggil dari root tapi diakses lewat path tertentu (misal API)
-$base_url = $protocol . $domainName . $scriptName;
-// Pastikan diakhiri dengan slash
-if (substr($base_url, -1) !== '/') {
-    // Cari posisi folder terakhir jika di dalam subfolder
-    $base_url = preg_replace('/[^\/]+\.php$/', '', $base_url);
-    if (substr($base_url, -1) !== '/') $base_url .= '/';
-}
+// Jika aplikasi dipindah folder atau dihosting, isi URL dasar di sini (akhiri dengan slash /)
+// Contoh: $base_url_config = 'http://localhost/jurnal/';
+$base_url_config = '';
 
-// Untuk keperluan API atau CLI yang mungkin tidak punya HTTP_HOST
-if (empty($domainName)) {
-    define('BASE_URL', '/');
+if (!empty($base_url_config)) {
+    define('BASE_URL', $base_url_config);
 } else {
-    // Normalisasi: jika kita di dalam folder 'admin', 'guru', 'siswa', atau 'waka', kita perlu naik ke root
-    $base_path = str_replace(['/admin/', '/guru/', '/waka/', '/api/', '/siswa/'], '/', $scriptName);
-    define('BASE_URL', $protocol . $domainName . $base_path);
+    // Deteksi URL dasar secara otomatis
+    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
+    $domainName = $_SERVER['HTTP_HOST'] ?? 'localhost';
+    $scriptName = $_SERVER['SCRIPT_NAME'];
+
+    // Cari path root aplikasi (naik dari folder core jika perlu)
+    $app_root_path = str_replace(['/admin/', '/guru/', '/waka/', '/api/', '/siswa/', '/error/'], '/', dirname($scriptName));
+    $app_root_path = rtrim($app_root_path, '/\\') . '/';
+
+    define('BASE_URL', $protocol . $domainName . $app_root_path);
 }
 
 // --- Mulai Session ---

@@ -1,14 +1,7 @@
-# Ensure models are served correctly
 <IfModule mod_mime.c>
     AddType application/json .json
     AddType application/octet-stream .shard
 </IfModule>
-
-# Allow access to all files in this directory
 <IfModule mod_authz_core.c>
     Require all granted
-</IfModule>
-<IfModule !mod_authz_core.c>
-    Order allow,deny
-    Allow from all
 </IfModule>

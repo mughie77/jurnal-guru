@@ -1,25 +1,20 @@
 RewriteEngine On
 
-# Dinamis mendeteksi folder aplikasi
-RewriteCond %{REQUEST_URI} ^/(jurnal)/
-RewriteRule ^ - [E=BASE_PATH:/%1/]
-RewriteCond %{ENV:BASE_PATH} ^$
-RewriteRule ^ - [E=BASE_PATH:/]
+# 1. Hilangkan .php pada address bar (External Redirect)
+# Agar http://localhost/jurnal/profil.php menjadi http://localhost/jurnal/profil
+RewriteCond %{THE_REQUEST} ^[A-Z]{3,}\s/+(.+)\.php[\s?] [NC]
+RewriteRule ^ /%1 [R=301,L]
 
-# Error Documents - Menggunakan path absolut dari root server
-# Menggunakan path relatif dari root domain jika aplikasi di root
-# Jika di subfolder jurnal, pastikan path benar
+# 2. Map URL tanpa ekstensi ke file .php (Internal Rewrite)
+# Agar http://localhost/jurnal/profil tetap memproses profil.php
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME}\.php -f
+RewriteRule ^(.*)$ $1.php [L]
+
+# 3. Error Documents
+# PENTING: Apache ErrorDocument membutuhkan path lengkap dari domain root.
+# GANTI "/jurnal/" jika folder aplikasi Anda berbeda.
 ErrorDocument 403 /jurnal/error/403.php
 ErrorDocument 404 /jurnal/error/404.php
 ErrorDocument 500 /jurnal/error/500.php
 ErrorDocument 503 /jurnal/error/503.php
-
-# Remove .php extension
-# Redirect /page.php to /page
-RewriteCond %{THE_REQUEST} ^[A-Z]{3,}\s/+(.+)\.php[\s?] [NC]
-RewriteRule ^ %{ENV:BASE_PATH}%1 [R=301,L]
-
-# Internal rewrite from /page to /page.php
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteCond %{REQUEST_FILENAME}\.php -f
-RewriteRule ^(.*)$ $1.php [L]
