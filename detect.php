@@ -222,25 +222,39 @@ $favicon = !empty($sets['favicon']) ? BASE_URL . 'uploads/' . $sets['favicon'] :
             const displaySize = { width: video.offsetWidth, height: video.offsetHeight };
             faceapi.matchDimensions(canvas, displaySize);
 
-            // Fetch registered faces
+            // Fetch registered faces with pre-computed descriptors
             const response = await fetch('<?= BASE_URL ?>api/get_face_list.php');
             const students = await response.json();
 
             const labeledDescriptors = await Promise.all(
                 students.map(async student => {
-                    const img = await faceapi.fetchImage(student.image);
-                    const detections = await faceapi.detectSingleFace(img).withFaceLandmarks().withFaceDescriptor();
-                    if (!detections) return null;
-                    return new faceapi.LabeledFaceDescriptors(student.name, [detections.descriptor]);
+                    if (student.descriptor) {
+                        // Use pre-computed descriptor (FAST)
+                        return new faceapi.LabeledFaceDescriptors(student.name, [new Float32Array(student.descriptor)]);
+                    } else {
+                        // Fallback for old data: Fetch and process image (SLOW)
+                        try {
+                            const img = await faceapi.fetchImage(student.image);
+                            const detections = await faceapi.detectSingleFace(img).withFaceLandmarks().withFaceDescriptor();
+                            if (!detections) return null;
+                            return new faceapi.LabeledFaceDescriptors(student.name, [detections.descriptor]);
+                        } catch (e) { return null; }
+                    }
                 })
             );
 
             const validDescriptors = labeledDescriptors.filter(d => d !== null);
+
+            if (validDescriptors.length === 0) {
+                detectionResult.innerText = 'Tidak Ada Wajah Terdaftar';
+                return;
+            }
+
             const faceMatcher = new faceapi.FaceMatcher(validDescriptors, 0.6);
 
-            // Detection Loop
+            // Detection Loop using TinyFaceDetector for performance
             setInterval(async () => {
-                const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptors();
+                const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.5 })).withFaceLandmarks().withFaceDescriptors();
                 const resizedDetections = faceapi.resizeResults(detections, displaySize);
 
                 canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);

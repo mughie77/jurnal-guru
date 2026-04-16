@@ -31,7 +31,8 @@ authorize_role(['admin']);
                 'siswa' => [
                     'tempat_lahir' => "VARCHAR(100) DEFAULT NULL AFTER foto",
                     'tanggal_lahir' => "DATE DEFAULT NULL AFTER tempat_lahir",
-                    'face_image' => "VARCHAR(255) DEFAULT NULL AFTER tanggal_lahir"
+                    'face_image' => "VARCHAR(255) DEFAULT NULL AFTER tanggal_lahir",
+                    'face_descriptor' => "TEXT DEFAULT NULL AFTER face_image"
                 ],
                 'guru' => [
                     'tempat_lahir' => "VARCHAR(100) DEFAULT NULL AFTER foto",

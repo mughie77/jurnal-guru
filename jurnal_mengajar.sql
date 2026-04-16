@@ -39,6 +39,7 @@ CREATE TABLE `guru` (
   `tempat_lahir` varchar(100) DEFAULT NULL,
   `tanggal_lahir` date DEFAULT NULL,
   `face_image` varchar(255) DEFAULT NULL,
+  `face_descriptor` text DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `nip` (`nip`),
   KEY `user_id` (`user_id`),
@@ -119,6 +120,7 @@ CREATE TABLE `siswa` (
   `tempat_lahir` varchar(100) DEFAULT NULL,
   `tanggal_lahir` date DEFAULT NULL,
   `face_image` varchar(255) DEFAULT NULL,
+  `face_descriptor` text DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `nis` (`nis`),
   UNIQUE KEY `nisn` (`nisn`)

@@ -23,6 +23,8 @@ if (!$col_exists && $_SESSION['role'] === 'admin') {
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $col_exists) {
     if (!empty($_POST['face_data'])) {
         $img = $_POST['face_data'];
+        $descriptor = $_POST['face_descriptor'] ?? null;
+
         $img = str_replace('data:image/jpeg;base64,', '', $img);
         $img = str_replace(' ', '+', $img);
         $data = base64_decode($img);
@@ -38,9 +40,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $col_exists) {
 
         if (file_put_contents($filepath, $data)) {
             // Update database
-            $sql = "UPDATE siswa SET face_image = ? WHERE id = ?";
+            $sql = "UPDATE siswa SET face_image = ?, face_descriptor = ? WHERE id = ?";
             $stmt = mysqli_prepare($conn, $sql);
-            mysqli_stmt_bind_param($stmt, "si", $filename, $siswa_id);
+            mysqli_stmt_bind_param($stmt, "ssi", $filename, $descriptor, $siswa_id);
             if (mysqli_stmt_execute($stmt)) {
                 $success_msg = "Wajah berhasil didaftarkan!";
             } else {
@@ -73,6 +75,9 @@ require_once __DIR__ . '/../includes/header.php';
     .lg\:ml-64 { margin-left: 0; }
     body { background-color: #F8FAFC; }
 </style>
+
+<!-- Face-API.js -->
+<script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
 
 <div class="bg-slate-50 min-h-screen pb-24">
     <div class="p-4 lg:p-8 max-w-2xl mx-auto">
@@ -165,6 +170,7 @@ require_once __DIR__ . '/../includes/header.php';
 
             <form id="faceForm" method="POST" class="hidden">
                 <input type="hidden" name="face_data" id="face_data">
+                <input type="hidden" name="face_descriptor" id="face_descriptor">
                 <div class="flex gap-4">
                     <button type="button" id="retake" class="flex-1 py-5 bg-slate-100 text-slate-500 rounded-[24px] font-black text-xs uppercase tracking-[0.2em] hover:bg-slate-200 transition-all">Ulangi</button>
                     <button type="submit" class="flex-[2] py-5 bg-emerald-600 text-white rounded-[24px] font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-emerald-100 hover:bg-emerald-700 active:scale-95 transition-all">Daftarkan Wajah</button>
@@ -196,6 +202,7 @@ require_once __DIR__ . '/../includes/header.php';
     const retake = document.getElementById('retake');
     const faceForm = document.getElementById('faceForm');
     const faceDataInput = document.getElementById('face_data');
+    const faceDescriptorInput = document.getElementById('face_descriptor');
     const cameraStatus = document.getElementById('cameraStatus');
     const capturedPreview = document.getElementById('capturedPreview');
     const previewImg = document.getElementById('previewImg');
@@ -217,15 +224,54 @@ require_once __DIR__ . '/../includes/header.php';
         }
     }
 
-    initCamera();
+    // Load Models for descriptor calculation
+    const MODEL_URL = '<?= BASE_URL ?>models';
+    async function loadModels() {
+        try {
+            await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
+            await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+            await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+            initCamera();
+        } catch (e) {
+            console.error("Model load failed:", e);
+            cameraStatus.innerHTML = '<i class="fa fa-exclamation-triangle text-4xl text-amber-500 mb-4"></i><span class="text-[10px] font-black uppercase tracking-widest text-amber-600 text-center">Gagal memuat AI. Pastikan internet stabil.</span>';
+        }
+    }
+
+    loadModels();
 
     // Capture Photo
-    snap.addEventListener('click', () => {
+    snap.addEventListener('click', async () => {
+        const originalText = snap.innerHTML;
+        snap.disabled = true;
+        snap.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Memproses Wajah...';
+
         const context = canvas.getContext('2d');
+        canvas.width = 640; // Use reasonable size for processing
+        canvas.height = 480;
+
+        // Draw the video frame
+        context.translate(canvas.width, 0);
+        context.scale(-1, 1);
+        context.drawImage(video, 0, 0, 640, 480);
+
+        // Calculate Descriptor
+        const detection = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor();
+
+        if (!detection) {
+            alert("Wajah tidak terdeteksi! Pastikan pencahayaan cukup dan wajah terlihat jelas.");
+            snap.disabled = false;
+            snap.innerHTML = originalText;
+            return;
+        }
+
+        // Save descriptor as JSON string
+        faceDescriptorInput.value = JSON.stringify(Array.from(detection.descriptor));
+
+        // Higher quality for storage
         canvas.width = 1080;
         canvas.height = 1080;
-
-        // Draw the video frame to the canvas
+        context.setTransform(1, 0, 0, 1, 0, 0);
         context.translate(canvas.width, 0);
         context.scale(-1, 1);
         context.drawImage(video, 0, 0, 1080, 1080);
@@ -238,7 +284,7 @@ require_once __DIR__ . '/../includes/header.php';
         snap.classList.add('hidden');
         faceForm.classList.remove('hidden');
 
-        // Stop the camera stream to save battery
+        // Stop camera
         if (video.srcObject) {
             const stream = video.srcObject;
             const tracks = stream.getTracks();
