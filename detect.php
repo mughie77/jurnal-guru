@@ -135,20 +135,28 @@ $favicon = !empty($sets['favicon']) ? BASE_URL . 'uploads/' . $sets['favicon'] :
         // 2. https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights (Raw GitHub - sometimes blocked)
         // 3. Hosting locally (best but requires assets in the repo)
 
-        // Selalu gunakan BASE_URL absolut agar file model ditemukan dari folder mana pun
-        const MODEL_URL = '<?= BASE_URL ?>models';
+        // Tentukan folder model secara dinamis
+        // Gunakan relative path 'models' agar lebih kompatibel dengan berbagai skema http/https
+        let MODEL_URL = 'models';
 
         async function init() {
             try {
                 statusIndicator.innerHTML = '<div class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></div><span class="text-white/80 text-[10px] font-black uppercase tracking-widest">Memuat AI...</span>';
 
-                console.log("Loading Models from:", MODEL_URL);
+                console.log("Fetching AI Models from:", window.location.origin + window.location.pathname.replace(/[^\/]*$/, '') + MODEL_URL);
 
-                // Load models secara berurutan untuk kestabilan koneksi di beberapa browser
+                // Load models secara berurutan untuk menghindari koneksi yang terputus (fetch failed)
                 await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
+                console.log("SSD Mobilenet Loaded");
+
                 await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+                console.log("Landmarks Loaded");
+
                 await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+                console.log("Recognition Loaded");
+
                 await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+                console.log("Tiny Detector Loaded");
 
                 statusIndicator.innerHTML = '<div class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></div><span class="text-white/80 text-[10px] font-black uppercase tracking-widest">Memulai Kamera...</span>';
 
@@ -156,21 +164,25 @@ $favicon = !empty($sets['favicon']) ? BASE_URL . 'uploads/' . $sets['favicon'] :
             } catch (err) {
                 console.error("AI Initialization failed:", err);
                 statusIndicator.innerHTML = '<div class="w-2 h-2 rounded-full bg-rose-500"></div><span class="text-white/80 text-[10px] font-black uppercase tracking-widest">Gagal Memuat AI</span>';
-                detectionResult.innerText = 'Error: ' + err.message.substring(0, 40);
 
-                // Coba fallback ke path relatif jika absolut gagal (beberapa setup server lokal unik)
-                if (MODEL_URL.startsWith('http')) {
-                    console.log("Retrying with relative path...");
+                // Jika relative path gagal, coba gunakan BASE_URL dari PHP sebagai cadangan
+                const FALLBACK_URL = '<?= BASE_URL ?>models';
+                if (MODEL_URL !== FALLBACK_URL) {
+                    console.log("Retrying with FALLBACK_URL:", FALLBACK_URL);
+                    MODEL_URL = FALLBACK_URL;
                     try {
-                        await faceapi.nets.ssdMobilenetv1.loadFromUri('models');
-                        await faceapi.nets.faceLandmark68Net.loadFromUri('models');
-                        await faceapi.nets.faceRecognitionNet.loadFromUri('models');
-                        await faceapi.nets.tinyFaceDetector.loadFromUri('models');
+                        await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
+                        await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+                        await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+                        await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
                         startVideo();
+                        return;
                     } catch (e) {
-                        console.error("Relative path fallback failed also.");
+                        console.error("Fallback also failed:", e);
                     }
                 }
+
+                detectionResult.innerHTML = `<button onclick="window.location.reload()" class="underline">Gagal: ${err.message.substring(0, 20)}. Coba Lagi?</button>`;
             }
         }
 

@@ -23,13 +23,16 @@ if (!empty($base_url_config)) {
     define('BASE_URL', $base_url_config);
 } else {
     // Deteksi URL dasar secara otomatis
-    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
+    $protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443 || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https')) ? "https://" : "http://";
     $domainName = $_SERVER['HTTP_HOST'] ?? 'localhost';
     $scriptName = $_SERVER['SCRIPT_NAME'];
 
     // Cari path root aplikasi (naik dari folder core jika perlu)
     $app_root_path = str_replace(['/admin/', '/guru/', '/waka/', '/api/', '/siswa/', '/error/'], '/', dirname($scriptName));
-    $app_root_path = rtrim($app_root_path, '/\\') . '/';
+
+    // Normalisasi path agar selalu diakhiri dengan satu slash
+    $app_root_path = str_replace('\\', '/', $app_root_path);
+    $app_root_path = rtrim($app_root_path, '/') . '/';
 
     define('BASE_URL', $protocol . $domainName . $app_root_path);
 }

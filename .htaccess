@@ -1,19 +1,23 @@
 RewriteEngine On
+Options -MultiViews
 
-# 1. Hilangkan .php pada address bar (External Redirect)
-# Agar http://localhost/jurnal/profil.php menjadi http://localhost/jurnal/profil
+# Exclude existing directories and files from rewriting
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# 1. Hilangkan .php pada address bar (Internal Rewrite)
+# Memungkinkan akses /login untuk login.php
+RewriteCond %{REQUEST_FILENAME}.php -f
+RewriteRule ^(.*?)/?$ $1.php [L]
+
+# 2. Redirect dari .php ke non-php (External Redirect)
+# Agar lebih rapi, hanya jika dipanggil langsung lewat browser
 RewriteCond %{THE_REQUEST} ^[A-Z]{3,}\s/+(.+)\.php[\s?] [NC]
 RewriteRule ^ /%1 [R=301,L]
 
-# 2. Map URL tanpa ekstensi ke file .php (Internal Rewrite)
-# Agar http://localhost/jurnal/profil tetap memproses profil.php
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteCond %{REQUEST_FILENAME}\.php -f
-RewriteRule ^(.*)$ $1.php [L]
-
 # 3. Error Documents
-# PENTING: Apache ErrorDocument membutuhkan path lengkap dari domain root.
-# GANTI "/jurnal/" jika folder aplikasi Anda berbeda.
+# PENTING: GANTI "/jurnal/" jika folder aplikasi Anda berbeda.
 ErrorDocument 403 /jurnal/error/403.php
 ErrorDocument 404 /jurnal/error/404.php
 ErrorDocument 500 /jurnal/error/500.php
