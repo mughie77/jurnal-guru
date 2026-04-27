@@ -1,0 +1,8 @@
+# Prevent PHP execution in this directory
+<Files "*.php">
+    Order Deny,Allow
+    Deny from all
+</Files>
+
+# Ensure images are served correctly
+AddType image/jpeg .jpg .jpeg

@@ -57,6 +57,7 @@ if ($role == 'admin') {
         ".nav_link('admin/jurnal.php', 'fa fa-book-open', 'Jurnal Mengajar', $current_page == 'jurnal.php')."
         ".nav_link('admin/rekap_absensi.php', 'fa fa-chart-line', 'Rekap Absensi Jurnal', $current_page == 'rekap_absensi.php')."
         ".nav_link('admin/rekap_gps.php', 'fa fa-map-marked-alt', 'Rekap Absensi GPS', $current_page == 'rekap_gps.php')."
+        ".nav_link('admin/rekap_berkas.php', 'fa fa-file-invoice', 'Rekap Berkas Siswa', $current_page == 'rekap_berkas.php')."
         ".nav_link('admin/perangkat.php', 'fa fa-folder-open', 'Data Perangkat', $current_page == 'perangkat.php')."
     </div>";
 
@@ -93,6 +94,7 @@ if ($role == 'admin') {
         ".nav_link('waka/jurnal.php', 'fa fa-book-open', 'Jurnal Mengajar', $current_page == 'jurnal.php')."
         ".nav_link('admin/rekap_absensi.php', 'fa fa-chart-line', 'Rekap Absensi Jurnal', $current_page == 'rekap_absensi.php')."
         ".nav_link('admin/rekap_gps.php', 'fa fa-map-marked-alt', 'Rekap Absensi GPS', $current_page == 'rekap_gps.php')."
+        ".nav_link('admin/rekap_berkas.php', 'fa fa-file-invoice', 'Rekap Berkas Siswa', $current_page == 'rekap_berkas.php')."
         ".nav_link('admin/perangkat.php', 'fa fa-folder-open', 'Data Perangkat', $current_page == 'perangkat.php')."
     </div>";
 }
