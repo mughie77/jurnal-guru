@@ -88,8 +88,14 @@ require_once __DIR__ . '/../includes/header.php';
 </div>
 
 <script>
-    // Generate Barcode
-    JsBarcode("#barcode", "<?= $siswa['nis'] ?>", {
+    // Generate Barcode - Only use the part of NIS before the slash
+    <?php
+    $barcode_val = $siswa['nis'];
+    if (strpos($barcode_val, '/') !== false) {
+        $barcode_val = explode('/', $barcode_val)[0];
+    }
+    ?>
+    JsBarcode("#barcode", "<?= $barcode_val ?>", {
         format: "CODE128",
         width: 1.5,
         height: 35,
