@@ -5,6 +5,30 @@ require_once __DIR__ . '/../config/database.php';
 authorize_role(['siswa']);
 
 $siswa_id = $_SESSION['user_id'];
+$message = '';
+$message_type = '';
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profil'])) {
+    if (!verify_csrf_token($_POST['csrf_token'] ?? '')) die("CSRF Token Invalid");
+
+    $jk = $_POST['jenis_kelamin'];
+    $tempat_lahir = $_POST['tempat_lahir'];
+    $tanggal_lahir = $_POST['tanggal_lahir'];
+    $no_telp = $_POST['no_telp'];
+    $alamat = $_POST['alamat'];
+
+    $sql = "UPDATE siswa SET jenis_kelamin = ?, tempat_lahir = ?, tanggal_lahir = ?, no_telp = ?, alamat = ? WHERE id = ?";
+    $stmt = mysqli_prepare($conn, $sql);
+    mysqli_stmt_bind_param($stmt, "sssssi", $jk, $tempat_lahir, $tanggal_lahir, $no_telp, $alamat, $siswa_id);
+
+    if (mysqli_stmt_execute($stmt)) {
+        $message = "Profil berhasil diperbarui!";
+        $message_type = "success";
+    } else {
+        $message = "Gagal memperbarui profil.";
+        $message_type = "error";
+    }
+}
 
 // Get Student Profile and Active Class
 $query_profile = "SELECT s.*, k.nama_kelas, tp.tahun as tahun_pelajaran
@@ -40,6 +64,17 @@ require_once __DIR__ . '/../includes/header.php';
                 <i class="fa fa-arrow-left"></i>
             </a>
         </div>
+
+        <?php if ($message): ?>
+            <script>
+                Swal.fire({
+                    icon: '<?= $message_type ?>',
+                    title: '<?= $message_type == 'success' ? 'Berhasil' : 'Gagal' ?>',
+                    text: '<?= $message ?>',
+                    customClass: { popup: 'rounded-3xl', title: 'font-black italic' }
+                });
+            </script>
+        <?php endif; ?>
 
         <div class="lux-card p-8 mb-8 bg-gradient-to-br from-indigo-600 to-indigo-800 text-white relative overflow-hidden">
             <div class="relative z-10 flex flex-col items-center text-center">
@@ -98,10 +133,86 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
 
         <div class="mt-12 text-center">
-            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Ingin mengubah data?</p>
-            <p class="text-xs text-slate-500 italic px-8">"Perubahan data diri hanya dapat dilakukan melalui Administrator atau Operator sekolah via Dapodik."</p>
+            <button onclick="openModal('editProfilModal')" class="px-8 py-3 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest italic shadow-xl hover:bg-indigo-600 transition-all flex items-center justify-center mx-auto gap-2">
+                <i class="fa fa-edit"></i> Edit Profil
+            </button>
         </div>
     </div>
 </div>
+
+<div id="modalOverlay" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] hidden transition-opacity duration-300 opacity-0" onclick="closeAllModals()"></div>
+
+<div id="editProfilModal" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-white rounded-[40px] shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0 overflow-hidden">
+    <div class="bg-slate-900 px-8 py-6 text-white flex items-center justify-between">
+        <h3 class="text-xl font-black italic tracking-widest uppercase">Edit Profil</h3>
+        <button onclick="closeModal('editProfilModal')" class="text-white/50 hover:text-white transition-colors"><i class="fa fa-times text-xl"></i></button>
+    </div>
+    <form action="" method="POST" class="p-8 space-y-5">
+        <input type="hidden" name="csrf_token" value="<?= get_csrf_token() ?>">
+
+        <div>
+            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Jenis Kelamin</label>
+            <select name="jenis_kelamin" required class="w-full px-5 py-3.5 rounded-2xl bg-slate-50 border-2 border-transparent focus:border-indigo-100 outline-none font-bold text-slate-700 transition-all">
+                <option value="L" <?= $siswa['jenis_kelamin'] == 'L' ? 'selected' : '' ?>>Laki-laki</option>
+                <option value="P" <?= $siswa['jenis_kelamin'] == 'P' ? 'selected' : '' ?>>Perempuan</option>
+            </select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Tempat Lahir</label>
+                <input type="text" name="tempat_lahir" value="<?= htmlspecialchars($siswa['tempat_lahir'] ?? '') ?>" required class="w-full px-5 py-3.5 rounded-2xl bg-slate-50 border-2 border-transparent focus:border-indigo-100 outline-none font-bold text-slate-700 transition-all">
+            </div>
+            <div>
+                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Tanggal Lahir</label>
+                <input type="date" name="tanggal_lahir" value="<?= htmlspecialchars($siswa['tanggal_lahir'] ?? '') ?>" required class="w-full px-5 py-3.5 rounded-2xl bg-slate-50 border-2 border-transparent focus:border-indigo-100 outline-none font-bold text-slate-700 transition-all">
+            </div>
+        </div>
+
+        <div>
+            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Nomor Telp / HP</label>
+            <input type="text" name="no_telp" value="<?= htmlspecialchars($siswa['no_telp'] ?? '') ?>" required class="w-full px-5 py-3.5 rounded-2xl bg-slate-50 border-2 border-transparent focus:border-indigo-100 outline-none font-bold text-slate-700 transition-all">
+        </div>
+
+        <div>
+            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Alamat Lengkap</label>
+            <textarea name="alamat" rows="3" required class="w-full px-5 py-3.5 rounded-2xl bg-slate-50 border-2 border-transparent focus:border-indigo-100 outline-none font-bold text-slate-700 transition-all"><?= htmlspecialchars($siswa['alamat'] ?? '') ?></textarea>
+        </div>
+
+        <div class="pt-4">
+            <button type="submit" name="update_profil" class="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black italic tracking-widest uppercase shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all active:scale-95">Simpan Perubahan</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    function openModal(id) {
+        const modal = document.getElementById(id);
+        const overlay = document.getElementById('modalOverlay');
+        overlay.classList.remove('hidden');
+        modal.classList.remove('hidden');
+        setTimeout(() => {
+            overlay.classList.add('opacity-100');
+            modal.classList.remove('scale-95', 'opacity-0');
+        }, 10);
+    }
+
+    function closeModal(id) {
+        const modal = document.getElementById(id);
+        const overlay = document.getElementById('modalOverlay');
+        overlay.classList.remove('opacity-100');
+        modal.classList.add('scale-95', 'opacity-0');
+        setTimeout(() => {
+            overlay.classList.add('hidden');
+            modal.classList.add('hidden');
+        }, 300);
+    }
+
+    function closeAllModals() {
+        document.querySelectorAll('.modal-content').forEach(m => {
+            if (!m.classList.contains('hidden')) closeModal(m.id);
+        });
+    }
+</script>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>
