@@ -117,6 +117,17 @@ if (!empty($where_clauses)) {
 
 $pagin = get_pagination_data($conn, "siswa s LEFT JOIN siswa_kelas sk ON s.id = sk.siswa_id AND sk.tahun_pelajaran_id = '$active_tahun_id'", 15, $where_sql);
 
+// Calculate totals based on filters
+$total_query = "SELECT
+                    COUNT(*) as total,
+                    SUM(CASE WHEN s.jenis_kelamin = 'L' THEN 1 ELSE 0 END) as total_L,
+                    SUM(CASE WHEN s.jenis_kelamin = 'P' THEN 1 ELSE 0 END) as total_P
+                FROM siswa s
+                LEFT JOIN siswa_kelas sk ON s.id = sk.siswa_id AND sk.tahun_pelajaran_id = '$active_tahun_id'
+                $where_sql";
+$total_res = mysqli_query($conn, $total_query);
+$totals = mysqli_fetch_assoc($total_res);
+
 $query = "SELECT s.*, k.nama_kelas
           FROM siswa s
           LEFT JOIN siswa_kelas sk ON s.id = sk.siswa_id AND sk.tahun_pelajaran_id = '$active_tahun_id'
@@ -177,6 +188,30 @@ require_once __DIR__ . '/../includes/header.php';
     Swal.fire({ icon: '<?= $message_type ?>', title: '<?= ucfirst($message_type) ?>', text: '<?= addslashes(htmlspecialchars($message)) ?>' });
 </script>
 <?php endif; ?>
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+    <div class="lux-card p-6 bg-gradient-to-br from-indigo-500 to-indigo-700 text-white border-none shadow-lg shadow-indigo-100 flex items-center justify-between">
+        <div>
+            <p class="text-[10px] font-black uppercase tracking-[0.2em] opacity-80 mb-1">Total Siswa Terfilter</p>
+            <h3 class="text-3xl font-black italic tracking-tighter"><?= $totals['total'] ?></h3>
+        </div>
+        <div class="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-2xl shadow-inner"><i class="fa fa-users"></i></div>
+    </div>
+    <div class="lux-card p-6 bg-white border-none shadow-lg shadow-slate-100 flex items-center justify-between">
+        <div>
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Laki-laki (L)</p>
+            <h3 class="text-3xl font-black italic text-indigo-600 tracking-tighter"><?= $totals['total_L'] ?? 0 ?></h3>
+        </div>
+        <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-500 flex items-center justify-center text-2xl"><i class="fa fa-mars"></i></div>
+    </div>
+    <div class="lux-card p-6 bg-white border-none shadow-lg shadow-slate-100 flex items-center justify-between">
+        <div>
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Perempuan (P)</p>
+            <h3 class="text-3xl font-black italic text-pink-500 tracking-tighter"><?= $totals['total_P'] ?? 0 ?></h3>
+        </div>
+        <div class="w-12 h-12 rounded-2xl bg-pink-50 text-pink-500 flex items-center justify-center text-2xl"><i class="fa fa-venus"></i></div>
+    </div>
+</div>
 
 <div class="lux-card overflow-hidden">
     <div class="overflow-x-auto">

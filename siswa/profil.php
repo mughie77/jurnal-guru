@@ -142,12 +142,12 @@ require_once __DIR__ . '/../includes/header.php';
 
 <div id="modalOverlay" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] hidden transition-opacity duration-300 opacity-0" onclick="closeAllModals()"></div>
 
-<div id="editProfilModal" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-white rounded-[40px] shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0 overflow-hidden">
-    <div class="bg-slate-900 px-8 py-6 text-white flex items-center justify-between">
-        <h3 class="text-xl font-black italic tracking-widest uppercase">Edit Profil</h3>
+<div id="editProfilModal" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] max-w-lg bg-white rounded-[32px] sm:rounded-[40px] shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0 overflow-hidden">
+    <div class="bg-slate-900 px-6 py-5 sm:px-8 sm:py-6 text-white flex items-center justify-between">
+        <h3 class="text-lg sm:text-xl font-black italic tracking-widest uppercase">Edit Profil</h3>
         <button onclick="closeModal('editProfilModal')" class="text-white/50 hover:text-white transition-colors"><i class="fa fa-times text-xl"></i></button>
     </div>
-    <form action="" method="POST" class="p-8 space-y-5">
+    <form action="" method="POST" class="p-6 sm:p-8 space-y-4 sm:space-y-5 max-h-[70vh] overflow-y-auto">
         <input type="hidden" name="csrf_token" value="<?= get_csrf_token() ?>">
 
         <div>
@@ -158,7 +158,7 @@ require_once __DIR__ . '/../includes/header.php';
             </select>
         </div>
 
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
                 <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Tempat Lahir</label>
                 <input type="text" name="tempat_lahir" value="<?= htmlspecialchars($siswa['tempat_lahir'] ?? '') ?>" required class="w-full px-5 py-3.5 rounded-2xl bg-slate-50 border-2 border-transparent focus:border-indigo-100 outline-none font-bold text-slate-700 transition-all">
