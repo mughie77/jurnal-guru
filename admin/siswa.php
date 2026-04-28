@@ -86,7 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
     } catch (mysqli_sql_exception $e) {
         if ($e->getCode() == 1062) {
-            $message = "Gagal: NIS " . htmlspecialchars($_POST['nis']) . " sudah terdaftar di sistem.";
+            $message = "Gagal: NIS/NISN sudah terdaftar di sistem.";
             $message_type = 'error';
         } else {
             $message = "Database Error: " . $e->getMessage();
@@ -104,7 +104,7 @@ $where_clauses = [];
 $where_clauses[] = "s.id IN (SELECT siswa_id FROM siswa_kelas WHERE tahun_pelajaran_id = '$active_tahun_id')";
 
 if (!empty($search)) {
-    $where_clauses[] = "(s.nama_siswa LIKE '%$search%' OR s.nis LIKE '%$search%')";
+    $where_clauses[] = "(s.nama_siswa LIKE '%$search%' OR s.nis LIKE '%$search%' OR s.nisn LIKE '%$search%')";
 }
 if ($kelas_filter > 0) {
     $where_clauses[] = "sk.kelas_id = $kelas_filter";
@@ -154,7 +154,7 @@ require_once __DIR__ . '/../includes/header.php';
     <form action="" method="GET" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
         <div class="space-y-1">
             <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Cari Siswa</label>
-            <input type="text" name="search" value="<?= htmlspecialchars($search) ?>" placeholder="Nama atau NIS..." class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-100 bg-white shadow-sm">
+            <input type="text" name="search" value="<?= htmlspecialchars($search) ?>" placeholder="Nama, NIS, atau NISN..." class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-100 bg-white shadow-sm">
         </div>
         <div class="space-y-1">
             <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Filter Kelas</label>

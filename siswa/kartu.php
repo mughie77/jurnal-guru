@@ -64,7 +64,7 @@ require_once __DIR__ . '/../includes/header.php';
 
                     <div class="info-area-new">
                         <div class="info-value val-nama"><?= htmlspecialchars($siswa['nama_siswa']) ?></div>
-                        <div class="info-value val-nis"><?= htmlspecialchars($siswa['nis']) ?> / <?= htmlspecialchars($siswa['nisn'] ?? '-') ?></div>
+                        <div class="info-value val-nis"><?= htmlspecialchars($siswa['nis']) ?> | <?= htmlspecialchars($siswa['nisn'] ?? '-') ?></div>
                         <div class="info-value val-ttl">
                             <?= htmlspecialchars($siswa['tempat_lahir'] ?? '-') ?>,
                             <?= !empty($siswa['tanggal_lahir']) ? date('d-m-Y', strtotime($siswa['tanggal_lahir'])) : '-' ?>

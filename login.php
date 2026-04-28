@@ -49,17 +49,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $error_message = "Username atau Password salah.";
             }
         } else {
-            $sql_siswa = "SELECT id, nis, nama_siswa FROM siswa WHERE nis = ?";
+            $sql_siswa = "SELECT id, nisn, nama_siswa FROM siswa WHERE nisn = ?";
             $stmt_s = mysqli_prepare($conn, $sql_siswa);
             mysqli_stmt_bind_param($stmt_s, "s", $username);
             mysqli_stmt_execute($stmt_s);
             $res_s = mysqli_stmt_get_result($stmt_s);
 
             if ($siswa = mysqli_fetch_assoc($res_s)) {
-                if ($password === $siswa['nis']) {
+                if (!empty($siswa['nisn']) && $password === $siswa['nisn']) {
                     $_SESSION['user_id'] = $siswa['id'];
                     $_SESSION['nama_lengkap'] = $siswa['nama_siswa'];
-                    $_SESSION['username'] = $siswa['nis'];
+                    $_SESSION['username'] = $siswa['nisn'];
                     $_SESSION['role'] = 'siswa';
                     header('Location: ' . BASE_URL . 'siswa/index.php');
                     exit();
@@ -192,7 +192,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
                 <form action="" method="POST" class="space-y-6">
                     <div>
-                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 ml-1 italic">Username / NIP / NIS</label>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 ml-1 italic">Username / NIP / NISN</label>
                         <div class="group relative">
                             <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none transition-colors group-focus-within:text-indigo-600 text-slate-300">
                                 <i class="fa fa-user-circle"></i>

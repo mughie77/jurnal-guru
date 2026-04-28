@@ -19,8 +19,8 @@ switch ($type) {
         $filename = 'Template_Import_Siswa.xlsx';
         $data = [
             ['NIS', 'NISN', 'Nama Siswa', 'L/P', 'Alamat', 'No. Telp', 'Tempat Lahir', 'Tanggal Lahir'],
-            ['12345', '0012345678', 'Budi Santoso', 'L', 'Jl. Contoh No. 1', '08123456789', 'Bondowoso', '2005-01-01'],
-            ['12346', '0012345679', 'Ani Wijaya', 'P', 'Jl. Contoh No. 2', '08123456780', 'Bondowoso', '2005-02-02'],
+            ['1234/1231.2331', '0012345678', 'Budi Santoso', 'L', 'Jl. Contoh No. 1', '08123456789', 'Bondowoso', '2005-01-01'],
+            ['1235/1232.2332', '0012345679', 'Ani Wijaya', 'P', 'Jl. Contoh No. 2', '08123456780', 'Bondowoso', '2005-02-02'],
         ];
         break;
     case 'kelas':

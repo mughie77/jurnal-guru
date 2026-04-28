@@ -83,9 +83,7 @@
     height: 175px;
     border-radius: 6px;
     overflow: hidden;
-    background: #f1f5f9;
-    border: 2px solid white;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    background: transparent;
 }
 
 .photo-area-new img {
@@ -137,34 +135,37 @@
 
 /* Precise positions adjusted to be below labels on the background */
 .val-nama {
-    top: 84px;
+    top: 88px;
     left: 17px;
-    font-weight: 900;
-    font-size: 14px; /* Slightly larger for name */
+    font-weight: 800;
+    font-size: 14px;
+    color: #000;
 }
 .val-nis {
-    top: 128px;
+    top: 131px;
     left: 17px;
-    font-weight: 500;
+    font-weight: 800;
+    font-size: 13px;
 }
 .val-ttl {
-    top: 173px;
+    top: 174px;
     left: 17px;
-    font-weight: 500;
+    font-weight: 800;
+    font-size: 13px;
 }
 .val-jk {
-    top: 215px;
+    top: 217px;
     left: 17px;
-    font-weight: 500;
+    font-weight: 800;
+    font-size: 13px;
 }
 .val-alamat {
     top: 261px;
     left: 17px;
     width: 350px;
-
-    font-size: 10px;
-    font-weight: 500;
-
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1.2;
 }
 
 .info-label {
