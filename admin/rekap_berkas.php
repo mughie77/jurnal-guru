@@ -10,18 +10,17 @@ $kelas_id = mysqli_real_escape_string($conn, $_GET['kelas_id'] ?? '');
 
 $where = " WHERE tp.status = 'aktif'";
 if (!empty($search)) {
-    $where .= " AND (s.nama_siswa LIKE '%$search%' OR s.nis LIKE '%$search%')";
+    $where .= " AND (s.nama_siswa LIKE '%$search%' OR s.nis LIKE '%$search%' OR s.nisn LIKE '%$search%')";
 }
 if (!empty($kelas_id)) {
     $where .= " AND sk.kelas_id = '$kelas_id'";
 }
 
 // Pagination
-$count_query = "SELECT COUNT(*) as total FROM siswa s
+$table_join = "siswa s
                 JOIN siswa_kelas sk ON s.id = sk.siswa_id
-                JOIN tahun_pelajaran tp ON sk.tahun_pelajaran_id = tp.id
-                $where";
-$pagin = get_pagination_data($conn, $count_query, 15);
+                JOIN tahun_pelajaran tp ON sk.tahun_pelajaran_id = tp.id";
+$pagin = get_pagination_data($conn, $table_join, 15, $where);
 
 // Get Data
 $query = "SELECT s.id, s.nis, s.nama_siswa, s.berkas_kk, s.berkas_ijazah, k.nama_kelas
@@ -54,7 +53,7 @@ require_once __DIR__ . '/../includes/header.php';
         <form action="" method="GET" class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div class="relative">
                 <i class="fa fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                <input type="text" name="search" value="<?= htmlspecialchars($search) ?>" placeholder="Cari Nama / NIS..."
+                <input type="text" name="search" value="<?= htmlspecialchars($search) ?>" placeholder="Cari Nama / NIS / NISN..."
                     class="w-full pl-12 pr-4 py-3 rounded-2xl bg-slate-50 border-none focus:ring-2 focus:ring-indigo-500 font-bold text-slate-700 placeholder:text-slate-300">
             </div>
             <select name="kelas_id" class="w-full px-4 py-3 rounded-2xl bg-slate-50 border-none focus:ring-2 focus:ring-indigo-500 font-bold text-slate-700">
