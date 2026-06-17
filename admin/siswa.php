@@ -22,6 +22,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $jenis_kelamin = $_POST['jenis_kelamin'];
             $alamat = $_POST['alamat'] ?: null;
             $no_telp = $_POST['no_telp'] ?: null;
+            $tempat_lahir = $_POST['tempat_lahir'] ?: null;
+            $tanggal_lahir = $_POST['tanggal_lahir'] ?: null;
 
             $foto = null;
             if (!empty($_FILES['foto']['name'])) {
@@ -32,8 +34,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 }
             }
 
-            $stmt = mysqli_prepare($conn, "INSERT INTO siswa (nis, nisn, nama_siswa, jenis_kelamin, alamat, no_telp, foto) VALUES (?, ?, ?, ?, ?, ?, ?)");
-            mysqli_stmt_bind_param($stmt, "sssssss", $nis, $nisn, $nama_siswa, $jenis_kelamin, $alamat, $no_telp, $foto);
+            $stmt = mysqli_prepare($conn, "INSERT INTO siswa (nis, nisn, nama_siswa, jenis_kelamin, alamat, no_telp, foto, tempat_lahir, tanggal_lahir) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            mysqli_stmt_bind_param($stmt, "sssssssss", $nis, $nisn, $nama_siswa, $jenis_kelamin, $alamat, $no_telp, $foto, $tempat_lahir, $tanggal_lahir);
             if (mysqli_stmt_execute($stmt)) {
                 $message = "Siswa berhasil ditambahkan!";
                 $message_type = 'success';
@@ -46,10 +48,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $jenis_kelamin = $_POST['jenis_kelamin'];
             $alamat = $_POST['alamat'] ?: null;
             $no_telp = $_POST['no_telp'] ?: null;
+            $tempat_lahir = $_POST['tempat_lahir'] ?: null;
+            $tanggal_lahir = $_POST['tanggal_lahir'] ?: null;
 
             $q_foto = "";
-            $params = [$nis, $nisn, $nama_siswa, $jenis_kelamin, $alamat, $no_telp];
-            $types = "ssssss";
+            $params = [$nis, $nisn, $nama_siswa, $jenis_kelamin, $alamat, $no_telp, $tempat_lahir, $tanggal_lahir];
+            $types = "ssssssss";
 
             if (!empty($_FILES['foto']['name'])) {
                 $ext = strtolower(pathinfo($_FILES['foto']['name'], PATHINFO_EXTENSION));
@@ -65,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $params[] = $id;
             $types .= "i";
 
-            $stmt = mysqli_prepare($conn, "UPDATE siswa SET nis = ?, nisn = ?, nama_siswa = ?, jenis_kelamin = ?, alamat = ?, no_telp = ? $q_foto WHERE id = ?");
+            $stmt = mysqli_prepare($conn, "UPDATE siswa SET nis = ?, nisn = ?, nama_siswa = ?, jenis_kelamin = ?, alamat = ?, no_telp = ?, tempat_lahir = ?, tanggal_lahir = ? $q_foto WHERE id = ?");
             mysqli_stmt_bind_param($stmt, $types, ...$params);
             if (mysqli_stmt_execute($stmt)) {
                 $message = "Data siswa diperbarui!";
@@ -82,7 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
     } catch (mysqli_sql_exception $e) {
         if ($e->getCode() == 1062) {
-            $message = "Gagal: NIS " . htmlspecialchars($_POST['nis']) . " sudah terdaftar di sistem.";
+            $message = "Gagal: NIS/NISN sudah terdaftar di sistem.";
             $message_type = 'error';
         } else {
             $message = "Database Error: " . $e->getMessage();
@@ -100,7 +104,7 @@ $where_clauses = [];
 $where_clauses[] = "s.id IN (SELECT siswa_id FROM siswa_kelas WHERE tahun_pelajaran_id = '$active_tahun_id')";
 
 if (!empty($search)) {
-    $where_clauses[] = "(s.nama_siswa LIKE '%$search%' OR s.nis LIKE '%$search%')";
+    $where_clauses[] = "(s.nama_siswa LIKE '%$search%' OR s.nis LIKE '%$search%' OR s.nisn LIKE '%$search%')";
 }
 if ($kelas_filter > 0) {
     $where_clauses[] = "sk.kelas_id = $kelas_filter";
@@ -112,6 +116,17 @@ if (!empty($where_clauses)) {
 }
 
 $pagin = get_pagination_data($conn, "siswa s LEFT JOIN siswa_kelas sk ON s.id = sk.siswa_id AND sk.tahun_pelajaran_id = '$active_tahun_id'", 15, $where_sql);
+
+// Calculate totals based on filters
+$total_query = "SELECT
+                    COUNT(*) as total,
+                    SUM(CASE WHEN s.jenis_kelamin = 'L' THEN 1 ELSE 0 END) as total_L,
+                    SUM(CASE WHEN s.jenis_kelamin = 'P' THEN 1 ELSE 0 END) as total_P
+                FROM siswa s
+                LEFT JOIN siswa_kelas sk ON s.id = sk.siswa_id AND sk.tahun_pelajaran_id = '$active_tahun_id'
+                $where_sql";
+$total_res = mysqli_query($conn, $total_query);
+$totals = mysqli_fetch_assoc($total_res);
 
 $query = "SELECT s.*, k.nama_kelas
           FROM siswa s
@@ -150,7 +165,7 @@ require_once __DIR__ . '/../includes/header.php';
     <form action="" method="GET" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
         <div class="space-y-1">
             <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Cari Siswa</label>
-            <input type="text" name="search" value="<?= htmlspecialchars($search) ?>" placeholder="Nama atau NIS..." class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-100 bg-white shadow-sm">
+            <input type="text" name="search" value="<?= htmlspecialchars($search) ?>" placeholder="Nama, NIS, atau NISN..." class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-100 bg-white shadow-sm">
         </div>
         <div class="space-y-1">
             <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Filter Kelas</label>
@@ -173,6 +188,30 @@ require_once __DIR__ . '/../includes/header.php';
     Swal.fire({ icon: '<?= $message_type ?>', title: '<?= ucfirst($message_type) ?>', text: '<?= addslashes(htmlspecialchars($message)) ?>' });
 </script>
 <?php endif; ?>
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+    <div class="lux-card p-6 bg-gradient-to-br from-indigo-500 to-indigo-700 text-white border-none shadow-lg shadow-indigo-100 flex items-center justify-between">
+        <div>
+            <p class="text-[10px] font-black uppercase tracking-[0.2em] opacity-80 mb-1">Total Siswa Terfilter</p>
+            <h3 class="text-3xl font-black italic tracking-tighter"><?= $totals['total'] ?></h3>
+        </div>
+        <div class="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-2xl shadow-inner"><i class="fa fa-users"></i></div>
+    </div>
+    <div class="lux-card p-6 bg-white border-none shadow-lg shadow-slate-100 flex items-center justify-between">
+        <div>
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Laki-laki (L)</p>
+            <h3 class="text-3xl font-black italic text-indigo-600 tracking-tighter"><?= $totals['total_L'] ?? 0 ?></h3>
+        </div>
+        <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-500 flex items-center justify-center text-2xl"><i class="fa fa-mars"></i></div>
+    </div>
+    <div class="lux-card p-6 bg-white border-none shadow-lg shadow-slate-100 flex items-center justify-between">
+        <div>
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Perempuan (P)</p>
+            <h3 class="text-3xl font-black italic text-pink-500 tracking-tighter"><?= $totals['total_P'] ?? 0 ?></h3>
+        </div>
+        <div class="w-12 h-12 rounded-2xl bg-pink-50 text-pink-500 flex items-center justify-center text-2xl"><i class="fa fa-venus"></i></div>
+    </div>
+</div>
 
 <div class="lux-card overflow-hidden">
     <div class="overflow-x-auto">
@@ -257,6 +296,10 @@ require_once __DIR__ . '/../includes/header.php';
             <div><label class="block text-sm font-bold text-slate-700 mb-1">No. Telp/HP</label><input type="text" name="no_telp" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50"></div>
         </div>
         <div class="grid grid-cols-2 gap-4">
+            <div><label class="block text-sm font-bold text-slate-700 mb-1">Tempat Lahir</label><input type="text" name="tempat_lahir" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50"></div>
+            <div><label class="block text-sm font-bold text-slate-700 mb-1">Tanggal Lahir</label><input type="date" name="tanggal_lahir" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 bg-white"></div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
             <div><label class="block text-sm font-bold text-slate-700 mb-1">Alamat</label><textarea name="alamat" rows="2" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50"></textarea></div>
             <div><label class="block text-sm font-bold text-slate-700 mb-1">Foto Siswa</label><input type="file" name="foto" accept="image/*" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 bg-white"></div>
         </div>
@@ -283,6 +326,10 @@ require_once __DIR__ . '/../includes/header.php';
                 </select>
             </div>
             <div><label class="block text-sm font-bold text-slate-700 mb-1">No. Telp/HP</label><input type="text" name="no_telp" value="<?= htmlspecialchars($row['no_telp'] ?? '') ?>" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"></div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+            <div><label class="block text-sm font-bold text-slate-700 mb-1">Tempat Lahir</label><input type="text" name="tempat_lahir" value="<?= htmlspecialchars($row['tempat_lahir'] ?? '') ?>" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"></div>
+            <div><label class="block text-sm font-bold text-slate-700 mb-1">Tanggal Lahir</label><input type="date" name="tanggal_lahir" value="<?= htmlspecialchars($row['tanggal_lahir'] ?? '') ?>" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50 bg-white"></div>
         </div>
         <div class="grid grid-cols-2 gap-4">
             <div><label class="block text-sm font-bold text-slate-700 mb-1">Alamat</label><textarea name="alamat" rows="2" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"><?= htmlspecialchars($row['alamat'] ?? '') ?></textarea></div>

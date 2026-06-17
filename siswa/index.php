@@ -18,22 +18,19 @@ mysqli_stmt_bind_param($stmt, "i", $siswa_id);
 mysqli_stmt_execute($stmt);
 $siswa = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
 
-// Attendance Recap per Subject
-$query_absensi = "SELECT mp.nama_mapel,
-                  SUM(CASE WHEN aj.status = 'H' THEN 1 ELSE 0 END) as hadir,
-                  SUM(CASE WHEN aj.status = 'S' THEN 1 ELSE 0 END) as sakit,
-                  SUM(CASE WHEN aj.status = 'I' THEN 1 ELSE 0 END) as izin,
-                  SUM(CASE WHEN aj.status = 'A' THEN 1 ELSE 0 END) as alfa,
-                  (SELECT COUNT(*) FROM absensi_harian ah WHERE ah.siswa_id = ? AND ah.status = 'Terlambat' AND ah.tanggal IN (SELECT tanggal FROM jurnal WHERE mapel_id = mp.id)) as terlambat
-                  FROM absensi_jurnal aj
-                  JOIN jurnal j ON aj.jurnal_id = j.id
-                  JOIN mata_pelajaran mp ON j.mapel_id = mp.id
-                  WHERE aj.siswa_id = ? AND j.tahun_pelajaran_id = ?
-                  GROUP BY mp.id";
-$stmt_abs = mysqli_prepare($conn, $query_absensi);
-mysqli_stmt_bind_param($stmt_abs, "iii", $siswa_id, $siswa_id, $active_tahun_id);
-mysqli_stmt_execute($stmt_abs);
-$absensi_recap = mysqli_stmt_get_result($stmt_abs);
+// GPS Attendance Recap (Harian)
+$query_gps = "SELECT
+              SUM(CASE WHEN status = 'Hadir' THEN 1 ELSE 0 END) as hadir,
+              SUM(CASE WHEN status = 'Terlambat' THEN 1 ELSE 0 END) as terlambat,
+              SUM(CASE WHEN status = 'Sakit' THEN 1 ELSE 0 END) as sakit,
+              SUM(CASE WHEN status = 'Izin' THEN 1 ELSE 0 END) as izin,
+              SUM(CASE WHEN status = 'Alfa' THEN 1 ELSE 0 END) as alfa
+              FROM absensi_harian
+              WHERE siswa_id = ? AND (MONTH(tanggal) = MONTH(CURRENT_DATE()) AND YEAR(tanggal) = YEAR(CURRENT_DATE()))";
+$stmt_gps = mysqli_prepare($conn, $query_gps);
+mysqli_stmt_bind_param($stmt_gps, "i", $siswa_id);
+mysqli_stmt_execute($stmt_gps);
+$gps_recap = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt_gps));
 
 $page_title = "Dashboard Siswa";
 require_once __DIR__ . '/../includes/header.php';
@@ -47,7 +44,7 @@ require_once __DIR__ . '/../includes/header.php';
 
 <div class="bg-slate-50 min-h-screen pb-24">
     <div class="p-4 lg:p-8 max-w-4xl mx-auto">
-        <!-- Header Profil -->
+
         <div class="lux-card p-6 mb-8 bg-gradient-to-br from-indigo-600 to-indigo-800 text-white relative overflow-hidden">
             <div class="relative z-10 flex items-center gap-6">
                 <div class="w-24 h-24 rounded-2xl bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center text-3xl font-black italic shadow-inner overflow-hidden">
@@ -69,62 +66,108 @@ require_once __DIR__ . '/../includes/header.php';
             <i class="fa fa-user-graduate absolute -bottom-6 -right-6 text-9xl opacity-10"></i>
         </div>
 
-        <!-- Detail Data -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="lux-card p-5">
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Jenis Kelamin</p>
-                <p class="font-bold text-slate-800"><?= $siswa['jenis_kelamin'] == 'L' ? 'Laki-laki' : 'Perempuan' ?></p>
-            </div>
-            <div class="lux-card p-5">
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">No. Telp/HP</p>
-                <p class="font-bold text-slate-800"><?= htmlspecialchars($siswa['no_telp'] ?? '-') ?></p>
-            </div>
-            <div class="lux-card p-5">
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Tahun Pelajaran</p>
-                <p class="font-bold text-slate-800 italic"><?= htmlspecialchars($siswa['tahun_pelajaran']) ?></p>
-            </div>
+        <!-- Quick Actions Grid Design (2x4) -->
+        <div class="grid grid-cols-2 gap-4 mb-10 no-print">
+            <!-- Row 1 -->
+            <a href="absensi.php" class="p-5 rounded-[32px] bg-sky-500 text-white shadow-xl shadow-sky-100 flex flex-col gap-3 group transition-all hover:scale-[1.02] active:scale-95">
+                <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-lg shadow-inner group-hover:bg-white/30 transition-all">
+                    <i class="fa fa-fingerprint"></i>
+                </div>
+                <div>
+                    <div class="text-base font-black italic tracking-tighter uppercase leading-none">Absensi</div>
+                    <div class="text-[8px] font-bold text-sky-100 uppercase tracking-widest mt-1 opacity-80">Log Lokasi GPS</div>
+                </div>
+            </a>
+
+            <a href="izin.php" class="p-5 rounded-[32px] bg-violet-500 text-white shadow-xl shadow-violet-100 flex flex-col gap-3 group transition-all hover:scale-[1.02] active:scale-95">
+                <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-lg shadow-inner group-hover:bg-white/30 transition-all">
+                    <i class="fa fa-envelope-open-text"></i>
+                </div>
+                <div>
+                    <div class="text-base font-black italic tracking-tighter uppercase leading-none">Pengajuan Izin</div>
+                    <div class="text-[8px] font-bold text-violet-100 uppercase tracking-widest mt-1 opacity-80">Sakit & Keperluan</div>
+                </div>
+            </a>
+
+            <!-- Row 2 -->
+            <a href="media.php" class="p-5 rounded-[32px] bg-amber-500 text-white shadow-xl shadow-amber-100 flex flex-col gap-3 group transition-all hover:scale-[1.02] active:scale-95">
+                <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-lg shadow-inner group-hover:bg-white/30 transition-all">
+                    <i class="fa fa-book-reader"></i>
+                </div>
+                <div>
+                    <div class="text-base font-black italic tracking-tighter uppercase leading-none">Media & Buku</div>
+                    <div class="text-[8px] font-bold text-amber-100 uppercase tracking-widest mt-1 opacity-80">Digital Learning</div>
+                </div>
+            </a>
+
+            <a href="kartu.php" class="p-5 rounded-[32px] bg-rose-500 text-white shadow-xl shadow-rose-100 flex flex-col gap-3 group transition-all hover:scale-[1.02] active:scale-95">
+                <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-lg shadow-inner group-hover:bg-white/30 transition-all">
+                    <i class="fa fa-id-card"></i>
+                </div>
+                <div>
+                    <div class="text-base font-black italic tracking-tighter uppercase leading-none">Kartu Pelajar</div>
+                    <div class="text-[8px] font-bold text-rose-100 uppercase tracking-widest mt-1 opacity-80">Digital E-Card</div>
+                </div>
+            </a>
+
+            <!-- Row 3 -->
+            <a href="barcode.php" class="p-5 rounded-[32px] bg-indigo-500 text-white shadow-xl shadow-indigo-100 flex flex-col gap-3 group transition-all hover:scale-[1.02] active:scale-95">
+                <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-lg shadow-inner group-hover:bg-white/30 transition-all">
+                    <i class="fa fa-barcode"></i>
+                </div>
+                <div>
+                    <div class="text-base font-black italic tracking-tighter uppercase leading-none">Barcode</div>
+                    <div class="text-[8px] font-bold text-indigo-100 uppercase tracking-widest mt-1 opacity-80">Digital Identity</div>
+                </div>
+            </a>
+
+            <a href="berkas.php" class="p-5 rounded-[32px] bg-cyan-500 text-white shadow-xl shadow-cyan-100 flex flex-col gap-3 group transition-all hover:scale-[1.02] active:scale-95">
+                <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-lg shadow-inner group-hover:bg-white/30 transition-all">
+                    <i class="fa fa-folder-open"></i>
+                </div>
+                <div>
+                    <div class="text-base font-black italic tracking-tighter uppercase leading-none">Berkas Saya</div>
+                    <div class="text-[8px] font-bold text-cyan-100 uppercase tracking-widest mt-1 opacity-80">Upload KK & Ijazah</div>
+                </div>
+            </a>
+
+            <a href="profil.php" class="p-5 rounded-[32px] bg-emerald-500 text-white shadow-xl shadow-emerald-100 flex flex-col gap-3 group transition-all hover:scale-[1.02] active:scale-95 col-span-2">
+                <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-lg shadow-inner group-hover:bg-white/30 transition-all">
+                    <i class="fa fa-user-circle"></i>
+                </div>
+                <div>
+                    <div class="text-base font-black italic tracking-tighter uppercase leading-none">Profil Saya</div>
+                    <div class="text-[8px] font-bold text-emerald-100 uppercase tracking-widest mt-1 opacity-80">Informasi Pribadi</div>
+                </div>
+            </a>
         </div>
 
-        <div class="lux-card p-6 mb-8">
-            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Alamat Lengkap</p>
-            <p class="text-slate-700 italic"><?= nl2br(htmlspecialchars($siswa['alamat'] ?? 'Belum diisi')) ?></p>
-        </div>
-
-        <!-- Rekap Absensi -->
+        <!-- Rekap Absensi GPS (Monthly) -->
         <h3 class="text-lg font-black text-slate-800 italic uppercase tracking-widest mb-4 flex items-center">
-            <i class="fa fa-chart-pie mr-2 text-indigo-500"></i> Rekap Kehadiran
+            <i class="fa fa-chart-pie mr-2 text-indigo-500"></i> Rekap Kehadiran GPS Bulan Ini
         </h3>
 
-        <div class="space-y-4">
-            <?php if (mysqli_num_rows($absensi_recap) > 0): ?>
-                <?php while ($abs = mysqli_fetch_assoc($absensi_recap)):
-                    $total_per_mapel = $abs['hadir'] + $abs['sakit'] + $abs['izin'] + $abs['alfa'] + $abs['terlambat'];
-                    $persentase = $total_per_mapel > 0 ? (($abs['hadir'] + $abs['terlambat']) / $total_per_mapel) * 100 : 0;
-                ?>
-                <div class="lux-card p-6 hover:shadow-2xl transition-all group">
-                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div class="flex-1">
-                            <h4 class="font-black text-slate-800 uppercase tracking-tighter italic text-base group-hover:text-indigo-600 transition-colors"><?= htmlspecialchars($abs['nama_mapel']) ?></h4>
-                            <div class="flex flex-wrap gap-2 mt-3">
-                                <span class="px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded text-[10px] font-black uppercase border border-emerald-100">Hadir: <?= $abs['hadir'] ?></span>
-                                <span class="px-2 py-0.5 bg-amber-50 text-amber-600 rounded text-[10px] font-black uppercase border border-amber-100">Telat: <?= $abs['terlambat'] ?></span>
-                                <span class="px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px] font-black uppercase border border-blue-100">S/I: <?= $abs['sakit'] + $abs['izin'] ?></span>
-                                <span class="px-2 py-0.5 bg-rose-50 text-rose-600 rounded text-[10px] font-black uppercase border border-rose-100">Alfa: <?= $abs['alfa'] ?></span>
-                            </div>
-                        </div>
-                        <div class="text-right shrink-0">
-                            <div class="text-2xl font-black italic <?= $persentase >= 80 ? 'text-emerald-500' : 'text-amber-500' ?>"><?= round($persentase) ?>%</div>
-                            <p class="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em]">Kehadiran</p>
-                        </div>
-                    </div>
-                </div>
-                <?php endwhile; ?>
-            <?php else: ?>
-                <div class="lux-card p-12 text-center">
-                    <div class="w-16 h-16 bg-slate-50 text-slate-300 rounded-full flex items-center justify-center mx-auto mb-4"><i class="fa fa-calendar-times text-2xl"></i></div>
-                    <p class="text-slate-400 italic font-medium">Belum ada data absensi yang terekam.</p>
-                </div>
-            <?php endif; ?>
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+            <div class="lux-card p-4 text-center">
+                <div class="text-2xl font-black text-emerald-500 italic"><?= $gps_recap['hadir'] ?? 0 ?></div>
+                <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest">Hadir</p>
+            </div>
+            <div class="lux-card p-4 text-center">
+                <div class="text-2xl font-black text-amber-500 italic"><?= $gps_recap['terlambat'] ?? 0 ?></div>
+                <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest">Telat</p>
+            </div>
+            <div class="lux-card p-4 text-center">
+                <div class="text-2xl font-black text-blue-500 italic"><?= $gps_recap['sakit'] ?? 0 ?></div>
+                <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest">Sakit</p>
+            </div>
+            <div class="lux-card p-4 text-center">
+                <div class="text-2xl font-black text-indigo-500 italic"><?= $gps_recap['izin'] ?? 0 ?></div>
+                <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest">Izin</p>
+            </div>
+            <div class="lux-card p-4 text-center">
+                <div class="text-2xl font-black text-rose-500 italic"><?= $gps_recap['alfa'] ?? 0 ?></div>
+                <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest">Alfa</p>
+            </div>
         </div>
     </div>
 </div>

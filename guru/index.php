@@ -79,23 +79,46 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-            <!-- Menu Grid -->
+            <!-- Quick Actions Grid Design -->
             <div class="grid grid-cols-2 gap-4">
-                <a href="rekap_absen.php" class="lux-card p-6 flex flex-col items-center justify-center text-center gap-4 group hover:bg-emerald-600 transition-all duration-500">
-                    <div class="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-sm group-hover:rotate-12 group-hover:bg-white transition-all"><i class="fa fa-chart-line text-xl"></i></div>
-                    <span class="text-sm font-black text-slate-700 uppercase tracking-tighter group-hover:text-white">Rekap Absensi</span>
+                <a href="isi_absensi.php" class="p-6 rounded-[32px] bg-indigo-600 text-white shadow-xl shadow-indigo-200 flex flex-col gap-4 group transition-all hover:scale-[1.02] active:scale-95">
+                    <div class="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-xl shadow-inner group-hover:bg-white/30 transition-all">
+                        <i class="fa fa-user-check"></i>
+                    </div>
+                    <div>
+                        <div class="text-lg font-black italic tracking-tighter uppercase leading-none">Isi Jurnal</div>
+                        <div class="text-[9px] font-bold text-indigo-100 uppercase tracking-widest mt-1 opacity-70">Input Aktivitas</div>
+                    </div>
                 </a>
-                <a href="riwayat.php" class="lux-card p-6 flex flex-col items-center justify-center text-center gap-4 group hover:bg-amber-500 transition-all duration-500">
-                    <div class="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center shadow-sm group-hover:rotate-12 group-hover:bg-white transition-all"><i class="fa fa-history text-xl"></i></div>
-                    <span class="text-sm font-black text-slate-700 uppercase tracking-tighter group-hover:text-white">Riwayat Jurnal</span>
+
+                <a href="rekap_absen.php" class="p-6 rounded-[32px] bg-emerald-600 text-white shadow-xl shadow-emerald-200 flex flex-col gap-4 group transition-all hover:scale-[1.02] active:scale-95">
+                    <div class="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-xl shadow-inner group-hover:bg-white/30 transition-all">
+                        <i class="fa fa-chart-line"></i>
+                    </div>
+                    <div>
+                        <div class="text-lg font-black italic tracking-tighter uppercase leading-none">Rekap Absensi</div>
+                        <div class="text-[9px] font-bold text-emerald-100 uppercase tracking-widest mt-1 opacity-70">Laporan Kehadiran</div>
+                    </div>
                 </a>
-                <a href="perangkat.php" class="lux-card p-6 flex flex-col items-center justify-center text-center gap-4 group hover:bg-indigo-600 transition-all duration-500">
-                    <div class="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shadow-sm group-hover:rotate-12 group-hover:bg-white transition-all"><i class="fa fa-folder-open text-xl"></i></div>
-                    <span class="text-sm font-black text-slate-700 uppercase tracking-tighter group-hover:text-white">Perangkat</span>
+
+                <a href="riwayat.php" class="p-6 rounded-[32px] bg-amber-500 text-white shadow-xl shadow-amber-200 flex flex-col gap-4 group transition-all hover:scale-[1.02] active:scale-95">
+                    <div class="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-xl shadow-inner group-hover:bg-white/30 transition-all">
+                        <i class="fa fa-history"></i>
+                    </div>
+                    <div>
+                        <div class="text-lg font-black italic tracking-tighter uppercase leading-none">Riwayat Jurnal</div>
+                        <div class="text-[9px] font-bold text-amber-100 uppercase tracking-widest mt-1 opacity-70">Arsip Mengajar</div>
+                    </div>
                 </a>
-                <a href="<?= BASE_URL ?>logout.php" class="lux-card p-6 flex flex-col items-center justify-center text-center gap-4 group hover:bg-rose-600 transition-all duration-500">
-                    <div class="w-14 h-14 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center shadow-sm group-hover:rotate-12 group-hover:bg-white transition-all"><i class="fa fa-sign-out-alt text-xl"></i></div>
-                    <span class="text-sm font-black text-slate-700 uppercase tracking-tighter group-hover:text-white">Keluar Sistem</span>
+
+                <a href="perangkat.php" class="p-6 rounded-[32px] bg-rose-500 text-white shadow-xl shadow-rose-200 flex flex-col gap-4 group transition-all hover:scale-[1.02] active:scale-95">
+                    <div class="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-xl shadow-inner group-hover:bg-white/30 transition-all">
+                        <i class="fa fa-folder-open"></i>
+                    </div>
+                    <div>
+                        <div class="text-lg font-black italic tracking-tighter uppercase leading-none">Perangkat</div>
+                        <div class="text-[9px] font-bold text-rose-100 uppercase tracking-widest mt-1 opacity-70">Upload Media</div>
+                    </div>
                 </a>
             </div>
 

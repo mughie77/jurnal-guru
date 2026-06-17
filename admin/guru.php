@@ -15,6 +15,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $nip = $_POST['nip'];
         $alamat = $_POST['alamat'] ?: null;
         $no_telp = $_POST['no_telp'] ?: null;
+        $tempat_lahir = $_POST['tempat_lahir'] ?: null;
+        $tanggal_lahir = $_POST['tanggal_lahir'] ?: null;
         $pass = password_hash($nip, PASSWORD_DEFAULT);
 
         $foto = null;
@@ -33,8 +35,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             mysqli_stmt_execute($stmt1);
             $uid = mysqli_insert_id($conn);
 
-            $stmt2 = mysqli_prepare($conn, "INSERT INTO guru (user_id, nip, alamat, no_telp, foto) VALUES (?, ?, ?, ?, ?)");
-            mysqli_stmt_bind_param($stmt2, "issss", $uid, $nip, $alamat, $no_telp, $foto);
+            $stmt2 = mysqli_prepare($conn, "INSERT INTO guru (user_id, nip, alamat, no_telp, foto, tempat_lahir, tanggal_lahir) VALUES (?, ?, ?, ?, ?, ?, ?)");
+            mysqli_stmt_bind_param($stmt2, "issssss", $uid, $nip, $alamat, $no_telp, $foto, $tempat_lahir, $tanggal_lahir);
             mysqli_stmt_execute($stmt2);
             $gid = mysqli_insert_id($conn);
 
@@ -54,10 +56,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $nip = $_POST['nip'];
         $alamat = $_POST['alamat'] ?: null;
         $no_telp = $_POST['no_telp'] ?: null;
+        $tempat_lahir = $_POST['tempat_lahir'] ?: null;
+        $tanggal_lahir = $_POST['tanggal_lahir'] ?: null;
 
         $q_foto = "";
-        $params = [$nip, $alamat, $no_telp];
-        $types = "sss";
+        $params = [$nip, $alamat, $no_telp, $tempat_lahir, $tanggal_lahir];
+        $types = "sssss";
 
         if (!empty($_FILES['foto']['name'])) {
             $ext = strtolower(pathinfo($_FILES['foto']['name'], PATHINFO_EXTENSION));
@@ -79,7 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             mysqli_stmt_bind_param($stmt1, "si", $nama, $uid);
             mysqli_stmt_execute($stmt1);
 
-            $stmt2 = mysqli_prepare($conn, "UPDATE guru SET nip = ?, alamat = ?, no_telp = ? $q_foto WHERE id = ?");
+            $stmt2 = mysqli_prepare($conn, "UPDATE guru SET nip = ?, alamat = ?, no_telp = ?, tempat_lahir = ?, tanggal_lahir = ? $q_foto WHERE id = ?");
             mysqli_stmt_bind_param($stmt2, $types, ...$params);
             mysqli_stmt_execute($stmt2);
 
@@ -231,10 +235,14 @@ require_once __DIR__ . '/../includes/header.php';
             <div><label class="block text-sm font-bold text-slate-700 mb-2">Nama Lengkap</label><input type="text" name="nama_lengkap" required class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50"></div>
             <div><label class="block text-sm font-bold text-slate-700 mb-2">NIP (Username)</label><input type="text" name="nip" required class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50"></div>
         </div>
+        <div class="grid grid-cols-2 gap-4">
+            <div><label class="block text-sm font-bold text-slate-700 mb-2">Tempat Lahir</label><input type="text" name="tempat_lahir" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50"></div>
+            <div><label class="block text-sm font-bold text-slate-700 mb-2">Tanggal Lahir</label><input type="date" name="tanggal_lahir" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 bg-white"></div>
+        </div>
         <div class="grid grid-cols-2 gap-6">
             <div class="space-y-4">
                 <div><label class="block text-sm font-bold text-slate-700 mb-2">No. Telp/HP</label><input type="text" name="no_telp" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50"></div>
-                <div><label class="block text-sm font-bold text-slate-700 mb-2">Alamat</label><textarea name="alamat" rows="3" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50"></textarea></div>
+                <div><label class="block text-sm font-bold text-slate-700 mb-2">Alamat</label><textarea name="alamat" rows="2" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50"></textarea></div>
             </div>
             <div>
                 <label class="block text-sm font-bold text-slate-700 mb-2">Mata Pelajaran</label>
@@ -266,10 +274,14 @@ require_once __DIR__ . '/../includes/header.php';
             <div><label class="block text-sm font-bold text-slate-700 mb-2">Nama Lengkap</label><input type="text" name="nama_lengkap" id="edit_nama" required class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"></div>
             <div><label class="block text-sm font-bold text-slate-700 mb-2">NIP</label><input type="text" name="nip" id="edit_nip" required class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"></div>
         </div>
+        <div class="grid grid-cols-2 gap-4">
+            <div><label class="block text-sm font-bold text-slate-700 mb-2">Tempat Lahir</label><input type="text" name="tempat_lahir" id="edit_tempat_lahir" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"></div>
+            <div><label class="block text-sm font-bold text-slate-700 mb-2">Tanggal Lahir</label><input type="date" name="tanggal_lahir" id="edit_tanggal_lahir" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50 bg-white"></div>
+        </div>
         <div class="grid grid-cols-2 gap-6">
             <div class="space-y-4">
                 <div><label class="block text-sm font-bold text-slate-700 mb-2">No. Telp/HP</label><input type="text" name="no_telp" id="edit_telp" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"></div>
-                <div><label class="block text-sm font-bold text-slate-700 mb-2">Alamat</label><textarea name="alamat" id="edit_alamat" rows="3" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"></textarea></div>
+                <div><label class="block text-sm font-bold text-slate-700 mb-2">Alamat</label><textarea name="alamat" id="edit_alamat" rows="2" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"></textarea></div>
             </div>
             <div>
                 <label class="block text-sm font-bold text-slate-700 mb-2">Mata Pelajaran</label>

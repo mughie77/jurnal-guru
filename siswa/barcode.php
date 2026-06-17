@@ -52,7 +52,13 @@ require_once __DIR__ . '/../includes/header.php';
 
 <script>
     new QRCode(document.getElementById("qrcode_big"), {
-        text: "<?= $siswa['nis'] ?>",
+        <?php
+        $qr_val = $siswa['nis'];
+        if (strpos($qr_val, '/') !== false) {
+            $qr_val = explode('/', $qr_val)[0];
+        }
+        ?>
+        text: "<?= $qr_val ?>",
         width: 180,
         height: 180,
         colorDark : "#1e293b",

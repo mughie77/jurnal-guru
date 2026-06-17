@@ -27,9 +27,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['excel_file'])) {
                                               VALUES (?, ?, ?, 'guru')
                                               ON DUPLICATE KEY UPDATE nama_lengkap = VALUES(nama_lengkap), id=LAST_INSERT_ID(id)");
 
-            $stmt_guru = mysqli_prepare($conn, "INSERT INTO guru (user_id, nip, alamat, no_telp)
-                                              VALUES (?, ?, ?, ?)
-                                              ON DUPLICATE KEY UPDATE alamat = VALUES(alamat), no_telp = VALUES(no_telp)");
+            $stmt_guru = mysqli_prepare($conn, "INSERT INTO guru (user_id, nip, alamat, no_telp, tempat_lahir, tanggal_lahir)
+                                              VALUES (?, ?, ?, ?, ?, ?)
+                                              ON DUPLICATE KEY UPDATE alamat = VALUES(alamat), no_telp = VALUES(no_telp), tempat_lahir = VALUES(tempat_lahir), tanggal_lahir = VALUES(tanggal_lahir)");
 
             foreach ($rows as $index => $row) {
                 if (empty($row[0]) || empty($row[1])) {
@@ -42,6 +42,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['excel_file'])) {
                 $pass = password_hash($nip, PASSWORD_DEFAULT);
                 $alamat = $row[2] ?? null;
                 $no_telp = $row[3] ?? null;
+                $tempat_lahir = $row[4] ?? null;
+                $tanggal_lahir = $row[5] ?? null;
 
                 // Insert/Update User
                 mysqli_stmt_bind_param($stmt_user, "sss", $nama_lengkap, $nip, $pass);
@@ -51,7 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['excel_file'])) {
                 $uid = mysqli_insert_id($conn);
 
                 // Insert/Update Guru
-                mysqli_stmt_bind_param($stmt_guru, "isss", $uid, $nip, $alamat, $no_telp);
+                mysqli_stmt_bind_param($stmt_guru, "isssss", $uid, $nip, $alamat, $no_telp, $tempat_lahir, $tanggal_lahir);
                 if (!mysqli_stmt_execute($stmt_guru)) {
                     throw new Exception("Gagal memproses guru pada baris " . ($index + 2));
                 }
@@ -94,7 +96,7 @@ require_once __DIR__ . '/../includes/header.php';
         </h3>
         <p class="text-indigo-700/80 text-sm leading-relaxed mb-4">Pastikan file Excel Anda memiliki kolom dengan urutan sebagai berikut pada sheet pertama:</p>
         <div class="flex flex-wrap gap-2 items-center mb-6">
-            <?php foreach(['Nama Lengkap', 'NIP', 'Alamat', 'No. Telp'] as $col): ?>
+            <?php foreach(['Nama Lengkap', 'NIP', 'Alamat', 'No. Telp', 'Tempat Lahir', 'Tgl Lahir'] as $col): ?>
                 <span class="px-3 py-1.5 bg-white rounded-lg border border-indigo-200 text-indigo-600 text-[10px] font-black uppercase shadow-sm tracking-wider"><?= $col ?></span>
             <?php endforeach; ?>
         </div>

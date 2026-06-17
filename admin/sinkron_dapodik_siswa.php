@@ -23,14 +23,16 @@ try {
     mysqli_begin_transaction($conn);
 
     $count = 0;
-    $stmt = mysqli_prepare($conn, "INSERT INTO siswa (nis, nisn, nama_siswa, jenis_kelamin, alamat, no_telp)
-                                   VALUES (?, ?, ?, ?, ?, ?)
+    $stmt = mysqli_prepare($conn, "INSERT INTO siswa (nis, nisn, nama_siswa, jenis_kelamin, alamat, no_telp, tempat_lahir, tanggal_lahir)
+                                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                                    ON DUPLICATE KEY UPDATE
                                    nisn = VALUES(nisn),
                                    nama_siswa = VALUES(nama_siswa),
                                    jenis_kelamin = VALUES(jenis_kelamin),
                                    alamat = VALUES(alamat),
-                                   no_telp = VALUES(no_telp)");
+                                   no_telp = VALUES(no_telp),
+                                   tempat_lahir = VALUES(tempat_lahir),
+                                   tanggal_lahir = VALUES(tanggal_lahir)");
 
     foreach ($rows as $row) {
         $nis = $row['nipd'] ?? $row['nis'] ?? '';
@@ -41,8 +43,10 @@ try {
         $jk = ($row['jenis_kelamin'] == 'P') ? 'P' : 'L';
         $alamat = $row['alamat_jalan'] ?? null;
         $telp = $row['nomor_telepon_seluler'] ?? $row['nomor_telepon_rumah'] ?? null;
+        $tempat_lahir = $row['tempat_lahir'] ?? null;
+        $tanggal_lahir = $row['tanggal_lahir'] ?? null;
 
-        mysqli_stmt_bind_param($stmt, "ssssss", $nis, $nisn, $nama, $jk, $alamat, $telp);
+        mysqli_stmt_bind_param($stmt, "ssssssss", $nis, $nisn, $nama, $jk, $alamat, $telp, $tempat_lahir, $tanggal_lahir);
         mysqli_stmt_execute($stmt);
         $count++;
     }

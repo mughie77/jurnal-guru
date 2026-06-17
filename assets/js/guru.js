@@ -45,6 +45,8 @@ function openEditModal(data) {
     document.getElementById('edit_nip').value = data.nip || '';
     document.getElementById('edit_alamat').value = data.alamat || '';
     document.getElementById('edit_telp').value = data.no_telp || '';
+    document.getElementById('edit_tempat_lahir').value = data.tempat_lahir || '';
+    document.getElementById('edit_tanggal_lahir').value = data.tanggal_lahir || '';
 
     // Set mapel selects
     const select = document.querySelector('#editModal select[name="mapel_ids[]"]');

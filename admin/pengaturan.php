@@ -19,7 +19,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             'alamat_sekolah' => $_POST['alamat_sekolah'],
             'jam_masuk_sekolah' => $_POST['jam_masuk_sekolah'],
             'dapodik_url' => $_POST['dapodik_url'],
-            'dapodik_token' => $_POST['dapodik_token']
+            'dapodik_token' => $_POST['dapodik_token'],
+            'school_lat' => $_POST['school_lat'],
+            'school_lng' => $_POST['school_lng'],
+            'radius_absen' => $_POST['radius_absen']
         ];
 
         foreach ($settings as $key => $val) {
@@ -100,6 +103,29 @@ require_once __DIR__ . '/../includes/header.php';
                 <div class="space-y-2">
                     <label class="block text-sm font-bold text-slate-700">Alamat Sekolah</label>
                     <textarea name="alamat_sekolah" rows="3" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 transition-all"><?= htmlspecialchars($sets['alamat_sekolah'] ?? '') ?></textarea>
+                </div>
+
+                <div class="space-y-4">
+                    <label class="block text-sm font-bold text-slate-700 flex items-center">
+                        <i class="fa fa-map-marker-alt mr-2 text-rose-500"></i> Lokasi GPS Sekolah
+                    </label>
+                    <div id="map" class="w-full h-72 rounded-2xl border-2 border-slate-100 shadow-inner z-10"></div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Latitude</label>
+                            <input type="text" id="school_lat" name="school_lat" value="<?= htmlspecialchars($sets['school_lat'] ?? '-7.9135') ?>" readonly class="w-full px-4 py-2 bg-slate-50 rounded-xl border border-slate-200 text-sm font-mono font-bold text-slate-600">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Longitude</label>
+                            <input type="text" id="school_lng" name="school_lng" value="<?= htmlspecialchars($sets['school_lng'] ?? '113.8217') ?>" readonly class="w-full px-4 py-2 bg-slate-50 rounded-xl border border-slate-200 text-sm font-mono font-bold text-slate-600">
+                        </div>
+                        <div class="col-span-2">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Radius Absensi (Meter)</label>
+                            <input type="number" name="radius_absen" value="<?= htmlspecialchars($sets['radius_absen'] ?? '30') ?>" required class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 transition-all font-bold">
+                            <p class="text-[10px] text-slate-400 font-bold italic mt-1 uppercase tracking-wider">Jarak maksimal siswa dari koordinat sekolah untuk dapat melakukan absensi.</p>
+                        </div>
+                    </div>
+                    <p class="text-[10px] text-slate-400 font-bold italic uppercase tracking-wider">Geser penanda pada peta untuk menentukan lokasi presisi sekolah.</p>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -193,6 +219,35 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
     </div>
 </div>
+
+<!-- Leaflet JS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var lat = <?= (isset($sets['school_lat']) && $sets['school_lat'] !== '') ? $sets['school_lat'] : '-7.9135' ?>;
+    var lng = <?= (isset($sets['school_lng']) && $sets['school_lng'] !== '') ? $sets['school_lng'] : '113.8217' ?>;
+
+    var map = L.map('map').setView([lat, lng], 15);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    var marker = L.marker([lat, lng], {draggable: true}).addTo(map);
+
+    marker.on('dragend', function(e) {
+        var pos = marker.getLatLng();
+        document.getElementById('school_lat').value = pos.lat.toFixed(6);
+        document.getElementById('school_lng').value = pos.lng.toFixed(6);
+    });
+
+    map.on('click', function(e) {
+        marker.setLatLng(e.latlng);
+        document.getElementById('school_lat').value = e.latlng.lat.toFixed(6);
+        document.getElementById('school_lng').value = e.latlng.lng.toFixed(6);
+    });
+});
+</script>
 
 <!-- Page Specific Scripts -->
 <script src="<?= BASE_URL ?>assets/js/pengaturan.js"></script>

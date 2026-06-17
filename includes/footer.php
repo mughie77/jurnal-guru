@@ -36,16 +36,16 @@
                         <i class="fa fa-qrcode text-lg"></i>
                         <span class="text-[8px] font-black uppercase mt-1">Barcode</span>
                     </a>
-                    <a href="<?= BASE_URL ?>siswa/kartu.php" class="flex flex-col items-center p-2 rounded-xl transition-all <?= basename($_SERVER['PHP_SELF']) == 'kartu.php' ? 'text-indigo-600' : 'text-slate-400' ?>">
+                    <a href="<?= BASE_URL ?>siswa/absensi.php" class="flex flex-col items-center p-2 rounded-xl transition-all <?= basename($_SERVER['PHP_SELF']) == 'absensi.php' ? 'text-indigo-600' : 'text-slate-400' ?>">
                         <div class="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center text-white shadow-lg shadow-indigo-200 -mt-8 border-4 border-slate-50 transition-transform active:scale-90">
-                            <i class="fa fa-id-card"></i>
+                            <i class="fa fa-fingerprint"></i>
                         </div>
-                        <span class="text-[8px] font-black uppercase mt-1 text-indigo-600">Kartu Pelajar</span>
+                        <span class="text-[8px] font-black uppercase mt-1 text-indigo-600">Absen</span>
                     </a>
-                    <div class="flex flex-col items-center p-2 text-slate-300 pointer-events-none opacity-20">
-                        <i class="fa fa-chart-bar text-lg"></i>
-                        <span class="text-[8px] font-black uppercase mt-1">Nilai</span>
-                    </div>
+                    <a href="<?= BASE_URL ?>siswa/kartu.php" class="flex flex-col items-center p-2 rounded-xl transition-all <?= basename($_SERVER['PHP_SELF']) == 'kartu.php' ? 'text-indigo-600' : 'text-slate-400' ?>">
+                        <i class="fa fa-id-card text-lg"></i>
+                        <span class="text-[8px] font-black uppercase mt-1">Kartu Pelajar</span>
+                    </a>
                 <?php endif; ?>
 
                 <a href="<?= BASE_URL ?>logout.php" class="flex flex-col items-center p-2 rounded-xl transition-all text-rose-400 hover:text-rose-600">
@@ -58,5 +58,34 @@
 
     <!-- App Scripts -->
     <script src="<?= BASE_URL ?>assets/js/app.js"></script>
+    <script>
+        function updateClock() {
+            const now = new Date();
+            const timeOptions = {
+                timeZone: 'Asia/Jakarta',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            };
+            const dateOptions = {
+                timeZone: 'Asia/Jakarta',
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric'
+            };
+
+            const timeString = new Intl.DateTimeFormat('id-ID', timeOptions).format(now);
+            const dateString = new Intl.DateTimeFormat('id-ID', dateOptions).format(now);
+
+            const clockElement = document.getElementById('digital-clock');
+            const dateElement = document.getElementById('header-date');
+
+            if (clockElement) clockElement.textContent = timeString.replace(/\./g, ':');
+            if (dateElement) dateElement.textContent = dateString;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+    </script>
 </body>
 </html>

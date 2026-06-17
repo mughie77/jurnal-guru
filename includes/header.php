@@ -9,6 +9,22 @@ while ($r = mysqli_fetch_assoc($res_set)) {
 }
 $app_name = $app_sets['nama_sekolah'] ?? 'Aplikasi Jurnal Mengajar';
 $favicon = !empty($app_sets['favicon']) ? BASE_URL . 'uploads/' . $app_sets['favicon'] : BASE_URL . 'assets/img/favicon.png';
+
+// Get User Photo for Header
+$user_photo = null;
+if (isset($_SESSION['user_id'])) {
+    $uid = $_SESSION['user_id'];
+    $role = $_SESSION['role'];
+    if ($role == 'siswa') {
+        $q = mysqli_query($conn, "SELECT foto FROM siswa WHERE id = $uid");
+        $u_data = mysqli_fetch_assoc($q);
+        $user_photo = !empty($u_data['foto']) ? BASE_URL . "uploads/siswa/" . $u_data['foto'] : null;
+    } elseif ($role == 'guru' || $role == 'waka') {
+        $q = mysqli_query($conn, "SELECT foto FROM guru WHERE user_id = $uid");
+        $u_data = mysqli_fetch_assoc($q);
+        $user_photo = (!empty($u_data) && !empty($u_data['foto'])) ? BASE_URL . "uploads/guru/" . $u_data['foto'] : null;
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -75,16 +91,35 @@ $favicon = !empty($app_sets['favicon']) ? BASE_URL . 'uploads/' . $app_sets['fav
                 </button>
 
                 <div class="flex items-center space-x-4">
+                    <div class="flex items-center bg-slate-50 border border-slate-100 px-3 py-1.5 rounded-xl mr-2">
+                        <div class="flex items-center border-r border-slate-200 pr-3 mr-3">
+                            <i class="fa fa-calendar-day text-indigo-500 mr-2 text-[10px]"></i>
+                            <span id="header-date" class="text-[11px] font-black text-slate-500 uppercase tracking-widest"><?= date('d M Y') ?></span>
+                        </div>
+                        <i class="fa fa-clock text-indigo-500 mr-2 text-xs"></i>
+                        <span id="digital-clock" class="text-sm font-black text-slate-700 italic tracking-tighter"><?= date('H:i:s') ?></span>
+                    </div>
+
                     <div class="hidden md:flex flex-col text-right">
                         <span class="text-sm font-semibold text-slate-700"><?= htmlspecialchars($_SESSION['nama_lengkap']); ?></span>
                         <span class="text-xs text-slate-500 uppercase tracking-wider font-bold"><?= htmlspecialchars($_SESSION['role']); ?></span>
                     </div>
 
                     <div class="relative group">
-                        <button class="w-10 h-10 rounded-full bg-indigo-500 flex items-center justify-center text-white shadow-lg hover:ring-4 hover:ring-indigo-100 transition-all">
-                            <i class="fa fa-user"></i>
+                        <button class="w-10 h-10 rounded-full bg-indigo-500 flex items-center justify-center text-white shadow-lg hover:ring-4 hover:ring-indigo-100 transition-all overflow-hidden">
+                            <?php if ($user_photo): ?>
+                                <img src="<?= $user_photo ?>" class="w-full h-full object-cover">
+                            <?php else: ?>
+                                <i class="fa fa-user"></i>
+                            <?php endif; ?>
                         </button>
                         <div class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-slate-100 py-2 hidden group-hover:block animate-in fade-in slide-in-from-top-2 duration-200">
+                            <?php if ($_SESSION['role'] == 'siswa' || $_SESSION['role'] == 'guru'): ?>
+                                <a href="<?= BASE_URL . $_SESSION['role'] ?>/profil.php" class="flex items-center px-4 py-2 text-sm text-slate-600 hover:bg-indigo-50 font-medium">
+                                    <i class="fa fa-user-circle mr-3 text-indigo-500"></i> Profil Saya
+                                </a>
+                                <div class="h-px bg-slate-50 my-1"></div>
+                            <?php endif; ?>
                             <a href="<?= BASE_URL ?>logout.php" class="flex items-center px-4 py-2 text-sm text-rose-600 hover:bg-rose-50 font-medium">
                                 <i class="fa fa-sign-out-alt mr-3"></i> Logout
                             </a>

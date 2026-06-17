@@ -15,8 +15,11 @@ if (!empty($search)) {
 
 $pagin = get_pagination_data($conn, "kelas LEFT JOIN guru ON kelas.wali_kelas_id = guru.id LEFT JOIN users ON guru.user_id = users.id", 15, $where_sql);
 
-$query = "SELECT kelas.*, users.nama_lengkap as nama_wali_kelas
-          FROM kelas LEFT JOIN guru ON kelas.wali_kelas_id = guru.id
+$query = "SELECT kelas.*, users.nama_lengkap as nama_wali_kelas,
+          (SELECT COUNT(*) FROM siswa_kelas sk JOIN siswa s ON sk.siswa_id = s.id WHERE sk.kelas_id = kelas.id AND sk.tahun_pelajaran_id = $active_tahun_id AND s.jenis_kelamin = 'L') as jumlah_siswa_L,
+          (SELECT COUNT(*) FROM siswa_kelas sk JOIN siswa s ON sk.siswa_id = s.id WHERE sk.kelas_id = kelas.id AND sk.tahun_pelajaran_id = $active_tahun_id AND s.jenis_kelamin = 'P') as jumlah_siswa_P
+          FROM kelas
+          LEFT JOIN guru ON kelas.wali_kelas_id = guru.id
           LEFT JOIN users ON guru.user_id = users.id
           $where_sql
           ORDER BY kelas.nama_kelas ASC LIMIT {$pagin['limit']} OFFSET {$pagin['offset']}";

@@ -36,6 +36,10 @@ CREATE TABLE `guru` (
   `alamat` text DEFAULT NULL,
   `no_telp` varchar(20) DEFAULT NULL,
   `foto` varchar(255) DEFAULT NULL,
+  `tempat_lahir` varchar(100) DEFAULT NULL,
+  `tanggal_lahir` date DEFAULT NULL,
+  `berkas_kk` varchar(255) DEFAULT NULL,
+  `berkas_ijazah` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `nip` (`nip`),
   KEY `user_id` (`user_id`),
@@ -113,6 +117,10 @@ CREATE TABLE `siswa` (
   `alamat` text DEFAULT NULL,
   `no_telp` varchar(20) DEFAULT NULL,
   `foto` varchar(255) DEFAULT NULL,
+  `tempat_lahir` varchar(100) DEFAULT NULL,
+  `tanggal_lahir` date DEFAULT NULL,
+  `berkas_kk` varchar(255) DEFAULT NULL,
+  `berkas_ijazah` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `nis` (`nis`),
   UNIQUE KEY `nisn` (`nisn`)
@@ -199,6 +207,7 @@ CREATE TABLE `absensi_harian` (
   `waktu_masuk` time DEFAULT NULL,
   `status` enum('Hadir','Sakit','Izin','Alfa','Terlambat') NOT NULL DEFAULT 'Hadir',
   `keterangan` text DEFAULT NULL,
+  `file_surat` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `siswa_id` (`siswa_id`),
   KEY `tanggal` (`tanggal`),
@@ -224,7 +233,10 @@ INSERT INTO `pengaturan` (`nama_setting`, `nilai_setting`) VALUES
 ('favicon', 'favicon.png'),
 ('jam_masuk_sekolah', '07:00:00'),
 ('dapodik_url', ''),
-('dapodik_token', '');
+('dapodik_token', ''),
+('school_lat', '-7.9135'),
+('school_lng', '113.8217'),
+('radius_absen', '30');
 
 -- --------------------------------------------------------
 
@@ -241,4 +253,18 @@ CREATE TABLE `perangkat` (
   PRIMARY KEY (`id`),
   KEY `guru_id` (`guru_id`),
   CONSTRAINT `perangkat_ibfk_1` FOREIGN KEY (`guru_id`) REFERENCES `guru` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `perangkat_kelas`
+--
+CREATE TABLE `perangkat_kelas` (
+  `perangkat_id` int(11) NOT NULL,
+  `kelas_id` int(11) NOT NULL,
+  PRIMARY KEY (`perangkat_id`,`kelas_id`),
+  KEY `kelas_id` (`kelas_id`),
+  CONSTRAINT `perangkat_kelas_ibfk_1` FOREIGN KEY (`perangkat_id`) REFERENCES `perangkat` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `perangkat_kelas_ibfk_2` FOREIGN KEY (`kelas_id`) REFERENCES `kelas` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

@@ -7,23 +7,34 @@ authorize_role(['admin', 'waka']);
 $page_title = "Data Perangkat Mengajar";
 
 $guru_id = (int)($_GET['guru_id'] ?? 0);
+$kelas_id = (int)($_GET['kelas_id'] ?? 0);
 $search = mysqli_real_escape_string($conn, $_GET['search'] ?? '');
 
 $where_clauses = [];
 if ($guru_id > 0) $where_clauses[] = "p.guru_id = $guru_id";
+if ($kelas_id > 0) $where_clauses[] = "pk.kelas_id = $kelas_id";
 if (!empty($search)) $where_clauses[] = "p.nama_perangkat LIKE '%$search%'";
 
 $where_sql = !empty($where_clauses) ? "WHERE " . implode(" AND ", $where_clauses) : "";
 
-$pagin = get_pagination_data($conn, "perangkat p JOIN guru g ON p.guru_id = g.id JOIN users u ON g.user_id = u.id", 15, $where_sql);
+$query_base = "perangkat p
+               JOIN guru g ON p.guru_id = g.id
+               JOIN users u ON g.user_id = u.id
+               LEFT JOIN perangkat_kelas pk ON p.id = pk.perangkat_id";
+
+$pagin = get_pagination_data($conn, $query_base, 15, $where_sql, "DISTINCT p.id");
 
 $gurus = mysqli_query($conn, "SELECT g.id, u.nama_lengkap FROM guru g JOIN users u ON g.user_id = u.id ORDER BY u.nama_lengkap ASC");
+$kelases = mysqli_query($conn, "SELECT id, nama_kelas FROM kelas ORDER BY nama_kelas ASC");
 
-$query = "SELECT p.*, u.nama_lengkap as nama_guru
+$query = "SELECT p.*, u.nama_lengkap as nama_guru, GROUP_CONCAT(k.nama_kelas SEPARATOR ', ') as target_kelas
           FROM perangkat p
           JOIN guru g ON p.guru_id = g.id
           JOIN users u ON g.user_id = u.id
+          LEFT JOIN perangkat_kelas pk ON p.id = pk.perangkat_id
+          LEFT JOIN kelas k ON pk.kelas_id = k.id
           $where_sql
+          GROUP BY p.id
           ORDER BY p.created_at DESC LIMIT {$pagin['limit']} OFFSET {$pagin['offset']}";
 $perangkats = mysqli_query($conn, $query);
 
@@ -52,7 +63,16 @@ require_once __DIR__ . '/../includes/header.php';
                 <?php endwhile; ?>
             </select>
         </div>
-        <div class="lg:col-span-2 flex items-end gap-3">
+        <div class="space-y-1">
+            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Filter Kelas</label>
+            <select name="kelas_id" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-100 bg-white shadow-sm font-bold text-slate-700">
+                <option value="">-- Semua Kelas --</option>
+                <?php mysqli_data_seek($kelases, 0); while($k = mysqli_fetch_assoc($kelases)): ?>
+                    <option value="<?= $k['id'] ?>" <?= $k['id'] == $kelas_id ? 'selected' : '' ?>><?= htmlspecialchars($k['nama_kelas']) ?></option>
+                <?php endwhile; ?>
+            </select>
+        </div>
+        <div class="lg:col-span-1 flex items-end gap-3">
             <button type="submit" class="flex-1 px-6 py-2.5 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100">Terapkan Filter</button>
             <a href="perangkat.php" class="px-6 py-2.5 bg-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-300 transition-all text-center">Reset</a>
         </div>
@@ -65,25 +85,40 @@ require_once __DIR__ . '/../includes/header.php';
             <thead>
                 <tr class="bg-slate-50 border-b border-slate-100">
                     <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Guru</th>
-                    <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Nama Perangkat</th>
+                    <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Perangkat / Media</th>
                     <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Jenis</th>
-                    <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Waktu Unggah</th>
+                    <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Target Kelas</th>
                     <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Aksi</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-50">
                 <?php while($p = mysqli_fetch_assoc($perangkats)): ?>
                 <tr class="hover:bg-slate-50/50 transition-colors">
-                    <td class="px-6 py-4 font-bold text-slate-700 text-sm italic"><?= htmlspecialchars($p['nama_guru']) ?></td>
+                    <td class="px-6 py-4 font-bold text-slate-700 text-sm italic">
+                        <?= htmlspecialchars($p['nama_guru']) ?>
+                        <div class="text-[9px] text-slate-400 font-normal"><?= date('d M Y, H:i', strtotime($p['created_at'])) ?></div>
+                    </td>
                     <td class="px-6 py-4 font-semibold text-slate-600 text-sm"><?= htmlspecialchars($p['nama_perangkat']) ?></td>
                     <td class="px-6 py-4 text-center">
                         <span class="px-2 py-0.5 rounded bg-indigo-50 text-indigo-600 text-[9px] font-black uppercase border border-indigo-100"><?= $p['jenis_perangkat'] ?></span>
                     </td>
-                    <td class="px-6 py-4 text-xs text-slate-400"><?= date('d M Y, H:i', strtotime($p['created_at'])) ?></td>
+                    <td class="px-6 py-4">
+                        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-tighter truncate max-w-[150px]" title="<?= htmlspecialchars($p['target_kelas'] ?? 'Semua Kelas') ?>">
+                            <?= htmlspecialchars($p['target_kelas'] ?? 'Semua Kelas') ?>
+                        </p>
+                    </td>
                     <td class="px-6 py-4">
                         <div class="flex justify-center">
-                            <a href="<?= BASE_URL . $p['file_path'] ?>" target="_blank" class="w-9 h-9 flex items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all shadow-sm" title="Lihat/Download PDF">
-                                <i class="fa fa-file-download"></i>
+                            <?php
+                            $btn_color = 'bg-emerald-50 text-emerald-600 hover:bg-emerald-600';
+                            $icon = 'fa-file-download';
+                            if (strpos($p['file_path'], '.mp4') !== false) {
+                                $btn_color = 'bg-indigo-50 text-indigo-600 hover:bg-indigo-600';
+                                $icon = 'fa-play-circle';
+                            }
+                            ?>
+                            <a href="<?= BASE_URL . $p['file_path'] ?>" target="_blank" class="w-9 h-9 flex items-center justify-center rounded-lg <?= $btn_color ?> hover:text-white transition-all shadow-sm" title="Lihat/Download">
+                                <i class="fa <?= $icon ?>"></i>
                             </a>
                         </div>
                     </td>

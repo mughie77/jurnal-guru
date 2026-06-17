@@ -1,10 +1,10 @@
 <?php
-function get_pagination_data($conn, $table, $limit, $where = "") {
+function get_pagination_data($conn, $table, $limit, $where = "", $count_col = "*") {
     $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
     if ($page < 1) $page = 1;
     $offset = ($page - 1) * $limit;
 
-    $count_query = "SELECT COUNT(*) as total FROM $table $where";
+    $count_query = "SELECT COUNT($count_col) as total FROM $table $where";
     $count_res = mysqli_query($conn, $count_query);
     $total_data = mysqli_fetch_assoc($count_res)['total'];
     $total_pages = ceil($total_data / $limit);
@@ -21,12 +21,12 @@ function get_pagination_data($conn, $table, $limit, $where = "") {
 function render_pagination($current_page, $total_pages, $query_params = []) {
     if ($total_pages <= 1) return '';
 
-    $html = '<div class="flex items-center justify-between mt-8 px-2">';
+    $html = '<div class="flex flex-col sm:flex-row items-center justify-between mt-8 px-2 gap-4">';
 
     // Info
-    $html .= '<p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Halaman ' . $current_page . ' dari ' . $total_pages . '</p>';
+    $html .= '<p class="text-[10px] sm:text-xs font-black text-slate-400 uppercase tracking-widest order-2 sm:order-1 text-center sm:text-left">Halaman ' . $current_page . ' dari ' . $total_pages . '</p>';
 
-    $html .= '<div class="flex items-center gap-1">';
+    $html .= '<div class="flex items-center gap-1 order-1 sm:order-2">';
 
     // Build query string for existing filters
     $qs = "";
@@ -50,7 +50,7 @@ function render_pagination($current_page, $total_pages, $query_params = []) {
         $active_class = ($i == $current_page)
             ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-200'
             : 'bg-white text-slate-600 border-slate-100 hover:bg-slate-50 shadow-sm';
-        $html .= '<a href="?page=' . $i . $qs . '" class="w-10 h-10 flex items-center justify-center rounded-xl border font-bold text-sm transition-all ' . $active_class . '">' . $i . '</a>';
+        $html .= '<a href="?page=' . $i . $qs . '" class="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl border font-black text-xs sm:text-sm transition-all ' . $active_class . '">' . $i . '</a>';
     }
 
     // Next

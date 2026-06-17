@@ -1,0 +1,24 @@
+RewriteEngine On
+Options -MultiViews
+
+# Exclude existing directories and files from rewriting
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# 1. Hilangkan .php pada address bar (Internal Rewrite)
+# Memungkinkan akses /login untuk login.php
+RewriteCond %{REQUEST_FILENAME}.php -f
+RewriteRule ^(.*?)/?$ $1.php [L]
+
+# 2. Redirect dari .php ke non-php (External Redirect)
+# Agar lebih rapi, hanya jika dipanggil langsung lewat browser
+RewriteCond %{THE_REQUEST} ^[A-Z]{3,}\s/+(.+)\.php[\s?] [NC]
+RewriteRule ^ /%1 [R=301,L]
+
+# 3. Error Documents
+# PENTING: GANTI "/jurnal/" jika folder aplikasi Anda berbeda.
+ErrorDocument 403 /jurnal/error/403.php
+ErrorDocument 404 /jurnal/error/404.php
+ErrorDocument 500 /jurnal/error/500.php
+ErrorDocument 503 /jurnal/error/503.php
