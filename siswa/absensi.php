@@ -220,6 +220,23 @@ require_once __DIR__ . '/../includes/header.php';
         const lng = position.coords.longitude;
         const accuracy = position.coords.accuracy;
 
+        // Anti-Fake GPS heuristic checks
+        const isMocked = position.mocked || (position.coords && position.coords.mocked) || false;
+        const isAutomated = navigator.webdriver;
+
+        if (isMocked || isAutomated || accuracy <= 1) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Anti-Fake GPS Aktif',
+                text: 'Sistem mendeteksi penggunaan Fake GPS, Mock Location, atau browser otomatis. Anda dilarang melakukan absensi!',
+                allowOutsideClick: false
+            }).then(() => {
+                window.location.href = 'index.php';
+            });
+            if (watchId) navigator.geolocation.clearWatch(watchId);
+            return;
+        }
+
         const distance = calculateDistance(lat, lng, schoolPos[0], schoolPos[1]);
 
         distText.textContent = Math.round(distance);
@@ -349,17 +366,37 @@ require_once __DIR__ . '/../includes/header.php';
             btnAbsen.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i> Memproses...';
 
             navigator.geolocation.getCurrentPosition(function(pos) {
+                const lat = pos.coords.latitude;
+                const lng = pos.coords.longitude;
+                const accuracy = pos.coords.accuracy;
+                const isMocked = pos.mocked || (pos.coords && pos.coords.mocked) || false;
+                const isAutomated = navigator.webdriver;
+
+                if (isMocked || isAutomated || accuracy <= 1) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Fake GPS Terdeteksi',
+                        text: 'Sistem mendeteksi penggunaan Fake GPS atau browser otomatis. Anda dilarang melakukan absensi!',
+                        allowOutsideClick: false
+                    }).then(() => {
+                        window.location.href = 'index.php';
+                    });
+                    return;
+                }
+
                 // Accuracy Check
-                if (pos.coords.accuracy > 150) {
-                    Swal.fire('GPS Tidak Akurat', 'Akurasi GPS Anda terlalu rendah (' + Math.round(pos.coords.accuracy) + 'm). Mohon pindah ke area yang tidak terhalang bangunan.', 'warning');
+                if (accuracy > 150) {
+                    Swal.fire('GPS Tidak Akurat', 'Akurasi GPS Anda terlalu rendah (' + Math.round(accuracy) + 'm). Mohon pindah ke area yang tidak terhalang bangunan.', 'warning');
                     btnAbsen.disabled = false;
                     btnAbsen.innerHTML = '<i class="fa fa-fingerprint text-xl"></i> ABSEN SEKARANG';
                     return;
                 }
 
                 const data = new FormData();
-                data.append('lat', pos.coords.latitude);
-                data.append('lng', pos.coords.longitude);
+                data.append('lat', lat);
+                data.append('lng', lng);
+                data.append('accuracy', accuracy);
+                data.append('mocked', isMocked ? '1' : '0');
 
                 fetch('../api/submit_absensi_gps.php', {
                     method: 'POST',

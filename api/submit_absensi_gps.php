@@ -26,8 +26,18 @@ if ($gps_enabled !== 'aktif') {
 $siswa_id = $_SESSION['user_id'];
 $lat = $_POST['lat'] ?? null;
 $lng = $_POST['lng'] ?? null;
+$accuracy = (float)($_POST['accuracy'] ?? 10);
+$mocked = (int)($_POST['mocked'] ?? 0);
+
+// Anti-Fake GPS Server-side heuristics
+if ($mocked === 1 || $accuracy <= 1) {
+    ob_clean();
+    echo json_encode(['success' => false, 'message' => 'Absensi Ditolak: Sistem mendeteksi penggunaan Fake GPS atau Mocking koordinat pada device Anda.']);
+    exit;
+}
 
 if (!$lat || !$lng) {
+    ob_clean();
     echo json_encode(['success' => false, 'message' => 'Koordinat tidak valid.']);
     exit;
 }
