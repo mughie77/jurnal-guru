@@ -126,7 +126,17 @@ require_once __DIR__ . '/../includes/header.php';
                 <?php if(mysqli_num_rows($result) > 0): ?>
                     <?php while ($row = mysqli_fetch_assoc($result)): ?>
                     <tr class="hover:bg-slate-50/50 transition-colors">
-                        <td class="px-6 py-4 text-sm font-bold text-slate-700 whitespace-nowrap"><?= date('d/m/Y', strtotime($row['tanggal'])) ?></td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm font-bold text-slate-700"><?= date('d M Y', strtotime($row['tanggal'])) ?></span>
+                                <?php if (!empty($row['latitude']) && !empty($row['longitude'])): ?>
+                                    <a href="https://www.google.com/maps?q=<?= $row['latitude'] ?>,<?= $row['longitude'] ?>" target="_blank" class="text-rose-500 hover:text-rose-700 transition-colors" title="Lokasi Pengisian: <?= $row['latitude'] ?>, <?= $row['longitude'] ?>">
+                                        <i class="fa fa-map-marker-alt"></i>
+                                    </a>
+                                <?php endif; ?>
+                            </div>
+                            <div class="text-[10px] text-slate-400 font-bold" title="Waktu Submit Jurnal">Submit: <?= date('d/m/Y H:i', strtotime($row['created_at'])) ?> WIB</div>
+                        </td>
                         <td class="px-6 py-4">
                             <div class="font-bold text-slate-800 text-sm leading-tight mb-0.5"><?= htmlspecialchars($row['nama_lengkap']) ?></div>
                             <div class="text-[10px] text-indigo-500 font-black uppercase tracking-tighter"><?= htmlspecialchars($row['nama_mapel']) ?></div>
