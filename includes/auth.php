@@ -3,15 +3,13 @@ if (!defined('BASE_URL')) {
     require_once __DIR__ . '/../config/database.php';
 }
 
-// Secure session settings
-ini_set('session.cookie_httponly', 1);
-ini_set('session.use_only_cookies', 1);
-if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
-    ini_set('session.cookie_secure', 1);
-}
-
+// Secure session settings (only if session is not active)
 if (session_status() == PHP_SESSION_NONE) {
-    // Shared session logic from database.php
+    ini_set('session.cookie_httponly', 1);
+    ini_set('session.use_only_cookies', 1);
+    if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
+        ini_set('session.cookie_secure', 1);
+    }
     session_start();
 }
 

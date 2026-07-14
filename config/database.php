@@ -40,6 +40,12 @@ if (!empty($base_url_config)) {
 // --- Mulai Session ---
 // Panggil session_start() di sini agar tersedia di semua halaman
 if (session_status() == PHP_SESSION_NONE) {
+    ini_set('session.cookie_httponly', 1);
+    ini_set('session.use_only_cookies', 1);
+    if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
+        ini_set('session.cookie_secure', 1);
+    }
+
     // Check for persistent session before starting
     if (isset($_COOKIE[session_name()])) {
         // If we want to support long sessions, we might need to increase gc_maxlifetime
