@@ -37,10 +37,22 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $message = "Kelas diperbarui!";
         $message_type = 'success';
     } elseif (isset($_POST['hapus'])) {
-        $id = $_POST['id'];
-        if (mysqli_query($conn, "DELETE FROM kelas WHERE id = $id")) {
-            $message = "Kelas dihapus!";
-            $message_type = 'success';
+        $id = (int)$_POST['id'];
+        try {
+            if (mysqli_query($conn, "DELETE FROM kelas WHERE id = $id")) {
+                $message = "Kelas dihapus!";
+                $message_type = 'success';
+            } else {
+                $message = "Gagal menghapus kelas.";
+                $message_type = 'error';
+            }
+        } catch (mysqli_sql_exception $e) {
+            if ($e->getCode() == 1451 || strpos($e->getMessage(), 'foreign key constraint fails') !== false) {
+                $message = "Gagal: Kelas ini tidak dapat dihapus karena masih digunakan di dalam data siswa, jurnal mengajar, atau tabel lainnya.";
+            } else {
+                $message = "Gagal: " . $e->getMessage();
+            }
+            $message_type = 'error';
         }
     }
 }
