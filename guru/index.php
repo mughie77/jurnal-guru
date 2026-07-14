@@ -80,7 +80,11 @@ require_once __DIR__ . '/../includes/header.php';
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
             <!-- Quick Actions Grid Design -->
-            <div class="grid grid-cols-2 gap-4">
+            <?php
+            $wali_info = get_wali_kelas_info();
+            $grid_cols_class = $wali_info ? "grid-cols-2 lg:grid-cols-3" : "grid-cols-2";
+            ?>
+            <div class="grid <?= $grid_cols_class ?> gap-4 col-span-1 lg:col-span-2">
                 <a href="isi_absensi.php" class="p-6 rounded-[32px] bg-indigo-600 text-white shadow-xl shadow-indigo-200 flex flex-col gap-4 group transition-all hover:scale-[1.02] active:scale-95">
                     <div class="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-xl shadow-inner group-hover:bg-white/30 transition-all">
                         <i class="fa fa-user-check"></i>
@@ -120,6 +124,18 @@ require_once __DIR__ . '/../includes/header.php';
                         <div class="text-[9px] font-bold text-rose-100 uppercase tracking-widest mt-1 opacity-70">Upload Media</div>
                     </div>
                 </a>
+
+                <?php if ($wali_info): ?>
+                <a href="<?= BASE_URL ?>admin/rekap_persiswa.php" class="p-6 rounded-[32px] bg-violet-600 text-white shadow-xl shadow-violet-200 flex flex-col gap-4 group transition-all hover:scale-[1.02] active:scale-95 col-span-2 lg:col-span-1">
+                    <div class="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-xl shadow-inner group-hover:bg-white/30 transition-all">
+                        <i class="fa fa-user-check"></i>
+                    </div>
+                    <div>
+                        <div class="text-lg font-black italic tracking-tighter uppercase leading-none">Rekap Kelas Saya</div>
+                        <div class="text-[9px] font-bold text-violet-100 uppercase tracking-widest mt-1 opacity-70">Wali Kelas: <?= htmlspecialchars($wali_info['nama_kelas']) ?></div>
+                    </div>
+                </a>
+                <?php endif; ?>
             </div>
 
             <!-- Activity Table -->

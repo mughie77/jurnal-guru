@@ -32,10 +32,43 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
+// Helper to check if a user is a wali kelas and return their class information
+function get_wali_kelas_info() {
+    global $conn;
+    if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'guru') {
+        return null;
+    }
+    $user_id = (int)$_SESSION['user_id'];
+    // Find teacher (guru) id
+    $q_guru = mysqli_query($conn, "SELECT id FROM guru WHERE user_id = $user_id");
+    if ($g_data = mysqli_fetch_assoc($q_guru)) {
+        $guru_id = (int)$g_data['id'];
+        // Check if assigned in kelas
+        $q_kelas = mysqli_query($conn, "SELECT id, nama_kelas FROM kelas WHERE wali_kelas_id = $guru_id LIMIT 1");
+        if ($k_data = mysqli_fetch_assoc($q_kelas)) {
+            return [
+                'guru_id' => $guru_id,
+                'kelas_id' => (int)$k_data['id'],
+                'nama_kelas' => $k_data['nama_kelas']
+            ];
+        }
+    }
+    return null;
+}
+
 // Role Authorization
 function authorize_role(array $allowed_roles) {
-    if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], $allowed_roles)) {
-        $role = $_SESSION['role'] ?? '';
+    $role = $_SESSION['role'] ?? '';
+
+    // Support "wali_kelas" dynamic role
+    $is_wali_kelas = false;
+    if (in_array('wali_kelas', $allowed_roles) && $role === 'guru') {
+        if (get_wali_kelas_info() !== null) {
+            $is_wali_kelas = true;
+        }
+    }
+
+    if (!isset($_SESSION['role']) || (!in_array($_SESSION['role'], $allowed_roles) && !$is_wali_kelas)) {
         switch ($role) {
             case 'admin': header('Location: ' . BASE_URL . 'admin/'); break;
             case 'waka': header('Location: ' . BASE_URL . 'waka/'); break;

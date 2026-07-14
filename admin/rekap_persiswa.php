@@ -3,14 +3,26 @@ require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/pagination.php';
 
-authorize_role(['admin', 'waka']);
+authorize_role(['admin', 'waka', 'wali_kelas']);
 $page_title = "Rekap Kehadiran Siswa";
 
-$kelases = mysqli_query($conn, "SELECT id, nama_kelas FROM kelas ORDER BY nama_kelas");
-$tahun_pelajarans = mysqli_query($conn, "SELECT id, tahun FROM tahun_pelajaran ORDER BY tahun DESC");
+$is_wali = ($_SESSION['role'] === 'guru');
+$wali_info = get_wali_kelas_info();
 
-$kelas_id = (int)($_GET['kelas_id'] ?? 0);
+if ($is_wali && $wali_info) {
+    $kelas_id = $wali_info['kelas_id'];
+    $kelases = mysqli_query($conn, "SELECT id, nama_kelas FROM kelas WHERE id = " . $wali_info['kelas_id'] . " ORDER BY nama_kelas");
+} else {
+    $kelases = mysqli_query($conn, "SELECT id, nama_kelas FROM kelas ORDER BY nama_kelas");
+    $kelas_id = (int)($_GET['kelas_id'] ?? 0);
+}
+
+$tahun_pelajarans = mysqli_query($conn, "SELECT id, tahun FROM tahun_pelajaran ORDER BY tahun DESC");
 $filter_tipe = $_GET['filter_tipe'] ?? 'hari';
+if ($filter_tipe !== 'hari' && $filter_tipe !== 'bulan' && $filter_tipe !== 'semester') {
+    $filter_tipe = 'hari';
+}
+$filter_tipe = mysqli_real_escape_string($conn, $filter_tipe);
 
 $start_date = '';
 $end_date = '';
@@ -19,12 +31,27 @@ $end_date = '';
 $hari_mulai = $_GET['hari_mulai'] ?? date('Y-m-d');
 $hari_selesai = $_GET['hari_selesai'] ?? date('Y-m-d');
 
+if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $hari_mulai)) {
+    $hari_mulai = date('Y-m-d');
+}
+if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $hari_selesai)) {
+    $hari_selesai = date('Y-m-d');
+}
+
+$hari_mulai = mysqli_real_escape_string($conn, $hari_mulai);
+$hari_selesai = mysqli_real_escape_string($conn, $hari_selesai);
+
 // Monthly
 $bulan = (int)($_GET['bulan'] ?? date('m'));
 $tahun_select = (int)($_GET['tahun_select'] ?? date('Y'));
 
 // Semester
 $semester = $_GET['semester'] ?? 'ganjil';
+if ($semester !== 'ganjil' && $semester !== 'genap') {
+    $semester = 'ganjil';
+}
+$semester = mysqli_real_escape_string($conn, $semester);
+
 $tahun_ajaran_id = (int)($_GET['tahun_ajaran_id'] ?? $active_tahun_id);
 
 if ($kelas_id > 0) {
@@ -62,7 +89,8 @@ if ($kelas_id > 0) {
 $rekap = [];
 $pagin = null;
 if ($kelas_id > 0 && $start_date && $end_date) {
-    $where_siswa = " WHERE sk.kelas_id = $kelas_id AND sk.tahun_pelajaran_id = $active_tahun_id";
+    $active_tahun_id_clean = (int)($active_tahun_id ?? 0);
+    $where_siswa = " WHERE sk.kelas_id = $kelas_id AND sk.tahun_pelajaran_id = $active_tahun_id_clean";
     $pagin = get_pagination_data($conn, "siswa s JOIN siswa_kelas sk ON s.id = sk.siswa_id", 50, $where_siswa);
 
     $query = "SELECT s.id, s.nis, s.nama_siswa, s.jenis_kelamin,
@@ -101,12 +129,19 @@ require_once __DIR__ . '/../includes/header.php';
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
                 <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2">Pilih Kelas</label>
-                <select name="kelas_id" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-100 bg-white font-bold">
-                    <option value="">-- Pilih Kelas --</option>
-                    <?php mysqli_data_seek($kelases, 0); while($k = mysqli_fetch_assoc($kelases)): ?>
-                        <option value="<?= $k['id'] ?>" <?= $k['id'] == $kelas_id ? 'selected' : '' ?>><?= htmlspecialchars($k['nama_kelas']) ?></option>
-                    <?php endwhile; ?>
-                </select>
+                <?php if ($is_wali && $wali_info): ?>
+                    <input type="hidden" name="kelas_id" value="<?= $kelas_id ?>">
+                    <select disabled class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-100 font-bold text-slate-600">
+                        <option value="<?= $wali_info['kelas_id'] ?>"><?= htmlspecialchars($wali_info['nama_kelas']) ?></option>
+                    </select>
+                <?php else: ?>
+                    <select name="kelas_id" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-100 bg-white font-bold">
+                        <option value="">-- Pilih Kelas --</option>
+                        <?php mysqli_data_seek($kelases, 0); while($k = mysqli_fetch_assoc($kelases)): ?>
+                            <option value="<?= $k['id'] ?>" <?= $k['id'] == $kelas_id ? 'selected' : '' ?>><?= htmlspecialchars($k['nama_kelas']) ?></option>
+                        <?php endwhile; ?>
+                    </select>
+                <?php endif; ?>
             </div>
 
             <div>
@@ -187,6 +222,11 @@ require_once __DIR__ . '/../includes/header.php';
 <div class="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-2">
     <div>
         <p class="text-sm font-bold text-slate-500">Rentang Waktu Laporan: <span class="text-slate-800 underline font-black"><?= date('d F Y', strtotime($start_date)) ?></span> s/d <span class="text-slate-800 underline font-black"><?= date('d F Y', strtotime($end_date)) ?></span></p>
+    </div>
+    <div>
+        <a href="export_rekap_persiswa.php?<?= http_build_query($_GET) ?>" class="inline-flex items-center px-5 py-2.5 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100">
+            <i class="fa fa-file-excel mr-2"></i> Ekspor Excel
+        </a>
     </div>
 </div>
 
