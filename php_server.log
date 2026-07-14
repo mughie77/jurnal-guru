@@ -1,1 +1,209 @@
-[Tue Apr 28 00:23:10 2026] PHP 8.3.6 Development Server (http://0.0.0.0:8000) started
+[Mon Jul 13 23:56:07 2026] PHP 8.3.6 Development Server (http://0.0.0.0:8000) started
+[Tue Jul 14 00:02:00 2026] 127.0.0.1:58418 Accepted
+[Tue Jul 14 00:02:00 2026] 127.0.0.1:58418 [200]: GET /login.php
+[Tue Jul 14 00:02:00 2026] 127.0.0.1:58418 Closing
+[Tue Jul 14 00:02:01 2026] 127.0.0.1:58422 Accepted
+[Tue Jul 14 00:02:01 2026] 127.0.0.1:58422 [404]: GET /uploads/favicon.png - No such file or directory
+[Tue Jul 14 00:02:01 2026] 127.0.0.1:58422 Closing
+[Tue Jul 14 00:02:02 2026] 127.0.0.1:58436 Accepted
+[Tue Jul 14 00:02:02 2026] 127.0.0.1:58436 [404]: GET /uploads/favicon.png - No such file or directory
+[Tue Jul 14 00:02:02 2026] 127.0.0.1:58436 Closing
+[Tue Jul 14 00:02:03 2026] 127.0.0.1:58444 Accepted
+[Tue Jul 14 00:02:03 2026] 127.0.0.1:58444 [200]: POST /login.php
+[Tue Jul 14 00:02:03 2026] 127.0.0.1:58444 Closing
+[Tue Jul 14 00:02:03 2026] 127.0.0.1:58452 Accepted
+[Tue Jul 14 00:02:03 2026] 127.0.0.1:58452 [404]: GET /uploads/favicon.png - No such file or directory
+[Tue Jul 14 00:02:03 2026] 127.0.0.1:58452 Closing
+[Tue Jul 14 00:02:04 2026] 127.0.0.1:58456 Accepted
+[Tue Jul 14 00:02:04 2026] 127.0.0.1:58456 [404]: GET /uploads/favicon.png - No such file or directory
+[Tue Jul 14 00:02:04 2026] 127.0.0.1:58456 Closing
+[Tue Jul 14 00:02:04 2026] 127.0.0.1:45994 Accepted
+[Tue Jul 14 00:02:04 2026] PHP Fatal error:  Uncaught Error: Undefined constant "BASE_URL" in /app/includes/auth.php:29
+Stack trace:
+#0 /app/admin/pengaturan.php(2): require_once()
+#1 {main}
+  thrown in /app/includes/auth.php on line 29
+[Tue Jul 14 00:02:04 2026] 127.0.0.1:45994 [500]: GET /admin/pengaturan.php - Uncaught Error: Undefined constant "BASE_URL" in /app/includes/auth.php:29
+Stack trace:
+#0 /app/admin/pengaturan.php(2): require_once()
+#1 {main}
+  thrown in /app/includes/auth.php on line 29
+[Tue Jul 14 00:02:04 2026] 127.0.0.1:45994 Closing
+[Tue Jul 14 00:03:12 2026] 127.0.0.1:47366 Accepted
+[Tue Jul 14 00:03:12 2026] 127.0.0.1:47366 [200]: GET /login.php
+[Tue Jul 14 00:03:12 2026] 127.0.0.1:47366 Closing
+[Tue Jul 14 00:03:12 2026] 127.0.0.1:47376 Accepted
+[Tue Jul 14 00:03:12 2026] 127.0.0.1:47376 [404]: GET /uploads/favicon.png - No such file or directory
+[Tue Jul 14 00:03:12 2026] 127.0.0.1:47376 Closing
+[Tue Jul 14 00:03:12 2026] 127.0.0.1:47392 Accepted
+[Tue Jul 14 00:03:12 2026] 127.0.0.1:47392 [404]: GET /uploads/favicon.png - No such file or directory
+[Tue Jul 14 00:03:12 2026] 127.0.0.1:47392 Closing
+[Tue Jul 14 00:03:14 2026] 127.0.0.1:47394 Accepted
+[Tue Jul 14 00:03:14 2026] 127.0.0.1:47394 [200]: POST /login.php
+[Tue Jul 14 00:03:14 2026] 127.0.0.1:47394 Closing
+[Tue Jul 14 00:03:14 2026] 127.0.0.1:47396 Accepted
+[Tue Jul 14 00:03:14 2026] 127.0.0.1:47396 [404]: GET /uploads/favicon.png - No such file or directory
+[Tue Jul 14 00:03:14 2026] 127.0.0.1:47396 Closing
+[Tue Jul 14 00:03:14 2026] 127.0.0.1:47398 Accepted
+[Tue Jul 14 00:03:14 2026] 127.0.0.1:47398 [404]: GET /uploads/favicon.png - No such file or directory
+[Tue Jul 14 00:03:14 2026] 127.0.0.1:47398 Closing
+[Tue Jul 14 00:03:16 2026] 127.0.0.1:58224 Accepted
+[Tue Jul 14 00:03:16 2026] PHP Fatal error:  Uncaught Error: Undefined constant "BASE_URL" in /app/includes/auth.php:29
+Stack trace:
+#0 /app/admin/pengaturan.php(2): require_once()
+#1 {main}
+  thrown in /app/includes/auth.php on line 29
+[Tue Jul 14 00:03:16 2026] 127.0.0.1:58224 [500]: GET /admin/pengaturan.php - Uncaught Error: Undefined constant "BASE_URL" in /app/includes/auth.php:29
+Stack trace:
+#0 /app/admin/pengaturan.php(2): require_once()
+#1 {main}
+  thrown in /app/includes/auth.php on line 29
+[Tue Jul 14 00:03:16 2026] 127.0.0.1:58224 Closing
+[Tue Jul 14 00:04:19 2026] 127.0.0.1:56532 Accepted
+[Tue Jul 14 00:04:19 2026] 127.0.0.1:56532 [200]: GET /login.php
+[Tue Jul 14 00:04:19 2026] 127.0.0.1:56532 Closing
+[Tue Jul 14 00:04:19 2026] 127.0.0.1:56536 Accepted
+[Tue Jul 14 00:04:19 2026] 127.0.0.1:56536 [404]: GET /uploads/favicon.png - No such file or directory
+[Tue Jul 14 00:04:19 2026] 127.0.0.1:56536 Closing
+[Tue Jul 14 00:04:19 2026] 127.0.0.1:56542 Accepted
+[Tue Jul 14 00:04:19 2026] 127.0.0.1:56542 [404]: GET /uploads/favicon.png - No such file or directory
+[Tue Jul 14 00:04:19 2026] 127.0.0.1:56542 Closing
+[Tue Jul 14 00:04:20 2026] 127.0.0.1:56556 Accepted
+[Tue Jul 14 00:04:20 2026] 127.0.0.1:56556 [200]: POST /login.php
+[Tue Jul 14 00:04:20 2026] 127.0.0.1:56556 Closing
+[Tue Jul 14 00:04:20 2026] 127.0.0.1:56560 Accepted
+[Tue Jul 14 00:04:20 2026] 127.0.0.1:56560 [404]: GET /uploads/favicon.png - No such file or directory
+[Tue Jul 14 00:04:20 2026] 127.0.0.1:56560 Closing
+[Tue Jul 14 00:04:20 2026] 127.0.0.1:56576 Accepted
+[Tue Jul 14 00:04:20 2026] 127.0.0.1:56576 [404]: GET /uploads/favicon.png - No such file or directory
+[Tue Jul 14 00:04:20 2026] 127.0.0.1:56576 Closing
+[Tue Jul 14 00:04:21 2026] 127.0.0.1:56586 Accepted
+[Tue Jul 14 00:04:21 2026] PHP Fatal error:  Uncaught Error: Undefined constant "BASE_URL" in /app/includes/auth.php:29
+Stack trace:
+#0 /app/admin/pengaturan.php(2): require_once()
+#1 {main}
+  thrown in /app/includes/auth.php on line 29
+[Tue Jul 14 00:04:21 2026] 127.0.0.1:56586 [500]: GET /admin/pengaturan.php - Uncaught Error: Undefined constant "BASE_URL" in /app/includes/auth.php:29
+Stack trace:
+#0 /app/admin/pengaturan.php(2): require_once()
+#1 {main}
+  thrown in /app/includes/auth.php on line 29
+[Tue Jul 14 00:04:21 2026] 127.0.0.1:56586 Closing
+[Tue Jul 14 00:06:01 2026] 127.0.0.1:46112 Accepted
+[Tue Jul 14 00:06:01 2026] 127.0.0.1:46112 [200]: GET /login.php
+[Tue Jul 14 00:06:01 2026] 127.0.0.1:46112 Closing
+[Tue Jul 14 00:06:01 2026] 127.0.0.1:46114 Accepted
+[Tue Jul 14 00:06:01 2026] 127.0.0.1:46114 [404]: GET /uploads/favicon.png - No such file or directory
+[Tue Jul 14 00:06:01 2026] 127.0.0.1:46114 Closing
+[Tue Jul 14 00:06:01 2026] 127.0.0.1:46130 Accepted
+[Tue Jul 14 00:06:01 2026] 127.0.0.1:46130 [404]: GET /uploads/favicon.png - No such file or directory
+[Tue Jul 14 00:06:01 2026] 127.0.0.1:46130 Closing
+[Tue Jul 14 00:06:03 2026] 127.0.0.1:46138 Accepted
+[Tue Jul 14 00:06:03 2026] 127.0.0.1:46138 [200]: POST /login.php
+[Tue Jul 14 00:06:03 2026] 127.0.0.1:46138 Closing
+[Tue Jul 14 00:06:03 2026] 127.0.0.1:46142 Accepted
+[Tue Jul 14 00:06:03 2026] 127.0.0.1:46142 [404]: GET /uploads/favicon.png - No such file or directory
+[Tue Jul 14 00:06:03 2026] 127.0.0.1:46142 Closing
+[Tue Jul 14 00:06:03 2026] 127.0.0.1:46152 Accepted
+[Tue Jul 14 00:06:03 2026] 127.0.0.1:46152 [404]: GET /uploads/favicon.png - No such file or directory
+[Tue Jul 14 00:06:03 2026] 127.0.0.1:46152 Closing
+[Tue Jul 14 00:06:05 2026] 127.0.0.1:45606 Accepted
+[Tue Jul 14 00:06:05 2026] PHP Warning:  ini_set(): Session ini settings cannot be changed when a session is active in /app/includes/auth.php on line 7
+[Tue Jul 14 00:06:05 2026] PHP Warning:  ini_set(): Session ini settings cannot be changed when a session is active in /app/includes/auth.php on line 8
+[Tue Jul 14 00:06:05 2026] 127.0.0.1:45606 [302]: GET /admin/pengaturan.php
+[Tue Jul 14 00:06:05 2026] 127.0.0.1:45606 Closing
+[Tue Jul 14 00:06:05 2026] 127.0.0.1:45618 Accepted
+[Tue Jul 14 00:06:05 2026] 127.0.0.1:45618 [404]: GET /admin/login.php - No such file or directory
+[Tue Jul 14 00:06:05 2026] 127.0.0.1:45618 Closing
+[Tue Jul 14 00:07:33 2026] 127.0.0.1:60214 Accepted
+[Tue Jul 14 00:07:33 2026] 127.0.0.1:60214 [200]: GET /login.php
+[Tue Jul 14 00:07:33 2026] 127.0.0.1:60214 Closing
+[Tue Jul 14 00:07:33 2026] 127.0.0.1:60216 Accepted
+[Tue Jul 14 00:07:33 2026] 127.0.0.1:60216 [404]: GET /uploads/favicon.png - No such file or directory
+[Tue Jul 14 00:07:33 2026] 127.0.0.1:60216 Closing
+[Tue Jul 14 00:07:33 2026] 127.0.0.1:60220 Accepted
+[Tue Jul 14 00:07:33 2026] 127.0.0.1:60220 [404]: GET /uploads/favicon.png - No such file or directory
+[Tue Jul 14 00:07:33 2026] 127.0.0.1:60220 Closing
+[Tue Jul 14 00:07:35 2026] 127.0.0.1:56940 Accepted
+[Tue Jul 14 00:07:35 2026] 127.0.0.1:56940 [200]: POST /login.php
+[Tue Jul 14 00:07:35 2026] 127.0.0.1:56940 Closing
+[Tue Jul 14 00:07:35 2026] 127.0.0.1:56948 Accepted
+[Tue Jul 14 00:07:35 2026] 127.0.0.1:56948 [404]: GET /uploads/favicon.png - No such file or directory
+[Tue Jul 14 00:07:35 2026] 127.0.0.1:56948 Closing
+[Tue Jul 14 00:07:35 2026] 127.0.0.1:56950 Accepted
+[Tue Jul 14 00:07:35 2026] 127.0.0.1:56950 [404]: GET /uploads/favicon.png - No such file or directory
+[Tue Jul 14 00:07:35 2026] 127.0.0.1:56950 Closing
+[Tue Jul 14 00:07:37 2026] 127.0.0.1:56962 Accepted
+[Tue Jul 14 00:07:37 2026] PHP Warning:  ini_set(): Session ini settings cannot be changed when a session is active in /app/includes/auth.php on line 7
+[Tue Jul 14 00:07:37 2026] PHP Warning:  ini_set(): Session ini settings cannot be changed when a session is active in /app/includes/auth.php on line 8
+[Tue Jul 14 00:07:37 2026] 127.0.0.1:56962 [302]: GET /admin/pengaturan.php
+[Tue Jul 14 00:07:37 2026] 127.0.0.1:56962 Closing
+[Tue Jul 14 00:07:37 2026] 127.0.0.1:56968 Accepted
+[Tue Jul 14 00:07:37 2026] 127.0.0.1:56968 [200]: GET /login.php
+[Tue Jul 14 00:07:37 2026] 127.0.0.1:56968 Closing
+[Tue Jul 14 00:07:37 2026] 127.0.0.1:56974 Accepted
+[Tue Jul 14 00:07:37 2026] 127.0.0.1:56974 [404]: GET /uploads/favicon.png - No such file or directory
+[Tue Jul 14 00:07:37 2026] 127.0.0.1:56974 Closing
+[Tue Jul 14 00:07:37 2026] 127.0.0.1:56982 Accepted
+[Tue Jul 14 00:07:37 2026] 127.0.0.1:56982 [404]: GET /uploads/favicon.png - No such file or directory
+[Tue Jul 14 00:07:37 2026] 127.0.0.1:56982 Closing
+[Tue Jul 14 00:10:05 2026] 127.0.0.1:50700 Accepted
+[Tue Jul 14 00:10:05 2026] 127.0.0.1:50700 [200]: GET /login.php
+[Tue Jul 14 00:10:05 2026] 127.0.0.1:50700 Closing
+[Tue Jul 14 00:10:05 2026] 127.0.0.1:50710 Accepted
+[Tue Jul 14 00:10:05 2026] 127.0.0.1:50710 [404]: GET /uploads/favicon.png - No such file or directory
+[Tue Jul 14 00:10:05 2026] 127.0.0.1:50710 Closing
+[Tue Jul 14 00:10:05 2026] 127.0.0.1:50714 Accepted
+[Tue Jul 14 00:10:05 2026] 127.0.0.1:50714 [404]: GET /uploads/favicon.png - No such file or directory
+[Tue Jul 14 00:10:05 2026] 127.0.0.1:50714 Closing
+[Tue Jul 14 00:10:06 2026] 127.0.0.1:50724 Accepted
+[Tue Jul 14 00:10:07 2026] 127.0.0.1:50724 [302]: POST /login.php
+[Tue Jul 14 00:10:07 2026] 127.0.0.1:50724 Closing
+[Tue Jul 14 00:10:07 2026] 127.0.0.1:50736 Accepted
+[Tue Jul 14 00:10:07 2026] 127.0.0.1:50736 [302]: GET /index.php
+[Tue Jul 14 00:10:07 2026] 127.0.0.1:50736 Closing
+[Tue Jul 14 00:10:07 2026] 127.0.0.1:50738 Accepted
+[Tue Jul 14 00:10:07 2026] PHP Warning:  ini_set(): Session ini settings cannot be changed when a session is active in /app/includes/auth.php on line 7
+[Tue Jul 14 00:10:07 2026] PHP Warning:  ini_set(): Session ini settings cannot be changed when a session is active in /app/includes/auth.php on line 8
+[Tue Jul 14 00:10:07 2026] 127.0.0.1:50738 [200]: GET /admin/
+[Tue Jul 14 00:10:07 2026] 127.0.0.1:50738 Closing
+[Tue Jul 14 00:10:07 2026] 127.0.0.1:50750 Accepted
+[Tue Jul 14 00:10:07 2026] 127.0.0.1:50766 Accepted
+[Tue Jul 14 00:10:07 2026] 127.0.0.1:50750 [200]: GET /assets/css/style.css
+[Tue Jul 14 00:10:07 2026] 127.0.0.1:50766 [200]: GET /assets/js/app.js
+[Tue Jul 14 00:10:07 2026] 127.0.0.1:50750 Closing
+[Tue Jul 14 00:10:07 2026] 127.0.0.1:50766 Closing
+[Tue Jul 14 00:10:09 2026] 127.0.0.1:50782 Accepted
+[Tue Jul 14 00:10:09 2026] PHP Warning:  ini_set(): Session ini settings cannot be changed when a session is active in /app/includes/auth.php on line 7
+[Tue Jul 14 00:10:09 2026] PHP Warning:  ini_set(): Session ini settings cannot be changed when a session is active in /app/includes/auth.php on line 8
+[Tue Jul 14 00:10:09 2026] 127.0.0.1:50782 [200]: GET /admin/pengaturan.php
+[Tue Jul 14 00:10:09 2026] 127.0.0.1:50782 Closing
+[Tue Jul 14 00:10:09 2026] 127.0.0.1:50790 Accepted
+[Tue Jul 14 00:10:09 2026] 127.0.0.1:50792 Accepted
+[Tue Jul 14 00:10:09 2026] 127.0.0.1:50790 [200]: GET /assets/css/style.css
+[Tue Jul 14 00:10:09 2026] 127.0.0.1:50792 [404]: GET /uploads/favicon.png - No such file or directory
+[Tue Jul 14 00:10:09 2026] 127.0.0.1:50792 Closing
+[Tue Jul 14 00:10:09 2026] 127.0.0.1:50790 Closing
+[Tue Jul 14 00:10:09 2026] 127.0.0.1:50802 Accepted
+[Tue Jul 14 00:10:09 2026] 127.0.0.1:50814 Accepted
+[Tue Jul 14 00:10:09 2026] 127.0.0.1:50802 [200]: GET /assets/js/pengaturan.js
+[Tue Jul 14 00:10:09 2026] 127.0.0.1:50814 [200]: GET /assets/js/app.js
+[Tue Jul 14 00:10:09 2026] 127.0.0.1:50802 Closing
+[Tue Jul 14 00:10:09 2026] 127.0.0.1:50814 Closing
+[Tue Jul 14 00:10:13 2026] 127.0.0.1:50828 Accepted
+[Tue Jul 14 00:10:13 2026] PHP Warning:  ini_set(): Session ini settings cannot be changed when a session is active in /app/includes/auth.php on line 7
+[Tue Jul 14 00:10:13 2026] PHP Warning:  ini_set(): Session ini settings cannot be changed when a session is active in /app/includes/auth.php on line 8
+[Tue Jul 14 00:10:13 2026] 127.0.0.1:50828 [200]: POST /admin/pengaturan.php
+[Tue Jul 14 00:10:13 2026] 127.0.0.1:50828 Closing
+[Tue Jul 14 00:10:13 2026] 127.0.0.1:50838 Accepted
+[Tue Jul 14 00:10:13 2026] 127.0.0.1:50844 Accepted
+[Tue Jul 14 00:10:13 2026] 127.0.0.1:50838 [200]: GET /assets/css/style.css
+[Tue Jul 14 00:10:13 2026] 127.0.0.1:50854 Accepted
+[Tue Jul 14 00:10:13 2026] 127.0.0.1:50844 [404]: GET /uploads/favicon.png - No such file or directory
+[Tue Jul 14 00:10:13 2026] 127.0.0.1:50844 Closing
+[Tue Jul 14 00:10:13 2026] 127.0.0.1:50854 [200]: GET /assets/js/pengaturan.js
+[Tue Jul 14 00:10:13 2026] 127.0.0.1:50838 Closing
+[Tue Jul 14 00:10:13 2026] 127.0.0.1:50854 Closing
+[Tue Jul 14 00:10:13 2026] 127.0.0.1:50870 Accepted
+[Tue Jul 14 00:10:13 2026] 127.0.0.1:50870 [200]: GET /assets/js/app.js
+[Tue Jul 14 00:10:13 2026] 127.0.0.1:50870 Closing

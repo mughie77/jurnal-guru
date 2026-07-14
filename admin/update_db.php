@@ -40,6 +40,10 @@ authorize_role(['admin']);
                 ],
                 'absensi_harian' => [
                     'file_surat' => "VARCHAR(255) DEFAULT NULL AFTER keterangan"
+                ],
+                'jurnal' => [
+                    'latitude' => "VARCHAR(50) DEFAULT NULL AFTER keterangan",
+                    'longitude' => "VARCHAR(50) DEFAULT NULL AFTER latitude"
                 ]
             ];
 
@@ -65,7 +69,8 @@ authorize_role(['admin']);
             $new_settings = [
                 'school_lat' => '-7.9135',
                 'school_lng' => '113.8217',
-                'radius_absen' => '30'
+                'radius_absen' => '30',
+                'siswa_gps_absen' => 'nonaktif'
             ];
 
             foreach ($new_settings as $key => $val) {

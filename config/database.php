@@ -28,7 +28,7 @@ if (!empty($base_url_config)) {
     $scriptName = $_SERVER['SCRIPT_NAME'];
 
     // Cari path root aplikasi (naik dari folder core jika perlu)
-    $app_root_path = str_replace(['/admin/', '/guru/', '/waka/', '/api/', '/siswa/', '/error/'], '/', dirname($scriptName));
+    $app_root_path = str_replace(['/admin', '/guru', '/waka', '/api', '/siswa', '/error'], '/', dirname($scriptName));
 
     // Normalisasi path agar selalu diakhiri dengan satu slash
     $app_root_path = str_replace('\\', '/', $app_root_path);

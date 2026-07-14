@@ -1,4 +1,8 @@
 <?php
+if (!defined('BASE_URL')) {
+    require_once __DIR__ . '/../config/database.php';
+}
+
 // Secure session settings
 ini_set('session.cookie_httponly', 1);
 ini_set('session.use_only_cookies', 1);

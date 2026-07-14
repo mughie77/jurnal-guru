@@ -22,7 +22,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             'dapodik_token' => $_POST['dapodik_token'],
             'school_lat' => $_POST['school_lat'],
             'school_lng' => $_POST['school_lng'],
-            'radius_absen' => $_POST['radius_absen']
+            'radius_absen' => $_POST['radius_absen'],
+            'siswa_gps_absen' => $_POST['siswa_gps_absen']
         ];
 
         foreach ($settings as $key => $val) {
@@ -103,6 +104,17 @@ require_once __DIR__ . '/../includes/header.php';
                 <div class="space-y-2">
                     <label class="block text-sm font-bold text-slate-700">Alamat Sekolah</label>
                     <textarea name="alamat_sekolah" rows="3" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 transition-all"><?= htmlspecialchars($sets['alamat_sekolah'] ?? '') ?></textarea>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-2">
+                        <label class="block text-sm font-bold text-slate-700">Status Absensi GPS Siswa</label>
+                        <select name="siswa_gps_absen" required class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 bg-white transition-all font-bold">
+                            <option value="aktif" <?= (isset($sets['siswa_gps_absen']) && $sets['siswa_gps_absen'] === 'aktif') ? 'selected' : '' ?>>Aktif (Menggunakan GPS)</option>
+                            <option value="nonaktif" <?= (!isset($sets['siswa_gps_absen']) || $sets['siswa_gps_absen'] !== 'aktif') ? 'selected' : '' ?>>Nonaktif (Absensi Manual di Jurnal)</option>
+                        </select>
+                        <p class="text-[10px] text-slate-400 font-bold italic">Jika dinonaktifkan, siswa tidak bisa melakukan absensi GPS mandiri dan absensi diisi manual oleh guru.</p>
+                    </div>
                 </div>
 
                 <div class="space-y-4">

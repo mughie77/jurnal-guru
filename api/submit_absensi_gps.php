@@ -11,6 +11,18 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'siswa') {
     exit;
 }
 
+// Check if GPS attendance is disabled
+$res_set_check = mysqli_query($conn, "SELECT nilai_setting FROM pengaturan WHERE nama_setting = 'siswa_gps_absen'");
+$gps_enabled = 'nonaktif';
+if ($row_gps = mysqli_fetch_assoc($res_set_check)) {
+    $gps_enabled = $row_gps['nilai_setting'];
+}
+if ($gps_enabled !== 'aktif') {
+    ob_clean();
+    echo json_encode(['success' => false, 'message' => 'Absensi GPS Siswa sedang dinonaktifkan oleh Administrator.']);
+    exit;
+}
+
 $siswa_id = $_SESSION['user_id'];
 $lat = $_POST['lat'] ?? null;
 $lng = $_POST['lng'] ?? null;

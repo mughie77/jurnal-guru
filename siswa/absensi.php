@@ -16,6 +16,8 @@ $res_set = mysqli_query($conn, "SELECT * FROM pengaturan");
 $sets = [];
 while ($r = mysqli_fetch_assoc($res_set)) $sets[$r['nama_setting']] = $r['nilai_setting'];
 
+$is_gps_disabled = (isset($sets['siswa_gps_absen']) && $sets['siswa_gps_absen'] === 'nonaktif');
+
 // Ensure coordinates are numeric and not empty
 $school_lat = (isset($sets['school_lat']) && $sets['school_lat'] !== '') ? $sets['school_lat'] : '-7.9135';
 $school_lng = (isset($sets['school_lng']) && $sets['school_lng'] !== '') ? $sets['school_lng'] : '113.8217';
@@ -69,17 +71,23 @@ require_once __DIR__ . '/../includes/header.php';
 
         <div class="lux-card p-6 mb-6">
             <div id="status-location" class="mb-6 flex flex-col items-center gap-3">
-                <div id="loc-indicator" class="inline-flex items-center px-4 py-2 bg-amber-50 text-amber-600 rounded-full text-[10px] font-black uppercase tracking-widest border border-amber-100">
-                    <div class="gps-pulse mr-2"></div> Mencari Lokasi Anda...
-                </div>
-                <div class="flex gap-2">
-                    <button type="button" id="btn-manual-loc" class="px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl text-[10px] font-black uppercase tracking-widest border border-indigo-100 hover:bg-indigo-600 hover:text-white transition-all">
-                        <i class="fa fa-crosshairs mr-2"></i> Update Lokasi
-                    </button>
-                    <button type="button" onclick="window.location.reload()" class="px-4 py-2 bg-slate-50 text-slate-600 rounded-xl text-[10px] font-black uppercase tracking-widest border border-slate-200 hover:bg-slate-200 transition-all">
-                        <i class="fa fa-sync-alt mr-2"></i> Refresh
-                    </button>
-                </div>
+                <?php if ($is_gps_disabled): ?>
+                    <div class="inline-flex items-center px-4 py-2 bg-rose-50 text-rose-600 rounded-full text-[10px] font-black uppercase tracking-widest border border-rose-100">
+                        <i class="fa fa-ban mr-2"></i> Absensi GPS Nonaktif
+                    </div>
+                <?php else: ?>
+                    <div id="loc-indicator" class="inline-flex items-center px-4 py-2 bg-amber-50 text-amber-600 rounded-full text-[10px] font-black uppercase tracking-widest border border-amber-100">
+                        <div class="gps-pulse mr-2"></div> Mencari Lokasi Anda...
+                    </div>
+                    <div class="flex gap-2">
+                        <button type="button" id="btn-manual-loc" class="px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl text-[10px] font-black uppercase tracking-widest border border-indigo-100 hover:bg-indigo-600 hover:text-white transition-all">
+                            <i class="fa fa-crosshairs mr-2"></i> Update Lokasi
+                        </button>
+                        <button type="button" onclick="window.location.reload()" class="px-4 py-2 bg-slate-50 text-slate-600 rounded-xl text-[10px] font-black uppercase tracking-widest border border-slate-200 hover:bg-slate-200 transition-all">
+                            <i class="fa fa-sync-alt mr-2"></i> Refresh
+                        </button>
+                    </div>
+                <?php endif; ?>
             </div>
 
             <div class="grid grid-cols-2 gap-4 mb-8">
@@ -94,10 +102,18 @@ require_once __DIR__ . '/../includes/header.php';
             </div>
 
             <p id="hint-text" class="text-[11px] text-slate-400 italic font-medium leading-relaxed mb-6 text-center px-4">
-                Pastikan GPS aktif dan Anda berada dalam radius <b><?= $radius_absen ?> meter</b> dari lokasi sekolah.
+                <?php if ($is_gps_disabled): ?>
+                    Sistem absensi GPS sedang dinonaktifkan oleh administrator.
+                <?php else: ?>
+                    Pastikan GPS aktif dan Anda berada dalam radius <b><?= $radius_absen ?> meter</b> dari lokasi sekolah.
+                <?php endif; ?>
             </p>
 
-            <?php if ($is_already_absen): ?>
+            <?php if ($is_gps_disabled): ?>
+                <button disabled class="w-full py-4 bg-slate-200 text-slate-400 font-black rounded-2xl shadow-xl transition-all flex items-center justify-center gap-3 cursor-not-allowed">
+                    <i class="fa fa-ban text-xl"></i> ABSENSI DINONAKTIFKAN
+                </button>
+            <?php elseif ($is_already_absen): ?>
                 <button disabled class="w-full py-4 bg-emerald-500 text-white font-black rounded-2xl shadow-xl transition-all flex items-center justify-center gap-3">
                     <i class="fa fa-check-double text-xl"></i> ANDA SUDAH ABSEN HARI INI
                 </button>
@@ -300,6 +316,18 @@ require_once __DIR__ . '/../includes/header.php';
 
     // Initialize
     document.addEventListener('DOMContentLoaded', () => {
+        <?php if ($is_gps_disabled): ?>
+            Swal.fire({
+                icon: 'warning',
+                title: 'Absensi GPS Nonaktif',
+                text: 'Absensi GPS Siswa sedang dinonaktifkan oleh Administrator.',
+                confirmButtonText: 'Kembali ke Dashboard',
+                allowOutsideClick: false
+            }).then(() => {
+                window.location.href = 'index.php';
+            });
+            return;
+        <?php endif; ?>
         initMap();
         startGeolocation();
     });
