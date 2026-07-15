@@ -93,26 +93,81 @@ if ($kelas_id > 0 && $start_date && $end_date) {
     $where_siswa = " WHERE sk.kelas_id = $kelas_id AND sk.tahun_pelajaran_id = $active_tahun_id_clean";
     $pagin = get_pagination_data($conn, "siswa s JOIN siswa_kelas sk ON s.id = sk.siswa_id", 50, $where_siswa);
 
-    $query = "SELECT s.id, s.nis, s.nama_siswa, s.jenis_kelamin,
-                     COUNT(CASE WHEN aj.status = 'H' THEN 1 END) as count_h,
-                     COUNT(CASE WHEN aj.status = 'S' THEN 1 END) as count_s,
-                     COUNT(CASE WHEN aj.status = 'I' THEN 1 END) as count_i,
-                     COUNT(CASE WHEN aj.status = 'A' THEN 1 END) as count_a
+    // Get the page of students
+    $query = "SELECT s.id, s.nis, s.nama_siswa, s.jenis_kelamin
               FROM siswa s
               JOIN siswa_kelas sk ON s.id = sk.siswa_id
-              LEFT JOIN (
-                  SELECT aj.siswa_id, aj.status
-                  FROM absensi_jurnal aj
-                  JOIN jurnal j ON aj.jurnal_id = j.id
-                  WHERE j.kelas_id = $kelas_id AND j.tanggal BETWEEN '$start_date' AND '$end_date'
-              ) aj ON s.id = aj.siswa_id
               $where_siswa
-              GROUP BY s.id, s.nis, s.nama_siswa, s.jenis_kelamin
               ORDER BY s.nama_siswa ASC LIMIT {$pagin['limit']} OFFSET {$pagin['offset']}";
 
     $res = mysqli_query($conn, $query);
+    $students = [];
+    $student_ids = [];
     while ($row = mysqli_fetch_assoc($res)) {
-        $rekap[] = $row;
+        $students[] = $row;
+        $student_ids[] = (int)$row['id'];
+    }
+
+    if (!empty($student_ids)) {
+        $ids_str = implode(',', $student_ids);
+        $q_abs = "SELECT aj.siswa_id, j.tanggal, aj.status
+                  FROM absensi_jurnal aj
+                  JOIN jurnal j ON aj.jurnal_id = j.id
+                  WHERE aj.siswa_id IN ($ids_str) AND j.kelas_id = $kelas_id AND j.tanggal BETWEEN '$start_date' AND '$end_date'";
+        $res_abs = mysqli_query($conn, $q_abs);
+
+        $daily_logs = [];
+        while ($row_abs = mysqli_fetch_assoc($res_abs)) {
+            $sid = $row_abs['siswa_id'];
+            $date = $row_abs['tanggal'];
+            $status = $row_abs['status'];
+            $daily_logs[$sid][$date][] = $status;
+        }
+
+        foreach ($students as $s) {
+            $sid = $s['id'];
+            $count_h = 0;
+            $count_s = 0;
+            $count_i = 0;
+            $count_a = 0;
+
+            if (isset($daily_logs[$sid])) {
+                foreach ($daily_logs[$sid] as $date => $statuses) {
+                    $freq = ['H' => 0, 'S' => 0, 'I' => 0, 'A' => 0];
+                    foreach ($statuses as $st) {
+                        if (isset($freq[$st])) {
+                            $freq[$st]++;
+                        }
+                    }
+
+                    // Tie-breaker prioritization
+                    $max_val = -1;
+                    $daily_status = 'H';
+                    foreach (['A', 'I', 'S', 'H'] as $st) {
+                        if ($freq[$st] >= $max_val) {
+                            $max_val = $freq[$st];
+                            $daily_status = $st;
+                        }
+                    }
+
+                    if ($daily_status === 'H') $count_h++;
+                    elseif ($daily_status === 'S') $count_s++;
+                    elseif ($daily_status === 'I') $count_i++;
+                    elseif ($daily_status === 'A') $count_a++;
+                }
+            }
+
+            $rekap[] = [
+                'id' => $s['id'],
+                'nis' => $s['nis'],
+                'nama_siswa' => $s['nama_siswa'],
+                'jenis_kelamin' => $s['jenis_kelamin'],
+                'count_h' => $count_h,
+                'count_s' => $count_s,
+                'count_i' => $count_i,
+                'count_a' => $count_a
+            ];
+        }
     }
 }
 
@@ -242,13 +297,13 @@ require_once __DIR__ . '/../includes/header.php';
                     <th class="px-4 py-4 text-center bg-amber-50 text-amber-700 font-black text-[10px] uppercase border-l border-slate-100">Sakit (S)</th>
                     <th class="px-4 py-4 text-center bg-blue-50 text-blue-700 font-black text-[10px] uppercase border-l border-slate-100">Izin (I)</th>
                     <th class="px-4 py-4 text-center bg-rose-50 text-rose-700 font-black text-[10px] uppercase border-l border-slate-100">Alfa (A)</th>
-                    <th class="px-6 py-4 text-center text-[10px] font-black text-slate-500 uppercase tracking-widest border-l border-slate-100">Total Jam</th>
+                    <th class="px-6 py-4 text-center text-[10px] font-black text-slate-500 uppercase tracking-widest border-l border-slate-100">Total Hari</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-50">
                 <?php foreach ($rekap as $r): ?>
                 <?php
-                $total_jam = $r['count_h'] + $r['count_s'] + $r['count_i'] + $r['count_a'];
+                $total_hari = $r['count_h'] + $r['count_s'] + $r['count_i'] + $r['count_a'];
                 ?>
                 <tr class="hover:bg-slate-50/50 transition-colors">
                     <td class="px-6 py-4 font-bold text-slate-700 text-sm">
@@ -260,7 +315,7 @@ require_once __DIR__ . '/../includes/header.php';
                     <td class="px-4 py-4 text-center border-l border-slate-50 font-black text-amber-600 text-sm bg-amber-50/10"><?= $r['count_s'] ?></td>
                     <td class="px-4 py-4 text-center border-l border-slate-50 font-black text-blue-600 text-sm bg-blue-50/10"><?= $r['count_i'] ?></td>
                     <td class="px-4 py-4 text-center border-l border-slate-50 font-black text-rose-600 text-sm bg-rose-50/10"><?= $r['count_a'] ?></td>
-                    <td class="px-6 py-4 text-center border-l border-slate-50 font-bold text-slate-700 text-sm bg-slate-50/30"><?= $total_jam ?></td>
+                    <td class="px-6 py-4 text-center border-l border-slate-50 font-bold text-slate-700 text-sm bg-slate-50/30"><?= $total_hari ?></td>
                 </tr>
                 <?php endforeach; ?>
                 <?php if(empty($rekap)): ?>

@@ -98,24 +98,81 @@ $nama_kelas = $kls_data['nama_kelas'] ?? 'Semua';
 $active_tahun_id_clean = (int)($active_tahun_id ?? 0);
 $where_siswa = " WHERE sk.kelas_id = $kelas_id AND sk.tahun_pelajaran_id = $active_tahun_id_clean";
 
-$query = "SELECT s.id, s.nis, s.nama_siswa, s.jenis_kelamin,
-                 COUNT(CASE WHEN aj.status = 'H' THEN 1 END) as count_h,
-                 COUNT(CASE WHEN aj.status = 'S' THEN 1 END) as count_s,
-                 COUNT(CASE WHEN aj.status = 'I' THEN 1 END) as count_i,
-                 COUNT(CASE WHEN aj.status = 'A' THEN 1 END) as count_a
+$query = "SELECT s.id, s.nis, s.nama_siswa, s.jenis_kelamin
           FROM siswa s
           JOIN siswa_kelas sk ON s.id = sk.siswa_id
-          LEFT JOIN (
-              SELECT aj.siswa_id, aj.status
-              FROM absensi_jurnal aj
-              JOIN jurnal j ON aj.jurnal_id = j.id
-              WHERE j.kelas_id = $kelas_id AND j.tanggal BETWEEN '$start_date' AND '$end_date'
-          ) aj ON s.id = aj.siswa_id
           $where_siswa
-          GROUP BY s.id, s.nis, s.nama_siswa, s.jenis_kelamin
           ORDER BY s.nama_siswa ASC";
 
 $res = mysqli_query($conn, $query);
+$students = [];
+$student_ids = [];
+while ($row = mysqli_fetch_assoc($res)) {
+    $students[] = $row;
+    $student_ids[] = (int)$row['id'];
+}
+
+$rekap_data = [];
+if (!empty($student_ids)) {
+    $ids_str = implode(',', $student_ids);
+    $q_abs = "SELECT aj.siswa_id, j.tanggal, aj.status
+              FROM absensi_jurnal aj
+              JOIN jurnal j ON aj.jurnal_id = j.id
+              WHERE aj.siswa_id IN ($ids_str) AND j.kelas_id = $kelas_id AND j.tanggal BETWEEN '$start_date' AND '$end_date'";
+    $res_abs = mysqli_query($conn, $q_abs);
+
+    $daily_logs = [];
+    while ($row_abs = mysqli_fetch_assoc($res_abs)) {
+        $sid = $row_abs['siswa_id'];
+        $date = $row_abs['tanggal'];
+        $status = $row_abs['status'];
+        $daily_logs[$sid][$date][] = $status;
+    }
+
+    foreach ($students as $s) {
+        $sid = $s['id'];
+        $count_h = 0;
+        $count_s = 0;
+        $count_i = 0;
+        $count_a = 0;
+
+        if (isset($daily_logs[$sid])) {
+            foreach ($daily_logs[$sid] as $date => $statuses) {
+                $freq = ['H' => 0, 'S' => 0, 'I' => 0, 'A' => 0];
+                foreach ($statuses as $st) {
+                    if (isset($freq[$st])) {
+                        $freq[$st]++;
+                    }
+                }
+
+                // Tie-breaker prioritization
+                $max_val = -1;
+                $daily_status = 'H';
+                foreach (['A', 'I', 'S', 'H'] as $st) {
+                    if ($freq[$st] >= $max_val) {
+                        $max_val = $freq[$st];
+                        $daily_status = $st;
+                    }
+                }
+
+                if ($daily_status === 'H') $count_h++;
+                elseif ($daily_status === 'S') $count_s++;
+                elseif ($daily_status === 'I') $count_i++;
+                elseif ($daily_status === 'A') $count_a++;
+            }
+        }
+
+        $rekap_data[] = [
+            'nama_siswa' => $s['nama_siswa'],
+            'nis' => $s['nis'],
+            'jenis_kelamin' => $s['jenis_kelamin'],
+            'count_h' => $count_h,
+            'count_s' => $count_s,
+            'count_i' => $count_i,
+            'count_a' => $count_a
+        ];
+    }
+}
 
 $data = [];
 // Title and Metadata
@@ -133,11 +190,11 @@ $data[] = [
     '<b>Sakit (S)</b>',
     '<b>Izin (I)</b>',
     '<b>Alfa (A)</b>',
-    '<b>Total Jam</b>'
+    '<b>Total Hari</b>'
 ];
 
-while($row = mysqli_fetch_assoc($res)) {
-    $total_jam = $row['count_h'] + $row['count_s'] + $row['count_i'] + $row['count_a'];
+foreach ($rekap_data as $row) {
+    $total_hari = $row['count_h'] + $row['count_s'] + $row['count_i'] + $row['count_a'];
     $data[] = [
         $row['nama_siswa'],
         $row['nis'],
@@ -146,7 +203,7 @@ while($row = mysqli_fetch_assoc($res)) {
         $row['count_s'],
         $row['count_i'],
         $row['count_a'],
-        $total_jam
+        $total_hari
     ];
 }
 

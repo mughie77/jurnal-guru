@@ -125,12 +125,31 @@ document.addEventListener('DOMContentLoaded', function() {
     const lngInput = document.getElementById('lng-input');
     let hasLocation = false;
 
+    function verifyAntiFakeGPS(position) {
+        const accuracy = position.coords.accuracy;
+        const isMocked = position.mocked || (position.coords && position.coords.mocked) || false;
+        const isAutomated = navigator.webdriver;
+
+        if (isMocked || isAutomated || accuracy <= 1) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Fake GPS Terdeteksi',
+                text: 'Sistem mendeteksi penggunaan Fake GPS atau browser otomatis. Anda dilarang melakukan submit jurnal!',
+                confirmButtonColor: '#4F46E5'
+            });
+            return false;
+        }
+        return true;
+    }
+
     // Pre-fetch location on page load to speed up submission
     if ("geolocation" in navigator) {
         navigator.geolocation.getCurrentPosition(function(position) {
-            latInput.value = position.coords.latitude;
-            lngInput.value = position.coords.longitude;
-            hasLocation = true;
+            if (verifyAntiFakeGPS(position)) {
+                latInput.value = position.coords.latitude;
+                lngInput.value = position.coords.longitude;
+                hasLocation = true;
+            }
         }, function(error) {
             console.warn("Pre-fetch location failed:", error);
         }, { enableHighAccuracy: true, timeout: 10000 });
@@ -139,7 +158,6 @@ document.addEventListener('DOMContentLoaded', function() {
     if (form) {
         form.addEventListener('submit', function(e) {
             if (hasLocation && latInput.value && lngInput.value) {
-                // If we already have the coordinates, submit directly
                 return true;
             }
 
@@ -165,11 +183,13 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
             navigator.geolocation.getCurrentPosition(function(position) {
-                latInput.value = position.coords.latitude;
-                lngInput.value = position.coords.longitude;
-                hasLocation = true;
                 Swal.close();
-                form.submit(); // Resubmit the form
+                if (verifyAntiFakeGPS(position)) {
+                    latInput.value = position.coords.latitude;
+                    lngInput.value = position.coords.longitude;
+                    hasLocation = true;
+                    form.submit(); // Resubmit the form
+                }
             }, function(error) {
                 Swal.close();
                 let errorMsg = 'Gagal mendapatkan koordinat lokasi GPS Anda.';
