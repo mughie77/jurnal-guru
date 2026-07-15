@@ -30,13 +30,13 @@ require_once __DIR__ . '/../includes/header.php';
     <div class="p-8 lg:p-12 max-w-7xl mx-auto">
         <div class="flex items-center justify-between mb-12">
             <div class="flex items-center gap-6">
-                <div class="w-20 h-20 rounded-2xl bg-indigo-600 border-4 border-white shadow-xl overflow-hidden flex items-center justify-center">
+                <a href="profil.php" class="w-20 h-20 rounded-2xl bg-indigo-600 border-4 border-white shadow-xl overflow-hidden flex items-center justify-center block hover:scale-105 transition-transform">
                     <?php if(!empty($guru_foto)): ?>
                         <img src="<?= BASE_URL ?>uploads/guru/<?= $guru_foto ?>" class="w-full h-full object-cover">
                     <?php else: ?>
                         <i class="fa fa-user-tie text-white text-3xl"></i>
                     <?php endif; ?>
-                </div>
+                </a>
                 <div>
                     <h1 class="text-3xl font-black text-slate-800 tracking-tight italic">Beranda Guru <span class="text-indigo-600">(<?= htmlspecialchars($_SESSION['nama_lengkap']) ?>)</span></h1>
                     <p class="text-slate-400 font-medium tracking-wide"><?= date('l, d F Y') ?></p>
@@ -122,6 +122,16 @@ require_once __DIR__ . '/../includes/header.php';
                     <div>
                         <div class="text-lg font-black italic tracking-tighter uppercase leading-none">Perangkat</div>
                         <div class="text-[9px] font-bold text-rose-100 uppercase tracking-widest mt-1 opacity-70">Upload Media</div>
+                    </div>
+                </a>
+
+                <a href="rekan.php" class="p-6 rounded-[32px] bg-sky-500 text-white shadow-xl shadow-sky-200 flex flex-col gap-4 group transition-all hover:scale-[1.02] active:scale-95">
+                    <div class="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-xl shadow-inner group-hover:bg-white/30 transition-all">
+                        <i class="fa fa-users"></i>
+                    </div>
+                    <div>
+                        <div class="text-lg font-black italic tracking-tighter uppercase leading-none">Rekan Guru</div>
+                        <div class="text-[9px] font-bold text-sky-100 uppercase tracking-widest mt-1 opacity-70">Kontak Sejawat</div>
                     </div>
                 </a>
 

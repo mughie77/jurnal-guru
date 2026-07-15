@@ -106,13 +106,23 @@ if (isset($_SESSION['user_id'])) {
                     </div>
 
                     <div class="relative group">
-                        <button class="w-10 h-10 rounded-full bg-indigo-500 flex items-center justify-center text-white shadow-lg hover:ring-4 hover:ring-indigo-100 transition-all overflow-hidden">
-                            <?php if ($user_photo): ?>
-                                <img src="<?= $user_photo ?>" class="w-full h-full object-cover">
-                            <?php else: ?>
-                                <i class="fa fa-user"></i>
-                            <?php endif; ?>
-                        </button>
+                        <?php if ($_SESSION['role'] == 'siswa' || $_SESSION['role'] == 'guru'): ?>
+                            <a href="<?= BASE_URL . $_SESSION['role'] ?>/profil.php" class="w-10 h-10 rounded-full bg-indigo-500 flex items-center justify-center text-white shadow-lg hover:ring-4 hover:ring-indigo-100 transition-all overflow-hidden block">
+                                <?php if ($user_photo): ?>
+                                    <img src="<?= $user_photo ?>" class="w-full h-full object-cover">
+                                <?php else: ?>
+                                    <i class="fa fa-user"></i>
+                                <?php endif; ?>
+                            </a>
+                        <?php else: ?>
+                            <button class="w-10 h-10 rounded-full bg-indigo-500 flex items-center justify-center text-white shadow-lg hover:ring-4 hover:ring-indigo-100 transition-all overflow-hidden">
+                                <?php if ($user_photo): ?>
+                                    <img src="<?= $user_photo ?>" class="w-full h-full object-cover">
+                                <?php else: ?>
+                                    <i class="fa fa-user"></i>
+                                <?php endif; ?>
+                            </button>
+                        <?php endif; ?>
                         <div class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-slate-100 py-2 hidden group-hover:block animate-in fade-in slide-in-from-top-2 duration-200">
                             <?php if ($_SESSION['role'] == 'siswa' || $_SESSION['role'] == 'guru'): ?>
                                 <a href="<?= BASE_URL . $_SESSION['role'] ?>/profil.php" class="flex items-center px-4 py-2 text-sm text-slate-600 hover:bg-indigo-50 font-medium">
