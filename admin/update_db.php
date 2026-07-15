@@ -102,6 +102,24 @@ authorize_role(['admin']);
                 $logs[] = ['status' => 'error', 'msg' => "Failed creating <b>perangkat_kelas</b>: " . mysqli_error($conn)];
             }
 
+            // Create mood_survey table
+            $create_mood = "CREATE TABLE IF NOT EXISTS `mood_survey` (
+                `id` int(11) NOT NULL AUTO_INCREMENT,
+                `user_id` int(11) NOT NULL,
+                `role` enum('siswa','guru') NOT NULL,
+                `mood` varchar(50) NOT NULL,
+                `tanggal` date NOT NULL,
+                `created_at` timestamp NULL DEFAULT current_timestamp(),
+                PRIMARY KEY (`id`),
+                UNIQUE KEY `unique_user_daily` (`user_id`, `role`, `tanggal`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci";
+
+            if (mysqli_query($conn, $create_mood)) {
+                $logs[] = ['status' => 'success', 'msg' => "Table <b>mood_survey</b> created successfully"];
+            } else {
+                $logs[] = ['status' => 'error', 'msg' => "Failed creating <b>mood_survey</b>: " . mysqli_error($conn)];
+            }
+
             foreach ($logs as $log) {
                 $color = 'text-blue-600 bg-blue-50';
                 $icon = 'info-circle';

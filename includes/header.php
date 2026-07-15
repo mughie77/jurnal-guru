@@ -138,5 +138,175 @@ if (isset($_SESSION['user_id'])) {
                 </div>
             </header>
 
+            <?php
+            $show_mood_survey = false;
+            if (isset($_SESSION['user_id']) && in_array($_SESSION['role'], ['siswa', 'guru'])) {
+                $current_date = date('Y-m-d');
+                $uid = (int)$_SESSION['user_id'];
+                $role = mysqli_real_escape_string($conn, $_SESSION['role']);
+
+                // Check if entry exists
+                $check_survey = mysqli_query($conn, "SELECT 1 FROM mood_survey WHERE user_id = $uid AND role = '$role' AND tanggal = '$current_date'");
+                if (mysqli_num_rows($check_survey) == 0) {
+                    $show_mood_survey = true;
+                }
+            }
+            ?>
+
+            <?php if ($show_mood_survey): ?>
+            <div id="moodSurveyOverlay" class="fixed inset-0 bg-slate-950/80 backdrop-blur-xl flex items-center justify-center p-4 z-[9999]">
+                <div class="max-w-xl w-full bg-white rounded-[32px] shadow-2xl overflow-hidden relative border border-slate-100 flex flex-col animate-in fade-in zoom-in-95 duration-300">
+                    <!-- Top decorative mesh banner -->
+                    <div class="bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 p-8 text-center text-white relative">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 blur-xl"></div>
+                        <div class="absolute bottom-0 left-0 w-32 h-32 bg-indigo-500/20 rounded-full -ml-16 -mb-16 blur-xl"></div>
+
+                        <div class="w-16 h-16 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/20 mx-auto mb-4 shadow-xl">
+                            <i class="fa fa-heart-pulse text-white text-3xl animate-pulse"></i>
+                        </div>
+                        <h2 class="text-2xl font-black italic tracking-tight">MOOD SURVEY HARIAN</h2>
+                        <p class="text-indigo-100/80 text-xs font-bold uppercase tracking-[0.15em] mt-1">Bagaimana kabar & mood Anda hari ini?</p>
+                    </div>
+
+                    <div class="p-8 flex-1">
+                        <p class="text-slate-500 text-sm text-center font-semibold mb-6">
+                            Halo <span class="text-indigo-600 font-bold"><?= htmlspecialchars($_SESSION['nama_lengkap']) ?></span>, silakan pilih salah satu emoji mood yang menggambarkan perasaan Anda hari ini sebelum melanjutkan aktivitas di CAKRA.
+                        </p>
+
+                        <form id="moodSurveyForm" onsubmit="submitMoodSurvey(event)">
+                            <input type="hidden" name="mood_value" id="selectedMoodValue" value="">
+
+                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
+                                <!-- Sangat Baik -->
+                                <button type="button" onclick="selectMoodCard('sangat_baik', this)" class="mood-card p-4 rounded-2xl border-2 border-slate-100 hover:border-indigo-100 hover:bg-indigo-50/20 flex flex-col items-center justify-center gap-2 transition-all group focus:outline-none">
+                                    <span class="text-4xl group-hover:scale-110 transition-transform">😃</span>
+                                    <span class="text-xs font-black text-slate-700 uppercase tracking-wider">Sangat Baik</span>
+                                </button>
+                                <!-- Bersemangat -->
+                                <button type="button" onclick="selectMoodCard('bersemangat', this)" class="mood-card p-4 rounded-2xl border-2 border-slate-100 hover:border-indigo-100 hover:bg-indigo-50/20 flex flex-col items-center justify-center gap-2 transition-all group focus:outline-none">
+                                    <span class="text-4xl group-hover:scale-110 transition-transform">💪</span>
+                                    <span class="text-xs font-black text-slate-700 uppercase tracking-wider">Bersemangat</span>
+                                </button>
+                                <!-- Biasa Saja -->
+                                <button type="button" onclick="selectMoodCard('biasa_saja', this)" class="mood-card p-4 rounded-2xl border-2 border-slate-100 hover:border-indigo-100 hover:bg-indigo-50/20 flex flex-col items-center justify-center gap-2 transition-all group focus:outline-none">
+                                    <span class="text-4xl group-hover:scale-110 transition-transform">😐</span>
+                                    <span class="text-xs font-black text-slate-700 uppercase tracking-wider">Biasa Saja</span>
+                                </button>
+                                <!-- Lelah -->
+                                <button type="button" onclick="selectMoodCard('lelah', this)" class="mood-card p-4 rounded-2xl border-2 border-slate-100 hover:border-indigo-100 hover:bg-indigo-50/20 flex flex-col items-center justify-center gap-2 transition-all group focus:outline-none">
+                                    <span class="text-4xl group-hover:scale-110 transition-transform">😴</span>
+                                    <span class="text-xs font-black text-slate-700 uppercase tracking-wider">Lelah</span>
+                                </button>
+                                <!-- Stres -->
+                                <button type="button" onclick="selectMoodCard('stres', this)" class="mood-card p-4 rounded-2xl border-2 border-slate-100 hover:border-indigo-100 hover:bg-indigo-50/20 flex flex-col items-center justify-center gap-2 transition-all group focus:outline-none">
+                                    <span class="text-4xl group-hover:scale-110 transition-transform">😔</span>
+                                    <span class="text-xs font-black text-slate-700 uppercase tracking-wider">Stres</span>
+                                </button>
+                                <!-- Sedih -->
+                                <button type="button" onclick="selectMoodCard('sedih', this)" class="mood-card p-4 rounded-2xl border-2 border-slate-100 hover:border-indigo-100 hover:bg-indigo-50/20 flex flex-col items-center justify-center gap-2 transition-all group focus:outline-none">
+                                    <span class="text-4xl group-hover:scale-110 transition-transform">😢</span>
+                                    <span class="text-xs font-black text-slate-700 uppercase tracking-wider">Sedih</span>
+                                </button>
+                            </div>
+
+                            <button type="submit" id="submitMoodBtn" disabled class="w-full bg-slate-300 text-slate-500 font-black py-4 rounded-2xl shadow-xl shadow-slate-100 hover:shadow-indigo-100 transition-all active:scale-[0.98] flex items-center justify-center gap-3 group tracking-widest italic cursor-not-allowed">
+                                <span>SIMPAN MOOD SAYA</span>
+                                <i class="fa fa-paper-plane transition-transform group-hover:translate-x-1"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+            function selectMoodCard(mood, element) {
+                // Set hidden input value
+                document.getElementById('selectedMoodValue').value = mood;
+
+                // Clear selection on other cards
+                document.querySelectorAll('.mood-card').forEach(card => {
+                    card.classList.remove('border-indigo-500', 'bg-indigo-50/50', 'ring-4', 'ring-indigo-100');
+                    card.classList.add('border-slate-100');
+                });
+
+                // Highlight selected card
+                element.classList.remove('border-slate-100');
+                element.classList.add('border-indigo-500', 'bg-indigo-50/50', 'ring-4', 'ring-indigo-100');
+
+                // Enable submit button
+                const btn = document.getElementById('submitMoodBtn');
+                btn.disabled = false;
+                btn.classList.remove('bg-slate-300', 'text-slate-500', 'cursor-not-allowed');
+                btn.classList.add('bg-slate-900', 'text-white', 'hover:bg-indigo-600', 'cursor-pointer');
+            }
+
+            function submitMoodSurvey(e) {
+                e.preventDefault();
+                const mood = document.getElementById('selectedMoodValue').value;
+                if (!mood) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Pilih Mood Anda!',
+                        text: 'Silakan pilih salah satu mood emoji di atas sebelum menyimpan.',
+                        confirmButtonColor: '#4F46E5'
+                    });
+                    return;
+                }
+
+                const submitBtn = document.getElementById('submitMoodBtn');
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fa fa-spinner animate-spin mr-2"></i> Menyimpan...';
+
+                fetch('<?= BASE_URL ?>api/submit_mood.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: 'mood=' + encodeURIComponent(mood)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Mood Berhasil Disimpan!',
+                            text: data.message || 'Terima kasih, semoga hari Anda menyenangkan!',
+                            confirmButtonColor: '#4F46E5',
+                            timer: 2000,
+                            showConfirmButton: false
+                        }).then(() => {
+                            // Fade out and remove overlay
+                            const overlay = document.getElementById('moodSurveyOverlay');
+                            overlay.classList.add('opacity-0', 'transition-opacity', 'duration-300');
+                            setTimeout(() => {
+                                overlay.remove();
+                            }, 300);
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal Menyimpan Mood',
+                            text: data.error || 'Terjadi kesalahan sistem, silakan coba lagi.',
+                            confirmButtonColor: '#4F46E5'
+                        });
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = '<span>SIMPAN MOOD SAYA</span> <i class="fa fa-paper-plane"></i>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Koneksi Bermasalah',
+                        text: 'Silakan periksa koneksi internet Anda.',
+                        confirmButtonColor: '#4F46E5'
+                    });
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<span>SIMPAN MOOD SAYA</span> <i class="fa fa-paper-plane"></i>';
+                });
+            }
+            </script>
+            <?php endif; ?>
+
             <!-- Main Scrollable Content -->
             <main class="flex-1 overflow-x-hidden overflow-y-auto bg-slate-50 p-4 lg:p-8">
