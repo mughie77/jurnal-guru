@@ -58,6 +58,9 @@ if ($role == 'admin') {
         ".nav_link('admin/rekap_absensi.php', 'fa fa-chart-line', 'Rekap Absensi Jurnal', $current_page == 'rekap_absensi.php')."
         ".nav_link('admin/rekap_persiswa.php', 'fa fa-user-check', 'Rekap Kehadiran Siswa', $current_page == 'rekap_persiswa.php')."
         ".nav_link('admin/rekap_gps.php', 'fa fa-map-marked-alt', 'Rekap Absensi GPS', $current_page == 'rekap_gps.php')."
+        ".nav_link('waka/rekap_izin.php', 'fa fa-envelope-open-text', 'Rekap Pengajuan Izin', $current_page == 'rekap_izin.php')."
+        ".nav_link('admin/rekap_kritik.php', 'fa fa-comment-dots', 'Rekap Kritik & Saran', $current_page == 'rekap_kritik.php')."
+        ".nav_link('admin/rekap_panic.php', 'fa fa-exclamation-triangle', 'Laporan Bullying', $current_page == 'rekap_panic.php')."
         ".nav_link('admin/rekap_berkas.php', 'fa fa-file-invoice', 'Rekap Berkas Siswa', $current_page == 'rekap_berkas.php')."
         ".nav_link('admin/perangkat.php', 'fa fa-folder-open', 'Data Perangkat', $current_page == 'perangkat.php')."
     </div>";
@@ -96,6 +99,9 @@ if ($role == 'admin') {
         ".nav_link('admin/rekap_absensi.php', 'fa fa-chart-line', 'Rekap Absensi Jurnal', $current_page == 'rekap_absensi.php')."
         ".nav_link('admin/rekap_persiswa.php', 'fa fa-user-check', 'Rekap Kehadiran Siswa', $current_page == 'rekap_persiswa.php')."
         ".nav_link('admin/rekap_gps.php', 'fa fa-map-marked-alt', 'Rekap Absensi GPS', $current_page == 'rekap_gps.php')."
+        ".nav_link('waka/rekap_izin.php', 'fa fa-envelope-open-text', 'Rekap Pengajuan Izin', $current_page == 'rekap_izin.php')."
+        ".nav_link('admin/rekap_kritik.php', 'fa fa-comment-dots', 'Rekap Kritik & Saran', $current_page == 'rekap_kritik.php')."
+        ".nav_link('admin/rekap_panic.php', 'fa fa-exclamation-triangle', 'Laporan Bullying', $current_page == 'rekap_panic.php')."
         ".nav_link('admin/rekap_berkas.php', 'fa fa-file-invoice', 'Rekap Berkas Siswa', $current_page == 'rekap_berkas.php')."
         ".nav_link('admin/perangkat.php', 'fa fa-folder-open', 'Data Perangkat', $current_page == 'perangkat.php')."
     </div>";

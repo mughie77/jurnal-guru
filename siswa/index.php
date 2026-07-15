@@ -131,13 +131,39 @@ require_once __DIR__ . '/../includes/header.php';
                 </div>
             </a>
 
-            <a href="profil.php" class="p-5 rounded-[32px] bg-emerald-500 text-white shadow-xl shadow-emerald-100 flex flex-col gap-3 group transition-all hover:scale-[1.02] active:scale-95 col-span-2">
+            <a href="profil.php" class="p-5 rounded-[32px] bg-emerald-500 text-white shadow-xl shadow-emerald-100 flex flex-col gap-3 group transition-all hover:scale-[1.02] active:scale-95">
                 <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-lg shadow-inner group-hover:bg-white/30 transition-all">
                     <i class="fa fa-user-circle"></i>
                 </div>
                 <div>
                     <div class="text-base font-black italic tracking-tighter uppercase leading-none">Profil Saya</div>
                     <div class="text-[8px] font-bold text-emerald-100 uppercase tracking-widest mt-1 opacity-80">Informasi Pribadi</div>
+                </div>
+            </a>
+
+            <a href="kritik_saran.php" class="p-5 rounded-[32px] bg-sky-500 text-white shadow-xl shadow-sky-100 flex flex-col gap-3 group transition-all hover:scale-[1.02] active:scale-95">
+                <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-lg shadow-inner group-hover:bg-white/30 transition-all">
+                    <i class="fa fa-comment-dots"></i>
+                </div>
+                <div>
+                    <div class="text-base font-black italic tracking-tighter uppercase leading-none">Kritik & Saran</div>
+                    <div class="text-[8px] font-bold text-sky-100 uppercase tracking-widest mt-1 opacity-80">Umpan Balik</div>
+                </div>
+            </a>
+
+            <a href="panic.php" class="p-5 rounded-[32px] bg-rose-600 text-white shadow-xl shadow-rose-200 flex flex-col gap-3 group transition-all hover:scale-[1.02] active:scale-95 col-span-2 relative overflow-hidden">
+                <div class="absolute inset-0 bg-red-700/20 animate-pulse pointer-events-none"></div>
+                <div class="relative z-10 flex items-center justify-between w-full">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-2xl bg-white text-rose-600 flex items-center justify-center text-xl shadow-inner animate-bounce">
+                            <i class="fa fa-exclamation-triangle"></i>
+                        </div>
+                        <div>
+                            <div class="text-lg font-black italic tracking-tighter uppercase leading-none">Panic Button</div>
+                            <div class="text-[9px] font-bold text-rose-100 uppercase tracking-widest mt-1 opacity-90">Laporkan Perundungan / Bullying</div>
+                        </div>
+                    </div>
+                    <i class="fa fa-shield-alt text-4xl opacity-20 mr-2"></i>
                 </div>
             </a>
         </div>
