@@ -271,7 +271,7 @@ require_once __DIR__ . '/../includes/header.php';
 <div class="lux-card overflow-hidden mb-6 bg-white">
     <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
         <h3 class="text-base font-bold text-slate-800">Rincian Log Mood Harian</h3>
-        <span class="px-3 py-1 bg-indigo-50 text-indigo-600 text-xs font-black rounded-full"><?= number_format($pagin['total_records']) ?> Catatan</span>
+        <span class="px-3 py-1 bg-indigo-50 text-indigo-600 text-xs font-black rounded-full"><?= number_format($pagin['total_data']) ?> Catatan</span>
     </div>
 
     <div class="overflow-x-auto">
@@ -406,10 +406,10 @@ document.addEventListener("DOMContentLoaded", function () {
     $siswa_moods = ['sangat_baik' => 0, 'bersemangat' => 0, 'biasa_saja' => 0, 'lelah' => 0, 'stres' => 0, 'sedih' => 0];
     $guru_moods = ['sangat_baik' => 0, 'bersemangat' => 0, 'biasa_saja' => 0, 'lelah' => 0, 'stres' => 0, 'sedih' => 0];
 
-    $comp_q = mysqli_query($conn, "SELECT role, mood, COUNT(*) as count FROM mood_survey ms " .
+    $comp_q = mysqli_query($conn, "SELECT ms.role, ms.mood, COUNT(*) as count FROM mood_survey ms " .
         "LEFT JOIN siswa s ON ms.role = 'siswa' AND ms.user_id = s.id " .
         "LEFT JOIN users u ON ms.role = 'guru' AND ms.user_id = u.id " .
-        $where_sql . " GROUP BY role, mood");
+        $where_sql . " GROUP BY ms.role, ms.mood");
 
     while ($r = mysqli_fetch_assoc($comp_q)) {
         if ($r['role'] == 'siswa' && isset($siswa_moods[$r['mood']])) {
