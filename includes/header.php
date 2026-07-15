@@ -77,7 +77,7 @@ if (isset($_SESSION['user_id'])) {
                 <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest text-center truncate w-full"><?= htmlspecialchars($app_name) ?></p>
             </div>
 
-            <nav class="flex-1 mt-4 px-4 space-y-2 overflow-y-auto pb-8">
+            <nav id="sidebar-nav" class="flex-1 mt-4 px-4 space-y-2 overflow-y-auto pb-8">
                 <?php require_once __DIR__ . '/sidebar_content.php'; ?>
             </nav>
         </aside>
