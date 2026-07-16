@@ -71,6 +71,7 @@ if ($role == 'admin') {
     <div class='pt-6'>
         <p class='px-4 text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] mb-2'>Sistem</p>
         ".nav_link('admin/pengaturan.php', 'fa fa-cog', 'Pengaturan', $current_page == 'pengaturan.php')."
+        ".nav_link('admin/backup_restore.php', 'fa fa-database', 'Backup & Restore', $current_page == 'backup_restore.php')."
     </div>";
 } elseif ($role == 'waka') {
     echo nav_link('waka/index.php', 'fa fa-tachometer-alt', 'Beranda', $current_page == 'index.php');
