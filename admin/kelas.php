@@ -25,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (isset($_POST['tambah'])) {
         try {
             $nama_kelas = mysqli_real_escape_string($conn, $_POST['nama_kelas']);
-            $wali_kelas_id = !empty($_POST['wali_kelas_id']) ? $_POST['wali_kelas_id'] : 'NULL';
+            $wali_kelas_id = !empty($_POST['wali_kelas_id']) ? (int)$_POST['wali_kelas_id'] : 'NULL';
 
             $jadwal_pdf = 'NULL';
             if (!empty($_FILES['jadwal_pdf']['name'])) {
@@ -56,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         try {
             $id = (int)$_POST['id'];
             $nama_kelas = mysqli_real_escape_string($conn, $_POST['nama_kelas']);
-            $wali_kelas_id = !empty($_POST['wali_kelas_id']) ? $_POST['wali_kelas_id'] : 'NULL';
+            $wali_kelas_id = !empty($_POST['wali_kelas_id']) ? (int)$_POST['wali_kelas_id'] : 'NULL';
 
             $jadwal_pdf_q = "";
             if (!empty($_FILES['jadwal_pdf']['name'])) {

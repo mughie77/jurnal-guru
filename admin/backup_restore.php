@@ -87,26 +87,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['restore'])) {
 
             mysqli_begin_transaction($conn);
             try {
-                // Execute lines
-                $lines = explode("\n", $sql_content);
-                $query = '';
-
                 mysqli_query($conn, "SET FOREIGN_KEY_CHECKS=0");
 
+                // Remove multiline comments, single line comments starting with -- or # or /*
+                $sql_clean = preg_replace('/\/\*.*?\*\//s', '', $sql_content);
+                $lines = explode("\n", $sql_clean);
+                $processed_lines = [];
                 foreach ($lines as $line) {
-                    $line = trim($line);
-                    // Skip comments or empty lines
-                    if ($line === '' || strpos($line, '--') === 0 || strpos($line, '/*') === 0 || strpos($line, '#') === 0) {
+                    $trimmed = trim($line);
+                    if ($trimmed === '' || strpos($trimmed, '--') === 0 || strpos($trimmed, '#') === 0) {
                         continue;
                     }
+                    $processed_lines[] = $line;
+                }
+                $sql_executable = implode("\n", $processed_lines);
 
-                    $query .= $line . "\n";
+                // Split queries securely using standard statement delimiters at the end of a line
+                $queries = preg_split('/;[ \t\r]*\n/', $sql_executable);
 
-                    if (substr(trim($line), -1) === ';') {
-                        if (!mysqli_query($conn, $query)) {
-                            throw new Exception(mysqli_error($conn));
-                        }
-                        $query = '';
+                foreach ($queries as $query) {
+                    $query = trim($query);
+                    if ($query === '') {
+                        continue;
+                    }
+                    if (!mysqli_query($conn, $query)) {
+                        throw new Exception(mysqli_error($conn) . " | Query: " . $query);
                     }
                 }
 

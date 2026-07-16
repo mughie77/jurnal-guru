@@ -64,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 }
 
 $pagin = get_pagination_data($conn, "mata_pelajaran", 15, $where_sql);
-$result = mysqli_query($conn, "SELECT * FROM mata_pelajaran $where_sql ORDER BY nama_mapel ASC LIMIT {$pagin['limit']} OFFSET {$pagin['offset']}");
+$result = mysqli_query($conn, "SELECT mp.*, (SELECT COUNT(DISTINCT guru_id) FROM guru_mapel WHERE mapel_id = mp.id) as jml_guru FROM mata_pelajaran mp $where_sql ORDER BY mp.nama_mapel ASC LIMIT {$pagin['limit']} OFFSET {$pagin['offset']}");
 
 require_once __DIR__ . '/../includes/header.php';
 ?>
@@ -108,14 +108,33 @@ require_once __DIR__ . '/../includes/header.php';
                 <tr class="bg-slate-50 border-b border-slate-100">
                     <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Kode Mapel</th>
                     <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Nama Mata Pelajaran</th>
+                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Guru Pengampu</th>
                     <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Aksi</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-50">
-                <?php while ($row = mysqli_fetch_assoc($result)): ?>
+                <?php while ($row = mysqli_fetch_assoc($result)):
+                    $mapel_id = (int)$row['id'];
+                    $guru_res = mysqli_query($conn, "SELECT users.nama_lengkap, guru.nip
+                                                     FROM guru_mapel gm
+                                                     JOIN guru ON gm.guru_id = guru.id
+                                                     JOIN users ON guru.user_id = users.id
+                                                     WHERE gm.mapel_id = $mapel_id
+                                                     ORDER BY users.nama_lengkap ASC");
+                    $gurus_list = [];
+                    while ($g_row = mysqli_fetch_assoc($guru_res)) {
+                        $gurus_list[] = htmlspecialchars($g_row['nama_lengkap'] . " (" . $g_row['nip'] . ")", ENT_QUOTES, 'UTF-8');
+                    }
+                    $gurus_json = json_encode($gurus_list);
+                ?>
                 <tr class="hover:bg-slate-50/50 transition-colors">
                     <td class="px-6 py-4 font-mono text-sm text-indigo-600 font-bold"><?= htmlspecialchars($row['kode_mapel']) ?></td>
                     <td class="px-6 py-4 font-semibold text-slate-700"><?= htmlspecialchars($row['nama_mapel']) ?></td>
+                    <td class="px-6 py-4 text-center">
+                        <button type="button" onclick='showTeachersModal(<?= json_encode($row['nama_mapel']) ?>, <?= htmlspecialchars($gurus_json, ENT_QUOTES, 'UTF-8') ?>)' class="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-50 hover:bg-indigo-600 hover:text-white text-indigo-600 rounded-lg text-xs font-bold transition-all shadow-sm">
+                            <i class="fa fa-users text-[10px]"></i> <?= $row['jml_guru'] ?> Guru
+                        </button>
+                    </td>
                     <td class="px-6 py-4">
                         <div class="flex justify-center gap-2">
                             <button onclick="openEditModal(<?= htmlspecialchars(json_encode($row)) ?>)" class="w-9 h-9 flex items-center justify-center rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-600 hover:text-white transition-all">
@@ -182,6 +201,25 @@ require_once __DIR__ . '/../includes/header.php';
 </div>
 
 <script>
+function showTeachersModal(mapelName, teachersList) {
+    let content = '';
+    if (!teachersList || teachersList.length === 0) {
+        content = '<p class="text-slate-500 italic p-4">Belum ada guru yang mengampu mata pelajaran ini.</p>';
+    } else {
+        content = '<ul class="text-left space-y-2 max-h-60 overflow-y-auto p-2 bg-slate-50 rounded-xl border border-slate-100">';
+        teachersList.forEach(t => {
+            content += `<li class="flex items-center gap-2.5 p-2.5 bg-white rounded-lg shadow-sm border border-slate-100 font-bold text-slate-700 text-sm"><i class="fa fa-user-tie text-indigo-500"></i> ${t}</li>`;
+        });
+        content += '</ul>';
+    }
+    Swal.fire({
+        title: 'Guru Pengampu: ' + mapelName,
+        html: content,
+        confirmButtonColor: '#4F46E5',
+        confirmButtonText: 'Tutup'
+    });
+}
+
 const overlay = document.getElementById('modalOverlay');
 function openModal(id) { const m = document.getElementById(id); overlay.classList.remove('hidden'); m.classList.remove('hidden'); setTimeout(() => { overlay.classList.add('opacity-100'); m.classList.add('opacity-100', 'scale-100'); }, 10); }
 function closeModal(id) { const m = document.getElementById(id); overlay.classList.remove('opacity-100'); m.classList.remove('opacity-100', 'scale-100'); setTimeout(() => { overlay.classList.add('hidden'); m.classList.add('hidden'); }, 300); }

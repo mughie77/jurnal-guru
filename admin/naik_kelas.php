@@ -45,6 +45,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && (isset($_POST['proses_naik']) || iss
                     $count++;
                 }
 
+                // Copy Homeroom Teacher (Wali Kelas) from kelas_asal to kelas_tujuan
+                $q_wali = mysqli_query($conn, "SELECT wali_kelas_id FROM kelas WHERE id = $kelas_asal");
+                if ($row_wali = mysqli_fetch_assoc($q_wali)) {
+                    $wali_id = $row_wali['wali_kelas_id'];
+                    if (!empty($wali_id)) {
+                        mysqli_query($conn, "UPDATE kelas SET wali_kelas_id = $wali_id WHERE id = $kelas_tujuan");
+                    }
+                }
+
                 // Recalculate counts for both kelas asal (in active year) and kelas tujuan (in target year)
                 // For kelas asal (active year):
                 $qL_asal = mysqli_query($conn, "SELECT COUNT(*) as jml FROM siswa_kelas sk JOIN siswa s ON sk.siswa_id = s.id WHERE sk.kelas_id = $kelas_asal AND sk.tahun_pelajaran_id = $active_tahun_id AND s.jenis_kelamin = 'L'");
