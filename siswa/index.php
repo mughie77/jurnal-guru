@@ -66,34 +66,20 @@ require_once __DIR__ . '/../includes/header.php';
             <i class="fa fa-user-graduate absolute -bottom-6 -right-6 text-9xl opacity-10"></i>
         </div>
 
-        <?php if(!empty($siswa['jadwal_pdf'])): ?>
-        <div class="lux-card p-5 mb-8 bg-gradient-to-r from-emerald-500 to-teal-600 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xl shadow-emerald-100 relative overflow-hidden">
-            <div class="flex items-center gap-4 relative z-10">
-                <div class="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-xl shadow-inner shrink-0">
+        <!-- Quick Actions Grid Design (3x2) -->
+        <div class="grid grid-cols-2 gap-4 mb-10 no-print">
+            <!-- Row 1 -->
+            <?php if(!empty($siswa['jadwal_pdf'])): ?>
+                <a href="<?= BASE_URL ?>uploads/jadwal/<?= $siswa['jadwal_pdf'] ?>" target="_blank" class="p-5 rounded-[32px] bg-indigo-600 text-white shadow-xl shadow-indigo-100 flex flex-col gap-3 group transition-all hover:scale-[1.02] active:scale-95">
+            <?php else: ?>
+                <a href="javascript:void(0)" onclick="Swal.fire({icon: 'info', title: 'Belum Ada Jadwal', text: 'Jadwal pelajaran kelas belum diunggah oleh administrator.', confirmButtonColor: '#4F46E5'})" class="p-5 rounded-[32px] bg-indigo-600 text-white shadow-xl shadow-indigo-100 flex flex-col gap-3 group transition-all hover:scale-[1.02] active:scale-95">
+            <?php endif; ?>
+                <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-lg shadow-inner group-hover:bg-white/30 transition-all">
                     <i class="fa fa-calendar-alt"></i>
                 </div>
                 <div>
-                    <h4 class="text-sm font-black uppercase tracking-wider leading-none text-emerald-50">Jadwal Pelajaran Kelas</h4>
-                    <p class="text-xs font-bold text-white/90 mt-1">Unduh atau lihat jadwal pelajaran PDF resmi untuk kelas Anda.</p>
-                </div>
-            </div>
-            <a href="<?= BASE_URL ?>uploads/jadwal/<?= $siswa['jadwal_pdf'] ?>" target="_blank" class="w-full sm:w-auto px-5 py-2.5 bg-white text-emerald-700 hover:bg-emerald-50 font-black rounded-xl text-xs uppercase tracking-wider shadow-md transition-all text-center shrink-0 relative z-10">
-                <i class="fa fa-file-pdf mr-1.5"></i> Lihat Jadwal PDF
-            </a>
-            <i class="fa fa-calendar-day absolute -bottom-4 -right-4 text-7xl opacity-10"></i>
-        </div>
-        <?php endif; ?>
-
-        <!-- Quick Actions Grid Design (2x4) -->
-        <div class="grid grid-cols-2 gap-4 mb-10 no-print">
-            <!-- Row 1 -->
-            <a href="absensi.php" class="p-5 rounded-[32px] bg-sky-500 text-white shadow-xl shadow-sky-100 flex flex-col gap-3 group transition-all hover:scale-[1.02] active:scale-95">
-                <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-lg shadow-inner group-hover:bg-white/30 transition-all">
-                    <i class="fa fa-fingerprint"></i>
-                </div>
-                <div>
-                    <div class="text-base font-black italic tracking-tighter uppercase leading-none">Absensi</div>
-                    <div class="text-[8px] font-bold text-sky-100 uppercase tracking-widest mt-1 opacity-80">Log Lokasi GPS</div>
+                    <div class="text-base font-black italic tracking-tighter uppercase leading-none">Jadwal Kelas</div>
+                    <div class="text-[8px] font-bold text-indigo-100 uppercase tracking-widest mt-1 opacity-80">Jadwal Pelajaran PDF</div>
                 </div>
             </a>
 
@@ -118,27 +104,6 @@ require_once __DIR__ . '/../includes/header.php';
                 </div>
             </a>
 
-            <a href="kartu.php" class="p-5 rounded-[32px] bg-rose-500 text-white shadow-xl shadow-rose-100 flex flex-col gap-3 group transition-all hover:scale-[1.02] active:scale-95">
-                <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-lg shadow-inner group-hover:bg-white/30 transition-all">
-                    <i class="fa fa-id-card"></i>
-                </div>
-                <div>
-                    <div class="text-base font-black italic tracking-tighter uppercase leading-none">Kartu Pelajar</div>
-                    <div class="text-[8px] font-bold text-rose-100 uppercase tracking-widest mt-1 opacity-80">Digital E-Card</div>
-                </div>
-            </a>
-
-            <!-- Row 3 -->
-            <a href="barcode.php" class="p-5 rounded-[32px] bg-indigo-500 text-white shadow-xl shadow-indigo-100 flex flex-col gap-3 group transition-all hover:scale-[1.02] active:scale-95">
-                <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-lg shadow-inner group-hover:bg-white/30 transition-all">
-                    <i class="fa fa-barcode"></i>
-                </div>
-                <div>
-                    <div class="text-base font-black italic tracking-tighter uppercase leading-none">Barcode</div>
-                    <div class="text-[8px] font-bold text-indigo-100 uppercase tracking-widest mt-1 opacity-80">Digital Identity</div>
-                </div>
-            </a>
-
             <a href="berkas.php" class="p-5 rounded-[32px] bg-cyan-500 text-white shadow-xl shadow-cyan-100 flex flex-col gap-3 group transition-all hover:scale-[1.02] active:scale-95">
                 <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-lg shadow-inner group-hover:bg-white/30 transition-all">
                     <i class="fa fa-folder-open"></i>
@@ -149,6 +114,7 @@ require_once __DIR__ . '/../includes/header.php';
                 </div>
             </a>
 
+            <!-- Row 3 -->
             <a href="profil.php" class="p-5 rounded-[32px] bg-emerald-500 text-white shadow-xl shadow-emerald-100 flex flex-col gap-3 group transition-all hover:scale-[1.02] active:scale-95">
                 <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-lg shadow-inner group-hover:bg-white/30 transition-all">
                     <i class="fa fa-user-circle"></i>
