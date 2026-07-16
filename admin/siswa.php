@@ -277,16 +277,19 @@ require_once __DIR__ . '/../includes/header.php';
 
 <div id="modalOverlay" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] hidden transition-opacity duration-300 opacity-0" onclick="closeAllModals()"></div>
 
-<div id="tambahModal" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl bg-white rounded-3xl shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0 overflow-hidden">
-    <div class="bg-indigo-600 px-8 py-6 text-white font-bold italic text-2xl">Tambah Siswa</div>
-    <form action="" method="POST" enctype="multipart/form-data" class="p-8 space-y-4">
+<div id="tambahModal" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] sm:w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white rounded-3xl shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0">
+    <div class="bg-indigo-600 px-6 sm:px-8 py-4 sm:py-6 text-white font-bold italic text-xl sm:text-2xl sticky top-0 z-10 flex justify-between items-center">
+        <span>Tambah Siswa</span>
+        <button type="button" onclick="closeModal('tambahModal')" class="text-white/80 hover:text-white text-lg"><i class="fa fa-times"></i></button>
+    </div>
+    <form action="" method="POST" enctype="multipart/form-data" class="p-6 sm:p-8 space-y-4">
         <input type="hidden" name="csrf_token" value="<?= get_csrf_token() ?>">
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div><label class="block text-sm font-bold text-slate-700 mb-1">NIS</label><input type="text" name="nis" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50"></div>
             <div><label class="block text-sm font-bold text-slate-700 mb-1">NISN</label><input type="text" name="nisn" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50"></div>
         </div>
         <div><label class="block text-sm font-bold text-slate-700 mb-1">Nama Siswa</label><input type="text" name="nama_siswa" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50"></div>
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div><label class="block text-sm font-bold text-slate-700 mb-1">Jenis Kelamin</label>
                 <select name="jenis_kelamin" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 bg-white">
                     <option value="L">Laki-laki</option>
@@ -295,30 +298,33 @@ require_once __DIR__ . '/../includes/header.php';
             </div>
             <div><label class="block text-sm font-bold text-slate-700 mb-1">No. Telp/HP</label><input type="text" name="no_telp" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50"></div>
         </div>
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div><label class="block text-sm font-bold text-slate-700 mb-1">Tempat Lahir</label><input type="text" name="tempat_lahir" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50"></div>
             <div><label class="block text-sm font-bold text-slate-700 mb-1">Tanggal Lahir</label><input type="date" name="tanggal_lahir" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 bg-white"></div>
         </div>
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div><label class="block text-sm font-bold text-slate-700 mb-1">Alamat</label><textarea name="alamat" rows="2" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50"></textarea></div>
             <div><label class="block text-sm font-bold text-slate-700 mb-1">Foto Siswa</label><input type="file" name="foto" accept="image/*" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 bg-white"></div>
         </div>
-        <div class="pt-4 flex gap-3"><button type="button" onclick="closeModal('tambahModal')" class="flex-1 px-6 py-2.5 rounded-xl border border-slate-200 font-bold text-slate-600">Batal</button><button type="submit" name="tambah" class="flex-1 px-6 py-2.5 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-100">Simpan</button></div>
+        <div class="pt-4 flex flex-col sm:flex-row gap-3"><button type="button" onclick="closeModal('tambahModal')" class="flex-1 px-6 py-3 rounded-xl border border-slate-200 font-bold text-slate-600">Batal</button><button type="submit" name="tambah" class="flex-1 px-6 py-3 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-100">Simpan</button></div>
     </form>
 </div>
 
 <?php mysqli_data_seek($result, 0); while ($row = mysqli_fetch_assoc($result)): ?>
-<div id="editModal-<?= $row['id'] ?>" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl bg-white rounded-3xl shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0 overflow-hidden">
-    <div class="bg-amber-500 px-8 py-6 text-white font-bold italic text-2xl">Edit Siswa</div>
-    <form action="" method="POST" enctype="multipart/form-data" class="p-8 space-y-4">
+<div id="editModal-<?= $row['id'] ?>" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] sm:w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white rounded-3xl shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0">
+    <div class="bg-amber-500 px-6 sm:px-8 py-4 sm:py-6 text-white font-bold italic text-xl sm:text-2xl sticky top-0 z-10 flex justify-between items-center">
+        <span>Edit Siswa</span>
+        <button type="button" onclick="closeModal('editModal-<?= $row['id'] ?>')" class="text-white/80 hover:text-white text-lg"><i class="fa fa-times"></i></button>
+    </div>
+    <form action="" method="POST" enctype="multipart/form-data" class="p-6 sm:p-8 space-y-4">
         <input type="hidden" name="csrf_token" value="<?= get_csrf_token() ?>">
         <input type="hidden" name="id" value="<?= $row['id'] ?>">
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div><label class="block text-sm font-bold text-slate-700 mb-1">NIS</label><input type="text" name="nis" value="<?= htmlspecialchars($row['nis']) ?>" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"></div>
             <div><label class="block text-sm font-bold text-slate-700 mb-1">NISN</label><input type="text" name="nisn" value="<?= htmlspecialchars($row['nisn'] ?? '') ?>" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"></div>
         </div>
         <div><label class="block text-sm font-bold text-slate-700 mb-1">Nama Siswa</label><input type="text" name="nama_siswa" value="<?= htmlspecialchars($row['nama_siswa']) ?>" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"></div>
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div><label class="block text-sm font-bold text-slate-700 mb-1">Jenis Kelamin</label>
                 <select name="jenis_kelamin" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50 bg-white">
                     <option value="L" <?= $row['jenis_kelamin'] == 'L' ? 'selected' : '' ?>>Laki-laki</option>
@@ -327,11 +333,11 @@ require_once __DIR__ . '/../includes/header.php';
             </div>
             <div><label class="block text-sm font-bold text-slate-700 mb-1">No. Telp/HP</label><input type="text" name="no_telp" value="<?= htmlspecialchars($row['no_telp'] ?? '') ?>" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"></div>
         </div>
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div><label class="block text-sm font-bold text-slate-700 mb-1">Tempat Lahir</label><input type="text" name="tempat_lahir" value="<?= htmlspecialchars($row['tempat_lahir'] ?? '') ?>" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"></div>
             <div><label class="block text-sm font-bold text-slate-700 mb-1">Tanggal Lahir</label><input type="date" name="tanggal_lahir" value="<?= htmlspecialchars($row['tanggal_lahir'] ?? '') ?>" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50 bg-white"></div>
         </div>
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div><label class="block text-sm font-bold text-slate-700 mb-1">Alamat</label><textarea name="alamat" rows="2" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"><?= htmlspecialchars($row['alamat'] ?? '') ?></textarea></div>
             <div>
                 <label class="block text-sm font-bold text-slate-700 mb-1">Update Foto</label>
@@ -341,11 +347,11 @@ require_once __DIR__ . '/../includes/header.php';
                 <?php endif; ?>
             </div>
         </div>
-        <div class="pt-4 flex gap-3"><button type="button" onclick="closeModal('editModal-<?= $row['id'] ?>')" class="flex-1 px-6 py-2.5 rounded-xl border border-slate-200 font-bold text-slate-600">Batal</button><button type="submit" name="edit" class="flex-1 px-6 py-2.5 rounded-xl bg-amber-500 text-white font-bold hover:bg-amber-600 shadow-lg shadow-amber-100">Simpan</button></div>
+        <div class="pt-4 flex flex-col sm:flex-row gap-3"><button type="button" onclick="closeModal('editModal-<?= $row['id'] ?>')" class="flex-1 px-6 py-3 rounded-xl border border-slate-200 font-bold text-slate-600">Batal</button><button type="submit" name="edit" class="flex-1 px-6 py-3 rounded-xl bg-amber-500 text-white font-bold hover:bg-amber-600 shadow-lg shadow-amber-100">Simpan</button></div>
     </form>
 </div>
 
-<div id="hapusModal-<?= $row['id'] ?>" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-sm bg-white rounded-3xl shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0 overflow-hidden">
+<div id="hapusModal-<?= $row['id'] ?>" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] sm:w-full max-w-sm bg-white rounded-3xl shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0 overflow-hidden">
     <div class="p-8 text-center">
         <div class="w-16 h-16 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl"><i class="fa fa-trash"></i></div>
         <h3 class="text-xl font-bold text-slate-800 mb-2 italic">Hapus Siswa?</h3>

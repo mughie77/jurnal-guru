@@ -227,19 +227,19 @@ require_once __DIR__ . '/../includes/header.php';
 <div id="modalOverlay" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] hidden transition-opacity duration-300 opacity-0" onclick="closeAllModals()"></div>
 
 <!-- Tambah Modal -->
-<div id="tambahModal" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl bg-white rounded-3xl shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0 overflow-hidden">
-    <div class="bg-indigo-600 px-8 py-6 text-white"><h3 class="text-2xl font-bold italic">Tambah Guru</h3></div>
-    <form action="" method="POST" enctype="multipart/form-data" class="p-8 space-y-5">
+<div id="tambahModal" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] sm:w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white rounded-3xl shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0">
+    <div class="bg-indigo-600 px-6 sm:px-8 py-4 sm:py-6 text-white flex justify-between items-center sticky top-0 z-10"><h3 class="text-xl sm:text-2xl font-bold italic">Tambah Guru</h3><button type="button" onclick="closeModal('tambahModal')" class="text-white/80 hover:text-white text-lg"><i class="fa fa-times"></i></button></div>
+    <form action="" method="POST" enctype="multipart/form-data" class="p-6 sm:p-8 space-y-5">
         <input type="hidden" name="csrf_token" value="<?= get_csrf_token() ?>">
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div><label class="block text-sm font-bold text-slate-700 mb-2">Nama Lengkap</label><input type="text" name="nama_lengkap" required class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50"></div>
             <div><label class="block text-sm font-bold text-slate-700 mb-2">NIP (Username)</label><input type="text" name="nip" required class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50"></div>
         </div>
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div><label class="block text-sm font-bold text-slate-700 mb-2">Tempat Lahir</label><input type="text" name="tempat_lahir" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50"></div>
             <div><label class="block text-sm font-bold text-slate-700 mb-2">Tanggal Lahir</label><input type="date" name="tanggal_lahir" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 bg-white"></div>
         </div>
-        <div class="grid grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div class="space-y-4">
                 <div><label class="block text-sm font-bold text-slate-700 mb-2">No. Telp/HP</label><input type="text" name="no_telp" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50"></div>
                 <div><label class="block text-sm font-bold text-slate-700 mb-2">Alamat</label><textarea name="alamat" rows="2" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50"></textarea></div>
@@ -257,7 +257,7 @@ require_once __DIR__ . '/../includes/header.php';
             <label class="block text-sm font-bold text-slate-700 mb-2">Foto Guru</label>
             <input type="file" name="foto" accept="image/*" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 bg-white shadow-sm">
         </div>
-        <div class="pt-4 flex gap-4">
+        <div class="pt-4 flex flex-col sm:flex-row gap-4">
             <button type="button" onclick="closeModal('tambahModal')" class="flex-1 px-6 py-3 rounded-xl border border-slate-200 font-bold text-slate-600 hover:bg-slate-50 transition-all">Batal</button>
             <button type="submit" name="tambah" class="flex-[2] px-6 py-3 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all">Simpan Data</button>
         </div>
@@ -265,20 +265,20 @@ require_once __DIR__ . '/../includes/header.php';
 </div>
 
 <!-- Edit Modal -->
-<div id="editModal" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl bg-white rounded-3xl shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0 overflow-hidden">
-    <div class="bg-amber-500 px-8 py-6 text-white"><h3 class="text-2xl font-bold italic">Edit Data Guru</h3></div>
-    <form action="" method="POST" enctype="multipart/form-data" class="p-8 space-y-5">
+<div id="editModal" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] sm:w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white rounded-3xl shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0">
+    <div class="bg-amber-500 px-6 sm:px-8 py-4 sm:py-6 text-white flex justify-between items-center sticky top-0 z-10"><h3 class="text-xl sm:text-2xl font-bold italic">Edit Data Guru</h3><button type="button" onclick="closeModal('editModal')" class="text-white/80 hover:text-white text-lg"><i class="fa fa-times"></i></button></div>
+    <form action="" method="POST" enctype="multipart/form-data" class="p-6 sm:p-8 space-y-5">
         <input type="hidden" name="csrf_token" value="<?= get_csrf_token() ?>">
         <input type="hidden" name="id" id="edit_id"><input type="hidden" name="user_id" id="edit_user_id">
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div><label class="block text-sm font-bold text-slate-700 mb-2">Nama Lengkap</label><input type="text" name="nama_lengkap" id="edit_nama" required class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"></div>
             <div><label class="block text-sm font-bold text-slate-700 mb-2">NIP</label><input type="text" name="nip" id="edit_nip" required class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"></div>
         </div>
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div><label class="block text-sm font-bold text-slate-700 mb-2">Tempat Lahir</label><input type="text" name="tempat_lahir" id="edit_tempat_lahir" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"></div>
             <div><label class="block text-sm font-bold text-slate-700 mb-2">Tanggal Lahir</label><input type="date" name="tanggal_lahir" id="edit_tanggal_lahir" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50 bg-white"></div>
         </div>
-        <div class="grid grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div class="space-y-4">
                 <div><label class="block text-sm font-bold text-slate-700 mb-2">No. Telp/HP</label><input type="text" name="no_telp" id="edit_telp" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"></div>
                 <div><label class="block text-sm font-bold text-slate-700 mb-2">Alamat</label><textarea name="alamat" id="edit_alamat" rows="2" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"></textarea></div>
@@ -296,7 +296,7 @@ require_once __DIR__ . '/../includes/header.php';
             <label class="block text-sm font-bold text-slate-700 mb-2">Foto Guru</label>
             <input type="file" name="foto" accept="image/*" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50 bg-white shadow-sm">
         </div>
-        <div class="pt-4 flex gap-4">
+        <div class="pt-4 flex flex-col sm:flex-row gap-4">
             <button type="button" onclick="closeModal('editModal')" class="flex-1 px-6 py-3 rounded-xl border border-slate-200 font-bold text-slate-600 hover:bg-slate-50 transition-all">Batal</button>
             <button type="submit" name="edit" class="flex-[2] px-6 py-3 rounded-xl bg-amber-500 text-white font-bold hover:bg-amber-600 shadow-lg shadow-amber-100 transition-all">Simpan Perubahan</button>
         </div>
@@ -304,7 +304,7 @@ require_once __DIR__ . '/../includes/header.php';
 </div>
 
 <!-- Hapus Modal -->
-<div id="hapusModal" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-sm bg-white rounded-3xl shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0 overflow-hidden">
+<div id="hapusModal" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] sm:w-full max-w-sm bg-white rounded-3xl shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0 overflow-hidden">
     <div class="p-8 text-center">
         <div class="w-20 h-20 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl"><i class="fa fa-trash-alt"></i></div>
         <h3 class="text-xl font-bold text-slate-800 mb-2">Hapus Guru?</h3>

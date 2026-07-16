@@ -139,12 +139,12 @@ require_once __DIR__ . '/../includes/header.php';
 <div id="modalOverlay" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] hidden transition-opacity duration-300 opacity-0" onclick="closeAllModals()"></div>
 
 <!-- Tambah Modal -->
-<div id="tambahModal" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-white rounded-3xl shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0 overflow-hidden">
-    <div class="bg-indigo-600 px-8 py-6 text-white"><h3 class="text-2xl font-bold">Tambah Mapel</h3></div>
-    <form action="" method="POST" class="p-8 space-y-4">
+<div id="tambahModal" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] sm:w-full max-w-lg max-h-[90vh] overflow-y-auto bg-white rounded-3xl shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0">
+    <div class="bg-indigo-600 px-6 sm:px-8 py-4 sm:py-6 text-white flex justify-between items-center sticky top-0 z-10"><h3 class="text-xl sm:text-2xl font-bold">Tambah Mapel</h3><button type="button" onclick="closeModal('tambahModal')" class="text-white/80 hover:text-white text-lg"><i class="fa fa-times"></i></button></div>
+    <form action="" method="POST" class="p-6 sm:p-8 space-y-4">
         <input type="hidden" name="csrf_token" value="<?= get_csrf_token() ?>">
         <div><label class="block text-sm font-bold text-slate-700 mb-1">Nama Mapel</label><input type="text" name="nama_mapel" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50" placeholder="Contoh: Pemrograman Web"></div>
-        <div class="pt-4 flex gap-3">
+        <div class="pt-4 flex flex-col sm:flex-row gap-3">
             <button type="button" onclick="closeModal('tambahModal')" class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 font-bold text-slate-600 hover:bg-slate-50">Batal</button>
             <button type="submit" name="tambah" class="flex-1 px-4 py-2.5 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-100">Simpan</button>
         </div>
@@ -152,14 +152,14 @@ require_once __DIR__ . '/../includes/header.php';
 </div>
 
 <!-- Edit Modal -->
-<div id="editModal" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-white rounded-3xl shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0 overflow-hidden">
-    <div class="bg-amber-500 px-8 py-6 text-white"><h3 class="text-2xl font-bold">Edit Mapel</h3></div>
-    <form action="" method="POST" class="p-8 space-y-4">
+<div id="editModal" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] sm:w-full max-w-lg max-h-[90vh] overflow-y-auto bg-white rounded-3xl shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0">
+    <div class="bg-amber-500 px-6 sm:px-8 py-4 sm:py-6 text-white flex justify-between items-center sticky top-0 z-10"><h3 class="text-xl sm:text-2xl font-bold">Edit Mapel</h3><button type="button" onclick="closeModal('editModal')" class="text-white/80 hover:text-white text-lg"><i class="fa fa-times"></i></button></div>
+    <form action="" method="POST" class="p-6 sm:p-8 space-y-4">
         <input type="hidden" name="csrf_token" value="<?= get_csrf_token() ?>">
         <input type="hidden" name="id" id="edit_id">
         <div><label class="block text-sm font-bold text-slate-700 mb-1">Kode Mapel (Permanen)</label><input type="text" id="edit_kode" disabled class="w-full px-4 py-2.5 rounded-xl border border-slate-100 bg-slate-50 text-slate-400 font-mono font-bold outline-none cursor-not-allowed"></div>
         <div><label class="block text-sm font-bold text-slate-700 mb-1">Nama Mata Pelajaran</label><input type="text" name="nama_mapel" id="edit_nama" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"></div>
-        <div class="pt-4 flex gap-3">
+        <div class="pt-4 flex flex-col sm:flex-row gap-3">
             <button type="button" onclick="closeModal('editModal')" class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 font-bold text-slate-600 hover:bg-slate-50">Batal</button>
             <button type="submit" name="edit" class="flex-1 px-4 py-2.5 rounded-xl bg-amber-500 text-white font-bold hover:bg-amber-600">Simpan</button>
         </div>
@@ -167,7 +167,7 @@ require_once __DIR__ . '/../includes/header.php';
 </div>
 
 <!-- Delete Modal -->
-<div id="hapusModal" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-sm bg-white rounded-3xl shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0 overflow-hidden">
+<div id="hapusModal" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] sm:w-full max-w-sm bg-white rounded-3xl shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0 overflow-hidden">
     <div class="p-8 text-center">
         <div class="w-16 h-16 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl"><i class="fa fa-trash"></i></div>
         <h3 class="text-lg font-bold text-slate-800 mb-1">Hapus Mapel?</h3>
