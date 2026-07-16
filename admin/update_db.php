@@ -163,6 +163,26 @@ authorize_role(['admin']);
                 $logs[] = ['status' => 'error', 'msg' => "Failed creating <b>kritik_saran</b>: " . mysqli_error($conn)];
             }
 
+            // Create kategori_perangkat table
+            $create_kat = "CREATE TABLE IF NOT EXISTS `kategori_perangkat` (
+                `id` int(11) NOT NULL AUTO_INCREMENT,
+                `nama_kategori` varchar(100) NOT NULL,
+                PRIMARY KEY (`id`),
+                UNIQUE KEY `nama_kategori_unique` (`nama_kategori`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
+
+            if (mysqli_query($conn, $create_kat)) {
+                $logs[] = ['status' => 'success', 'msg' => "Table <b>kategori_perangkat</b> created successfully"];
+                // Seed default categories
+                $defaults = ['RPP', 'Silabus', 'Modul Ajar', 'Buku Digital', 'Video Pembelajaran', 'Lainnya'];
+                foreach ($defaults as $d) {
+                    $d_esc = mysqli_real_escape_string($conn, $d);
+                    mysqli_query($conn, "INSERT IGNORE INTO kategori_perangkat (nama_kategori) VALUES ('$d_esc')");
+                }
+            } else {
+                $logs[] = ['status' => 'error', 'msg' => "Failed creating <b>kategori_perangkat</b>: " . mysqli_error($conn)];
+            }
+
             foreach ($logs as $log) {
                 $color = 'text-blue-600 bg-blue-50';
                 if ($log['status'] == 'success') {

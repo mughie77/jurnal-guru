@@ -11,6 +11,47 @@ $guru_id = mysqli_fetch_assoc($guru_res)['id'];
 
 $message = ''; $message_type = '';
 
+// Handle AJAX actions for Category Management
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['ajax_action'])) {
+    ob_start();
+    header('Content-Type: application/json');
+    if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
+        ob_clean();
+        echo json_encode(['success' => false, 'message' => 'CSRF Token Invalid']);
+        exit;
+    }
+
+    if ($_POST['ajax_action'] === 'tambah_kategori') {
+        $nama = trim($_POST['nama_kategori']);
+        if (empty($nama)) {
+            ob_clean();
+            echo json_encode(['success' => false, 'message' => 'Nama kategori tidak boleh kosong.']);
+            exit;
+        }
+        $stmt = mysqli_prepare($conn, "INSERT INTO kategori_perangkat (nama_kategori) VALUES (?) ON DUPLICATE KEY UPDATE nama_kategori = VALUES(nama_kategori)");
+        mysqli_stmt_bind_param($stmt, "s", $nama);
+        if (mysqli_stmt_execute($stmt)) {
+            ob_clean();
+            echo json_encode(['success' => true, 'message' => 'Kategori berhasil ditambahkan!']);
+        } else {
+            ob_clean();
+            echo json_encode(['success' => false, 'message' => 'Gagal menyimpan kategori.']);
+        }
+    } elseif ($_POST['ajax_action'] === 'hapus_kategori_by_name') {
+        $nama = trim($_POST['nama_kategori']);
+        $stmt = mysqli_prepare($conn, "DELETE FROM kategori_perangkat WHERE nama_kategori = ?");
+        mysqli_stmt_bind_param($stmt, "s", $nama);
+        if (mysqli_stmt_execute($stmt)) {
+            ob_clean();
+            echo json_encode(['success' => true, 'message' => 'Kategori berhasil dihapus!']);
+        } else {
+            ob_clean();
+            echo json_encode(['success' => false, 'message' => 'Gagal menghapus kategori.']);
+        }
+    }
+    exit;
+}
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['upload'])) {
     if (!verify_csrf_token($_POST['csrf_token'] ?? '')) die("CSRF Token Invalid");
     $nama = mysqli_real_escape_string($conn, $_POST['nama_perangkat']);
@@ -77,6 +118,7 @@ $query_p = "SELECT p.*, GROUP_CONCAT(k.nama_kelas SEPARATOR ', ') as target_kela
 $perangkats = mysqli_query($conn, $query_p);
 
 $kelases = mysqli_query($conn, "SELECT id, nama_kelas FROM kelas ORDER BY nama_kelas ASC");
+$kategori_list = mysqli_query($conn, "SELECT * FROM kategori_perangkat ORDER BY nama_kategori ASC");
 
 require_once __DIR__ . '/../includes/header.php';
 ?>
@@ -110,14 +152,16 @@ require_once __DIR__ . '/../includes/header.php';
                         <input type="text" name="nama_perangkat" placeholder="Contoh: RPP Web Dasar" required class="w-full px-4 py-3 rounded-xl border border-slate-100 bg-slate-50 focus:bg-white border-transparent focus:border-indigo-100 focus:ring-4 focus:ring-indigo-50 transition-all font-bold text-slate-700 text-sm">
                     </div>
                     <div>
-                        <label class="block text-[9px] sm:text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-1">Jenis</label>
+                        <div class="flex items-center justify-between mb-2 ml-1">
+                            <label class="block text-[9px] sm:text-[10px] font-black text-slate-500 uppercase tracking-widest mb-0">Jenis / Kategori</label>
+                            <button type="button" onclick="kelolaKategori()" class="text-[9px] font-black text-indigo-600 hover:text-indigo-800 uppercase tracking-widest flex items-center gap-1">
+                                <i class="fa fa-folder-plus text-xs"></i> Kelola Kategori
+                            </button>
+                        </div>
                         <select name="jenis_perangkat" required class="w-full px-4 py-3 rounded-xl border border-slate-100 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-indigo-50 bg-white font-bold text-slate-700 text-sm appearance-none cursor-pointer transition-all">
-                            <option value="RPP">RPP</option>
-                            <option value="Silabus">Silabus</option>
-                            <option value="Modul Ajar">Modul Ajar</option>
-                            <option value="Buku Digital">Buku Digital</option>
-                            <option value="Video Pembelajaran">Video Pembelajaran</option>
-                            <option value="Lainnya">Lainnya</option>
+                            <?php mysqli_data_seek($kategori_list, 0); while($kat = mysqli_fetch_assoc($kategori_list)): ?>
+                                <option value="<?= htmlspecialchars($kat['nama_kategori']) ?>"><?= htmlspecialchars($kat['nama_kategori']) ?></option>
+                            <?php endwhile; ?>
                         </select>
                     </div>
                     <div>
@@ -154,6 +198,95 @@ require_once __DIR__ . '/../includes/header.php';
             const fileName = input.files[0] ? input.files[0].name : "Pilih PDF/Word/MP4...";
             document.getElementById('file-chosen').textContent = fileName;
             document.getElementById('file-chosen').classList.add('text-indigo-600');
+        }
+
+        function kelolaKategori() {
+            const select = document.querySelector('select[name="jenis_perangkat"]');
+            const options = Array.from(select.options);
+
+            let listHtml = '<ul class="text-left space-y-2 max-h-40 overflow-y-auto p-2 bg-slate-50 rounded-xl border border-slate-100 mb-4">';
+            options.forEach(opt => {
+                listHtml += `
+                <li class="flex items-center justify-between p-2 bg-white rounded-lg shadow-sm border border-slate-100 text-xs font-bold text-slate-700">
+                    <span>${opt.text}</span>
+                    <button type="button" onclick="hapusKategoriByName('${opt.text}')" class="text-rose-500 hover:text-rose-700 transition-colors"><i class="fa fa-trash-alt"></i></button>
+                </li>`;
+            });
+            listHtml += '</ul>';
+            listHtml += '<input type="text" id="new_kat_input" placeholder="Nama kategori baru..." class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 text-sm font-bold text-slate-700">';
+
+            Swal.fire({
+                title: 'Manajemen Kategori',
+                html: listHtml,
+                showCancelButton: true,
+                confirmButtonText: 'Tambah Kategori',
+                cancelButtonText: 'Tutup',
+                confirmButtonColor: '#4F46E5',
+                preConfirm: () => {
+                    const inputVal = document.getElementById('new_kat_input').value.trim();
+                    if (!inputVal) {
+                        Swal.showValidationMessage('Nama kategori baru tidak boleh kosong!');
+                    }
+                    return inputVal;
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const formData = new FormData();
+                    formData.append('ajax_action', 'tambah_kategori');
+                    formData.append('nama_kategori', result.value);
+                    formData.append('csrf_token', '<?= get_csrf_token() ?>');
+
+                    fetch('perangkat.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(res => res.json())
+                    .then(res => {
+                        if (res.success) {
+                            Swal.fire('Berhasil', res.message, 'success').then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire('Gagal', res.message, 'error');
+                        }
+                    });
+                }
+            });
+        }
+
+        function hapusKategoriByName(namaKategori) {
+            Swal.fire({
+                title: 'Hapus Kategori?',
+                text: `Apakah Anda yakin ingin menghapus kategori "${namaKategori}"?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Ya, Hapus!',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const formData = new FormData();
+                    formData.append('ajax_action', 'hapus_kategori_by_name');
+                    formData.append('nama_kategori', namaKategori);
+                    formData.append('csrf_token', '<?= get_csrf_token() ?>');
+
+                    fetch('perangkat.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(res => res.json())
+                    .then(res => {
+                        if (res.success) {
+                            Swal.fire('Berhasil', res.message, 'success').then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire('Gagal', res.message, 'error');
+                        }
+                    });
+                }
+            });
         }
         </script>
 
