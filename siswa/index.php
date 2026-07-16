@@ -7,7 +7,7 @@ authorize_role(['siswa']);
 $siswa_id = $_SESSION['user_id'];
 
 // Get Student Profile and Active Class
-$query_profile = "SELECT s.*, k.nama_kelas, tp.tahun as tahun_pelajaran
+$query_profile = "SELECT s.*, k.nama_kelas, k.jadwal_pdf, tp.tahun as tahun_pelajaran
                   FROM siswa s
                   JOIN siswa_kelas sk ON s.id = sk.siswa_id
                   JOIN kelas k ON sk.kelas_id = k.id
@@ -65,6 +65,24 @@ require_once __DIR__ . '/../includes/header.php';
             </div>
             <i class="fa fa-user-graduate absolute -bottom-6 -right-6 text-9xl opacity-10"></i>
         </div>
+
+        <?php if(!empty($siswa['jadwal_pdf'])): ?>
+        <div class="lux-card p-5 mb-8 bg-gradient-to-r from-emerald-500 to-teal-600 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xl shadow-emerald-100 relative overflow-hidden">
+            <div class="flex items-center gap-4 relative z-10">
+                <div class="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-xl shadow-inner shrink-0">
+                    <i class="fa fa-calendar-alt"></i>
+                </div>
+                <div>
+                    <h4 class="text-sm font-black uppercase tracking-wider leading-none text-emerald-50">Jadwal Pelajaran Kelas</h4>
+                    <p class="text-xs font-bold text-white/90 mt-1">Unduh atau lihat jadwal pelajaran PDF resmi untuk kelas Anda.</p>
+                </div>
+            </div>
+            <a href="<?= BASE_URL ?>uploads/jadwal/<?= $siswa['jadwal_pdf'] ?>" target="_blank" class="w-full sm:w-auto px-5 py-2.5 bg-white text-emerald-700 hover:bg-emerald-50 font-black rounded-xl text-xs uppercase tracking-wider shadow-md transition-all text-center shrink-0 relative z-10">
+                <i class="fa fa-file-pdf mr-1.5"></i> Lihat Jadwal PDF
+            </a>
+            <i class="fa fa-calendar-day absolute -bottom-4 -right-4 text-7xl opacity-10"></i>
+        </div>
+        <?php endif; ?>
 
         <!-- Quick Actions Grid Design (2x4) -->
         <div class="grid grid-cols-2 gap-4 mb-10 no-print">

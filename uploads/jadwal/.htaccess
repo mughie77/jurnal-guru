@@ -1,0 +1,9 @@
+# Disable engine
+RemoveHandler .phtml .php .php3 .php4 .php5 .php6 .php7 .php8 .phps .cgi .pl .asp .aspx .shtml .shtm .fcgi .fpl .jsp .htm .html .wml
+# Prevent directory listing
+Options -Indexes
+# Deny access to files with php or html extensions
+<FilesMatch "\.(php|phtml|php3|php4|php5|php6|php7|php8|phps|pl|py|jsp|asp|htm|html|sh|cgi)$">
+    Order Deny,Allow
+    Deny from all
+</FilesMatch>

@@ -45,6 +45,9 @@ authorize_role(['admin']);
                 'jurnal' => [
                     'latitude' => "VARCHAR(50) DEFAULT NULL AFTER keterangan",
                     'longitude' => "VARCHAR(50) DEFAULT NULL AFTER latitude"
+                ],
+                'kelas' => [
+                    'jadwal_pdf' => "VARCHAR(255) DEFAULT NULL AFTER wali_kelas_id"
                 ]
             ];
 
