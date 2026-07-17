@@ -4,8 +4,15 @@ ob_start();
 header('Content-Type: application/json');
 require_once __DIR__ . '/../config/database.php';
 
-// Define a default secure API Key (Admin can change or use this token)
-$expected_key = 'CAKRA_SECURE_API_KEY_2026';
+// Fetch dynamic API Key setting
+$res = mysqli_query($conn, "SELECT nilai_setting FROM pengaturan WHERE nama_setting = 'external_api_key'");
+$expected_key = '';
+if ($row = mysqli_fetch_assoc($res)) {
+    $expected_key = $row['nilai_setting'];
+}
+if (empty($expected_key)) {
+    $expected_key = 'CAKRA_SECURE_API_KEY_2026'; // Fallback
+}
 
 $provided_key = $_SERVER['HTTP_X_API_KEY'] ?? $_GET['api_key'] ?? '';
 

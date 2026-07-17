@@ -54,10 +54,11 @@ $db_user = 'root'; // Sesuaikan dengan username database Anda
 $db_pass = ''; // Sesuaikan dengan password database Anda
 $db_name = 'jurnal_mengajar';
 
-$conn = mysqli_connect($db_host, $db_user, $db_pass, $db_name);
+$conn = @mysqli_connect($db_host, $db_user, $db_pass, $db_name);
 
 if (!$conn) {
-    die("Koneksi Gagal: " . mysqli_connect_error());
+    include __DIR__ . '/setup_db.php';
+    exit();
 }
 
 // --- URL Konfigurasi ---

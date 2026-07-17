@@ -109,8 +109,9 @@ if ($role == 'admin') {
     echo sidebar_section('Laporan & Rekap', 'fa fa-chart-bar', $laporan_active, $laporan_links);
 
     // Group 4: Sistem
-    $sistem_active = in_array($current_page, ['pengaturan.php', 'backup_restore.php']);
+    $sistem_active = in_array($current_page, ['pengaturan.php', 'backup_restore.php', 'api_settings.php']);
     $sistem_links = sub_nav_link('admin/pengaturan.php', 'Pengaturan', $current_page == 'pengaturan.php') .
+                    sub_nav_link('admin/api_settings.php', 'Pengaturan API', $current_page == 'api_settings.php') .
                     sub_nav_link('admin/backup_restore.php', 'Backup & Restore', $current_page == 'backup_restore.php');
     echo sidebar_section('Sistem', 'fa fa-cogs', $sistem_active, $sistem_links);
 } elseif ($role == 'waka') {
