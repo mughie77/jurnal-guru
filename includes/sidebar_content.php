@@ -1,7 +1,35 @@
 <?php
 $current_page = basename($_SERVER['PHP_SELF']);
 $role = $_SESSION['role'];
+?>
 
+<style>
+/* Smooth opening animations for submenus and chevron rotations */
+details.group[open] .submenu-content {
+    animation: slideDownSubmenu 0.25s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    transform-origin: top;
+}
+@keyframes slideDownSubmenu {
+    from {
+        opacity: 0;
+        transform: scaleY(0.95) translateY(-5px);
+        max-height: 0;
+    }
+    to {
+        opacity: 1;
+        transform: scaleY(1) translateY(0);
+        max-height: 500px;
+    }
+}
+.group-open-chevron {
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+details.group[open] .group-open-chevron {
+    transform: rotate(90deg);
+}
+</style>
+
+<?php
 function nav_link($url, $icon, $label, $active) {
     $base_url = BASE_URL;
     $class = $active
@@ -35,9 +63,9 @@ function sidebar_section($title, $icon, $open, $links_html) {
                     <i class='{$icon} w-6 text-center text-base mr-3 text-slate-500 group-hover:text-indigo-400 group-open:text-indigo-400 transition-colors'></i>
                     <span class='font-black text-xs uppercase tracking-[0.15em]'>{$title}</span>
                 </div>
-                <i class='fa fa-chevron-right text-[9px] text-slate-600 transition-transform duration-300 group-open:rotate-90'></i>
+                <i class='fa fa-chevron-right text-[9px] text-slate-600 group-open-chevron'></i>
             </summary>
-            <div class='mt-1.5 space-y-0.5 transition-all duration-300'>
+            <div class='submenu-content mt-1.5 space-y-0.5 overflow-hidden transition-all duration-300'>
                 {$links_html}
             </div>
         </details>
