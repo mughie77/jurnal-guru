@@ -124,24 +124,78 @@ authorize_role(['admin']);
                 $logs[] = ['status' => 'error', 'msg' => "Failed creating <b>mood_survey</b>: " . mysqli_error($conn)];
             }
 
-            // Create panic_button table
-            $create_panic = "CREATE TABLE IF NOT EXISTS `panic_button` (
+            // Rename panic_button to pengaduan if panic_button exists
+            $check_panic_table = mysqli_query($conn, "SHOW TABLES LIKE 'panic_button'");
+            if (mysqli_num_rows($check_panic_table) > 0) {
+                // Check if pengaduan table already exists
+                $check_pengaduan_table = mysqli_query($conn, "SHOW TABLES LIKE 'pengaduan'");
+                if (mysqli_num_rows($check_pengaduan_table) == 0) {
+                    $rename_query = "RENAME TABLE `panic_button` TO `pengaduan`";
+                    if (mysqli_query($conn, $rename_query)) {
+                        $logs[] = ['status' => 'success', 'msg' => "Table <b>panic_button</b> successfully renamed to <b>pengaduan</b>"];
+                    } else {
+                        $logs[] = ['status' => 'error', 'msg' => "Failed to rename <b>panic_button</b> to <b>pengaduan</b>: " . mysqli_error($conn)];
+                    }
+                } else {
+                    $logs[] = ['status' => 'info', 'msg' => "Table <b>pengaduan</b> already exists; skipping rename of <b>panic_button</b>"];
+                }
+            } else {
+                // If panic_button table does not exist, create pengaduan directly if it does not exist
+                $create_pengaduan = "CREATE TABLE IF NOT EXISTS `pengaduan` (
+                    `id` int(11) NOT NULL AUTO_INCREMENT,
+                    `siswa_id` int(11) NOT NULL,
+                    `nama_siswa` varchar(150) NOT NULL,
+                    `keterangan` text NOT NULL,
+                    `latitude` decimal(11,8) NOT NULL,
+                    `longitude` decimal(11,8) NOT NULL,
+                    `akurasi` float NOT NULL,
+                    `tanggal` timestamp NULL DEFAULT current_timestamp(),
+                    PRIMARY KEY (`id`),
+                    CONSTRAINT `pengaduan_ibfk_1` FOREIGN KEY (`siswa_id`) REFERENCES `siswa` (`id`) ON DELETE CASCADE
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci";
+
+                if (mysqli_query($conn, $create_pengaduan)) {
+                    $logs[] = ['status' => 'success', 'msg' => "Table <b>pengaduan</b> created successfully"];
+                } else {
+                    $logs[] = ['status' => 'error', 'msg' => "Failed creating <b>pengaduan</b>: " . mysqli_error($conn)];
+                }
+            }
+
+            // Create konsultasi table
+            $create_konsultasi = "CREATE TABLE IF NOT EXISTS `konsultasi` (
                 `id` int(11) NOT NULL AUTO_INCREMENT,
                 `siswa_id` int(11) NOT NULL,
-                `nama_siswa` varchar(150) NOT NULL,
-                `keterangan` text NOT NULL,
-                `latitude` decimal(11,8) NOT NULL,
-                `longitude` decimal(11,8) NOT NULL,
-                `akurasi` float NOT NULL,
-                `tanggal` timestamp NULL DEFAULT current_timestamp(),
+                `guru_id` int(11) NOT NULL,
+                `subjek` varchar(255) NOT NULL,
+                `status` enum('open','closed') NOT NULL DEFAULT 'open',
+                `created_at` timestamp NULL DEFAULT current_timestamp(),
+                `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
                 PRIMARY KEY (`id`),
-                CONSTRAINT `panic_button_ibfk_1` FOREIGN KEY (`siswa_id`) REFERENCES `siswa` (`id`) ON DELETE CASCADE
+                CONSTRAINT `konsultasi_ibfk_1` FOREIGN KEY (`siswa_id`) REFERENCES `siswa` (`id`) ON DELETE CASCADE,
+                CONSTRAINT `konsultasi_ibfk_2` FOREIGN KEY (`guru_id`) REFERENCES `guru` (`id`) ON DELETE CASCADE
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci";
 
-            if (mysqli_query($conn, $create_panic)) {
-                $logs[] = ['status' => 'success', 'msg' => "Table <b>panic_button</b> created successfully"];
+            if (mysqli_query($conn, $create_konsultasi)) {
+                $logs[] = ['status' => 'success', 'msg' => "Table <b>konsultasi</b> created successfully"];
             } else {
-                $logs[] = ['status' => 'error', 'msg' => "Failed creating <b>panic_button</b>: " . mysqli_error($conn)];
+                $logs[] = ['status' => 'error', 'msg' => "Failed creating <b>konsultasi</b>: " . mysqli_error($conn)];
+            }
+
+            // Create konsultasi_pesan table
+            $create_konsultasi_pesan = "CREATE TABLE IF NOT EXISTS `konsultasi_pesan` (
+                `id` int(11) NOT NULL AUTO_INCREMENT,
+                `konsultasi_id` int(11) NOT NULL,
+                `pengirim_role` enum('siswa','guru') NOT NULL,
+                `pesan` text NOT NULL,
+                `created_at` timestamp NULL DEFAULT current_timestamp(),
+                PRIMARY KEY (`id`),
+                CONSTRAINT `konsultasi_pesan_ibfk_1` FOREIGN KEY (`konsultasi_id`) REFERENCES `konsultasi` (`id`) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci";
+
+            if (mysqli_query($conn, $create_konsultasi_pesan)) {
+                $logs[] = ['status' => 'success', 'msg' => "Table <b>konsultasi_pesan</b> created successfully"];
+            } else {
+                $logs[] = ['status' => 'error', 'msg' => "Failed creating <b>konsultasi_pesan</b>: " . mysqli_error($conn)];
             }
 
             // Create kritik_saran table

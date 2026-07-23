@@ -2,14 +2,45 @@
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../config/database.php';
 
-authorize_role(['admin', 'waka']);
+// Helper check for Guru BK or Wali Kelas or Admin/Waka
+$user_role = $_SESSION['role'];
+$user_id = $_SESSION['user_id'];
 
-// Fetch all panic reports
-$query = "SELECT pb.*, k.nama_kelas
-          FROM panic_button pb
-          LEFT JOIN siswa_kelas sk ON pb.siswa_id = sk.siswa_id AND sk.tahun_pelajaran_id = ?
+$is_allowed = false;
+if (in_array($user_role, ['admin', 'waka'])) {
+    $is_allowed = true;
+} elseif ($user_role === 'guru') {
+    // Check if Wali Kelas
+    $wali_info = get_wali_kelas_info();
+    if ($wali_info !== null) {
+        $is_allowed = true;
+    } else {
+        // Check if Guru BK
+        $q_guru = mysqli_query($conn, "SELECT id FROM guru WHERE user_id = " . (int)$user_id);
+        if ($g_data = mysqli_fetch_assoc($q_guru)) {
+            $guru_id = (int)$g_data['id'];
+            $q_bk = mysqli_query($conn, "SELECT COUNT(*) as count FROM guru_mapel gm
+                                         JOIN mata_pelajaran mp ON gm.mapel_id = mp.id
+                                         WHERE gm.guru_id = $guru_id AND (mp.nama_mapel LIKE '%Bimbingan Konseling%' OR mp.nama_mapel LIKE '%BK%')");
+            $bk_count = mysqli_fetch_assoc($q_bk)['count'] ?? 0;
+            if ($bk_count > 0) {
+                $is_allowed = true;
+            }
+        }
+    }
+}
+
+if (!$is_allowed) {
+    header('Location: ' . BASE_URL . 'logout.php');
+    exit();
+}
+
+// Fetch all pengaduan reports
+$query = "SELECT p.*, k.nama_kelas
+          FROM pengaduan p
+          LEFT JOIN siswa_kelas sk ON p.siswa_id = sk.siswa_id AND sk.tahun_pelajaran_id = ?
           LEFT JOIN kelas k ON sk.kelas_id = k.id
-          ORDER BY pb.tanggal DESC";
+          ORDER BY p.tanggal DESC";
 $stmt = mysqli_prepare($conn, $query);
 mysqli_stmt_bind_param($stmt, "i", $active_tahun_id);
 mysqli_stmt_execute($stmt);
@@ -21,7 +52,7 @@ while ($row = mysqli_fetch_assoc($result)) {
 }
 mysqli_stmt_close($stmt);
 
-$page_title = "Rekap Laporan Bullying (Panic Button)";
+$page_title = "Rekap Laporan Pengaduan Siswa";
 require_once __DIR__ . '/../includes/header.php';
 ?>
 
@@ -29,11 +60,11 @@ require_once __DIR__ . '/../includes/header.php';
     <!-- Header -->
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
-            <h1 class="text-3xl font-black italic text-slate-800 tracking-tight text-rose-600">REKAP LAPORAN BULLYING</h1>
-            <p class="text-slate-400 font-bold text-xs uppercase tracking-widest mt-1">Layanan Pantauan Keamanan Darurat Anti-Bullying</p>
+            <h1 class="text-3xl font-black italic text-slate-800 tracking-tight text-rose-600">REKAP LAPORAN PENGADUAN SISWA</h1>
+            <p class="text-slate-400 font-bold text-xs uppercase tracking-widest mt-1">Layanan Pantauan Keamanan & Laporan Pengaduan Siswa</p>
         </div>
         <div class="flex items-center gap-3">
-            <a href="export_panic.php" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-2xl shadow-lg shadow-emerald-100 transition-all flex items-center gap-2 text-xs uppercase tracking-wider">
+            <a href="export_pengaduan.php" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-2xl shadow-lg shadow-emerald-100 transition-all flex items-center gap-2 text-xs uppercase tracking-wider">
                 <i class="fa fa-file-excel text-sm"></i> Export Excel
             </a>
         </div>
@@ -44,7 +75,7 @@ require_once __DIR__ . '/../includes/header.php';
         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
             <i class="fa fa-search"></i>
         </div>
-        <input type="text" id="searchPanic" onkeyup="filterPanic()" placeholder="Cari nama siswa, kelas, atau keterangan..."
+        <input type="text" id="searchPengaduan" onkeyup="filterPengaduan()" placeholder="Cari nama siswa, kelas, atau keterangan..."
                class="w-full pl-12 pr-4 py-3 rounded-2xl border border-slate-200 bg-white focus:outline-none focus:ring-4 focus:ring-rose-50 focus:border-rose-500 font-bold text-slate-700 placeholder:text-slate-300 transition-all shadow-sm">
     </div>
 
@@ -61,14 +92,14 @@ require_once __DIR__ . '/../includes/header.php';
                         <th class="px-6 py-4 text-center text-[10px] font-black text-slate-500 uppercase tracking-widest">Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-50" id="panicTableBody">
+                <tbody class="divide-y divide-slate-50" id="pengaduanTableBody">
                     <?php if (empty($reports)): ?>
                         <tr>
-                            <td colspan="5" class="px-6 py-12 text-center text-slate-400 font-bold italic">Belum ada laporan bullying yang masuk. Aman sejahtera!</td>
+                            <td colspan="5" class="px-6 py-12 text-center text-slate-400 font-bold italic">Belum ada laporan pengaduan yang masuk. Aman sejahtera!</td>
                         </tr>
                     <?php else: ?>
                         <?php foreach ($reports as $r): ?>
-                            <tr class="panic-row hover:bg-rose-50/10 transition-colors"
+                            <tr class="pengaduan-row hover:bg-rose-50/10 transition-colors"
                                 data-nama="<?= strtolower(htmlspecialchars($r['nama_siswa'])) ?>"
                                 data-kelas="<?= strtolower(htmlspecialchars($r['nama_kelas'] ?? 'Tanpa Kelas')) ?>"
                                 data-keterangan="<?= strtolower(htmlspecialchars($r['keterangan'])) ?>">
@@ -107,9 +138,9 @@ require_once __DIR__ . '/../includes/header.php';
 </div>
 
 <script>
-function filterPanic() {
-    const query = document.getElementById('searchPanic').value.toLowerCase();
-    const rows = document.getElementsByClassName('panic-row');
+function filterPengaduan() {
+    const query = document.getElementById('searchPengaduan').value.toLowerCase();
+    const rows = document.getElementsByClassName('pengaduan-row');
 
     for (let i = 0; i < rows.length; i++) {
         const row = rows[i];

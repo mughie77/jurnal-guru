@@ -54,7 +54,11 @@ $db_user = 'root'; // Sesuaikan dengan username database Anda
 $db_pass = ''; // Sesuaikan dengan password database Anda
 $db_name = 'jurnal_mengajar';
 
-$conn = @mysqli_connect($db_host, $db_user, $db_pass, $db_name);
+try {
+    $conn = mysqli_connect($db_host, $db_user, $db_pass, $db_name);
+} catch (mysqli_sql_exception $e) {
+    $conn = false;
+}
 
 if (!$conn) {
     include __DIR__ . '/setup_db.php';
@@ -70,7 +74,7 @@ if (!empty($base_url_config)) {
     define('BASE_URL', $base_url_config);
 } else {
     // Deteksi URL dasar secara otomatis
-    $protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443 || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https')) ? "https://" : "http://";
+    $protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443) || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https')) ? "https://" : "http://";
     $domainName = $_SERVER['HTTP_HOST'] ?? 'localhost';
     $scriptName = $_SERVER['SCRIPT_NAME'];
 
