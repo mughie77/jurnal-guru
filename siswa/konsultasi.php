@@ -394,6 +394,23 @@ require_once __DIR__ . '/../includes/header.php';
         }
     }
 
+    // Automatically open modal and select teacher if query parameters are set
+    window.addEventListener('DOMContentLoaded', (event) => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const isNew = urlParams.get('id') === 'new';
+        const guruId = urlParams.get('guru_id');
+
+        if (isNew || guruId) {
+            openModal('newConsultationModal');
+            if (guruId) {
+                const selectElement = document.querySelector('select[name="guru_id"]');
+                if (selectElement) {
+                    selectElement.value = guruId;
+                }
+            }
+        }
+    });
+
     <?php if (!empty($message)): ?>
     Swal.fire({
         icon: '<?= $message_type ?>',
