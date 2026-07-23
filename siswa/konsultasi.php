@@ -8,6 +8,47 @@ $siswa_id = (int)$_SESSION['user_id'];
 $message = '';
 $message_type = '';
 
+// Helper to compress and save uploaded chat images
+function compress_and_save_upload($file_post, $upload_dir) {
+    if (!isset($file_post) || $file_post['error'] !== UPLOAD_ERR_OK) {
+        return null;
+    }
+
+    $file_tmp = $file_post['tmp_name'];
+    $info = @getimagesize($file_tmp);
+    if ($info === false) {
+        return null;
+    }
+
+    $mime = $info['mime'];
+    if (!in_array($mime, ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'])) {
+        return null;
+    }
+
+    if ($mime == 'image/jpeg' || $mime == 'image/jpg') {
+        $image = @imagecreatefromjpeg($file_tmp);
+    } elseif ($mime == 'image/png') {
+        $image = @imagecreatefrompng($file_tmp);
+    } elseif ($mime == 'image/gif') {
+        $image = @imagecreatefromgif($file_tmp);
+    } else {
+        return null;
+    }
+
+    if (!$image) {
+        return null;
+    }
+
+    $new_filename = uniqid('chat_', true) . '.jpg';
+    $target_path = rtrim($upload_dir, '/') . '/' . $new_filename;
+
+    // Save as compressed jpeg with 50% quality (compact size)
+    $success = @imagejpeg($image, $target_path, 50);
+    @imagedestroy($image);
+
+    return $success ? $new_filename : null;
+}
+
 // Generate CSRF token if not set
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
@@ -42,6 +83,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['start_consultation'])
             $message = "Harap isi semua kolom formulir konsultasi baru.";
             $message_type = "error";
         } else {
+            // Handle image upload and compression
+            $lampiran = compress_and_save_upload($_FILES['lampiran_foto'] ?? null, __DIR__ . '/../uploads/konsultasi');
+
             // Start transaction for atomicity
             mysqli_begin_transaction($conn);
             try {
@@ -52,9 +96,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['start_consultation'])
                 $konsultasi_id = mysqli_insert_id($conn);
                 mysqli_stmt_close($stmt);
 
-                // Insert first message
-                $stmt_msg = mysqli_prepare($conn, "INSERT INTO konsultasi_pesan (konsultasi_id, pengirim_role, pesan) VALUES (?, 'siswa', ?)");
-                mysqli_stmt_bind_param($stmt_msg, "is", $konsultasi_id, $first_message);
+                // Insert first message with lampiran_foto
+                $stmt_msg = mysqli_prepare($conn, "INSERT INTO konsultasi_pesan (konsultasi_id, pengirim_role, pesan, lampiran_foto) VALUES (?, 'siswa', ?, ?)");
+                mysqli_stmt_bind_param($stmt_msg, "iss", $konsultasi_id, $first_message, $lampiran);
                 mysqli_stmt_execute($stmt_msg);
                 mysqli_stmt_close($stmt_msg);
 
@@ -82,8 +126,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_message'])) {
         $konsultasi_id = (int)($_POST['konsultasi_id'] ?? 0);
         $pesan = mysqli_real_escape_string($conn, trim($_POST['pesan'] ?? ''));
 
-        if ($konsultasi_id <= 0 || empty($pesan)) {
-            $message = "Pesan tidak boleh kosong.";
+        if ($konsultasi_id <= 0 || (empty($pesan) && empty($_FILES['lampiran_foto']['name']))) {
+            $message = "Pesan atau foto tidak boleh kosong.";
             $message_type = "error";
         } else {
             // Verify ownership of the consultation
@@ -94,8 +138,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_message'])) {
                     $message = "Konsultasi ini sudah ditutup.";
                     $message_type = "error";
                 } else {
-                    $stmt_msg = mysqli_prepare($conn, "INSERT INTO konsultasi_pesan (konsultasi_id, pengirim_role, pesan) VALUES (?, 'siswa', ?)");
-                    mysqli_stmt_bind_param($stmt_msg, "is", $konsultasi_id, $pesan);
+                    // Handle image upload and compression
+                    $lampiran = compress_and_save_upload($_FILES['lampiran_foto'] ?? null, __DIR__ . '/../uploads/konsultasi');
+
+                    $stmt_msg = mysqli_prepare($conn, "INSERT INTO konsultasi_pesan (konsultasi_id, pengirim_role, pesan, lampiran_foto) VALUES (?, 'siswa', ?, ?)");
+                    mysqli_stmt_bind_param($stmt_msg, "iss", $konsultasi_id, $pesan, $lampiran);
                     if (mysqli_stmt_execute($stmt_msg)) {
                         // Update updated_at column in konsultasi
                         mysqli_query($conn, "UPDATE konsultasi SET updated_at = CURRENT_TIMESTAMP WHERE id = $konsultasi_id");
@@ -274,7 +321,14 @@ require_once __DIR__ . '/../includes/header.php';
                                     <?php $is_me = ($m['pengirim_role'] === 'siswa'); ?>
                                     <div class="flex <?= $is_me ? 'justify-end' : 'justify-start' ?>">
                                         <div class="max-w-[75%] rounded-3xl px-5 py-3.5 shadow-sm text-sm <?= $is_me ? 'bg-indigo-600 text-white rounded-br-none' : 'bg-white border border-slate-100 text-slate-800 rounded-bl-none' ?>">
-                                            <p class="leading-relaxed font-medium"><?= nl2br(htmlspecialchars($m['pesan'])) ?></p>
+                                            <?php if (!empty($m['pesan'])): ?>
+                                                <p class="leading-relaxed font-medium"><?= nl2br(htmlspecialchars($m['pesan'])) ?></p>
+                                            <?php endif; ?>
+                                            <?php if (!empty($m['lampiran_foto'])): ?>
+                                                <div class="mt-2">
+                                                    <img src="<?= BASE_URL ?>uploads/konsultasi/<?= $m['lampiran_foto'] ?>" class="max-w-full sm:max-w-xs rounded-2xl shadow-sm border border-slate-100 cursor-pointer hover:opacity-95 transition-opacity" onclick="window.open(this.src)">
+                                                </div>
+                                            <?php endif; ?>
                                             <div class="text-[9px] mt-2 flex items-center justify-between gap-4 <?= $is_me ? 'text-indigo-200' : 'text-slate-400' ?>">
                                                 <span class="font-bold uppercase tracking-wider"><?= $is_me ? 'Anda' : 'Guru BK' ?></span>
                                                 <span><?= date('H:i', strtotime($m['created_at'])) ?></span>
@@ -288,16 +342,24 @@ require_once __DIR__ . '/../includes/header.php';
                         <!-- Chat Input Box -->
                         <?php if ($active_thread['status'] === 'open'): ?>
                             <div class="p-6 border-t border-slate-100">
-                                <form action="" method="POST" class="flex gap-4">
+                                <div id="fileNameIndicator" class="hidden text-[10px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-full px-3 py-1 inline-block mb-3 animate-pulse"></div>
+                                <form action="" method="POST" enctype="multipart/form-data" class="flex gap-4 items-center">
                                     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                                     <input type="hidden" name="konsultasi_id" value="<?= $active_id ?>">
                                     <input type="hidden" name="send_message" value="1">
-                                    <textarea name="pesan" rows="1" required
+
+                                    <!-- Photo Upload Input -->
+                                    <input type="file" name="lampiran_foto" accept="image/*" class="hidden" id="photoUploadInput" onchange="document.getElementById('fileNameIndicator').innerText = 'Foto terpilih: ' + this.files[0].name; document.getElementById('fileNameIndicator').classList.remove('hidden');">
+                                    <label for="photoUploadInput" class="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-200 text-slate-400 hover:text-indigo-600 flex items-center justify-center text-lg cursor-pointer transition-all active:scale-95" title="Kirim Foto">
+                                        <i class="fa fa-camera"></i>
+                                    </label>
+
+                                    <textarea name="pesan" rows="1"
                                               placeholder="Tulis pesan konsultasi Anda di sini..."
                                               class="flex-1 px-5 py-3.5 rounded-2xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 focus:border-indigo-500 font-medium text-slate-700 resize-none italic text-xs shadow-inner"
                                               onkeydown="if(event.keyCode == 13 && !event.shiftKey) { this.form.submit(); return false; }"></textarea>
                                     <button type="submit"
-                                            class="px-6 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-2xl transition-all flex items-center justify-center shadow-lg shadow-indigo-100 hover:scale-105 active:scale-95">
+                                            class="w-12 h-12 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-2xl transition-all flex items-center justify-center shadow-lg shadow-indigo-100 hover:scale-105 active:scale-95">
                                         <i class="fa fa-paper-plane text-base"></i>
                                     </button>
                                 </form>
@@ -321,7 +383,7 @@ require_once __DIR__ . '/../includes/header.php';
         <p class="text-indigo-100 text-[10px] font-bold uppercase tracking-widest mt-1">Diskusikan keluhan Anda dengan guru BK secara aman & rahasia</p>
         <button onclick="closeKonsultasiModal('newConsultationModal')" class="absolute top-6 right-6 text-white/80 hover:text-white text-lg"><i class="fa fa-times"></i></button>
     </div>
-    <form action="" method="POST" class="p-6 space-y-5">
+    <form action="" method="POST" enctype="multipart/form-data" class="p-6 space-y-5">
         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
         <input type="hidden" name="start_consultation" value="1">
 
@@ -345,6 +407,11 @@ require_once __DIR__ . '/../includes/header.php';
             <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Pesan Pembuka</label>
             <textarea name="pesan" rows="4" required placeholder="Jelaskan secara mendetail apa yang ingin Anda konsultasikan..."
                       class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 font-medium text-slate-700 text-sm italic"></textarea>
+        </div>
+
+        <div>
+            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Lampiran Foto (Opsional, Dikompres Otomatis)</label>
+            <input type="file" name="lampiran_foto" accept="image/*" class="block w-full text-xs text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-black file:uppercase file:bg-indigo-50 file:text-indigo-600 hover:file:bg-indigo-100 transition-all">
         </div>
 
         <div class="flex gap-4 pt-4">

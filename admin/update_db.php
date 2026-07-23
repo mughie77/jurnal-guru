@@ -48,10 +48,23 @@ authorize_role(['admin']);
                 ],
                 'kelas' => [
                     'jadwal_pdf' => "VARCHAR(255) DEFAULT NULL AFTER wali_kelas_id"
+                ],
+                'konsultasi_pesan' => [
+                    'lampiran_foto' => "VARCHAR(255) DEFAULT NULL AFTER pesan"
                 ]
             ];
 
             $logs = [];
+
+            // Ensure uploads/konsultasi directory exists
+            $upload_dir = __DIR__ . '/../uploads/konsultasi';
+            if (!file_exists($upload_dir)) {
+                mkdir($upload_dir, 0775, true);
+                // Create secure .htaccess
+                $htaccess_content = "# Prevent PHP execution in this directory\n<Files \"*.php\">\n    Order Deny,Allow\n    Deny from all\n</Files>\n\n# Ensure images are served correctly\nAddType image/jpeg .jpg .jpeg\n";
+                file_put_contents($upload_dir . '/.htaccess', $htaccess_content);
+                $logs[] = ['status' => 'success', 'msg' => "Directory <b>uploads/konsultasi/</b> created with secure .htaccess"];
+            }
 
             foreach ($tables as $table => $columns) {
                 foreach ($columns as $column => $definition) {

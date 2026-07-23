@@ -9,6 +9,47 @@ $user_id = (int)$_SESSION['user_id'];
 $message = '';
 $message_type = '';
 
+// Helper to compress and save uploaded chat images
+function compress_and_save_upload($file_post, $upload_dir) {
+    if (!isset($file_post) || $file_post['error'] !== UPLOAD_ERR_OK) {
+        return null;
+    }
+
+    $file_tmp = $file_post['tmp_name'];
+    $info = @getimagesize($file_tmp);
+    if ($info === false) {
+        return null;
+    }
+
+    $mime = $info['mime'];
+    if (!in_array($mime, ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'])) {
+        return null;
+    }
+
+    if ($mime == 'image/jpeg' || $mime == 'image/jpg') {
+        $image = @imagecreatefromjpeg($file_tmp);
+    } elseif ($mime == 'image/png') {
+        $image = @imagecreatefrompng($file_tmp);
+    } elseif ($mime == 'image/gif') {
+        $image = @imagecreatefromgif($file_tmp);
+    } else {
+        return null;
+    }
+
+    if (!$image) {
+        return null;
+    }
+
+    $new_filename = uniqid('chat_', true) . '.jpg';
+    $target_path = rtrim($upload_dir, '/') . '/' . $new_filename;
+
+    // Save as compressed jpeg with 50% quality (compact size)
+    $success = @imagejpeg($image, $target_path, 50);
+    @imagedestroy($image);
+
+    return $success ? $new_filename : null;
+}
+
 // Find teacher (guru) id
 $q_guru = mysqli_query($conn, "SELECT id, foto FROM guru WHERE user_id = $user_id");
 $g_data = mysqli_fetch_assoc($q_guru);
@@ -56,8 +97,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_reply'])) {
         $konsultasi_id = (int)($_POST['konsultasi_id'] ?? 0);
         $pesan = mysqli_real_escape_string($conn, trim($_POST['pesan'] ?? ''));
 
-        if ($konsultasi_id <= 0 || empty($pesan)) {
-            $message = "Pesan tidak boleh kosong.";
+        if ($konsultasi_id <= 0 || (empty($pesan) && empty($_FILES['lampiran_foto']['name']))) {
+            $message = "Pesan atau foto tidak boleh kosong.";
             $message_type = "error";
         } else {
             // Verify ownership
@@ -68,8 +109,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_reply'])) {
                     $message = "Konsultasi ini sudah ditutup.";
                     $message_type = "error";
                 } else {
-                    $stmt_msg = mysqli_prepare($conn, "INSERT INTO konsultasi_pesan (konsultasi_id, pengirim_role, pesan) VALUES (?, 'guru', ?)");
-                    mysqli_stmt_bind_param($stmt_msg, "is", $konsultasi_id, $pesan);
+                    // Handle image upload and compression
+                    $lampiran = compress_and_save_upload($_FILES['lampiran_foto'] ?? null, __DIR__ . '/../uploads/konsultasi');
+
+                    $stmt_msg = mysqli_prepare($conn, "INSERT INTO konsultasi_pesan (konsultasi_id, pengirim_role, pesan, lampiran_foto) VALUES (?, 'guru', ?, ?)");
+                    mysqli_stmt_bind_param($stmt_msg, "iss", $konsultasi_id, $pesan, $lampiran);
                     if (mysqli_stmt_execute($stmt_msg)) {
                         // Update updated_at in konsultasi
                         mysqli_query($conn, "UPDATE konsultasi SET updated_at = CURRENT_TIMESTAMP WHERE id = $konsultasi_id");
@@ -258,7 +302,14 @@ require_once __DIR__ . '/../includes/header.php';
                                     <?php $is_me = ($m['pengirim_role'] === 'guru'); ?>
                                     <div class="flex <?= $is_me ? 'justify-end' : 'justify-start' ?>">
                                         <div class="max-w-[75%] rounded-3xl px-5 py-3.5 shadow-sm text-sm <?= $is_me ? 'bg-indigo-600 text-white rounded-br-none' : 'bg-white border border-slate-100 text-slate-800 rounded-bl-none' ?>">
-                                            <p class="leading-relaxed font-medium"><?= nl2br(htmlspecialchars($m['pesan'])) ?></p>
+                                            <?php if (!empty($m['pesan'])): ?>
+                                                <p class="leading-relaxed font-medium"><?= nl2br(htmlspecialchars($m['pesan'])) ?></p>
+                                            <?php endif; ?>
+                                            <?php if (!empty($m['lampiran_foto'])): ?>
+                                                <div class="mt-2">
+                                                    <img src="<?= BASE_URL ?>uploads/konsultasi/<?= $m['lampiran_foto'] ?>" class="max-w-full sm:max-w-xs rounded-2xl shadow-sm border border-slate-100 cursor-pointer hover:opacity-95 transition-opacity" onclick="window.open(this.src)">
+                                                </div>
+                                            <?php endif; ?>
                                             <div class="text-[9px] mt-2 flex items-center justify-between gap-4 <?= $is_me ? 'text-indigo-200' : 'text-slate-400' ?>">
                                                 <span class="font-bold uppercase tracking-wider"><?= $is_me ? 'Anda' : 'Siswa' ?></span>
                                                 <span><?= date('H:i', strtotime($m['created_at'])) ?></span>
@@ -272,16 +323,24 @@ require_once __DIR__ . '/../includes/header.php';
                         <!-- Chat Input Box -->
                         <?php if ($active_thread['status'] === 'open'): ?>
                             <div class="p-6 border-t border-slate-100">
-                                <form action="" method="POST" class="flex gap-4">
+                                <div id="fileNameIndicator" class="hidden text-[10px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-full px-3 py-1 inline-block mb-3 animate-pulse"></div>
+                                <form action="" method="POST" enctype="multipart/form-data" class="flex gap-4 items-center">
                                     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                                     <input type="hidden" name="konsultasi_id" value="<?= $active_id ?>">
                                     <input type="hidden" name="send_reply" value="1">
-                                    <textarea name="pesan" rows="1" required
+
+                                    <!-- Photo Upload Input -->
+                                    <input type="file" name="lampiran_foto" accept="image/*" class="hidden" id="photoUploadInput" onchange="document.getElementById('fileNameIndicator').innerText = 'Foto terpilih: ' + this.files[0].name; document.getElementById('fileNameIndicator').classList.remove('hidden');">
+                                    <label for="photoUploadInput" class="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-200 text-slate-400 hover:text-indigo-600 flex items-center justify-center text-lg cursor-pointer transition-all active:scale-95" title="Kirim Foto">
+                                        <i class="fa fa-camera"></i>
+                                    </label>
+
+                                    <textarea name="pesan" rows="1"
                                               placeholder="Tulis balasan bimbingan Anda di sini..."
                                               class="flex-1 px-5 py-3.5 rounded-2xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 focus:border-indigo-500 font-medium text-slate-700 resize-none italic text-xs shadow-inner"
                                               onkeydown="if(event.keyCode == 13 && !event.shiftKey) { this.form.submit(); return false; }"></textarea>
                                     <button type="submit"
-                                            class="px-6 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-2xl transition-all flex items-center justify-center shadow-lg shadow-indigo-100 hover:scale-105 active:scale-95">
+                                            class="w-12 h-12 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-2xl transition-all flex items-center justify-center shadow-lg shadow-indigo-100 hover:scale-105 active:scale-95">
                                         <i class="fa fa-paper-plane text-base"></i>
                                     </button>
                                 </form>
