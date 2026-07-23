@@ -181,7 +181,7 @@ require_once __DIR__ . '/../includes/header.php';
             <!-- Sidebar: Threads List (4 cols) -->
             <div class="lg:col-span-4 space-y-6">
                 <!-- Action: Mulai Konsultasi -->
-                <button onclick="openModal('newConsultationModal')"
+                <button onclick="openKonsultasiModal('newConsultationModal')"
                         class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-2xl shadow-lg shadow-indigo-100 transition-all flex items-center justify-center gap-2 text-sm uppercase tracking-wider italic">
                     <i class="fa fa-plus-circle text-lg"></i> Konsultasi Baru
                 </button>
@@ -318,7 +318,7 @@ require_once __DIR__ . '/../includes/header.php';
     <div class="p-6 bg-gradient-to-br from-indigo-600 to-indigo-800 text-white relative">
         <h3 class="text-xl font-black italic uppercase tracking-tighter">Mulai Konsultasi Baru</h3>
         <p class="text-indigo-100 text-[10px] font-bold uppercase tracking-widest mt-1">Diskusikan keluhan Anda dengan guru BK secara aman & rahasia</p>
-        <button onclick="closeModal('newConsultationModal')" class="absolute top-6 right-6 text-white/80 hover:text-white text-lg"><i class="fa fa-times"></i></button>
+        <button onclick="closeKonsultasiModal('newConsultationModal')" class="absolute top-6 right-6 text-white/80 hover:text-white text-lg"><i class="fa fa-times"></i></button>
     </div>
     <form action="" method="POST" class="p-6 space-y-5">
         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
@@ -347,7 +347,7 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
 
         <div class="flex gap-4 pt-4">
-            <button type="button" onclick="closeModal('newConsultationModal')" class="flex-1 px-4 py-3 rounded-xl border border-slate-200 font-bold text-slate-600 hover:bg-slate-50 text-sm">Batal</button>
+            <button type="button" onclick="closeKonsultasiModal('newConsultationModal')" class="flex-1 px-4 py-3 rounded-xl border border-slate-200 font-bold text-slate-600 hover:bg-slate-50 text-sm">Batal</button>
             <button type="submit" class="flex-1 px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-xl shadow-lg shadow-indigo-100 text-sm transition-all">Mulai Percakapan</button>
         </div>
     </form>
@@ -365,7 +365,7 @@ require_once __DIR__ . '/../includes/header.php';
     }
 
     // Modal helpers
-    function openModal(id) {
+    function openKonsultasiModal(id) {
         const modal = document.getElementById(id);
         const backdrop = document.getElementById('modalBackdrop');
         if (modal && backdrop) {
@@ -379,7 +379,7 @@ require_once __DIR__ . '/../includes/header.php';
         }
     }
 
-    function closeModal(id) {
+    function closeKonsultasiModal(id) {
         const modal = document.getElementById(id);
         const backdrop = document.getElementById('modalBackdrop');
         if (modal && backdrop) {
@@ -401,7 +401,7 @@ require_once __DIR__ . '/../includes/header.php';
         const guruId = urlParams.get('guru_id');
 
         if (isNew || guruId) {
-            openModal('newConsultationModal');
+            openKonsultasiModal('newConsultationModal');
             if (guruId) {
                 const selectElement = document.querySelector('select[name="guru_id"]');
                 if (selectElement) {
