@@ -1,145 +1,151 @@
-[Thu Jul 23 06:38:01 2026] PHP 8.3.6 Development Server (http://localhost:8000) started
-[Thu Jul 23 06:38:06 2026] [::1]:42346 Accepted
-[Thu Jul 23 06:38:06 2026] [::1]:42346 [200]: GET /login.php
-[Thu Jul 23 06:38:06 2026] [::1]:42346 Closing
-[Thu Jul 23 06:38:06 2026] [::1]:42356 Accepted
-[Thu Jul 23 06:38:06 2026] [::1]:42356 [404]: GET /uploads/favicon.png - No such file or directory
-[Thu Jul 23 06:38:06 2026] [::1]:42356 Closing
-[Thu Jul 23 06:38:06 2026] [::1]:42366 Accepted
-[Thu Jul 23 06:38:06 2026] [::1]:42366 [404]: GET /uploads/favicon.png - No such file or directory
-[Thu Jul 23 06:38:06 2026] [::1]:42366 Closing
-[Thu Jul 23 06:38:07 2026] [::1]:42378 Accepted
-[Thu Jul 23 06:38:07 2026] [::1]:42378 [302]: POST /login.php
-[Thu Jul 23 06:38:07 2026] [::1]:42378 Closing
-[Thu Jul 23 06:38:07 2026] [::1]:42384 Accepted
-[Thu Jul 23 06:38:07 2026] [::1]:42384 [200]: GET /siswa/index.php
-[Thu Jul 23 06:38:07 2026] [::1]:42384 Closing
-[Thu Jul 23 06:38:07 2026] [::1]:42400 Accepted
-[Thu Jul 23 06:38:07 2026] [::1]:42412 Accepted
-[Thu Jul 23 06:38:07 2026] [::1]:42400 [200]: GET /assets/css/style.css
-[Thu Jul 23 06:38:07 2026] [::1]:42400 Closing
-[Thu Jul 23 06:38:07 2026] [::1]:42412 [200]: GET /assets/js/app.js
-[Thu Jul 23 06:38:07 2026] [::1]:42412 Closing
-[Thu Jul 23 06:38:08 2026] [::1]:42422 Accepted
-[Thu Jul 23 06:38:08 2026] [::1]:42422 [200]: GET /siswa/pengaduan.php
-[Thu Jul 23 06:38:08 2026] [::1]:42422 Closing
-[Thu Jul 23 06:38:08 2026] [::1]:42436 Accepted
-[Thu Jul 23 06:38:08 2026] [::1]:42438 Accepted
-[Thu Jul 23 06:38:08 2026] [::1]:42436 [200]: GET /assets/css/style.css
-[Thu Jul 23 06:38:08 2026] [::1]:42438 [200]: GET /assets/js/app.js
-[Thu Jul 23 06:38:08 2026] [::1]:42436 Closing
-[Thu Jul 23 06:38:08 2026] [::1]:42438 Closing
-[Thu Jul 23 06:38:09 2026] [::1]:42440 Accepted
-[Thu Jul 23 06:38:09 2026] [::1]:42440 [200]: POST /siswa/pengaduan.php
-[Thu Jul 23 06:38:09 2026] [::1]:42440 Closing
-[Thu Jul 23 06:38:09 2026] [::1]:42452 Accepted
-[Thu Jul 23 06:38:09 2026] [::1]:42468 Accepted
-[Thu Jul 23 06:38:09 2026] [::1]:42452 [200]: GET /assets/css/style.css
-[Thu Jul 23 06:38:09 2026] [::1]:42468 [200]: GET /assets/js/app.js
-[Thu Jul 23 06:38:09 2026] [::1]:42452 Closing
-[Thu Jul 23 06:38:09 2026] [::1]:42468 Closing
-[Thu Jul 23 06:38:12 2026] [::1]:53648 Accepted
-[Thu Jul 23 06:38:12 2026] [::1]:53648 [200]: GET /siswa/konsultasi.php
-[Thu Jul 23 06:38:12 2026] [::1]:53648 Closing
-[Thu Jul 23 06:38:12 2026] [::1]:53650 Accepted
-[Thu Jul 23 06:38:12 2026] [::1]:53660 Accepted
-[Thu Jul 23 06:38:12 2026] [::1]:53650 [200]: GET /assets/css/style.css
-[Thu Jul 23 06:38:12 2026] [::1]:53660 [200]: GET /assets/js/app.js
-[Thu Jul 23 06:38:12 2026] [::1]:53650 Closing
-[Thu Jul 23 06:38:12 2026] [::1]:53660 Closing
-[Thu Jul 23 06:38:14 2026] [::1]:53676 Accepted
-[Thu Jul 23 06:38:14 2026] [::1]:53676 [302]: POST /siswa/konsultasi.php
-[Thu Jul 23 06:38:14 2026] [::1]:53676 Closing
-[Thu Jul 23 06:38:14 2026] [::1]:53682 Accepted
-[Thu Jul 23 06:38:14 2026] [::1]:53682 [200]: GET /siswa/konsultasi.php?id=5
-[Thu Jul 23 06:38:14 2026] [::1]:53682 Closing
-[Thu Jul 23 06:38:14 2026] [::1]:53696 Accepted
-[Thu Jul 23 06:38:14 2026] [::1]:53706 Accepted
-[Thu Jul 23 06:38:14 2026] [::1]:53696 [200]: GET /assets/css/style.css
-[Thu Jul 23 06:38:14 2026] [::1]:53706 [200]: GET /assets/js/app.js
-[Thu Jul 23 06:38:14 2026] [::1]:53696 Closing
-[Thu Jul 23 06:38:14 2026] [::1]:53706 Closing
-[Thu Jul 23 06:38:16 2026] [::1]:53714 Accepted
-[Thu Jul 23 06:38:16 2026] [::1]:53714 [302]: POST /siswa/konsultasi.php?id=5
-[Thu Jul 23 06:38:16 2026] [::1]:53714 Closing
-[Thu Jul 23 06:38:16 2026] [::1]:53716 Accepted
-[Thu Jul 23 06:38:16 2026] [::1]:53716 [200]: GET /siswa/konsultasi.php?id=5
-[Thu Jul 23 06:38:16 2026] [::1]:53716 Closing
-[Thu Jul 23 06:38:16 2026] [::1]:53732 Accepted
-[Thu Jul 23 06:38:16 2026] [::1]:53746 Accepted
-[Thu Jul 23 06:38:16 2026] [::1]:53732 [200]: GET /assets/css/style.css
-[Thu Jul 23 06:38:16 2026] [::1]:53746 [200]: GET /assets/js/app.js
-[Thu Jul 23 06:38:16 2026] [::1]:53732 Closing
-[Thu Jul 23 06:38:16 2026] [::1]:53746 Closing
-[Thu Jul 23 06:38:19 2026] [::1]:53756 Accepted
-[Thu Jul 23 06:38:19 2026] [::1]:53756 [200]: GET /siswa/kontak.php
-[Thu Jul 23 06:38:19 2026] [::1]:53756 Closing
-[Thu Jul 23 06:38:19 2026] [::1]:53768 Accepted
-[Thu Jul 23 06:38:19 2026] [::1]:53776 Accepted
-[Thu Jul 23 06:38:19 2026] [::1]:53768 [200]: GET /assets/css/style.css
-[Thu Jul 23 06:38:19 2026] [::1]:53776 [200]: GET /assets/js/app.js
-[Thu Jul 23 06:38:19 2026] [::1]:53768 Closing
-[Thu Jul 23 06:38:19 2026] [::1]:53776 Closing
-[Thu Jul 23 06:38:21 2026] [::1]:43382 Accepted
-[Thu Jul 23 06:38:21 2026] [::1]:43382 [302]: GET /logout.php
-[Thu Jul 23 06:38:21 2026] [::1]:43382 Closing
-[Thu Jul 23 06:38:21 2026] [::1]:43388 Accepted
-[Thu Jul 23 06:38:21 2026] [::1]:43388 [200]: GET /login.php
-[Thu Jul 23 06:38:21 2026] [::1]:43388 Closing
-[Thu Jul 23 06:38:21 2026] [::1]:43398 Accepted
-[Thu Jul 23 06:38:21 2026] [::1]:43398 [404]: GET /uploads/favicon.png - No such file or directory
-[Thu Jul 23 06:38:21 2026] [::1]:43398 Closing
-[Thu Jul 23 06:38:21 2026] [::1]:43400 Accepted
-[Thu Jul 23 06:38:21 2026] [::1]:43400 [404]: GET /uploads/favicon.png - No such file or directory
-[Thu Jul 23 06:38:21 2026] [::1]:43400 Closing
-[Thu Jul 23 06:38:22 2026] [::1]:43406 Accepted
-[Thu Jul 23 06:38:22 2026] [::1]:43406 [200]: GET /login.php
-[Thu Jul 23 06:38:22 2026] [::1]:43406 Closing
-[Thu Jul 23 06:38:22 2026] [::1]:43418 Accepted
-[Thu Jul 23 06:38:22 2026] [::1]:43418 [404]: GET /uploads/favicon.png - No such file or directory
-[Thu Jul 23 06:38:22 2026] [::1]:43418 Closing
-[Thu Jul 23 06:38:22 2026] [::1]:43426 Accepted
-[Thu Jul 23 06:38:22 2026] [::1]:43426 [404]: GET /uploads/favicon.png - No such file or directory
-[Thu Jul 23 06:38:22 2026] [::1]:43426 Closing
-[Thu Jul 23 06:38:22 2026] [::1]:43438 Accepted
-[Thu Jul 23 06:38:22 2026] [::1]:43438 [302]: POST /login.php
-[Thu Jul 23 06:38:22 2026] [::1]:43438 Closing
-[Thu Jul 23 06:38:22 2026] [::1]:43440 Accepted
-[Thu Jul 23 06:38:22 2026] [::1]:43440 [302]: GET /index.php
-[Thu Jul 23 06:38:22 2026] [::1]:43440 Closing
-[Thu Jul 23 06:38:22 2026] [::1]:43454 Accepted
-[Thu Jul 23 06:38:22 2026] [::1]:43454 [200]: GET /guru/
-[Thu Jul 23 06:38:22 2026] [::1]:43454 Closing
-[Thu Jul 23 06:38:22 2026] [::1]:43456 Accepted
-[Thu Jul 23 06:38:22 2026] [::1]:43462 Accepted
-[Thu Jul 23 06:38:22 2026] [::1]:43456 [200]: GET /assets/css/style.css
-[Thu Jul 23 06:38:22 2026] [::1]:43462 [200]: GET /assets/js/app.js
-[Thu Jul 23 06:38:22 2026] [::1]:43456 Closing
-[Thu Jul 23 06:38:22 2026] [::1]:43462 Closing
-[Thu Jul 23 06:38:23 2026] [::1]:43478 Accepted
-[Thu Jul 23 06:38:23 2026] [::1]:43478 [200]: GET /guru/konsultasi.php
-[Thu Jul 23 06:38:23 2026] [::1]:43478 Closing
-[Thu Jul 23 06:38:23 2026] [::1]:43492 Accepted
-[Thu Jul 23 06:38:23 2026] [::1]:43500 Accepted
-[Thu Jul 23 06:38:23 2026] [::1]:43492 [200]: GET /assets/css/style.css
-[Thu Jul 23 06:38:23 2026] [::1]:43500 [200]: GET /assets/js/app.js
-[Thu Jul 23 06:38:23 2026] [::1]:43492 Closing
-[Thu Jul 23 06:38:23 2026] [::1]:43500 Closing
-[Thu Jul 23 06:38:24 2026] [::1]:43514 Accepted
-[Thu Jul 23 06:38:24 2026] [::1]:43514 [200]: GET /guru/konsultasi.php?id=5
-[Thu Jul 23 06:38:24 2026] [::1]:43514 Closing
-[Thu Jul 23 06:38:24 2026] [::1]:43528 Accepted
-[Thu Jul 23 06:38:24 2026] [::1]:43542 Accepted
-[Thu Jul 23 06:38:24 2026] [::1]:43528 [200]: GET /assets/css/style.css
-[Thu Jul 23 06:38:24 2026] [::1]:43542 [200]: GET /assets/js/app.js
-[Thu Jul 23 06:38:24 2026] [::1]:43528 Closing
-[Thu Jul 23 06:38:24 2026] [::1]:43542 Closing
-[Thu Jul 23 06:38:28 2026] [::1]:43554 Accepted
-[Thu Jul 23 06:38:28 2026] [::1]:43554 [200]: GET /guru/rekap_pengaduan.php
-[Thu Jul 23 06:38:28 2026] [::1]:43554 Closing
-[Thu Jul 23 06:38:28 2026] [::1]:43560 Accepted
-[Thu Jul 23 06:38:28 2026] [::1]:43566 Accepted
-[Thu Jul 23 06:38:28 2026] [::1]:43560 [200]: GET /assets/css/style.css
-[Thu Jul 23 06:38:28 2026] [::1]:43566 [200]: GET /assets/js/app.js
-[Thu Jul 23 06:38:28 2026] [::1]:43560 Closing
-[Thu Jul 23 06:38:28 2026] [::1]:43566 Closing
+[Thu Jul 23 06:52:32 2026] PHP 8.3.6 Development Server (http://localhost:8000) started
+[Thu Jul 23 06:52:37 2026] [::1]:37060 Accepted
+[Thu Jul 23 06:52:37 2026] [::1]:37060 [200]: GET /login.php
+[Thu Jul 23 06:52:37 2026] [::1]:37060 Closing
+[Thu Jul 23 06:52:37 2026] [::1]:37074 Accepted
+[Thu Jul 23 06:52:37 2026] [::1]:37074 [404]: GET /uploads/favicon.png - No such file or directory
+[Thu Jul 23 06:52:37 2026] [::1]:37074 Closing
+[Thu Jul 23 06:52:37 2026] [::1]:37088 Accepted
+[Thu Jul 23 06:52:37 2026] [::1]:37088 [404]: GET /uploads/favicon.png - No such file or directory
+[Thu Jul 23 06:52:37 2026] [::1]:37088 Closing
+[Thu Jul 23 06:52:38 2026] [::1]:37094 Accepted
+[Thu Jul 23 06:52:38 2026] [::1]:37094 [302]: POST /login.php
+[Thu Jul 23 06:52:38 2026] [::1]:37094 Closing
+[Thu Jul 23 06:52:38 2026] [::1]:37098 Accepted
+[Thu Jul 23 06:52:38 2026] [::1]:37098 [200]: GET /siswa/index.php
+[Thu Jul 23 06:52:38 2026] [::1]:37098 Closing
+[Thu Jul 23 06:52:38 2026] [::1]:37102 Accepted
+[Thu Jul 23 06:52:38 2026] [::1]:37106 Accepted
+[Thu Jul 23 06:52:38 2026] [::1]:37102 [200]: GET /assets/css/style.css
+[Thu Jul 23 06:52:38 2026] [::1]:37106 [200]: GET /assets/js/app.js
+[Thu Jul 23 06:52:38 2026] [::1]:37102 Closing
+[Thu Jul 23 06:52:38 2026] [::1]:37106 Closing
+[Thu Jul 23 06:52:40 2026] [::1]:37110 Accepted
+[Thu Jul 23 06:52:40 2026] [::1]:37110 [200]: POST /api/submit_mood.php
+[Thu Jul 23 06:52:40 2026] [::1]:37110 Closing
+[Thu Jul 23 06:52:43 2026] [::1]:37126 Accepted
+[Thu Jul 23 06:52:43 2026] [::1]:37126 [200]: GET /siswa/pengaduan.php
+[Thu Jul 23 06:52:43 2026] [::1]:37126 Closing
+[Thu Jul 23 06:52:43 2026] [::1]:37142 Accepted
+[Thu Jul 23 06:52:43 2026] [::1]:37142 [200]: GET /assets/css/style.css
+[Thu Jul 23 06:52:43 2026] [::1]:37142 Closing
+[Thu Jul 23 06:52:43 2026] [::1]:37148 Accepted
+[Thu Jul 23 06:52:43 2026] [::1]:37148 [200]: GET /assets/js/app.js
+[Thu Jul 23 06:52:43 2026] [::1]:37148 Closing
+[Thu Jul 23 06:52:44 2026] [::1]:37150 Accepted
+[Thu Jul 23 06:52:44 2026] [::1]:37150 [200]: POST /siswa/pengaduan.php
+[Thu Jul 23 06:52:44 2026] [::1]:37150 Closing
+[Thu Jul 23 06:52:44 2026] [::1]:37158 Accepted
+[Thu Jul 23 06:52:44 2026] [::1]:37160 Accepted
+[Thu Jul 23 06:52:44 2026] [::1]:37158 [200]: GET /assets/css/style.css
+[Thu Jul 23 06:52:44 2026] [::1]:37160 [200]: GET /assets/js/app.js
+[Thu Jul 23 06:52:44 2026] [::1]:37158 Closing
+[Thu Jul 23 06:52:44 2026] [::1]:37160 Closing
+[Thu Jul 23 06:52:47 2026] [::1]:33086 Accepted
+[Thu Jul 23 06:52:47 2026] [::1]:33086 [200]: GET /siswa/konsultasi.php
+[Thu Jul 23 06:52:47 2026] [::1]:33086 Closing
+[Thu Jul 23 06:52:47 2026] [::1]:33094 Accepted
+[Thu Jul 23 06:52:47 2026] [::1]:33104 Accepted
+[Thu Jul 23 06:52:47 2026] [::1]:33094 [200]: GET /assets/css/style.css
+[Thu Jul 23 06:52:47 2026] [::1]:33104 [200]: GET /assets/js/app.js
+[Thu Jul 23 06:52:47 2026] [::1]:33094 Closing
+[Thu Jul 23 06:52:47 2026] [::1]:33104 Closing
+[Thu Jul 23 06:52:49 2026] [::1]:33112 Accepted
+[Thu Jul 23 06:52:49 2026] [::1]:33112 [302]: POST /siswa/konsultasi.php
+[Thu Jul 23 06:52:49 2026] [::1]:33112 Closing
+[Thu Jul 23 06:52:49 2026] [::1]:33126 Accepted
+[Thu Jul 23 06:52:49 2026] [::1]:33126 [200]: GET /siswa/konsultasi.php?id=6
+[Thu Jul 23 06:52:49 2026] [::1]:33126 Closing
+[Thu Jul 23 06:52:49 2026] [::1]:33142 Accepted
+[Thu Jul 23 06:52:49 2026] [::1]:33150 Accepted
+[Thu Jul 23 06:52:49 2026] [::1]:33142 [200]: GET /assets/css/style.css
+[Thu Jul 23 06:52:49 2026] [::1]:33150 [200]: GET /assets/js/app.js
+[Thu Jul 23 06:52:49 2026] [::1]:33142 Closing
+[Thu Jul 23 06:52:49 2026] [::1]:33150 Closing
+[Thu Jul 23 06:52:51 2026] [::1]:33154 Accepted
+[Thu Jul 23 06:52:51 2026] [::1]:33154 [302]: POST /siswa/konsultasi.php?id=6
+[Thu Jul 23 06:52:51 2026] [::1]:33154 Closing
+[Thu Jul 23 06:52:51 2026] [::1]:33158 Accepted
+[Thu Jul 23 06:52:51 2026] [::1]:33158 [200]: GET /siswa/konsultasi.php?id=6
+[Thu Jul 23 06:52:51 2026] [::1]:33158 Closing
+[Thu Jul 23 06:52:51 2026] [::1]:33168 Accepted
+[Thu Jul 23 06:52:51 2026] [::1]:33170 Accepted
+[Thu Jul 23 06:52:51 2026] [::1]:33168 [200]: GET /assets/css/style.css
+[Thu Jul 23 06:52:51 2026] [::1]:33170 [200]: GET /assets/js/app.js
+[Thu Jul 23 06:52:51 2026] [::1]:33168 Closing
+[Thu Jul 23 06:52:51 2026] [::1]:33170 Closing
+[Thu Jul 23 06:52:54 2026] [::1]:33182 Accepted
+[Thu Jul 23 06:52:54 2026] [::1]:33182 [200]: GET /siswa/kontak.php
+[Thu Jul 23 06:52:54 2026] [::1]:33182 Closing
+[Thu Jul 23 06:52:54 2026] [::1]:33190 Accepted
+[Thu Jul 23 06:52:54 2026] [::1]:33206 Accepted
+[Thu Jul 23 06:52:54 2026] [::1]:33190 [200]: GET /assets/css/style.css
+[Thu Jul 23 06:52:54 2026] [::1]:33206 [200]: GET /assets/js/app.js
+[Thu Jul 23 06:52:54 2026] [::1]:33190 Closing
+[Thu Jul 23 06:52:54 2026] [::1]:33206 Closing
+[Thu Jul 23 06:52:56 2026] [::1]:33212 Accepted
+[Thu Jul 23 06:52:56 2026] [::1]:33212 [302]: GET /logout.php
+[Thu Jul 23 06:52:56 2026] [::1]:33212 Closing
+[Thu Jul 23 06:52:56 2026] [::1]:33214 Accepted
+[Thu Jul 23 06:52:56 2026] [::1]:33214 [200]: GET /login.php
+[Thu Jul 23 06:52:56 2026] [::1]:33214 Closing
+[Thu Jul 23 06:52:56 2026] [::1]:33220 Accepted
+[Thu Jul 23 06:52:56 2026] [::1]:33220 [404]: GET /uploads/favicon.png - No such file or directory
+[Thu Jul 23 06:52:56 2026] [::1]:33220 Closing
+[Thu Jul 23 06:52:56 2026] [::1]:33226 Accepted
+[Thu Jul 23 06:52:56 2026] [::1]:33226 [404]: GET /uploads/favicon.png - No such file or directory
+[Thu Jul 23 06:52:56 2026] [::1]:33226 Closing
+[Thu Jul 23 06:52:56 2026] [::1]:60206 Accepted
+[Thu Jul 23 06:52:56 2026] [::1]:60206 [200]: GET /login.php
+[Thu Jul 23 06:52:56 2026] [::1]:60206 Closing
+[Thu Jul 23 06:52:56 2026] [::1]:60214 Accepted
+[Thu Jul 23 06:52:56 2026] [::1]:60214 [404]: GET /uploads/favicon.png - No such file or directory
+[Thu Jul 23 06:52:56 2026] [::1]:60214 Closing
+[Thu Jul 23 06:52:56 2026] [::1]:60228 Accepted
+[Thu Jul 23 06:52:56 2026] [::1]:60228 [404]: GET /uploads/favicon.png - No such file or directory
+[Thu Jul 23 06:52:56 2026] [::1]:60228 Closing
+[Thu Jul 23 06:52:57 2026] [::1]:60236 Accepted
+[Thu Jul 23 06:52:57 2026] [::1]:60236 [302]: POST /login.php
+[Thu Jul 23 06:52:57 2026] [::1]:60236 Closing
+[Thu Jul 23 06:52:57 2026] [::1]:60252 Accepted
+[Thu Jul 23 06:52:57 2026] [::1]:60252 [302]: GET /index.php
+[Thu Jul 23 06:52:57 2026] [::1]:60252 Closing
+[Thu Jul 23 06:52:57 2026] [::1]:60262 Accepted
+[Thu Jul 23 06:52:57 2026] [::1]:60262 [200]: GET /guru/
+[Thu Jul 23 06:52:57 2026] [::1]:60262 Closing
+[Thu Jul 23 06:52:57 2026] [::1]:60274 Accepted
+[Thu Jul 23 06:52:57 2026] [::1]:60284 Accepted
+[Thu Jul 23 06:52:57 2026] [::1]:60274 [200]: GET /assets/css/style.css
+[Thu Jul 23 06:52:57 2026] [::1]:60284 [200]: GET /assets/js/app.js
+[Thu Jul 23 06:52:57 2026] [::1]:60274 Closing
+[Thu Jul 23 06:52:57 2026] [::1]:60284 Closing
+[Thu Jul 23 06:52:58 2026] [::1]:60298 Accepted
+[Thu Jul 23 06:52:58 2026] [::1]:60298 [200]: POST /api/submit_mood.php
+[Thu Jul 23 06:52:58 2026] [::1]:60298 Closing
+[Thu Jul 23 06:53:01 2026] [::1]:60310 Accepted
+[Thu Jul 23 06:53:01 2026] [::1]:60310 [200]: GET /guru/konsultasi.php
+[Thu Jul 23 06:53:01 2026] [::1]:60310 Closing
+[Thu Jul 23 06:53:01 2026] [::1]:60326 Accepted
+[Thu Jul 23 06:53:01 2026] [::1]:60330 Accepted
+[Thu Jul 23 06:53:01 2026] [::1]:60326 [200]: GET /assets/css/style.css
+[Thu Jul 23 06:53:01 2026] [::1]:60330 [200]: GET /assets/js/app.js
+[Thu Jul 23 06:53:01 2026] [::1]:60326 Closing
+[Thu Jul 23 06:53:01 2026] [::1]:60330 Closing
+[Thu Jul 23 06:53:03 2026] [::1]:60334 Accepted
+[Thu Jul 23 06:53:03 2026] [::1]:60334 [200]: GET /guru/konsultasi.php?id=6
+[Thu Jul 23 06:53:03 2026] [::1]:60334 Closing
+[Thu Jul 23 06:53:03 2026] [::1]:60340 Accepted
+[Thu Jul 23 06:53:03 2026] [::1]:60344 Accepted
+[Thu Jul 23 06:53:03 2026] [::1]:60340 [200]: GET /assets/css/style.css
+[Thu Jul 23 06:53:03 2026] [::1]:60344 [200]: GET /assets/js/app.js
+[Thu Jul 23 06:53:03 2026] [::1]:60340 Closing
+[Thu Jul 23 06:53:03 2026] [::1]:60344 Closing
+[Thu Jul 23 06:53:07 2026] [::1]:53052 Accepted
+[Thu Jul 23 06:53:07 2026] [::1]:53052 [200]: GET /guru/rekap_pengaduan.php
+[Thu Jul 23 06:53:07 2026] [::1]:53052 Closing
+[Thu Jul 23 06:53:07 2026] [::1]:53058 Accepted
+[Thu Jul 23 06:53:07 2026] [::1]:53072 Accepted
+[Thu Jul 23 06:53:07 2026] [::1]:53058 [200]: GET /assets/css/style.css
+[Thu Jul 23 06:53:07 2026] [::1]:53072 [200]: GET /assets/js/app.js
+[Thu Jul 23 06:53:07 2026] [::1]:53058 Closing
+[Thu Jul 23 06:53:07 2026] [::1]:53072 Closing

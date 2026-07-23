@@ -275,11 +275,12 @@ require_once __DIR__ . '/../includes/header.php';
                                 <form action="" method="POST" class="flex gap-4">
                                     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                                     <input type="hidden" name="konsultasi_id" value="<?= $active_id ?>">
+                                    <input type="hidden" name="send_reply" value="1">
                                     <textarea name="pesan" rows="1" required
                                               placeholder="Tulis balasan bimbingan Anda di sini..."
                                               class="flex-1 px-5 py-3.5 rounded-2xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 focus:border-indigo-500 font-medium text-slate-700 resize-none italic text-xs shadow-inner"
                                               onkeydown="if(event.keyCode == 13 && !event.shiftKey) { this.form.submit(); return false; }"></textarea>
-                                    <button type="submit" name="send_reply"
+                                    <button type="submit"
                                             class="px-6 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-2xl transition-all flex items-center justify-center shadow-lg shadow-indigo-100 hover:scale-105 active:scale-95">
                                         <i class="fa fa-paper-plane text-base"></i>
                                     </button>
