@@ -9,7 +9,7 @@ $user_id = (int)$_SESSION['user_id'];
 $message = '';
 $message_type = '';
 
-// Helper to compress and save uploaded chat images
+// Helper to compress and save uploaded chat images with secure fallback
 function compress_and_save_upload($file_post, $upload_dir) {
     if (!isset($file_post) || $file_post['error'] !== UPLOAD_ERR_OK) {
         return null;
@@ -26,28 +26,48 @@ function compress_and_save_upload($file_post, $upload_dir) {
         return null;
     }
 
-    if ($mime == 'image/jpeg' || $mime == 'image/jpg') {
-        $image = @imagecreatefromjpeg($file_tmp);
-    } elseif ($mime == 'image/png') {
-        $image = @imagecreatefrompng($file_tmp);
-    } elseif ($mime == 'image/gif') {
-        $image = @imagecreatefromgif($file_tmp);
-    } else {
-        return null;
-    }
-
-    if (!$image) {
-        return null;
-    }
-
     $new_filename = uniqid('chat_', true) . '.jpg';
     $target_path = rtrim($upload_dir, '/') . '/' . $new_filename;
 
-    // Save as compressed jpeg with 50% quality (compact size)
-    $success = @imagejpeg($image, $target_path, 50);
-    @imagedestroy($image);
+    $compressed = false;
 
-    return $success ? $new_filename : null;
+    // Try GD Compression first
+    try {
+        if (function_exists('imagecreatefromjpeg') && function_exists('imagejpeg')) {
+            if ($mime == 'image/jpeg' || $mime == 'image/jpg') {
+                $image = @imagecreatefromjpeg($file_tmp);
+            } elseif ($mime == 'image/png') {
+                $image = @imagecreatefrompng($file_tmp);
+            } elseif ($mime == 'image/gif') {
+                $image = @imagecreatefromgif($file_tmp);
+            } else {
+                $image = false;
+            }
+
+            if ($image) {
+                $compressed = @imagejpeg($image, $target_path, 50);
+                @imagedestroy($image);
+            }
+        }
+    } catch (Throwable $t) {
+        $compressed = false;
+    }
+
+    // Fallback: if GD compression fails or is missing, save raw upload
+    if (!$compressed) {
+        $ext = 'jpg';
+        if ($mime == 'image/png') $ext = 'png';
+        if ($mime == 'image/gif') $ext = 'gif';
+        $new_filename = uniqid('chat_', true) . '.' . $ext;
+        $target_path = rtrim($upload_dir, '/') . '/' . $new_filename;
+
+        if (@move_uploaded_file($file_tmp, $target_path)) {
+            return $new_filename;
+        }
+        return null;
+    }
+
+    return $new_filename;
 }
 
 // Find teacher (guru) id
