@@ -152,13 +152,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_reply'])) {
     }
 }
 
+// Sanitize active_tahun_id
+$active_tahun_id_int = (int)($active_tahun_id ?? 0);
+
 // Fetch active threads for this BK teacher
 $threads_query = "SELECT k.*, s.nama_siswa, s.foto as foto_siswa, kelas.nama_kelas,
                   (SELECT pesan FROM konsultasi_pesan kp WHERE kp.konsultasi_id = k.id ORDER BY kp.created_at DESC LIMIT 1) as last_msg,
                   (SELECT created_at FROM konsultasi_pesan kp WHERE kp.konsultasi_id = k.id ORDER BY kp.created_at DESC LIMIT 1) as last_msg_time
                   FROM konsultasi k
                   JOIN siswa s ON k.siswa_id = s.id
-                  LEFT JOIN siswa_kelas sk ON s.id = sk.siswa_id AND sk.tahun_pelajaran_id = $active_tahun_id
+                  LEFT JOIN siswa_kelas sk ON s.id = sk.siswa_id AND sk.tahun_pelajaran_id = $active_tahun_id_int
                   LEFT JOIN kelas ON sk.kelas_id = kelas.id
                   WHERE k.guru_id = $guru_id
                   ORDER BY k.updated_at DESC";
@@ -177,7 +180,7 @@ if ($active_id > 0) {
     $active_thread_query = "SELECT k.*, s.nama_siswa, s.foto as foto_siswa, s.no_telp as telp_siswa, kelas.nama_kelas
                             FROM konsultasi k
                             JOIN siswa s ON k.siswa_id = s.id
-                            LEFT JOIN siswa_kelas sk ON s.id = sk.siswa_id AND sk.tahun_pelajaran_id = $active_tahun_id
+                            LEFT JOIN siswa_kelas sk ON s.id = sk.siswa_id AND sk.tahun_pelajaran_id = $active_tahun_id_int
                             LEFT JOIN kelas ON sk.kelas_id = kelas.id
                             WHERE k.id = $active_id AND k.guru_id = $guru_id LIMIT 1";
     $active_thread_res = mysqli_query($conn, $active_thread_query);
