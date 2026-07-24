@@ -90,17 +90,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['start_consultation'])
             mysqli_begin_transaction($conn);
             try {
                 // Insert into konsultasi
-                $stmt = mysqli_prepare($conn, "INSERT INTO konsultasi (siswa_id, guru_id, subjek, status) VALUES (?, ?, ?, 'open')");
-                mysqli_stmt_bind_param($stmt, "iis", $siswa_id, $guru_id, $subjek);
-                mysqli_stmt_execute($stmt);
+                $q_ins_k = mysqli_query($conn, "INSERT INTO konsultasi (siswa_id, guru_id, subjek, status) VALUES ($siswa_id, $guru_id, '$subjek', 'open')");
+                if (!$q_ins_k) {
+                    throw new Exception(mysqli_error($conn));
+                }
                 $konsultasi_id = mysqli_insert_id($conn);
-                mysqli_stmt_close($stmt);
 
                 // Insert first message with lampiran_foto
-                $stmt_msg = mysqli_prepare($conn, "INSERT INTO konsultasi_pesan (konsultasi_id, pengirim_role, pesan, lampiran_foto) VALUES (?, 'siswa', ?, ?)");
-                mysqli_stmt_bind_param($stmt_msg, "iss", $konsultasi_id, $first_message, $lampiran);
-                mysqli_stmt_execute($stmt_msg);
-                mysqli_stmt_close($stmt_msg);
+                $lamp_val = $lampiran !== null ? "'" . mysqli_real_escape_string($conn, $lampiran) . "'" : "NULL";
+                $q_ins_m = mysqli_query($conn, "INSERT INTO konsultasi_pesan (konsultasi_id, pengirim_role, pesan, lampiran_foto) VALUES ($konsultasi_id, 'siswa', '$first_message', $lamp_val)");
+                if (!$q_ins_m) {
+                    throw new Exception(mysqli_error($conn));
+                }
 
                 mysqli_commit($conn);
                 $message = "Konsultasi baru berhasil dimulai!";
@@ -141,9 +142,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_message'])) {
                     // Handle image upload and compression
                     $lampiran = compress_and_save_upload($_FILES['lampiran_foto'] ?? null, __DIR__ . '/../uploads/konsultasi');
 
-                    $stmt_msg = mysqli_prepare($conn, "INSERT INTO konsultasi_pesan (konsultasi_id, pengirim_role, pesan, lampiran_foto) VALUES (?, 'siswa', ?, ?)");
-                    mysqli_stmt_bind_param($stmt_msg, "iss", $konsultasi_id, $pesan, $lampiran);
-                    if (mysqli_stmt_execute($stmt_msg)) {
+                    $lamp_val = $lampiran !== null ? "'" . mysqli_real_escape_string($conn, $lampiran) . "'" : "NULL";
+                    $q_ins = mysqli_query($conn, "INSERT INTO konsultasi_pesan (konsultasi_id, pengirim_role, pesan, lampiran_foto) VALUES ($konsultasi_id, 'siswa', '$pesan', $lamp_val)");
+                    if ($q_ins) {
                         // Update updated_at column in konsultasi
                         mysqli_query($conn, "UPDATE konsultasi SET updated_at = CURRENT_TIMESTAMP WHERE id = $konsultasi_id");
                         header("Location: konsultasi.php?id=" . $konsultasi_id);
@@ -152,7 +153,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_message'])) {
                         $message = "Gagal mengirim pesan: " . mysqli_error($conn);
                         $message_type = "error";
                     }
-                    mysqli_stmt_close($stmt_msg);
                 }
             } else {
                 $message = "Akses ditolak.";

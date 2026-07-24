@@ -112,9 +112,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_reply'])) {
                     // Handle image upload and compression
                     $lampiran = compress_and_save_upload($_FILES['lampiran_foto'] ?? null, __DIR__ . '/../uploads/konsultasi');
 
-                    $stmt_msg = mysqli_prepare($conn, "INSERT INTO konsultasi_pesan (konsultasi_id, pengirim_role, pesan, lampiran_foto) VALUES (?, 'guru', ?, ?)");
-                    mysqli_stmt_bind_param($stmt_msg, "iss", $konsultasi_id, $pesan, $lampiran);
-                    if (mysqli_stmt_execute($stmt_msg)) {
+                    $lamp_val = $lampiran !== null ? "'" . mysqli_real_escape_string($conn, $lampiran) . "'" : "NULL";
+                    $q_ins = mysqli_query($conn, "INSERT INTO konsultasi_pesan (konsultasi_id, pengirim_role, pesan, lampiran_foto) VALUES ($konsultasi_id, 'guru', '$pesan', $lamp_val)");
+                    if ($q_ins) {
                         // Update updated_at in konsultasi
                         mysqli_query($conn, "UPDATE konsultasi SET updated_at = CURRENT_TIMESTAMP WHERE id = $konsultasi_id");
                         header("Location: konsultasi.php?id=" . $konsultasi_id);
@@ -123,7 +123,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_reply'])) {
                         $message = "Gagal mengirim balasan: " . mysqli_error($conn);
                         $message_type = "error";
                     }
-                    mysqli_stmt_close($stmt_msg);
                 }
             } else {
                 $message = "Akses ditolak.";
