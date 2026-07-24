@@ -80,6 +80,12 @@ if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
+// Check if POST request was discarded due to exceeding file upload size limit (post_max_size)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($_POST)) {
+    $message = "Ukuran berkas foto terlalu besar. Harap gunakan foto dengan ukuran yang lebih kecil (maksimal 2MB).";
+    $message_type = "error";
+}
+
 // Handle closing a consultation thread
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['close_consultation'])) {
     if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {

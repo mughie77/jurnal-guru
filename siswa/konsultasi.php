@@ -89,6 +89,12 @@ while ($row = mysqli_fetch_assoc($bk_result)) {
     $bk_teachers[] = $row;
 }
 
+// Check if POST request was discarded due to exceeding file upload size limit (post_max_size)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($_POST)) {
+    $message = "Ukuran berkas foto terlalu besar. Harap gunakan foto dengan ukuran yang lebih kecil (maksimal 2MB).";
+    $message_type = "error";
+}
+
 // 2. Handle starting a new consultation thread
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['start_consultation'])) {
     if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
