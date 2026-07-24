@@ -8,11 +8,13 @@ $page_title = "Data Perangkat Mengajar";
 
 $guru_id = (int)($_GET['guru_id'] ?? 0);
 $kelas_id = (int)($_GET['kelas_id'] ?? 0);
+$jenis_perangkat = mysqli_real_escape_string($conn, $_GET['jenis_perangkat'] ?? '');
 $search = mysqli_real_escape_string($conn, $_GET['search'] ?? '');
 
 $where_clauses = [];
 if ($guru_id > 0) $where_clauses[] = "p.guru_id = $guru_id";
 if ($kelas_id > 0) $where_clauses[] = "pk.kelas_id = $kelas_id";
+if (!empty($jenis_perangkat)) $where_clauses[] = "p.jenis_perangkat = '$jenis_perangkat'";
 if (!empty($search)) $where_clauses[] = "p.nama_perangkat LIKE '%$search%'";
 
 $where_sql = !empty($where_clauses) ? "WHERE " . implode(" AND ", $where_clauses) : "";
@@ -26,6 +28,7 @@ $pagin = get_pagination_data($conn, $query_base, 15, $where_sql, "DISTINCT p.id"
 
 $gurus = mysqli_query($conn, "SELECT g.id, u.nama_lengkap FROM guru g JOIN users u ON g.user_id = u.id ORDER BY u.nama_lengkap ASC");
 $kelases = mysqli_query($conn, "SELECT id, nama_kelas FROM kelas ORDER BY nama_kelas ASC");
+$categories = mysqli_query($conn, "SELECT id, nama_kategori FROM kategori_perangkat ORDER BY nama_kategori ASC");
 
 $query = "SELECT p.*, u.nama_lengkap as nama_guru, GROUP_CONCAT(k.nama_kelas SEPARATOR ', ') as target_kelas
           FROM perangkat p
@@ -49,7 +52,7 @@ require_once __DIR__ . '/../includes/header.php';
 </div>
 
 <div class="lux-card p-6 mb-8 bg-gradient-to-br from-indigo-50/50 to-white">
-    <form action="" method="GET" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+    <form action="" method="GET" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
         <div class="space-y-1">
             <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Cari Perangkat</label>
             <input type="text" name="search" value="<?= htmlspecialchars($search) ?>" placeholder="Nama berkas..." class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-100 bg-white shadow-sm">
@@ -72,8 +75,17 @@ require_once __DIR__ . '/../includes/header.php';
                 <?php endwhile; ?>
             </select>
         </div>
+        <div class="space-y-1">
+            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Filter Kategori</label>
+            <select name="jenis_perangkat" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-100 bg-white shadow-sm font-bold text-slate-700">
+                <option value="">-- Semua Kategori --</option>
+                <?php mysqli_data_seek($categories, 0); while($cat = mysqli_fetch_assoc($categories)): ?>
+                    <option value="<?= $cat['nama_kategori'] ?>" <?= $cat['nama_kategori'] == $jenis_perangkat ? 'selected' : '' ?>><?= htmlspecialchars($cat['nama_kategori']) ?></option>
+                <?php endwhile; ?>
+            </select>
+        </div>
         <div class="lg:col-span-1 flex items-end gap-3">
-            <button type="submit" class="flex-1 px-6 py-2.5 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100">Terapkan Filter</button>
+            <button type="submit" class="flex-1 px-6 py-2.5 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100">Filter</button>
             <a href="perangkat.php" class="px-6 py-2.5 bg-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-300 transition-all text-center">Reset</a>
         </div>
     </form>
