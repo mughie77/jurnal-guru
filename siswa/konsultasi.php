@@ -8,6 +8,38 @@ $siswa_id = (int)$_SESSION['user_id'];
 $message = '';
 $message_type = '';
 
+// Secure URL parser & filter
+function sanitize_and_format_urls($text) {
+    // First, escape HTML to prevent XSS (CWE-79)
+    $text = htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
+
+    // Regex to match URLs securely
+    $pattern = '/\b(https?:\/\/[^\s<>]+|www\.[^\s<>]+)/i';
+
+    // Replace URLs with safe clickable anchors
+    $text = preg_replace_callback($pattern, function($matches) {
+        $url = $matches[0];
+        $href = $url;
+
+        // Ensure protocol is present
+        if (strpos(strtolower($href), 'http://') !== 0 && strpos(strtolower($href), 'https://') !== 0) {
+            $href = 'https://' . $href;
+        }
+
+        // Prevent javascript: or data: pseudo-protocols
+        $parsed = parse_url($href);
+        $scheme = isset($parsed['scheme']) ? strtolower($parsed['scheme']) : '';
+        if (!in_array($scheme, ['http', 'https'])) {
+            return htmlspecialchars($url, ENT_QUOTES, 'UTF-8');
+        }
+
+        // Return safe HTML anchor
+        return '<a href="' . htmlspecialchars($href, ENT_QUOTES, 'UTF-8') . '" target="_blank" rel="noopener noreferrer nofollow" class="text-indigo-600 hover:underline font-bold break-all">' . htmlspecialchars($url, ENT_QUOTES, 'UTF-8') . '</a>';
+    }, $text);
+
+    return $text;
+}
+
 // Generate CSRF token if not set
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
@@ -281,7 +313,7 @@ require_once __DIR__ . '/../includes/header.php';
                                     <?php $is_me = ($m['pengirim_role'] === 'siswa'); ?>
                                     <div class="flex <?= $is_me ? 'justify-end' : 'justify-start' ?>">
                                         <div class="max-w-[75%] rounded-3xl px-5 py-3.5 shadow-sm text-sm <?= $is_me ? 'bg-indigo-600 text-white rounded-br-none' : 'bg-white border border-slate-100 text-slate-800 rounded-bl-none' ?>">
-                                            <p class="leading-relaxed font-medium"><?= nl2br(htmlspecialchars($m['pesan'])) ?></p>
+                                            <p class="leading-relaxed font-medium"><?= nl2br(sanitize_and_format_urls($m['pesan'])) ?></p>
                                             <div class="text-[9px] mt-2 flex items-center justify-between gap-4 <?= $is_me ? 'text-indigo-200' : 'text-slate-400' ?>">
                                                 <span class="font-bold uppercase tracking-wider"><?= $is_me ? 'Anda' : 'Guru BK' ?></span>
                                                 <span><?= date('H:i', strtotime($m['created_at'])) ?></span>
@@ -295,6 +327,16 @@ require_once __DIR__ . '/../includes/header.php';
                         <!-- Chat Input Box -->
                         <?php if ($active_thread['status'] === 'open'): ?>
                             <div class="p-6 border-t border-slate-100">
+                                <!-- Emoticon Panel -->
+                                <div class="flex flex-wrap gap-1.5 mb-3 p-2 bg-slate-50 border border-slate-100 rounded-2xl shadow-inner no-print" id="emoticonPanel">
+                                    <?php
+                                    $emojis = ['😊', '😂', '😍', '👍', '🙏', '😭', '😡', '😮', '👏', '🎉', '💔', '❤️', '🤔', '💡', '🌟', '🤝', '🧑‍🏫', '📝', '🏫', '📱'];
+                                    foreach ($emojis as $emoji): ?>
+                                        <button type="button" onclick="insertEmoji('<?= $emoji ?>')" class="w-8 h-8 flex items-center justify-center rounded-xl bg-white hover:bg-indigo-50 hover:text-indigo-600 text-base shadow-sm border border-slate-100 transition-all active:scale-90 select-none">
+                                            <?= $emoji ?>
+                                        </button>
+                                    <?php endforeach; ?>
+                                </div>
                                 <form action="" method="POST" class="flex gap-4 items-center">
                                     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                                     <input type="hidden" name="konsultasi_id" value="<?= $active_id ?>">
@@ -371,6 +413,19 @@ require_once __DIR__ . '/../includes/header.php';
     const chatContainer = document.getElementById('chatContainer');
     if (chatContainer) {
         chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
+    // Emoji Insertion Helper
+    function insertEmoji(emoji) {
+        const textarea = document.querySelector('textarea[name="pesan"]');
+        if (textarea) {
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const text = textarea.value;
+            textarea.value = text.substring(0, start) + emoji + text.substring(end);
+            textarea.focus();
+            textarea.selectionStart = textarea.selectionEnd = start + emoji.length;
+        }
     }
 
     // Modal helpers
