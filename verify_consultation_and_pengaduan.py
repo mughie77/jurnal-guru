@@ -91,10 +91,8 @@ async def main():
         await page.wait_for_load_state("networkidle")
         await page.wait_for_timeout(2000)
 
-        print("Siswa consultation thread opened. Sending follow-up message with photo upload...")
+        print("Siswa consultation thread opened. Sending follow-up message...")
         await page.fill('textarea[name="pesan"]', "Mohon sarannya ya Pak, terima kasih banyak.")
-        await page.set_input_files('input[id="photoUploadInput"]', 'assets/img/karpel.jpg')
-        await page.wait_for_timeout(1000)
         await page.click('button[type="submit"]')
         await page.wait_for_load_state("networkidle")
         await page.wait_for_timeout(2000)
