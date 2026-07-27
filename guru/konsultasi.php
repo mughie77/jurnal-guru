@@ -172,6 +172,9 @@ $threads_query = "SELECT k.*, s.nama_siswa, s.foto as foto_siswa, kelas.nama_kel
                   WHERE k.guru_id = $guru_id
                   ORDER BY k.updated_at DESC";
 $threads_res = mysqli_query($conn, $threads_query);
+if (!$threads_res) {
+    die("Threads Query Error: " . mysqli_error($conn));
+}
 $threads = [];
 while ($row = mysqli_fetch_assoc($threads_res)) {
     $threads[] = $row;
@@ -190,12 +193,18 @@ if ($active_id > 0) {
                             LEFT JOIN kelas ON sk.kelas_id = kelas.id
                             WHERE k.id = $active_id AND k.guru_id = $guru_id LIMIT 1";
     $active_thread_res = mysqli_query($conn, $active_thread_query);
+    if (!$active_thread_res) {
+        die("Active Thread Query Error: " . mysqli_error($conn));
+    }
     if ($row = mysqli_fetch_assoc($active_thread_res)) {
         $active_thread = $row;
 
         // Fetch messages
         $messages_query = "SELECT * FROM konsultasi_pesan WHERE konsultasi_id = $active_id ORDER BY created_at ASC";
         $messages_res = mysqli_query($conn, $messages_query);
+        if (!$messages_res) {
+            die("Messages Query Error: " . mysqli_error($conn));
+        }
         while ($msg = mysqli_fetch_assoc($messages_res)) {
             $messages[] = $msg;
         }
