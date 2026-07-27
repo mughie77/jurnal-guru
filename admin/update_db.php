@@ -48,9 +48,6 @@ authorize_role(['admin']);
                 ],
                 'kelas' => [
                     'jadwal_pdf' => "VARCHAR(255) DEFAULT NULL AFTER wali_kelas_id"
-                ],
-                'konsultasi_pesan' => [
-                    'lampiran_foto' => "VARCHAR(255) DEFAULT NULL AFTER pesan"
                 ]
             ];
 
@@ -174,39 +171,44 @@ authorize_role(['admin']);
                 }
             }
 
-            // Create konsultasi table
+            // Drop old tables first to overwrite any restricted foreign key structures cleanly
+            mysqli_query($conn, "DROP TABLE IF EXISTS `konsultasi_pesan`");
+            mysqli_query($conn, "DROP TABLE IF EXISTS `konsultasi`");
+
+            // Create the new robust, highly compatible 'konsultasi' table (No foreign key constraints to prevent driver clashes)
             $create_konsultasi = "CREATE TABLE IF NOT EXISTS `konsultasi` (
                 `id` int(11) NOT NULL AUTO_INCREMENT,
                 `siswa_id` int(11) NOT NULL,
                 `guru_id` int(11) NOT NULL,
                 `subjek` varchar(255) NOT NULL,
-                `status` enum('open','closed') NOT NULL DEFAULT 'open',
+                `status` varchar(50) NOT NULL DEFAULT 'open',
                 `created_at` timestamp NULL DEFAULT current_timestamp(),
                 `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
                 PRIMARY KEY (`id`),
-                CONSTRAINT `konsultasi_ibfk_1` FOREIGN KEY (`siswa_id`) REFERENCES `siswa` (`id`) ON DELETE CASCADE,
-                CONSTRAINT `konsultasi_ibfk_2` FOREIGN KEY (`guru_id`) REFERENCES `guru` (`id`) ON DELETE CASCADE
+                KEY `siswa_id` (`siswa_id`),
+                KEY `guru_id` (`guru_id`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci";
 
             if (mysqli_query($conn, $create_konsultasi)) {
-                $logs[] = ['status' => 'success', 'msg' => "Table <b>konsultasi</b> created successfully"];
+                $logs[] = ['status' => 'success', 'msg' => "Robust Table <b>konsultasi</b> created successfully"];
             } else {
                 $logs[] = ['status' => 'error', 'msg' => "Failed creating <b>konsultasi</b>: " . mysqli_error($conn)];
             }
 
-            // Create konsultasi_pesan table
+            // Create the new robust, highly compatible 'konsultasi_pesan' table
             $create_konsultasi_pesan = "CREATE TABLE IF NOT EXISTS `konsultasi_pesan` (
                 `id` int(11) NOT NULL AUTO_INCREMENT,
                 `konsultasi_id` int(11) NOT NULL,
-                `pengirim_role` enum('siswa','guru') NOT NULL,
+                `pengirim_role` varchar(50) NOT NULL,
                 `pesan` text NOT NULL,
+                `lampiran_foto` varchar(255) DEFAULT NULL,
                 `created_at` timestamp NULL DEFAULT current_timestamp(),
                 PRIMARY KEY (`id`),
-                CONSTRAINT `konsultasi_pesan_ibfk_1` FOREIGN KEY (`konsultasi_id`) REFERENCES `konsultasi` (`id`) ON DELETE CASCADE
+                KEY `konsultasi_id` (`konsultasi_id`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci";
 
             if (mysqli_query($conn, $create_konsultasi_pesan)) {
-                $logs[] = ['status' => 'success', 'msg' => "Table <b>konsultasi_pesan</b> created successfully"];
+                $logs[] = ['status' => 'success', 'msg' => "Robust Table <b>konsultasi_pesan</b> created successfully"];
             } else {
                 $logs[] = ['status' => 'error', 'msg' => "Failed creating <b>konsultasi_pesan</b>: " . mysqli_error($conn)];
             }
