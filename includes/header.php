@@ -155,7 +155,7 @@ if (isset($_SESSION['user_id'])) {
 
             <?php if ($show_mood_survey): ?>
             <div id="moodSurveyOverlay" class="fixed inset-0 bg-slate-950/80 backdrop-blur-xl flex items-center justify-center p-4 z-[9999]">
-                <div class="max-w-xl w-full bg-white rounded-[32px] shadow-2xl overflow-hidden relative border border-slate-100 flex flex-col animate-in fade-in zoom-in-95 duration-300">
+                <div class="max-w-xl w-full bg-white rounded-[32px] shadow-2xl overflow-y-auto max-h-[90vh] relative border border-slate-100 flex flex-col animate-in fade-in zoom-in-95 duration-300">
                     <!-- Top decorative mesh banner -->
                     <div class="bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 p-8 text-center text-white relative">
                         <div class="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 blur-xl"></div>
@@ -173,10 +173,10 @@ if (isset($_SESSION['user_id'])) {
                             Halo <span class="text-indigo-600 font-bold"><?= htmlspecialchars($_SESSION['nama_lengkap']) ?></span>, silakan pilih salah satu emoji mood yang menggambarkan perasaan Anda hari ini sebelum melanjutkan aktivitas di CAKRA.
                         </p>
 
-                        <form id="moodSurveyForm" onsubmit="submitMoodSurvey(event)">
+                        <form id="moodSurveyForm">
                             <input type="hidden" name="mood_value" id="selectedMoodValue" value="">
 
-                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
+                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
                                 <!-- Sangat Baik -->
                                 <button type="button" onclick="selectMoodCard('sangat_baik', this)" class="mood-card p-4 rounded-2xl border-2 border-slate-100 hover:border-indigo-100 hover:bg-indigo-50/20 flex flex-col items-center justify-center gap-2 transition-all group focus:outline-none">
                                     <span class="text-4xl group-hover:scale-110 transition-transform">😃</span>
@@ -208,11 +208,6 @@ if (isset($_SESSION['user_id'])) {
                                     <span class="text-xs font-black text-slate-700 uppercase tracking-wider">Sedih</span>
                                 </button>
                             </div>
-
-                            <button type="submit" id="submitMoodBtn" disabled class="w-full bg-slate-300 text-slate-500 font-black py-4 rounded-2xl shadow-xl shadow-slate-100 hover:shadow-indigo-100 transition-all active:scale-[0.98] flex items-center justify-center gap-3 group tracking-widest italic cursor-not-allowed">
-                                <span>SIMPAN MOOD SAYA</span>
-                                <i class="fa fa-paper-plane transition-transform group-hover:translate-x-1"></i>
-                            </button>
                         </form>
                     </div>
                 </div>
@@ -233,29 +228,19 @@ if (isset($_SESSION['user_id'])) {
                 element.classList.remove('border-slate-100');
                 element.classList.add('border-indigo-500', 'bg-indigo-50/50', 'ring-4', 'ring-indigo-100');
 
-                // Enable submit button
-                const btn = document.getElementById('submitMoodBtn');
-                btn.disabled = false;
-                btn.classList.remove('bg-slate-300', 'text-slate-500', 'cursor-not-allowed');
-                btn.classList.add('bg-slate-900', 'text-white', 'hover:bg-indigo-600', 'cursor-pointer');
+                // Instant direct submit upon selection
+                submitMoodSurveyDirect(mood);
             }
 
-            function submitMoodSurvey(e) {
-                e.preventDefault();
-                const mood = document.getElementById('selectedMoodValue').value;
-                if (!mood) {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Pilih Mood Anda!',
-                        text: 'Silakan pilih salah satu mood emoji di atas sebelum menyimpan.',
-                        confirmButtonColor: '#4F46E5'
-                    });
-                    return;
-                }
+            function submitMoodSurveyDirect(mood) {
+                if (!mood) return;
 
-                const submitBtn = document.getElementById('submitMoodBtn');
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = '<i class="fa fa-spinner animate-spin mr-2"></i> Menyimpan...';
+                // Disable all cards to prevent double submissions
+                document.querySelectorAll('.mood-card').forEach(card => {
+                    card.disabled = true;
+                    card.style.opacity = '0.6';
+                    card.style.pointerEvents = 'none';
+                });
 
                 fetch('<?= BASE_URL ?>api/submit_mood.php', {
                     method: 'POST',

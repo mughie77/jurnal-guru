@@ -32,21 +32,13 @@ async def main():
         print("Capturing screenshot of mood survey pop-up...")
         await page.screenshot(path="/home/jules/verification/screenshots/mood_survey_visible.png")
 
-        # Select "Bersemangat" card
-        print("Selecting Bersemangat mood...")
+        # Select "Bersemangat" card (instant submit!)
+        print("Selecting Bersemangat mood (instant submit)...")
         # Locating the mood button with Bersemangat text
         bersemangat_btn = page.locator("button:has-text('Bersemangat')")
         await bersemangat_btn.click()
 
-        # Take screenshot after selecting card
-        await page.screenshot(path="/home/jules/verification/screenshots/mood_survey_selected.png")
-
-        # Click Simpan Mood Saya
-        print("Submitting mood survey...")
-        submit_btn = page.locator("#submitMoodBtn")
-        await submit_btn.click()
-
-        # Wait for SweetAlert2 popup
+        # Wait for SweetAlert2 popup which is instantly shown
         swal = page.locator(".swal2-popup")
         await swal.wait_for(state="visible", timeout=5000)
         print("SweetAlert2 popup visible.")

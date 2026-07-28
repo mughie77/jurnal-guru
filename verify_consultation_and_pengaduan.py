@@ -31,7 +31,6 @@ async def main():
                 print("Mood survey overlay visible, completing it...")
                 bersemangat_btn = page.locator("button:has-text('Bersemangat')")
                 await bersemangat_btn.click()
-                await page.click("#submitMoodBtn")
                 await page.wait_for_timeout(3000)
                 print("Mood survey completed.")
         except Exception as e:
@@ -133,7 +132,6 @@ async def main():
                 print("Mood survey overlay visible for BK Teacher, completing it...")
                 bersemangat_btn = page.locator("button:has-text('Bersemangat')")
                 await bersemangat_btn.click()
-                await page.click("#submitMoodBtn")
                 await page.wait_for_timeout(3000)
                 print("Mood survey completed for BK Teacher.")
         except Exception as e:
