@@ -63,7 +63,7 @@ require_once __DIR__ . '/../includes/header.php';
             </div>
             <div class="lux-card p-8 bg-white border-slate-100">
                 <p class="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-4">Rata-rata Kehadiran</p>
-                <h2 class="text-5xl font-black italic text-slate-800"><?= round($hadir_avg, 1) ?></h2>
+                <h2 class="text-5xl font-black italic text-slate-800"><?= round((float)($hadir_avg ?? 0), 1) ?></h2>
                 <div class="mt-6 w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
                     <div class="bg-emerald-500 h-full w-[85%] rounded-full"></div>
                 </div>
@@ -103,7 +103,7 @@ require_once __DIR__ . '/../includes/header.php';
                 }
             }
 
-            $grid_cols_class = ($wali_info || $bk_info) ? "grid-cols-2 lg:grid-cols-3" : "grid-cols-2";
+            $grid_cols_class = ($wali_info || $bk_info) ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" : "grid-cols-1 sm:grid-cols-2";
             ?>
             <div class="grid <?= $grid_cols_class ?> gap-4 col-span-1 lg:col-span-2">
                 <a href="isi_absensi.php" class="p-6 rounded-[32px] bg-indigo-600 text-white shadow-xl shadow-indigo-200 flex flex-col gap-4 group transition-all hover:scale-[1.02] active:scale-95">

@@ -67,7 +67,7 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
 
         <!-- Quick Actions Grid Design (3x2) -->
-        <div class="grid grid-cols-2 gap-4 mb-10 no-print">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10 no-print">
             <!-- Row 1 -->
             <?php if(!empty($siswa['jadwal_pdf'])): ?>
                 <a href="<?= BASE_URL ?>uploads/jadwal/<?= $siswa['jadwal_pdf'] ?>" target="_blank" class="p-5 rounded-[32px] bg-indigo-600 text-white shadow-xl shadow-indigo-100 flex flex-col gap-3 group transition-all hover:scale-[1.02] active:scale-95">
@@ -157,7 +157,7 @@ require_once __DIR__ . '/../includes/header.php';
             </a>
 
             <!-- Row 5 (Pengaduan Siswa, formerly Panic Button) -->
-            <a href="pengaduan.php" class="p-5 rounded-[32px] bg-rose-600 text-white shadow-xl shadow-rose-200 flex flex-col gap-3 group transition-all hover:scale-[1.02] active:scale-95 col-span-2 relative overflow-hidden">
+            <a href="pengaduan.php" class="p-5 rounded-[32px] bg-rose-600 text-white shadow-xl shadow-rose-200 flex flex-col gap-3 group transition-all hover:scale-[1.02] active:scale-95 col-span-1 sm:col-span-2 relative overflow-hidden">
                 <div class="absolute inset-0 bg-red-700/10 animate-pulse pointer-events-none"></div>
                 <div class="relative z-10 flex items-center justify-between w-full">
                     <div class="flex items-center gap-4">
