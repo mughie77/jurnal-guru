@@ -103,119 +103,119 @@ require_once __DIR__ . '/../includes/header.php';
                 }
             }
 
-            $grid_cols_class = ($wali_info || $bk_info) ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" : "grid-cols-1 sm:grid-cols-2";
+            $grid_cols_class = ($wali_info || $bk_info) ? "grid-cols-2 lg:grid-cols-3" : "grid-cols-2";
             ?>
-            <div class="grid <?= $grid_cols_class ?> gap-4 col-span-1 lg:col-span-2">
-                <a href="isi_absensi.php" class="p-6 rounded-[32px] bg-indigo-600 text-white shadow-xl shadow-indigo-200 flex flex-col gap-4 group transition-all hover:scale-[1.02] active:scale-95">
-                    <div class="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-xl shadow-inner group-hover:bg-white/30 transition-all">
+            <div class="grid <?= $grid_cols_class ?> gap-3 sm:gap-4 col-span-1 lg:col-span-2">
+                <a href="isi_absensi.php" class="p-3.5 sm:p-6 rounded-2xl sm:rounded-[32px] bg-indigo-600 text-white shadow-xl shadow-indigo-200 flex flex-col gap-2.5 sm:gap-4 group transition-all hover:scale-[1.02] active:scale-95">
+                    <div class="w-8 h-8 sm:w-12 sm:h-12 rounded-xl bg-white/20 flex items-center justify-center text-sm sm:text-xl shadow-inner group-hover:bg-white/30 transition-all">
                         <i class="fa fa-user-check"></i>
                     </div>
                     <div>
-                        <div class="text-lg font-black italic tracking-tighter uppercase leading-none">Isi Jurnal</div>
-                        <div class="text-[9px] font-bold text-indigo-100 uppercase tracking-widest mt-1 opacity-70">Input Aktivitas</div>
+                        <div class="text-xs sm:text-lg font-black italic tracking-tighter uppercase leading-none">Isi Jurnal</div>
+                        <div class="text-[7px] sm:text-[9px] font-bold text-indigo-100 uppercase tracking-widest mt-1 opacity-70">Input Aktivitas</div>
                     </div>
                 </a>
 
-                <a href="rekap_absen.php" class="p-6 rounded-[32px] bg-emerald-600 text-white shadow-xl shadow-emerald-200 flex flex-col gap-4 group transition-all hover:scale-[1.02] active:scale-95">
-                    <div class="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-xl shadow-inner group-hover:bg-white/30 transition-all">
+                <a href="rekap_absen.php" class="p-3.5 sm:p-6 rounded-2xl sm:rounded-[32px] bg-emerald-600 text-white shadow-xl shadow-emerald-200 flex flex-col gap-2.5 sm:gap-4 group transition-all hover:scale-[1.02] active:scale-95">
+                    <div class="w-8 h-8 sm:w-12 sm:h-12 rounded-xl bg-white/20 flex items-center justify-center text-sm sm:text-xl shadow-inner group-hover:bg-white/30 transition-all">
                         <i class="fa fa-chart-line"></i>
                     </div>
                     <div>
-                        <div class="text-lg font-black italic tracking-tighter uppercase leading-none">Rekap Absensi</div>
-                        <div class="text-[9px] font-bold text-emerald-100 uppercase tracking-widest mt-1 opacity-70">Laporan Kehadiran</div>
+                        <div class="text-xs sm:text-lg font-black italic tracking-tighter uppercase leading-none">Rekap Absensi</div>
+                        <div class="text-[7px] sm:text-[9px] font-bold text-emerald-100 uppercase tracking-widest mt-1 opacity-70">Laporan Kehadiran</div>
                     </div>
                 </a>
 
-                <a href="riwayat.php" class="p-6 rounded-[32px] bg-amber-500 text-white shadow-xl shadow-amber-200 flex flex-col gap-4 group transition-all hover:scale-[1.02] active:scale-95">
-                    <div class="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-xl shadow-inner group-hover:bg-white/30 transition-all">
+                <a href="riwayat.php" class="p-3.5 sm:p-6 rounded-2xl sm:rounded-[32px] bg-amber-500 text-white shadow-xl shadow-amber-200 flex flex-col gap-2.5 sm:gap-4 group transition-all hover:scale-[1.02] active:scale-95">
+                    <div class="w-8 h-8 sm:w-12 sm:h-12 rounded-xl bg-white/20 flex items-center justify-center text-sm sm:text-xl shadow-inner group-hover:bg-white/30 transition-all">
                         <i class="fa fa-history"></i>
                     </div>
                     <div>
-                        <div class="text-lg font-black italic tracking-tighter uppercase leading-none">Riwayat Jurnal</div>
-                        <div class="text-[9px] font-bold text-amber-100 uppercase tracking-widest mt-1 opacity-70">Arsip Mengajar</div>
+                        <div class="text-xs sm:text-lg font-black italic tracking-tighter uppercase leading-none">Riwayat Jurnal</div>
+                        <div class="text-[7px] sm:text-[9px] font-bold text-amber-100 uppercase tracking-widest mt-1 opacity-70">Arsip Mengajar</div>
                     </div>
                 </a>
 
-                <a href="perangkat.php" class="p-6 rounded-[32px] bg-rose-500 text-white shadow-xl shadow-rose-200 flex flex-col gap-4 group transition-all hover:scale-[1.02] active:scale-95">
-                    <div class="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-xl shadow-inner group-hover:bg-white/30 transition-all">
+                <a href="perangkat.php" class="p-3.5 sm:p-6 rounded-2xl sm:rounded-[32px] bg-rose-500 text-white shadow-xl shadow-rose-200 flex flex-col gap-2.5 sm:gap-4 group transition-all hover:scale-[1.02] active:scale-95">
+                    <div class="w-8 h-8 sm:w-12 sm:h-12 rounded-xl bg-white/20 flex items-center justify-center text-sm sm:text-xl shadow-inner group-hover:bg-white/30 transition-all">
                         <i class="fa fa-folder-open"></i>
                     </div>
                     <div>
-                        <div class="text-lg font-black italic tracking-tighter uppercase leading-none">Perangkat</div>
-                        <div class="text-[9px] font-bold text-rose-100 uppercase tracking-widest mt-1 opacity-70">Upload Media</div>
+                        <div class="text-xs sm:text-lg font-black italic tracking-tighter uppercase leading-none">Perangkat</div>
+                        <div class="text-[7px] sm:text-[9px] font-bold text-rose-100 uppercase tracking-widest mt-1 opacity-70">Upload Media</div>
                     </div>
                 </a>
 
-                <a href="rekan.php" class="p-6 rounded-[32px] bg-sky-500 text-white shadow-xl shadow-sky-200 flex flex-col gap-4 group transition-all hover:scale-[1.02] active:scale-95">
-                    <div class="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-xl shadow-inner group-hover:bg-white/30 transition-all">
+                <a href="rekan.php" class="p-3.5 sm:p-6 rounded-2xl sm:rounded-[32px] bg-sky-500 text-white shadow-xl shadow-sky-200 flex flex-col gap-2.5 sm:gap-4 group transition-all hover:scale-[1.02] active:scale-95">
+                    <div class="w-8 h-8 sm:w-12 sm:h-12 rounded-xl bg-white/20 flex items-center justify-center text-sm sm:text-xl shadow-inner group-hover:bg-white/30 transition-all">
                         <i class="fa fa-users"></i>
                     </div>
                     <div>
-                        <div class="text-lg font-black italic tracking-tighter uppercase leading-none">Rekan Guru</div>
-                        <div class="text-[9px] font-bold text-sky-100 uppercase tracking-widest mt-1 opacity-70">Kontak Sejawat</div>
+                        <div class="text-xs sm:text-lg font-black italic tracking-tighter uppercase leading-none">Rekan Guru</div>
+                        <div class="text-[7px] sm:text-[9px] font-bold text-sky-100 uppercase tracking-widest mt-1 opacity-70">Kontak Sejawat</div>
                     </div>
                 </a>
 
-                <a href="kritik_saran.php" class="p-6 rounded-[32px] bg-indigo-500 text-white shadow-xl shadow-indigo-200 flex flex-col gap-4 group transition-all hover:scale-[1.02] active:scale-95">
-                    <div class="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-xl shadow-inner group-hover:bg-white/30 transition-all">
+                <a href="kritik_saran.php" class="p-3.5 sm:p-6 rounded-2xl sm:rounded-[32px] bg-indigo-500 text-white shadow-xl shadow-indigo-200 flex flex-col gap-2.5 sm:gap-4 group transition-all hover:scale-[1.02] active:scale-95">
+                    <div class="w-8 h-8 sm:w-12 sm:h-12 rounded-xl bg-white/20 flex items-center justify-center text-sm sm:text-xl shadow-inner group-hover:bg-white/30 transition-all">
                         <i class="fa fa-comment-dots"></i>
                     </div>
                     <div>
-                        <div class="text-lg font-black italic tracking-tighter uppercase leading-none">Kritik & Saran</div>
-                        <div class="text-[9px] font-bold text-indigo-100 uppercase tracking-widest mt-1 opacity-70">Umpan Balik</div>
+                        <div class="text-xs sm:text-lg font-black italic tracking-tighter uppercase leading-none">Kritik & Saran</div>
+                        <div class="text-[7px] sm:text-[9px] font-bold text-indigo-100 uppercase tracking-widest mt-1 opacity-70">Umpan Balik</div>
                     </div>
                 </a>
 
                 <?php if ($wali_info): ?>
-                <a href="<?= BASE_URL ?>admin/rekap_persiswa.php" class="p-6 rounded-[32px] bg-violet-600 text-white shadow-xl shadow-violet-200 flex flex-col gap-4 group transition-all hover:scale-[1.02] active:scale-95 col-span-1">
-                    <div class="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-xl shadow-inner group-hover:bg-white/30 transition-all">
+                <a href="<?= BASE_URL ?>admin/rekap_persiswa.php" class="p-3.5 sm:p-6 rounded-2xl sm:rounded-[32px] bg-violet-600 text-white shadow-xl shadow-violet-200 flex flex-col gap-2.5 sm:gap-4 group transition-all hover:scale-[1.02] active:scale-95 col-span-1">
+                    <div class="w-8 h-8 sm:w-12 sm:h-12 rounded-xl bg-white/20 flex items-center justify-center text-sm sm:text-xl shadow-inner group-hover:bg-white/30 transition-all">
                         <i class="fa fa-user-check"></i>
                     </div>
                     <div>
-                        <div class="text-lg font-black italic tracking-tighter uppercase leading-none">Rekap Kelas</div>
-                        <div class="text-[9px] font-bold text-violet-100 uppercase tracking-widest mt-1 opacity-70">Wali: <?= htmlspecialchars($wali_info['nama_kelas']) ?></div>
+                        <div class="text-xs sm:text-lg font-black italic tracking-tighter uppercase leading-none">Rekap Kelas</div>
+                        <div class="text-[7px] sm:text-[9px] font-bold text-violet-100 uppercase tracking-widest mt-1 opacity-70">Wali: <?= htmlspecialchars($wali_info['nama_kelas']) ?></div>
                     </div>
                 </a>
 
-                <a href="rekap_izin.php" class="p-6 rounded-[32px] bg-rose-600 text-white shadow-xl shadow-rose-200 flex flex-col gap-4 group transition-all hover:scale-[1.02] active:scale-95 col-span-1 relative">
+                <a href="rekap_izin.php" class="p-3.5 sm:p-6 rounded-2xl sm:rounded-[32px] bg-rose-600 text-white shadow-xl shadow-rose-200 flex flex-col gap-2.5 sm:gap-4 group transition-all hover:scale-[1.02] active:scale-95 col-span-1 relative">
                     <?php if ($pending_permits_count > 0): ?>
-                        <span class="absolute top-4 right-4 bg-yellow-400 text-slate-950 font-black text-[10px] uppercase px-2 py-0.5 rounded-full animate-bounce shadow-md">
+                        <span class="absolute top-2 right-2 sm:top-4 sm:right-4 bg-yellow-400 text-slate-950 font-black text-[7px] sm:text-[10px] uppercase px-1.5 py-0.5 sm:px-2 sm:py-0.5 rounded-full animate-bounce shadow-md">
                             <?= $pending_permits_count ?> PENDING
                         </span>
                     <?php endif; ?>
-                    <div class="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-xl shadow-inner group-hover:bg-white/30 transition-all">
+                    <div class="w-8 h-8 sm:w-12 sm:h-12 rounded-xl bg-white/20 flex items-center justify-center text-sm sm:text-xl shadow-inner group-hover:bg-white/30 transition-all">
                         <i class="fa fa-envelope-open-text"></i>
                     </div>
                     <div>
-                        <div class="text-lg font-black italic tracking-tighter uppercase leading-none">Siswa Izin</div>
-                        <div class="text-[9px] font-bold text-rose-100 uppercase tracking-widest mt-1 opacity-70">Verifikasi Izin/Sakit</div>
+                        <div class="text-xs sm:text-lg font-black italic tracking-tighter uppercase leading-none">Siswa Izin</div>
+                        <div class="text-[7px] sm:text-[9px] font-bold text-rose-100 uppercase tracking-widest mt-1 opacity-70">Verifikasi Izin/Sakit</div>
                     </div>
                 </a>
                 <?php endif; ?>
 
                 <?php if ($bk_info): ?>
-                <a href="rekap_pengaduan.php" class="p-6 rounded-[32px] bg-rose-600 text-white shadow-xl shadow-rose-200 flex flex-col gap-4 group transition-all hover:scale-[1.02] active:scale-95 col-span-1">
-                    <div class="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-xl shadow-inner group-hover:bg-white/30 transition-all">
+                <a href="rekap_pengaduan.php" class="p-3.5 sm:p-6 rounded-2xl sm:rounded-[32px] bg-rose-600 text-white shadow-xl shadow-rose-200 flex flex-col gap-2.5 sm:gap-4 group transition-all hover:scale-[1.02] active:scale-95 col-span-1">
+                    <div class="w-8 h-8 sm:w-12 sm:h-12 rounded-xl bg-white/20 flex items-center justify-center text-sm sm:text-xl shadow-inner group-hover:bg-white/30 transition-all">
                         <i class="fa fa-bullhorn"></i>
                     </div>
                     <div>
-                        <div class="text-lg font-black italic tracking-tighter uppercase leading-none">Daftar Pengaduan</div>
-                        <div class="text-[9px] font-bold text-rose-100 uppercase tracking-widest mt-1 opacity-70">Laporan Pengaduan Siswa</div>
+                        <div class="text-xs sm:text-lg font-black italic tracking-tighter uppercase leading-none">Daftar Pengaduan</div>
+                        <div class="text-[7px] sm:text-[9px] font-bold text-rose-100 uppercase tracking-widest mt-1 opacity-70">Laporan Pengaduan Siswa</div>
                     </div>
                 </a>
 
-                <a href="konsultasi.php" class="p-6 rounded-[32px] bg-indigo-500 text-white shadow-xl shadow-indigo-200 flex flex-col gap-4 group transition-all hover:scale-[1.02] active:scale-95 col-span-1 relative">
+                <a href="konsultasi.php" class="p-3.5 sm:p-6 rounded-2xl sm:rounded-[32px] bg-indigo-500 text-white shadow-xl shadow-indigo-200 flex flex-col gap-2.5 sm:gap-4 group transition-all hover:scale-[1.02] active:scale-95 col-span-1 relative">
                     <?php if ($open_chats_count > 0): ?>
-                        <span class="absolute top-4 right-4 bg-yellow-400 text-slate-950 font-black text-[10px] uppercase px-2 py-0.5 rounded-full animate-bounce shadow-md">
-                            <?= $open_chats_count ?> CHAT AKTIF
+                        <span class="absolute top-2 right-2 sm:top-4 sm:right-4 bg-yellow-400 text-slate-950 font-black text-[7px] sm:text-[10px] uppercase px-1.5 py-0.5 sm:px-2 sm:py-0.5 rounded-full animate-bounce shadow-md">
+                            <?= $open_chats_count ?> CHAT
                         </span>
                     <?php endif; ?>
-                    <div class="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-xl shadow-inner group-hover:bg-white/30 transition-all">
+                    <div class="w-8 h-8 sm:w-12 sm:h-12 rounded-xl bg-white/20 flex items-center justify-center text-sm sm:text-xl shadow-inner group-hover:bg-white/30 transition-all">
                         <i class="fa fa-comments"></i>
                     </div>
                     <div>
-                        <div class="text-lg font-black italic tracking-tighter uppercase leading-none">Chat Konsultasi</div>
-                        <div class="text-[9px] font-bold text-indigo-100 uppercase tracking-widest mt-1 opacity-70">Konsultasi BK Online</div>
+                        <div class="text-xs sm:text-lg font-black italic tracking-tighter uppercase leading-none">Chat Konsultasi</div>
+                        <div class="text-[7px] sm:text-[9px] font-bold text-indigo-100 uppercase tracking-widest mt-1 opacity-70">Konsultasi BK Online</div>
                     </div>
                 </a>
                 <?php endif; ?>
