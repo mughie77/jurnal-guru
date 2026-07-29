@@ -37,12 +37,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['simpan_jurnal'])) {
     $latitude = mysqli_real_escape_string($conn, $_POST['latitude'] ?? '');
     $longitude = mysqli_real_escape_string($conn, $_POST['longitude'] ?? '');
 
-    if (mysqli_query($conn, "UPDATE jurnal SET materi = '$materi', keterangan = '$keterangan', latitude = '$latitude', longitude = '$longitude' WHERE id = $jurnal_id")) {
-        $message = "Jurnal berhasil disimpan!"; $message_type = 'success';
-        header("Location: riwayat.php?success=1");
-        exit;
+    if (trim($materi) === '') {
+        $message = "Materi pembahasan wajib diisi!";
+        $message_type = 'error';
+    } else if (empty($latitude) || empty($longitude)) {
+        $message = "Akses lokasi GPS Anda wajib aktif dan terdeteksi untuk mengisi jurnal!";
+        $message_type = 'error';
     } else {
-        $message = "Error: " . mysqli_error($conn); $message_type = 'error';
+        if (mysqli_query($conn, "UPDATE jurnal SET materi = '$materi', keterangan = '$keterangan', latitude = '$latitude', longitude = '$longitude' WHERE id = $jurnal_id")) {
+            $message = "Jurnal berhasil disimpan!"; $message_type = 'success';
+            header("Location: riwayat.php?success=1");
+            exit;
+        } else {
+            $message = "Error: " . mysqli_error($conn); $message_type = 'error';
+        }
     }
 }
 
@@ -157,6 +165,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (form) {
         form.addEventListener('submit', function(e) {
+            if (!form.reportValidity()) {
+                e.preventDefault();
+                return false;
+            }
+
             if (hasLocation && latInput.value && lngInput.value) {
                 return true;
             }
@@ -215,5 +228,18 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+
+<?php if ($message !== ''): ?>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    Swal.fire({
+        icon: '<?= $message_type ?>',
+        title: '<?= $message_type === 'success' ? 'Berhasil' : 'Peringatan' ?>',
+        text: '<?= addslashes($message) ?>',
+        confirmButtonColor: '#4F46E5'
+    });
+});
+</script>
+<?php endif; ?>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>
