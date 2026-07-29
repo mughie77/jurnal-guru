@@ -65,6 +65,9 @@ if (!$conn) {
     exit();
 }
 
+// Set timezone untuk session koneksi database ke Asia/Jakarta (GMT+7)
+mysqli_query($conn, "SET time_zone = '+07:00'");
+
 // --- URL Konfigurasi ---
 // Jika aplikasi dipindah folder atau dihosting, isi URL dasar di sini (akhiri dengan slash /)
 // Contoh: $base_url_config = 'http://localhost/jurnal/';
