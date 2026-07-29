@@ -15,8 +15,6 @@ $kelases = mysqli_query($conn, "SELECT id, nama_kelas FROM kelas ORDER BY nama_k
 
 $message = ''; $message_type = '';
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['simpan_absensi'])) {
-    mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
-    mysqli_begin_transaction($conn);
     try {
         if (!verify_csrf_token($_POST['csrf_token'] ?? '')) throw new Exception("Token Keamanan Tidak Valid.");
 
@@ -25,34 +23,24 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['simpan_absensi'])) {
         $tgl = $_POST['tanggal'];
         $jam = $_POST['jam_ke'];
 
-        // 1. Create a "Pre-Journal" entry
-        $stmt = mysqli_prepare($conn, "INSERT INTO jurnal (guru_id, mapel_id, kelas_id, tahun_pelajaran_id, tanggal, jam_ke, materi, jml_hadir, jml_sakit, jml_izin, jml_alfa) VALUES (?, ?, ?, ?, ?, ?, '', 0, 0, 0, 0)");
-        mysqli_stmt_bind_param($stmt, "iiiiss", $guru_id, $mid, $kid, $active_tahun_id, $tgl, $jam);
-        mysqli_stmt_execute($stmt);
-        $jurnal_id = mysqli_insert_id($conn);
-
-        if (!$jurnal_id) throw new Exception("Gagal membuat record jurnal.");
-
-        // 2. Save individual attendance
-        if (!empty($_POST['absen'])) {
-            $stmt_absen = mysqli_prepare($conn, "INSERT INTO absensi_jurnal (jurnal_id, siswa_id, status) VALUES (?, ?, ?)");
-            foreach ($_POST['absen'] as $siswa_id => $status) {
-                mysqli_stmt_bind_param($stmt_absen, "iis", $jurnal_id, $siswa_id, $status);
-                mysqli_stmt_execute($stmt_absen);
-            }
-
-            // Sync counts
-            $res_counts = mysqli_query($conn, "SELECT
-                COUNT(CASE WHEN status='H' THEN 1 END) as h,
-                COUNT(CASE WHEN status='S' THEN 1 END) as s,
-                COUNT(CASE WHEN status='I' THEN 1 END) as i,
-                COUNT(CASE WHEN status='A' THEN 1 END) as a
-                FROM absensi_jurnal WHERE jurnal_id = $jurnal_id");
-            $c = mysqli_fetch_assoc($res_counts);
-            mysqli_query($conn, "UPDATE jurnal SET jml_hadir={$c['h']}, jml_sakit={$c['s']}, jml_izin={$c['i']}, jml_alfa={$c['a']} WHERE id = $jurnal_id");
+        if (empty($mid) || empty($kid) || empty($tgl) || empty($jam)) {
+            throw new Exception("Semua field (Mata Pelajaran, Kelas, Tanggal, Jam) wajib diisi.");
         }
 
-        mysqli_commit($conn);
+        if (empty($_POST['absen'])) {
+            throw new Exception("Daftar absensi siswa wajib diisi. Silakan pilih kelas yang memiliki siswa aktif.");
+        }
+
+        // Simpan ke session sebagai draft jurnal
+        $_SESSION['draft_jurnal'] = [
+            'guru_id' => $guru_id,
+            'mapel_id' => $mid,
+            'kelas_id' => $kid,
+            'tahun_pelajaran_id' => $active_tahun_id,
+            'tanggal' => $tgl,
+            'jam_ke' => $jam,
+            'absen' => $_POST['absen']
+        ];
 
         // 3. Success and Redirect
         echo "<!DOCTYPE html><html><head><script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script></head><body style='font-family:sans-serif;'>";
@@ -66,13 +54,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['simpan_absensi'])) {
                     timer: 2000,
                     timerProgressBar: true
                 }).then(() => {
-                    window.location.href = 'isi_jurnal.php?jid=$jurnal_id';
+                    window.location.href = 'isi_jurnal.php';
                 });
             });
         </script></body></html>";
         exit;
     } catch (Exception $e) {
-        mysqli_rollback($conn);
         $message = "Gagal: " . $e->getMessage(); $message_type = 'error';
     }
 }

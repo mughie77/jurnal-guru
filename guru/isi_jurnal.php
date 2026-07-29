@@ -4,29 +4,56 @@ require_once __DIR__ . '/../config/database.php';
 
 authorize_role(['guru', 'admin']);
 
-$jurnal_id = (int)($_GET['jid'] ?? 0);
-if ($jurnal_id <= 0) {
-    // If accessed directly without ID, redirect to attendance
+if (!isset($_SESSION['draft_jurnal'])) {
     header("Location: isi_absensi.php");
     exit;
 }
 
-$res_j = mysqli_query($conn, "SELECT j.*, mp.nama_mapel, k.nama_kelas
-                               FROM jurnal j
-                               JOIN mata_pelajaran mp ON j.mapel_id = mp.id
-                               JOIN kelas k ON j.kelas_id = k.id
-                               WHERE j.id = $jurnal_id");
-$j = mysqli_fetch_assoc($res_j);
+$draft = $_SESSION['draft_jurnal'];
+$guru_id = $draft['guru_id'];
+$mid = (int)$draft['mapel_id'];
+$kid = (int)$draft['kelas_id'];
+$tahun_pelajaran_id = $draft['tahun_pelajaran_id'];
+$tanggal = $draft['tanggal'];
+$jam_ke = $draft['jam_ke'];
+$absen_list = $draft['absen'];
+
+$res_meta = mysqli_query($conn, "SELECT mp.nama_mapel, k.nama_kelas
+                                  FROM mata_pelajaran mp, kelas k
+                                  WHERE mp.id = $mid AND k.id = $kid");
+$meta = mysqli_fetch_assoc($res_meta);
+
+$count_hadir = 0;
+foreach ($absen_list as $status) {
+    if ($status === 'H') $count_hadir++;
+}
+
+$j = [
+    'nama_mapel' => $meta['nama_mapel'] ?? '',
+    'nama_kelas' => $meta['nama_kelas'] ?? '',
+    'jam_ke' => $jam_ke,
+    'jml_hadir' => $count_hadir
+];
 
 // Ambil siswa yang tidak hadir (S/I/A)
-$res_abs = mysqli_query($conn, "SELECT s.nama_siswa, aj.status
-                                 FROM absensi_jurnal aj
-                                 JOIN siswa s ON aj.siswa_id = s.id
-                                 WHERE aj.jurnal_id = $jurnal_id AND aj.status != 'H'
-                                 ORDER BY aj.status ASC, s.nama_siswa ASC");
 $tidak_hadir = [];
-while ($row = mysqli_fetch_assoc($res_abs)) {
-    $tidak_hadir[] = $row;
+$absent_student_ids = [];
+$student_status_map = [];
+foreach ($absen_list as $sid => $status) {
+    if ($status !== 'H') {
+        $absent_student_ids[] = (int)$sid;
+        $student_status_map[(int)$sid] = $status;
+    }
+}
+if (!empty($absent_student_ids)) {
+    $ids_str = implode(',', $absent_student_ids);
+    $res_stud = mysqli_query($conn, "SELECT id, nama_siswa FROM siswa WHERE id IN ($ids_str) ORDER BY nama_siswa ASC");
+    while ($row = mysqli_fetch_assoc($res_stud)) {
+        $tidak_hadir[] = [
+            'nama_siswa' => $row['nama_siswa'],
+            'status' => $student_status_map[$row['id']]
+        ];
+    }
 }
 
 $message = ''; $message_type = '';
@@ -44,12 +71,48 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['simpan_jurnal'])) {
         $message = "Akses lokasi GPS Anda wajib aktif dan terdeteksi untuk mengisi jurnal!";
         $message_type = 'error';
     } else {
-        if (mysqli_query($conn, "UPDATE jurnal SET materi = '$materi', keterangan = '$keterangan', latitude = '$latitude', longitude = '$longitude' WHERE id = $jurnal_id")) {
-            $message = "Jurnal berhasil disimpan!"; $message_type = 'success';
+        mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+        mysqli_begin_transaction($conn);
+        try {
+            // 1. Insert into jurnal
+            $stmt = mysqli_prepare($conn, "INSERT INTO jurnal (guru_id, mapel_id, kelas_id, tahun_pelajaran_id, tanggal, jam_ke, materi, keterangan, latitude, longitude, jml_hadir, jml_sakit, jml_izin, jml_alfa) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, 0, 0)");
+            mysqli_stmt_bind_param($stmt, "iiiissssss", $guru_id, $mid, $kid, $tahun_pelajaran_id, $tanggal, $jam_ke, $materi, $keterangan, $latitude, $longitude);
+            mysqli_stmt_execute($stmt);
+            $jurnal_id = mysqli_insert_id($conn);
+
+            if (!$jurnal_id) throw new Exception("Gagal membuat record jurnal.");
+
+            // 2. Save individual attendance
+            if (!empty($absen_list)) {
+                $stmt_absen = mysqli_prepare($conn, "INSERT INTO absensi_jurnal (jurnal_id, siswa_id, status) VALUES (?, ?, ?)");
+                foreach ($absen_list as $siswa_id => $status) {
+                    mysqli_stmt_bind_param($stmt_absen, "iis", $jurnal_id, $siswa_id, $status);
+                    mysqli_stmt_execute($stmt_absen);
+                }
+
+                // Sync counts
+                $res_counts = mysqli_query($conn, "SELECT
+                    COUNT(CASE WHEN status='H' THEN 1 END) as h,
+                    COUNT(CASE WHEN status='S' THEN 1 END) as s,
+                    COUNT(CASE WHEN status='I' THEN 1 END) as i,
+                    COUNT(CASE WHEN status='A' THEN 1 END) as a
+                    FROM absensi_jurnal WHERE jurnal_id = $jurnal_id");
+                $c = mysqli_fetch_assoc($res_counts);
+                mysqli_query($conn, "UPDATE jurnal SET jml_hadir={$c['h']}, jml_sakit={$c['s']}, jml_izin={$c['i']}, jml_alfa={$c['a']} WHERE id = $jurnal_id");
+            }
+
+            mysqli_commit($conn);
+
+            // Bersihkan draft dari session setelah sukses disimpan
+            unset($_SESSION['draft_jurnal']);
+
             header("Location: riwayat.php?success=1");
             exit;
-        } else {
-            $message = "Error: " . mysqli_error($conn); $message_type = 'error';
+
+        } catch (Exception $e) {
+            mysqli_rollback($conn);
+            $message = "Gagal menyimpan jurnal: " . $e->getMessage();
+            $message_type = 'error';
         }
     }
 }
