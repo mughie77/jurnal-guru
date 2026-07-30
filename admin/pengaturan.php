@@ -245,19 +245,47 @@ document.addEventListener('DOMContentLoaded', function() {
         attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
+    var radiusAbsen = <?= (int)($sets['radius_absen'] ?? 30) ?>;
+
     var marker = L.marker([lat, lng], {draggable: true}).addTo(map);
+
+    // Tambahkan lingkaran batas radius absensi
+    var circle = L.circle([lat, lng], {
+        color: '#4F46E5',
+        fillColor: '#4F46E5',
+        fillOpacity: 0.15,
+        radius: radiusAbsen,
+        weight: 2
+    }).addTo(map);
+
+    // Sesuaikan zoom peta agar lingkaran terlihat dengan baik
+    map.fitBounds(circle.getBounds(), { padding: [20, 20] });
 
     marker.on('dragend', function(e) {
         var pos = marker.getLatLng();
         document.getElementById('school_lat').value = pos.lat.toFixed(6);
         document.getElementById('school_lng').value = pos.lng.toFixed(6);
+        circle.setLatLng(pos);
     });
 
     map.on('click', function(e) {
         marker.setLatLng(e.latlng);
         document.getElementById('school_lat').value = e.latlng.lat.toFixed(6);
         document.getElementById('school_lng').value = e.latlng.lng.toFixed(6);
+        circle.setLatLng(e.latlng);
     });
+
+    // Update radius lingkaran secara dinamis saat input Radius Absensi diubah
+    var radiusInput = document.querySelector('input[name="radius_absen"]');
+    if (radiusInput) {
+        radiusInput.addEventListener('input', function() {
+            var rVal = parseInt(this.value, 10);
+            if (!isNaN(rVal) && rVal > 0) {
+                circle.setRadius(rVal);
+                map.fitBounds(circle.getBounds(), { padding: [20, 20] });
+            }
+        });
+    }
 });
 </script>
 

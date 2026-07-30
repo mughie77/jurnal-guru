@@ -35,6 +35,20 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem('sidebar-scroll-position', sidebarNav.scrollTop);
         });
     }
+
+    // Accordion sidebar details menus: if one is opened, close all others
+    const detailsElements = document.querySelectorAll('details.group');
+    detailsElements.forEach(details => {
+        details.addEventListener('toggle', () => {
+            if (details.open) {
+                detailsElements.forEach(otherDetails => {
+                    if (otherDetails !== details) {
+                        otherDetails.removeAttribute('open');
+                    }
+                });
+            }
+        });
+    });
 });
 
 // Shared Modal Logic

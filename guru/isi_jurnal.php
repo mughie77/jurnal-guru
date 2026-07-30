@@ -56,6 +56,30 @@ if (!empty($absent_student_ids)) {
     }
 }
 
+// Ambil setting lokasi sekolah dan radius absensi
+$res_set = mysqli_query($conn, "SELECT * FROM pengaturan");
+$sets = [];
+while ($r = mysqli_fetch_assoc($res_set)) {
+    $sets[$r['nama_setting']] = $r['nilai_setting'];
+}
+$school_lat = (float)($sets['school_lat'] ?? -7.9135);
+$school_lng = (float)($sets['school_lng'] ?? 113.8217);
+$radius_absen = (int)($sets['radius_absen'] ?? 30);
+
+function vincentyGreatCircleDistance($lat1, $lon1, $lat2, $lon2, $earthRadius = 6371000) {
+    $latFrom = deg2rad($lat1);
+    $lonFrom = deg2rad($lon1);
+    $latTo = deg2rad($lat2);
+    $lonTo = deg2rad($lon2);
+
+    $lonDelta = $lonTo - $lonFrom;
+    $a = pow(cos($latTo) * sin($lonDelta), 2) + pow(cos($latFrom) * sin($latTo) - sin($latFrom) * cos($latTo) * cos($lonDelta), 2);
+    $b = sin($latFrom) * sin($latTo) + cos($latFrom) * cos($latTo) * cos($lonDelta);
+
+    $angle = atan2(sqrt($a), $b);
+    return $angle * $earthRadius;
+}
+
 $message = ''; $message_type = '';
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['simpan_jurnal'])) {
     if (!verify_csrf_token($_POST['csrf_token'] ?? '')) die("CSRF Token Invalid");
@@ -71,8 +95,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['simpan_jurnal'])) {
         $message = "Akses lokasi GPS Anda wajib aktif dan terdeteksi untuk mengisi jurnal!";
         $message_type = 'error';
     } else {
-        mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
-        mysqli_begin_transaction($conn);
+        $distance = vincentyGreatCircleDistance((float)$latitude, (float)$longitude, $school_lat, $school_lng);
+        if ($distance > ($radius_absen + 5)) { // 5m buffer for GPS jitter
+            $message = "Anda berada di luar radius lokasi sekolah (" . round($distance) . "m dari sekolah). Pengisian jurnal wajib dilakukan di dalam area sekolah (maksimal " . $radius_absen . "m)!";
+            $message_type = 'error';
+        } else {
+            mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+            mysqli_begin_transaction($conn);
         try {
             // 1. Insert into jurnal
             $stmt = mysqli_prepare($conn, "INSERT INTO jurnal (guru_id, mapel_id, kelas_id, tahun_pelajaran_id, tanggal, jam_ke, materi, keterangan, latitude, longitude, jml_hadir, jml_sakit, jml_izin, jml_alfa) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, 0, 0)");
@@ -113,6 +142,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['simpan_jurnal'])) {
             mysqli_rollback($conn);
             $message = "Gagal menyimpan jurnal: " . $e->getMessage();
             $message_type = 'error';
+        }
         }
     }
 }
@@ -196,6 +226,24 @@ document.addEventListener('DOMContentLoaded', function() {
     const lngInput = document.getElementById('lng-input');
     let hasLocation = false;
 
+    const schoolPos = [<?= $school_lat ?>, <?= $school_lng ?>];
+    const radiusAbsen = <?= $radius_absen ?>;
+
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371000; // metres
+        const φ1 = lat1 * Math.PI/180;
+        const φ2 = lat2 * Math.PI/180;
+        const Δφ = (lat2-lat1) * Math.PI/180;
+        const Δλ = (lon2-lon1) * Math.PI/180;
+
+        const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+                Math.cos(φ1) * Math.cos(φ2) *
+                Math.sin(Δλ/2) * Math.sin(Δλ/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+        return R * c; // in metres
+    }
+
     function verifyAntiFakeGPS(position) {
         const accuracy = position.coords.accuracy;
         const isMocked = position.mocked || (position.coords && position.coords.mocked) || false;
@@ -217,9 +265,14 @@ document.addEventListener('DOMContentLoaded', function() {
     if ("geolocation" in navigator) {
         navigator.geolocation.getCurrentPosition(function(position) {
             if (verifyAntiFakeGPS(position)) {
-                latInput.value = position.coords.latitude;
-                lngInput.value = position.coords.longitude;
-                hasLocation = true;
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                const distance = calculateDistance(lat, lng, schoolPos[0], schoolPos[1]);
+                if (distance <= (radiusAbsen + 5)) {
+                    latInput.value = lat;
+                    lngInput.value = lng;
+                    hasLocation = true;
+                }
             }
         }, function(error) {
             console.warn("Pre-fetch location failed:", error);
@@ -261,8 +314,22 @@ document.addEventListener('DOMContentLoaded', function() {
             navigator.geolocation.getCurrentPosition(function(position) {
                 Swal.close();
                 if (verifyAntiFakeGPS(position)) {
-                    latInput.value = position.coords.latitude;
-                    lngInput.value = position.coords.longitude;
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    const distance = calculateDistance(lat, lng, schoolPos[0], schoolPos[1]);
+
+                    if (distance > (radiusAbsen + 5)) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Di Luar Radius Sekolah',
+                            text: 'Akses ditolak: Anda berada ' + Math.round(distance) + 'm dari sekolah. Pengisian jurnal wajib dilakukan di dalam area sekolah (maksimal ' + radiusAbsen + 'm)!',
+                            confirmButtonColor: '#4F46E5'
+                        });
+                        return false;
+                    }
+
+                    latInput.value = lat;
+                    lngInput.value = lng;
                     hasLocation = true;
                     form.submit(); // Resubmit the form
                 }
