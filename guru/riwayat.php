@@ -43,6 +43,21 @@ require_once __DIR__ . '/../includes/header.php';
 </script>
 <?php endif; ?>
 
+<?php if (isset($_GET['success_edit'])): ?>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        Swal.fire({
+            icon: 'success',
+            title: 'Berhasil!',
+            text: 'Jurnal mengajar telah berhasil diperbarui.',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true
+        });
+    });
+</script>
+<?php endif; ?>
+
 <style>#sidebar, header, nav.navbar { display: none !important; } .lg\:ml-64 { margin-left: 0 !important; } .main-content { margin-left: 0 !important; padding-top: 2rem !important; }</style>
 
 <div class="max-w-6xl mx-auto pb-20">
@@ -79,6 +94,7 @@ require_once __DIR__ . '/../includes/header.php';
                         <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Kelas</th>
                         <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Materi</th>
                         <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Kehadiran</th>
+                        <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-50">
@@ -102,10 +118,15 @@ require_once __DIR__ . '/../includes/header.php';
                                     <span class="px-2 py-1 rounded-md bg-rose-50 text-rose-600 text-[10px] font-black border border-rose-100">A:<?= $row['jml_alfa'] ?></span>
                                 </div>
                             </td>
+                            <td class="px-6 py-4 text-center whitespace-nowrap">
+                                <a href="edit_jurnal.php?id=<?= $row['id'] ?>" class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all shadow-sm border border-indigo-100" title="Edit Jurnal">
+                                    <i class="fa fa-edit text-xs"></i>
+                                </a>
+                            </td>
                         </tr>
                         <?php endwhile; ?>
                     <?php else: ?>
-                        <tr><td colspan="5" class="px-6 py-20 text-center text-slate-400 font-medium italic">Tidak ada data riwayat jurnal.</td></tr>
+                        <tr><td colspan="6" class="px-6 py-20 text-center text-slate-400 font-medium italic">Tidak ada data riwayat jurnal.</td></tr>
                     <?php endif; ?>
                 </tbody>
             </table>
