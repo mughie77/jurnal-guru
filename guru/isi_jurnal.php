@@ -28,8 +28,15 @@ foreach ($absen_list as $status) {
     if ($status === 'H') $count_hadir++;
 }
 
+$nama_mapel = $meta['nama_mapel'] ?? '';
+$is_pjok = false;
+$lower_mapel = strtolower($nama_mapel);
+if (strpos($lower_mapel, 'pjok') !== false || strpos($lower_mapel, 'olahraga') !== false || strpos($lower_mapel, 'penjas') !== false || strpos($lower_mapel, 'penjaskes') !== false) {
+    $is_pjok = true;
+}
+
 $j = [
-    'nama_mapel' => $meta['nama_mapel'] ?? '',
+    'nama_mapel' => $nama_mapel,
     'nama_kelas' => $meta['nama_kelas'] ?? '',
     'jam_ke' => $jam_ke,
     'jml_hadir' => $count_hadir
@@ -96,7 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['simpan_jurnal'])) {
         $message_type = 'error';
     } else {
         $distance = vincentyGreatCircleDistance((float)$latitude, (float)$longitude, $school_lat, $school_lng);
-        if ($distance > ($radius_absen + 5)) { // 5m buffer for GPS jitter
+        if (!$is_pjok && $distance > ($radius_absen + 5)) { // 5m buffer for GPS jitter
             $message = "Anda berada di luar radius lokasi sekolah (" . round($distance) . "m dari sekolah). Pengisian jurnal wajib dilakukan di dalam area sekolah (maksimal " . $radius_absen . "m)!";
             $message_type = 'error';
         } else {
@@ -152,7 +159,7 @@ require_once __DIR__ . '/../includes/header.php';
 
 <style>#sidebar, header, nav.navbar { display: none !important; } .lg\:ml-64 { margin-left: 0 !important; } .main-content { margin-left: 0 !important; padding-top: 2rem !important; }</style>
 
-<div class="max-w-4xl mx-auto pb-32 px-2 sm:px-4">
+<div class="max-w-full w-full mx-auto pb-32 px-2 sm:px-4">
     <!-- Progress Indicator -->
     <div class="flex items-center gap-2 mb-6 sm:mb-10 overflow-hidden rounded-full bg-slate-200 h-2">
         <div class="w-1/2 h-full bg-emerald-500"></div>
@@ -173,7 +180,15 @@ require_once __DIR__ . '/../includes/header.php';
         <div class="absolute top-0 left-0 w-1 h-full bg-indigo-600"></div>
 
         <div class="mb-8 sm:mb-10 grid grid-cols-1 xs:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 pb-6 sm:pb-8 border-b border-slate-50">
-            <div><p class="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5 sm:mb-1">Mata Pelajaran</p><p class="text-sm sm:text-base font-bold text-slate-800 italic"><?= htmlspecialchars($j['nama_mapel']) ?></p></div>
+            <div>
+                <p class="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5 sm:mb-1">Mata Pelajaran</p>
+                <p class="text-sm sm:text-base font-bold text-slate-800 italic">
+                    <?= htmlspecialchars($j['nama_mapel']) ?>
+                    <?php if ($is_pjok): ?>
+                        <span class="inline-block ml-2 px-2 py-0.5 bg-rose-100 text-rose-700 text-[9px] font-black uppercase rounded">Bebas GPS</span>
+                    <?php endif; ?>
+                </p>
+            </div>
             <div><p class="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5 sm:mb-1">Kelas</p><p class="text-sm sm:text-base font-bold text-slate-800"><?= htmlspecialchars($j['nama_kelas']) ?></p></div>
             <div><p class="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5 sm:mb-1">Jam Ke-</p><p class="text-sm sm:text-base font-bold text-slate-800"><?= htmlspecialchars($j['jam_ke']) ?></p></div>
             <div><p class="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5 sm:mb-1">Kehadiran</p><p class="text-sm sm:text-base font-bold text-emerald-600"><?= $j['jml_hadir'] ?> Siswa</p></div>
@@ -228,6 +243,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const schoolPos = [<?= $school_lat ?>, <?= $school_lng ?>];
     const radiusAbsen = <?= $radius_absen ?>;
+    const isPjok = <?= $is_pjok ? 'true' : 'false' ?>;
 
     function calculateDistance(lat1, lon1, lat2, lon2) {
         const R = 6371000; // metres
@@ -268,7 +284,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const lat = position.coords.latitude;
                 const lng = position.coords.longitude;
                 const distance = calculateDistance(lat, lng, schoolPos[0], schoolPos[1]);
-                if (distance <= (radiusAbsen + 5)) {
+                if (isPjok || distance <= (radiusAbsen + 5)) {
                     latInput.value = lat;
                     lngInput.value = lng;
                     hasLocation = true;
@@ -318,7 +334,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     const lng = position.coords.longitude;
                     const distance = calculateDistance(lat, lng, schoolPos[0], schoolPos[1]);
 
-                    if (distance > (radiusAbsen + 5)) {
+                    if (!isPjok && distance > (radiusAbsen + 5)) {
                         Swal.fire({
                             icon: 'error',
                             title: 'Di Luar Radius Sekolah',

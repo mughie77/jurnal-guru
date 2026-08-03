@@ -27,18 +27,18 @@ require_once __DIR__ . '/../includes/header.php';
 
 <div class="bg-slate-50 min-h-screen pb-24">
     <!-- Main Content -->
-    <div class="p-8 lg:p-12 max-w-7xl mx-auto">
+    <div class="p-8 lg:p-12 max-w-full w-full mx-auto">
         <div class="flex items-center justify-between mb-12">
             <div class="flex items-center gap-6">
-                <a href="profil.php" class="w-20 h-20 rounded-2xl bg-indigo-600 border-4 border-white shadow-xl overflow-hidden flex items-center justify-center block hover:scale-105 transition-transform">
+                <a href="profil.php" class="w-20 h-20 rounded-xl bg-indigo-600 border-4 border-white shadow-xl overflow-hidden flex items-center justify-center block hover:scale-105 transition-transform">
                     <?php if(!empty($guru_foto)): ?>
-                        <img src="<?= BASE_URL ?>uploads/guru/<?= $guru_foto ?>" class="w-full h-full object-cover">
+                        <img src="<?= BASE_URL ?>uploads/guru/<?= $guru_foto ?>" class="w-full h-full object-cover rounded-none">
                     <?php else: ?>
                         <i class="fa fa-user-tie text-white text-3xl"></i>
                     <?php endif; ?>
                 </a>
                 <div>
-                    <h1 class="text-3xl font-black text-slate-800 tracking-tight italic">Beranda Guru <span class="text-indigo-600">(<?= htmlspecialchars($_SESSION['nama_lengkap']) ?>)</span></h1>
+                    <h1 class="text-3xl font-normal text-slate-800 tracking-tight italic">Beranda Guru <span class="text-indigo-600">(<?= htmlspecialchars($_SESSION['nama_lengkap']) ?>)</span></h1>
                     <p class="text-slate-400 font-medium tracking-wide"><?= date('l, d F Y') ?></p>
                 </div>
             </div>

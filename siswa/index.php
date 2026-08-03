@@ -43,19 +43,19 @@ require_once __DIR__ . '/../includes/header.php';
 </style>
 
 <div class="bg-slate-50 min-h-screen pb-24">
-    <div class="p-4 lg:p-8 max-w-4xl mx-auto">
+    <div class="p-4 lg:p-8 max-w-full w-full mx-auto">
 
         <div class="lux-card p-6 mb-8 bg-gradient-to-br from-indigo-600 to-indigo-800 text-white relative overflow-hidden">
             <div class="relative z-10 flex items-center gap-6">
-                <div class="w-24 h-24 rounded-2xl bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center text-3xl font-black italic shadow-inner overflow-hidden">
+                <div class="w-24 h-24 rounded-xl bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center text-3xl font-black italic shadow-inner overflow-hidden">
                     <?php if(!empty($siswa['foto'])): ?>
-                        <img src="<?= BASE_URL ?>uploads/siswa/<?= $siswa['foto'] ?>" class="w-full h-full object-cover">
+                        <img src="<?= BASE_URL ?>uploads/siswa/<?= $siswa['foto'] ?>" class="w-full h-full object-cover rounded-none">
                     <?php else: ?>
                         <?= strtoupper(substr($siswa['nama_siswa'], 0, 1)) ?>
                     <?php endif; ?>
                 </div>
                 <div>
-                    <h1 class="text-2xl font-black italic tracking-tight leading-tight"><?= htmlspecialchars($siswa['nama_siswa']) ?></h1>
+                    <h1 class="text-2xl font-normal italic tracking-tight leading-tight"><?= htmlspecialchars($siswa['nama_siswa']) ?></h1>
                     <p class="text-indigo-100 font-bold text-sm tracking-widest mt-1"><?= htmlspecialchars($siswa['nis']) ?> / <?= htmlspecialchars($siswa['nisn'] ?? '-') ?></p>
                     <div class="flex items-center gap-3 mt-3">
                         <span class="px-3 py-1 bg-white/10 rounded-full text-[10px] font-black uppercase tracking-widest border border-white/20"><?= htmlspecialchars($siswa['nama_kelas']) ?></span>

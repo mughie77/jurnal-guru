@@ -10,6 +10,24 @@ $guru_res = mysqli_query($conn, "SELECT id FROM guru WHERE user_id = $user_id");
 if(mysqli_num_rows($guru_res) == 0) die("Error: Data guru tidak ditemukan.");
 $guru_id = mysqli_fetch_assoc($guru_res)['id'];
 
+// Deletion Handler
+if (isset($_GET['action']) && $_GET['action'] == 'delete') {
+    $del_id = (int)($_GET['id'] ?? 0);
+    if (!verify_csrf_token($_GET['csrf_token'] ?? '')) {
+        die("CSRF Token Invalid");
+    }
+
+    // Ensure the journal belongs to this teacher or user is admin
+    $check_del = mysqli_query($conn, "SELECT id FROM jurnal WHERE id = $del_id AND (guru_id = $guru_id OR '" . $_SESSION['role'] . "' = 'admin')");
+    if (mysqli_num_rows($check_del) > 0) {
+        mysqli_query($conn, "DELETE FROM absensi_jurnal WHERE jurnal_id = $del_id");
+        mysqli_query($conn, "DELETE FROM jurnal WHERE id = $del_id");
+
+        header("Location: riwayat.php?success_delete=1");
+        exit;
+    }
+}
+
 $where_clause = "jurnal.guru_id = $guru_id";
 if ($active_tahun_id) $where_clause .= " AND jurnal.tahun_pelajaran_id = $active_tahun_id";
 if (!empty($_GET['tanggal'])) {
@@ -43,6 +61,21 @@ require_once __DIR__ . '/../includes/header.php';
 </script>
 <?php endif; ?>
 
+<?php if (isset($_GET['success_delete'])): ?>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        Swal.fire({
+            icon: 'success',
+            title: 'Berhasil!',
+            text: 'Jurnal mengajar telah berhasil dihapus.',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true
+        });
+    });
+</script>
+<?php endif; ?>
+
 <?php if (isset($_GET['success_edit'])): ?>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -60,7 +93,7 @@ require_once __DIR__ . '/../includes/header.php';
 
 <style>#sidebar, header, nav.navbar { display: none !important; } .lg\:ml-64 { margin-left: 0 !important; } .main-content { margin-left: 0 !important; padding-top: 2rem !important; }</style>
 
-<div class="max-w-6xl mx-auto pb-20">
+<div class="max-w-full w-full mx-auto pb-20 px-4 sm:px-8">
     <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
         <div>
             <h1 class="text-3xl font-bold text-slate-800 tracking-tight">Riwayat Jurnal</h1>
@@ -119,9 +152,14 @@ require_once __DIR__ . '/../includes/header.php';
                                 </div>
                             </td>
                             <td class="px-6 py-4 text-center whitespace-nowrap">
-                                <a href="edit_jurnal.php?id=<?= $row['id'] ?>" class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all shadow-sm border border-indigo-100" title="Edit Jurnal">
-                                    <i class="fa fa-edit text-xs"></i>
-                                </a>
+                                <div class="flex items-center justify-center gap-2">
+                                    <a href="edit_jurnal.php?id=<?= $row['id'] ?>" class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all shadow-sm border border-indigo-100" title="Edit Jurnal">
+                                        <i class="fa fa-edit text-xs"></i>
+                                    </a>
+                                    <button onclick="confirmDelete(<?= $row['id'] ?>, '<?= get_csrf_token() ?>')" class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white transition-all shadow-sm border border-rose-100" title="Hapus Jurnal">
+                                        <i class="fa fa-trash text-xs"></i>
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                         <?php endwhile; ?>
@@ -133,5 +171,24 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
     </div>
 </div>
+
+<script>
+function confirmDelete(id, csrfToken) {
+    Swal.fire({
+        title: 'Hapus Jurnal?',
+        text: 'Apakah Anda yakin ingin menghapus jurnal ini? Tindakan ini tidak dapat dibatalkan.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#EF4444',
+        cancelButtonColor: '#6B7280',
+        confirmButtonText: 'Ya, Hapus!',
+        cancelButtonText: 'Batal'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.location.href = 'riwayat.php?action=delete&id=' + id + '&csrf_token=' + csrfToken;
+        }
+    });
+}
+</script>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>
