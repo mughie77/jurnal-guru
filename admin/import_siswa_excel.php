@@ -24,9 +24,77 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['excel_file'])) {
 
         $success_count = 0;
         $skip_count = 0;
+        $duplicate_errors = [];
+
+        // Track parsed records in this Excel run to prevent intra-sheet duplicates
+        $parsed_nis = [];
+        $parsed_nisn = [];
+
+        // Build list of existing NIS and NISN to compare efficiently
+        $existing_nis = [];
+        $existing_nisn = [];
+
+        $res_ex = mysqli_query($conn, "SELECT nis, nisn, nama_siswa FROM siswa");
+        while ($r = mysqli_fetch_assoc($res_ex)) {
+            if ($r['nis']) {
+                $existing_nis[strtolower(trim($r['nis']))] = $r['nama_siswa'];
+            }
+            if ($r['nisn']) {
+                $existing_nisn[strtolower(trim($r['nisn']))] = $r['nama_siswa'];
+            }
+        }
 
         mysqli_begin_transaction($conn);
         try {
+            // First pass: validation against duplicates
+            foreach ($rows as $index => $row) {
+                $row_num = $index + 2;
+                if (empty($row[0])) {
+                    continue;
+                }
+
+                $nis = trim((string)$row[0]);
+                $nisn = trim((string)($row[1] ?? ''));
+                $nama_siswa = trim($row[2] ?? "Siswa baris $row_num");
+
+                if ($nis === '') {
+                    continue;
+                }
+
+                // Check duplicates in database
+                $nis_lc = strtolower($nis);
+                if (isset($existing_nis[$nis_lc])) {
+                    $duplicate_errors[] = "Baris $row_num: NIS '$nis' sudah digunakan di database oleh '" . $existing_nis[$nis_lc] . "'";
+                }
+
+                if ($nisn !== '') {
+                    $nisn_lc = strtolower($nisn);
+                    if (isset($existing_nisn[$nisn_lc])) {
+                        $duplicate_errors[] = "Baris $row_num: NISN '$nisn' sudah digunakan di database oleh '" . $existing_nisn[$nisn_lc] . "'";
+                    }
+                }
+
+                // Check duplicates within the Excel sheet itself
+                if (isset($parsed_nis[$nis_lc])) {
+                    $duplicate_errors[] = "Baris $row_num: NIS '$nis' ganda/duplikat dalam file Excel ini (sebelumnya di baris " . $parsed_nis[$nis_lc] . ")";
+                } else {
+                    $parsed_nis[$nis_lc] = $row_num;
+                }
+
+                if ($nisn !== '') {
+                    if (isset($parsed_nisn[$nisn_lc])) {
+                        $duplicate_errors[] = "Baris $row_num: NISN '$nisn' ganda/duplikat dalam file Excel ini (sebelumnya di baris " . $parsed_nisn[$nisn_lc] . ")";
+                    } else {
+                        $parsed_nisn[$nisn_lc] = $row_num;
+                    }
+                }
+            }
+
+            if (!empty($duplicate_errors)) {
+                // If duplicates are found, abort import and report all errors
+                throw new Exception("Ditemukan data ganda pada file Excel:\n" . implode("\n", array_slice($duplicate_errors, 0, 10)) . (count($duplicate_errors) > 10 ? "\n...dan " . (count($duplicate_errors) - 10) . " data ganda lainnya." : ""));
+            }
+
             // Prepared statements
             $stmt_siswa = mysqli_prepare($conn, "INSERT INTO siswa (nis, nisn, nama_siswa, jenis_kelamin, alamat, no_telp, tempat_lahir, tanggal_lahir)
                                                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
@@ -37,13 +105,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['excel_file'])) {
                                               ON DUPLICATE KEY UPDATE kelas_id = VALUES(kelas_id)");
 
             foreach ($rows as $index => $row) {
-                if (empty($row[0]) || empty($row[1])) {
+                if (empty($row[0])) {
                     $skip_count++;
                     continue;
                 }
 
-                $nis = (string)$row[0];
-                $nisn = (string)($row[1] ?? '');
+                $nis = trim((string)$row[0]);
+                $nisn = trim((string)($row[1] ?? ''));
+                $nisn = $nisn !== '' ? $nisn : null;
                 $nama_siswa = $row[2] ?? '';
                 $jk = (strtoupper(trim($row[3] ?? '')) == 'P') ? 'P' : 'L';
                 $alamat = $row[4] ?? null;
@@ -72,7 +141,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['excel_file'])) {
             $message_type = 'success';
         } catch (Exception $e) {
             mysqli_rollback($conn);
-            $message = "Error: " . $e->getMessage();
+            $message = $e->getMessage();
             $message_type = 'error';
         }
     } else {

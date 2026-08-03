@@ -16,14 +16,31 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
     try {
         if (isset($_POST['tambah'])) {
-            $nis = $_POST['nis'];
-            $nisn = $_POST['nisn'] ?: null;
+            $nis = trim($_POST['nis']);
+            $nisn = trim($_POST['nisn'] ?: '');
+            $nisn = $nisn !== '' ? $nisn : null;
             $nama_siswa = $_POST['nama_siswa'];
             $jenis_kelamin = $_POST['jenis_kelamin'];
             $alamat = $_POST['alamat'] ?: null;
             $no_telp = $_POST['no_telp'] ?: null;
             $tempat_lahir = $_POST['tempat_lahir'] ?: null;
             $tanggal_lahir = $_POST['tanggal_lahir'] ?: null;
+
+            // Pre-validation to avoid duplicate NIS
+            $check_nis = mysqli_query($conn, "SELECT id, nama_siswa FROM siswa WHERE nis = '" . mysqli_real_escape_string($conn, $nis) . "'");
+            if (mysqli_num_rows($check_nis) > 0) {
+                $dup = mysqli_fetch_assoc($check_nis);
+                throw new Exception("NIS '$nis' sudah terdaftar atas nama '" . $dup['nama_siswa'] . "'.");
+            }
+
+            // Pre-validation to avoid duplicate NISN (only check if NISN is supplied)
+            if ($nisn !== null) {
+                $check_nisn = mysqli_query($conn, "SELECT id, nama_siswa FROM siswa WHERE nisn = '" . mysqli_real_escape_string($conn, $nisn) . "'");
+                if (mysqli_num_rows($check_nisn) > 0) {
+                    $dup = mysqli_fetch_assoc($check_nisn);
+                    throw new Exception("NISN '$nisn' sudah terdaftar atas nama '" . $dup['nama_siswa'] . "'.");
+                }
+            }
 
             $foto = null;
             if (!empty($_FILES['foto']['name'])) {
@@ -42,14 +59,31 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             }
         } elseif (isset($_POST['edit'])) {
             $id = (int)$_POST['id'];
-            $nis = $_POST['nis'];
-            $nisn = $_POST['nisn'] ?: null;
+            $nis = trim($_POST['nis']);
+            $nisn = trim($_POST['nisn'] ?: '');
+            $nisn = $nisn !== '' ? $nisn : null;
             $nama_siswa = $_POST['nama_siswa'];
             $jenis_kelamin = $_POST['jenis_kelamin'];
             $alamat = $_POST['alamat'] ?: null;
             $no_telp = $_POST['no_telp'] ?: null;
             $tempat_lahir = $_POST['tempat_lahir'] ?: null;
             $tanggal_lahir = $_POST['tanggal_lahir'] ?: null;
+
+            // Pre-validation to avoid duplicate NIS
+            $check_nis = mysqli_query($conn, "SELECT id, nama_siswa FROM siswa WHERE nis = '" . mysqli_real_escape_string($conn, $nis) . "' AND id != $id");
+            if (mysqli_num_rows($check_nis) > 0) {
+                $dup = mysqli_fetch_assoc($check_nis);
+                throw new Exception("NIS '$nis' sudah digunakan oleh siswa lain ('" . $dup['nama_siswa'] . "').");
+            }
+
+            // Pre-validation to avoid duplicate NISN
+            if ($nisn !== null) {
+                $check_nisn = mysqli_query($conn, "SELECT id, nama_siswa FROM siswa WHERE nisn = '" . mysqli_real_escape_string($conn, $nisn) . "' AND id != $id");
+                if (mysqli_num_rows($check_nisn) > 0) {
+                    $dup = mysqli_fetch_assoc($check_nisn);
+                    throw new Exception("NISN '$nisn' sudah digunakan oleh siswa lain ('" . $dup['nama_siswa'] . "').");
+                }
+            }
 
             $q_foto = "";
             $params = [$nis, $nisn, $nama_siswa, $jenis_kelamin, $alamat, $no_telp, $tempat_lahir, $tanggal_lahir];
