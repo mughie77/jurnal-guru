@@ -24,7 +24,11 @@ switch ($action) {
     case 'status':
         exec('git status 2>&1', $output, $return_var);
         exec('git log -1 --oneline 2>&1', $log_output);
+        exec('git remote -v 2>&1', $remote_output);
         $output_str = implode("\n", $output);
+        if (!empty($remote_output)) {
+            $output_str .= "\n\nRemote Origin URL:\n" . implode("\n", $remote_output);
+        }
         if (!empty($log_output)) {
             $output_str .= "\n\nLast Commit:\n" . implode("\n", $log_output);
         }
@@ -32,6 +36,19 @@ switch ($action) {
             'success' => $return_var === 0,
             'message' => $return_var === 0 ? 'Status Git berhasil diambil.' : 'Gagal mengambil status Git.',
             'log' => $output_str
+        ]);
+        break;
+
+    case 'init_origin':
+        exec('git remote set-url origin https://github.com/mughie77/jurnal-guru.git 2>&1', $output, $return_var);
+        if ($return_var !== 0) {
+            $output = [];
+            exec('git remote add origin https://github.com/mughie77/jurnal-guru.git 2>&1', $output, $return_var);
+        }
+        echo json_encode([
+            'success' => $return_var === 0,
+            'message' => $return_var === 0 ? 'Remote Origin berhasil dikonfigurasi ke mughie77/jurnal-guru!' : 'Gagal mengonfigurasi remote origin.',
+            'log' => implode("\n", $output)
         ]);
         break;
 

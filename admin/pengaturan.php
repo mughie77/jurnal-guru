@@ -230,11 +230,25 @@ require_once __DIR__ . '/../includes/header.php';
                 </h3>
                 <span class="px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded text-[9px] font-black uppercase tracking-wider">DevOps</span>
             </div>
-            <p class="text-xs text-slate-500 leading-relaxed mb-6">Kelola pembaruan source code aplikasi langsung dari panel admin ini untuk ditarik atau didorong ke repositori GitHub.</p>
+            <p class="text-xs text-slate-500 leading-relaxed mb-4">Kelola pembaruan source code aplikasi langsung dari panel admin ini untuk ditarik atau didorong ke repositori GitHub.</p>
+
+            <div class="p-3 bg-slate-50 rounded-xl mb-4 space-y-2 border border-slate-100">
+                <div class="flex flex-col">
+                    <span class="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">GitHub CLI (gh)</span>
+                    <code class="text-[10px] font-mono font-bold text-slate-600 bg-white p-1.5 rounded border border-slate-100 break-all select-all">gh repo clone mughie77/jurnal-guru</code>
+                </div>
+                <div class="flex flex-col">
+                    <span class="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Git URL</span>
+                    <code class="text-[10px] font-mono font-bold text-slate-600 bg-white p-1.5 rounded border border-slate-100 break-all select-all">https://github.com/mughie77/jurnal-guru.git</code>
+                </div>
+            </div>
 
             <div class="space-y-3">
                 <button type="button" onclick="runGitAction('status', '<?= get_csrf_token() ?>')" class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-2">
                     <i class="fa fa-info-circle"></i> Cek Status Git
+                </button>
+                <button type="button" onclick="runGitAction('init_origin', '<?= get_csrf_token() ?>')" class="w-full py-2.5 bg-amber-50 hover:bg-amber-100 text-amber-700 font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-2 border border-amber-100">
+                    <i class="fa fa-link"></i> Set Remote origin URL
                 </button>
                 <button type="button" onclick="runGitAction('pull', '<?= get_csrf_token() ?>')" class="w-full py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-2 border border-emerald-100">
                     <i class="fa fa-cloud-download-alt"></i> Tarik Pembaruan (Pull)
