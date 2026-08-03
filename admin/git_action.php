@@ -1,4 +1,7 @@
 <?php
+// Start output buffering immediately to capture and discard any accidental notices, warnings, or errors
+ob_start();
+
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../config/database.php';
 
@@ -7,11 +10,13 @@ authorize_role(['admin']);
 header('Content-Type: application/json');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    ob_end_clean();
     echo json_encode(['success' => false, 'message' => 'Metode request tidak didukung.']);
     exit;
 }
 
 if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
+    ob_end_clean();
     echo json_encode(['success' => false, 'message' => 'Token CSRF tidak valid.']);
     exit;
 }
@@ -36,11 +41,13 @@ switch ($action) {
         if (!empty($log_output)) {
             $output_str .= "\n\nLast Commit:\n" . implode("\n", $log_output);
         }
-        echo json_encode([
+        $res = [
             'success' => $return_var === 0,
             'message' => $return_var === 0 ? 'Status Git berhasil diambil.' : 'Gagal mengambil status Git.',
             'log' => $output_str
-        ]);
+        ];
+        ob_end_clean();
+        echo json_encode($res);
         break;
 
     case 'init_origin':
@@ -49,11 +56,13 @@ switch ($action) {
             $output = [];
             exec('git remote add origin https://github.com/mughie77/jurnal-guru.git 2>&1', $output, $return_var);
         }
-        echo json_encode([
+        $res = [
             'success' => $return_var === 0,
             'message' => $return_var === 0 ? 'Remote Origin berhasil dikonfigurasi ke mughie77/jurnal-guru!' : 'Gagal mengonfigurasi remote origin.',
             'log' => implode("\n", $output)
-        ]);
+        ];
+        ob_end_clean();
+        echo json_encode($res);
         break;
 
     case 'pull':
@@ -65,11 +74,13 @@ switch ($action) {
         if (!$success) {
             $msg .= "\n\nSaran: Pastikan kunci SSH Anda terdaftar di GitHub atau repository diakses secara publik.";
         }
-        echo json_encode([
+        $res = [
             'success' => $success,
             'message' => $msg,
             'log' => $log
-        ]);
+        ];
+        ob_end_clean();
+        echo json_encode($res);
         break;
 
     case 'push':
@@ -105,14 +116,17 @@ switch ($action) {
         if (!$overall_success) {
             $msg .= "\n\nSaran: Periksa apakah Anda memiliki hak akses WRITE/PUSH ke repositori ini.";
         }
-        echo json_encode([
+        $res = [
             'success' => $overall_success,
             'message' => $msg,
             'log' => implode("\n", $all_outputs)
-        ]);
+        ];
+        ob_end_clean();
+        echo json_encode($res);
         break;
 
     default:
+        ob_end_clean();
         echo json_encode(['success' => false, 'message' => 'Aksi Git tidak valid.']);
         break;
 }

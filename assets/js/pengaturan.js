@@ -69,7 +69,17 @@ function runGitAction(action, csrfToken, additionalData = {}) {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: bodyParams
     })
-    .then(response => response.json())
+    .then(async response => {
+        const text = await response.text();
+        try {
+            return JSON.parse(text);
+        } catch (e) {
+            console.error("Malformed Git JSON Response:", text);
+            // Put raw html or text in logs for clear debugging
+            logBox.textContent = text;
+            throw new Error("Server mengembalikan format non-JSON. Periksa log box di bawah.");
+        }
+    })
     .then(data => {
         Swal.close();
         logBox.textContent = data.log || "Tidak ada output terminal.";
@@ -91,11 +101,13 @@ function runGitAction(action, csrfToken, additionalData = {}) {
     })
     .catch(err => {
         Swal.close();
-        logBox.textContent = "Terjadi kesalahan jaringan atau server error:\n" + err.message;
+        if (!logBox.textContent || logBox.textContent.includes("Menjalankan perintah Git")) {
+            logBox.textContent = "Terjadi kesalahan jaringan atau server error:\n" + err.message;
+        }
         Swal.fire({
             icon: 'error',
-            title: 'Request Error',
-            text: 'Gagal menjalankan perintah Git karena kesalahan jaringan.',
+            title: 'Gagal Memproses',
+            text: err.message || 'Gagal menjalankan perintah Git.',
             confirmButtonColor: '#EF4444'
         });
     });
