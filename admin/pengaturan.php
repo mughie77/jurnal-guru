@@ -223,6 +223,34 @@ require_once __DIR__ . '/../includes/header.php';
             </div>
         </div>
 
+        <div class="lux-card p-6 border-t-4 border-slate-700">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-slate-800 font-bold flex items-center italic">
+                    <i class="fab fa-github mr-2 text-slate-800 text-lg"></i> Sinkronisasi GitHub
+                </h3>
+                <span class="px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded text-[9px] font-black uppercase tracking-wider">DevOps</span>
+            </div>
+            <p class="text-xs text-slate-500 leading-relaxed mb-6">Kelola pembaruan source code aplikasi langsung dari panel admin ini untuk ditarik atau didorong ke repositori GitHub.</p>
+
+            <div class="space-y-3">
+                <button type="button" onclick="runGitAction('status', '<?= get_csrf_token() ?>')" class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-2">
+                    <i class="fa fa-info-circle"></i> Cek Status Git
+                </button>
+                <button type="button" onclick="runGitAction('pull', '<?= get_csrf_token() ?>')" class="w-full py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-2 border border-emerald-100">
+                    <i class="fa fa-cloud-download-alt"></i> Tarik Pembaruan (Pull)
+                </button>
+                <button type="button" onclick="confirmGitPush('<?= get_csrf_token() ?>')" class="w-full py-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-2 border border-indigo-100">
+                    <i class="fa fa-cloud-upload-alt"></i> Kirim Pembaruan (Push)
+                </button>
+            </div>
+
+            <!-- Logger box for git terminal output -->
+            <div id="git_log_container" class="mt-6 hidden">
+                <label class="block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Terminal Output</label>
+                <pre id="git_log_box" class="w-full p-4 bg-slate-900 text-slate-200 text-[11px] font-mono rounded-xl overflow-x-auto max-h-48 whitespace-pre-wrap leading-relaxed shadow-inner"></pre>
+            </div>
+        </div>
+
         <div class="lux-card p-6">
             <h3 class="text-slate-800 font-bold mb-3 flex items-center">
                 <i class="fa fa-lightbulb mr-2 text-amber-500"></i> Tips
