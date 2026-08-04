@@ -41,8 +41,10 @@ $output = [];
 $return_var = 0;
 
 // Prevent hangs during command executions if credentials prompt for input on SSH/HTTP
-putenv('GIT_TERMINAL_PROMPT=0');
-putenv('GIT_ASKPASS=echo');
+if (function_exists('putenv')) {
+    putenv('GIT_TERMINAL_PROMPT=0');
+    putenv('GIT_ASKPASS=echo');
+}
 
 switch ($action) {
     case 'status':
