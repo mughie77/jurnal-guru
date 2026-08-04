@@ -2,6 +2,21 @@
 // Start output buffering immediately to capture and discard any accidental notices, warnings, or errors
 ob_start();
 
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Intercept unauthorized or expired sessions early to return clean JSON instead of HTML redirects
+if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'admin') {
+    header('Content-Type: application/json');
+    ob_end_clean();
+    echo json_encode([
+        'success' => false,
+        'message' => 'Sesi Anda telah berakhir atau Anda tidak memiliki hak akses sebagai Admin. Silakan muat ulang halaman dan login kembali.'
+    ]);
+    exit();
+}
+
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../config/database.php';
 
