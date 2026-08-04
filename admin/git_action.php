@@ -58,7 +58,14 @@ if (function_exists('putenv')) {
     putenv('GIT_ASKPASS=echo');
 }
 
-$is_git_repo = is_dir(__DIR__ . '/../.git');
+// Detect if we are inside a Git repository using official Git check (robust against symlinks, chroots, etc)
+$is_git_repo = false;
+if (function_exists('exec')) {
+    exec('git rev-parse --is-inside-work-tree 2>&1', $check_git_out, $check_git_res);
+    if ($check_git_res === 0) {
+        $is_git_repo = true;
+    }
+}
 
 switch ($action) {
     case 'status':
@@ -96,6 +103,7 @@ switch ($action) {
             exec('git init 2>&1', $init_out);
             $init_logs[] = "> git init";
             $init_logs[] = implode("\n", $init_out);
+            $is_git_repo = true;
         }
 
         exec('git remote set-url origin https://github.com/mughie77/jurnal-guru.git 2>&1', $output, $return_var);
