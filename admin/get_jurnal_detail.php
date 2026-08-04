@@ -2,7 +2,7 @@
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../config/database.php';
 
-authorize_role(['admin', 'waka']);
+authorize_role(['admin', 'waka', 'guru']);
 
 header('Content-Type: application/json');
 

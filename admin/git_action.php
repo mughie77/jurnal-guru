@@ -17,6 +17,18 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'admin') {
     exit();
 }
 
+// Check if exec() is disabled in the PHP environment configuration (disabled_functions)
+if (!function_exists('exec')) {
+    header('Content-Type: application/json');
+    ob_end_clean();
+    echo json_encode([
+        'success' => false,
+        'message' => 'Fungsi shell exec() dinonaktifkan di server hosting Anda. Silakan hubungi penyedia hosting Anda untuk mengaktifkan exec() agar fitur sinkronisasi GitHub dapat berjalan.',
+        'log' => 'Error: exec() is disabled in php.ini (disable_functions).'
+    ]);
+    exit();
+}
+
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../config/database.php';
 
