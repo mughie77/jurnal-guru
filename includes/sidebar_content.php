@@ -95,17 +95,18 @@ if ($role == 'admin') {
     echo sidebar_section('Data Akademik', 'fa fa-graduation-cap', $akademik_active, $akademik_links);
 
     // Group 3: Laporan & Rekap
-    $laporan_active = in_array($current_page, ['jurnal.php', 'rekap_absensi.php', 'rekap_persiswa.php', 'rekap_gps.php', 'rekap_izin.php', 'rekap_kritik.php', 'rekap_pengaduan.php', 'rekap_mood.php', 'rekap_berkas.php', 'perangkat.php', 'peta_kelas.php']);
+    $laporan_active = in_array($current_page, ['jurnal.php', 'rekap_absensi.php', 'rekap_persiswa.php', 'rekap_gps.php', 'rekap_izin.php', 'rekap_kritik.php', 'rekap_pengaduan.php', 'rekap_mood.php', 'rekap_berkas.php', 'perangkat.php', 'peta_kelas.php', 'peta_sebar_jurnal.php']);
     $laporan_links = sub_nav_link('admin/jurnal.php', 'Jurnal Mengajar', $current_page == 'jurnal.php') .
                      sub_nav_link('admin/peta_kelas.php', 'Peta Status Kelas', $current_page == 'peta_kelas.php') .
-                     sub_nav_link('admin/rekap_absensi.php', 'Lap. Absensi Jurnal', $current_page == 'rekap_absensi.php') .
-                     sub_nav_link('admin/rekap_persiswa.php', 'Lap. Kehadiran Siswa', $current_page == 'rekap_persiswa.php') .
-                     sub_nav_link('admin/rekap_gps.php', 'Lap. Absensi GPS', $current_page == 'rekap_gps.php') .
-                     sub_nav_link('waka/rekap_izin.php', 'Lap. Pengajuan Izin', $current_page == 'rekap_izin.php') .
-                     sub_nav_link('admin/rekap_kritik.php', 'Lap. Kritik & Saran', $current_page == 'rekap_kritik.php') .
-                     sub_nav_link('admin/rekap_pengaduan.php', 'Lap. Pengaduan', $current_page == 'rekap_pengaduan.php') .
-                     sub_nav_link('admin/rekap_mood.php', 'Lap. Mood Harian', $current_page == 'rekap_mood.php') .
-                     sub_nav_link('admin/rekap_berkas.php', 'Lap. Berkas Siswa', $current_page == 'rekap_berkas.php') .
+                     sub_nav_link('admin/peta_sebar_jurnal.php', 'Peta Sebar Jurnal', $current_page == 'peta_sebar_jurnal.php') .
+                     sub_nav_link('admin/rekap_absensi.php', 'Absensi Jurnal', $current_page == 'rekap_absensi.php') .
+                     sub_nav_link('admin/rekap_persiswa.php', 'Kehadiran Siswa', $current_page == 'rekap_persiswa.php') .
+                     sub_nav_link('admin/rekap_gps.php', 'Absensi GPS', $current_page == 'rekap_gps.php') .
+                     sub_nav_link('waka/rekap_izin.php', 'Pengajuan Izin', $current_page == 'rekap_izin.php') .
+                     sub_nav_link('admin/rekap_kritik.php', 'Kritik & Saran', $current_page == 'rekap_kritik.php') .
+                     sub_nav_link('admin/rekap_pengaduan.php', 'Pengaduan', $current_page == 'rekap_pengaduan.php') .
+                     sub_nav_link('admin/rekap_mood.php', 'Mood Harian', $current_page == 'rekap_mood.php') .
+                     sub_nav_link('admin/rekap_berkas.php', 'Berkas Siswa', $current_page == 'rekap_berkas.php') .
                      sub_nav_link('admin/perangkat.php', 'Data Perangkat', $current_page == 'perangkat.php');
     echo sidebar_section('Laporan & Rekap', 'fa fa-chart-bar', $laporan_active, $laporan_links);
 
@@ -133,17 +134,18 @@ if ($role == 'admin') {
     echo sidebar_section('Data Akademik', 'fa fa-graduation-cap', $akademik_active, $akademik_links);
 
     // Group 3: Laporan & Rekap (Waka)
-    $laporan_active = in_array($current_page, ['jurnal.php', 'rekap_absensi.php', 'rekap_persiswa.php', 'rekap_gps.php', 'rekap_izin.php', 'rekap_kritik.php', 'rekap_pengaduan.php', 'rekap_mood.php', 'rekap_berkas.php', 'perangkat.php', 'peta_kelas.php']);
+    $laporan_active = in_array($current_page, ['jurnal.php', 'rekap_absensi.php', 'rekap_persiswa.php', 'rekap_gps.php', 'rekap_izin.php', 'rekap_kritik.php', 'rekap_pengaduan.php', 'rekap_mood.php', 'rekap_berkas.php', 'perangkat.php', 'peta_kelas.php', 'peta_sebar_jurnal.php']);
     $laporan_links = sub_nav_link('waka/jurnal.php', 'Jurnal Mengajar', $current_page == 'jurnal.php') .
                      sub_nav_link('waka/peta_kelas.php', 'Peta Status Kelas', $current_page == 'peta_kelas.php') .
-                     sub_nav_link('admin/rekap_absensi.php', 'Lap. Absensi Jurnal', $current_page == 'rekap_absensi.php') .
-                     sub_nav_link('admin/rekap_persiswa.php', 'Lap. Kehadiran Siswa', $current_page == 'rekap_persiswa.php') .
-                     sub_nav_link('admin/rekap_gps.php', 'Lap. Absensi GPS', $current_page == 'rekap_gps.php') .
-                     sub_nav_link('waka/rekap_izin.php', 'Lap. Pengajuan Izin', $current_page == 'rekap_izin.php') .
-                     sub_nav_link('admin/rekap_kritik.php', 'Lap. Kritik & Saran', $current_page == 'rekap_kritik.php') .
-                     sub_nav_link('admin/rekap_pengaduan.php', 'Lap. Pengaduan', $current_page == 'rekap_pengaduan.php') .
-                     sub_nav_link('admin/rekap_mood.php', 'Lap. Mood Harian', $current_page == 'rekap_mood.php') .
-                     sub_nav_link('admin/rekap_berkas.php', 'Lap. Berkas Siswa', $current_page == 'rekap_berkas.php') .
+                     sub_nav_link('waka/peta_sebar_jurnal.php', 'Peta Sebar Jurnal', $current_page == 'peta_sebar_jurnal.php') .
+                     sub_nav_link('admin/rekap_absensi.php', 'Absensi Jurnal', $current_page == 'rekap_absensi.php') .
+                     sub_nav_link('admin/rekap_persiswa.php', 'Kehadiran Siswa', $current_page == 'rekap_persiswa.php') .
+                     sub_nav_link('admin/rekap_gps.php', 'Absensi GPS', $current_page == 'rekap_gps.php') .
+                     sub_nav_link('waka/rekap_izin.php', 'Pengajuan Izin', $current_page == 'rekap_izin.php') .
+                     sub_nav_link('admin/rekap_kritik.php', 'Kritik & Saran', $current_page == 'rekap_kritik.php') .
+                     sub_nav_link('admin/rekap_pengaduan.php', 'Pengaduan', $current_page == 'rekap_pengaduan.php') .
+                     sub_nav_link('admin/rekap_mood.php', 'Mood Harian', $current_page == 'rekap_mood.php') .
+                     sub_nav_link('admin/rekap_berkas.php', 'Berkas Siswa', $current_page == 'rekap_berkas.php') .
                      sub_nav_link('admin/perangkat.php', 'Data Perangkat', $current_page == 'perangkat.php');
     echo sidebar_section('Laporan & Rekap', 'fa fa-chart-bar', $laporan_active, $laporan_links);
 }
