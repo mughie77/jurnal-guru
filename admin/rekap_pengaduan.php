@@ -123,10 +123,16 @@ require_once __DIR__ . '/../includes/header.php';
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 text-center">
-                                    <a href="https://www.google.com/maps/search/?api=1&query=<?= $r['latitude'] ?>,<?= $r['longitude'] ?>" target="_blank"
-                                       class="inline-flex items-center gap-1.5 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-md shadow-rose-100 transition-all hover:scale-105 active:scale-95">
-                                        <i class="fa fa-map-marker-alt"></i> Buka Maps
-                                    </a>
+                                    <div class="flex items-center justify-center gap-2">
+                                        <button onclick="showPengaduanDetail('<?= addslashes(htmlspecialchars($r['nama_siswa'])) ?>', '<?= addslashes(htmlspecialchars($r['nama_kelas'] ?? 'Tanpa Kelas')) ?>', '<?= date('d M Y, H:i', strtotime($r['tanggal'])) ?>', '<?= addslashes(htmlspecialchars($r['keterangan'])) ?>', '<?= $r['latitude'] ?>', '<?= $r['longitude'] ?>', '<?= round($r['akurasi']) ?>')"
+                                                class="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all hover:scale-105 active:scale-95">
+                                            <i class="fa fa-eye"></i> Detail
+                                        </button>
+                                        <a href="https://www.google.com/maps/search/?api=1&query=<?= $r['latitude'] ?>,<?= $r['longitude'] ?>" target="_blank"
+                                           class="inline-flex items-center gap-1.5 px-3 py-2 bg-rose-600 hover:bg-rose-700 text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-md shadow-rose-100 transition-all hover:scale-105 active:scale-95">
+                                            <i class="fa fa-map-marker-alt"></i> Maps
+                                        </a>
+                                    </div>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -154,6 +160,50 @@ function filterPengaduan() {
             row.style.display = 'none';
         }
     }
+}
+
+function showPengaduanDetail(nama, kelas, tanggal, keterangan, lat, lng, akurasi) {
+    const detailHtml = `
+        <div class="text-left space-y-4 max-h-[70vh] overflow-y-auto pr-1">
+            <div class="grid grid-cols-2 gap-3 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                <div>
+                    <span class="text-[8px] font-black text-slate-400 uppercase tracking-widest block">Pelapor / Siswa</span>
+                    <span class="text-xs font-bold text-slate-800">${nama}</span>
+                    <span class="px-2 py-0.5 rounded text-[8px] font-black uppercase bg-slate-200 text-slate-700 block mt-1 w-max">${kelas}</span>
+                </div>
+                <div>
+                    <span class="text-[8px] font-black text-slate-400 uppercase tracking-widest block">Waktu Kejadian</span>
+                    <span class="text-xs font-bold text-slate-800">${tanggal} WIB</span>
+                </div>
+            </div>
+            <div class="p-4 bg-rose-50 rounded-2xl border border-rose-100 space-y-1">
+                <span class="text-[8px] font-black text-rose-500 uppercase tracking-widest block">Kronologi / Laporan</span>
+                <p class="text-xs text-rose-950 font-semibold italic whitespace-pre-wrap leading-relaxed">"${keterangan}"</p>
+            </div>
+            <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                <span class="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-1">Koordinat GPS & Akurasi</span>
+                <p class="text-xs font-mono text-slate-700">Latitude: ${lat}<br>Longitude: ${lng}</p>
+                <div class="text-[10px] font-black text-rose-600 uppercase tracking-widest mt-2">
+                    <i class="fa fa-crosshairs mr-1"></i> Akurasi GPS: ±${akurasi} meter
+                </div>
+                <div class="pt-3">
+                    <a href="https://www.google.com/maps/search/?api=1&query=${lat},${lng}" target="_blank"
+                       class="inline-flex items-center gap-1.5 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-[9px] font-black uppercase tracking-widest rounded-xl shadow-md shadow-rose-100 transition-all hover:scale-105">
+                        <i class="fa fa-map-marker-alt"></i> Buka Lokasi di Google Maps
+                    </a>
+                </div>
+            </div>
+        </div>
+    `;
+
+    Swal.fire({
+        title: '<span class="font-black italic text-rose-600 text-lg uppercase tracking-wider">Detail Laporan Pengaduan</span>',
+        html: detailHtml,
+        showCloseButton: true,
+        confirmButtonText: 'Tutup',
+        confirmButtonColor: '#E11D48',
+        width: '500px'
+    });
 }
 </script>
 

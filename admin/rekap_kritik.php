@@ -121,10 +121,16 @@ require_once __DIR__ . '/../includes/header.php';
                                     <?php endif; ?>
                                 </td>
                                 <td class="px-6 py-4 text-center">
-                                    <button onclick="openReplyModal(<?= $f['id'] ?>, '<?= addslashes(htmlspecialchars($f['nama_pengirim'])) ?>', '<?= addslashes(htmlspecialchars($f['umpan_balik'] ?? '')) ?>')"
-                                            class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-md shadow-indigo-100 transition-all hover:scale-105 active:scale-95">
-                                        <i class="fa fa-reply mr-1"></i> Tanggapi
-                                    </button>
+                                    <div class="flex items-center justify-center gap-2">
+                                        <button onclick="showKritikDetail('<?= addslashes(htmlspecialchars($f['nama_pengirim'])) ?>', '<?= $f['role'] ?>', '<?= date('d M Y, H:i', strtotime($f['tanggal'])) ?>', '<?= addslashes(htmlspecialchars($f['subjek'])) ?>', '<?= addslashes(htmlspecialchars($f['isi'])) ?>', '<?= addslashes(htmlspecialchars($f['umpan_balik'] ?? '')) ?>')"
+                                                class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all hover:scale-105 active:scale-95">
+                                            <i class="fa fa-eye mr-1"></i> Detail
+                                        </button>
+                                        <button onclick="openReplyModal(<?= $f['id'] ?>, '<?= addslashes(htmlspecialchars($f['nama_pengirim'])) ?>', '<?= addslashes(htmlspecialchars($f['umpan_balik'] ?? '')) ?>')"
+                                                class="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-md shadow-indigo-100 transition-all hover:scale-105 active:scale-95">
+                                            <i class="fa fa-reply mr-1"></i> Tanggapi
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -181,6 +187,46 @@ function filterKritik() {
             row.style.display = 'none';
         }
     }
+}
+
+function showKritikDetail(sender, role, date, subject, content, reply) {
+    const roleBadge = role === 'siswa'
+        ? '<span class="px-2 py-0.5 rounded text-[9px] font-black uppercase bg-sky-100 text-sky-800">Siswa</span>'
+        : '<span class="px-2 py-0.5 rounded text-[9px] font-black uppercase bg-indigo-100 text-indigo-800">Guru</span>';
+
+    const detailHtml = `
+        <div class="text-left space-y-4 max-h-[70vh] overflow-y-auto pr-1">
+            <div class="grid grid-cols-2 gap-3 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                <div>
+                    <span class="text-[8px] font-black text-slate-400 uppercase tracking-widest block">Pengirim</span>
+                    <span class="text-xs font-bold text-slate-800">${sender} ${roleBadge}</span>
+                </div>
+                <div>
+                    <span class="text-[8px] font-black text-slate-400 uppercase tracking-widest block">Tanggal</span>
+                    <span class="text-xs font-bold text-slate-800">${date}</span>
+                </div>
+            </div>
+            <div class="p-4 bg-indigo-50/50 rounded-2xl border border-indigo-100/50 space-y-1">
+                <span class="text-[8px] font-black text-indigo-500 uppercase tracking-widest block">Subjek</span>
+                <span class="text-sm font-black text-indigo-700 block">${subject}</span>
+                <span class="text-[8px] font-black text-indigo-400 uppercase tracking-widest block mt-2">Isi Kiriman</span>
+                <p class="text-xs text-slate-700 font-semibold italic whitespace-pre-wrap leading-relaxed">"${content}"</p>
+            </div>
+            <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                <span class="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-1">Tanggapan / Umpan Balik</span>
+                <p class="text-xs text-slate-600 italic whitespace-pre-wrap leading-relaxed">${reply ? `"${reply}"` : 'Belum ada tanggapan'}</p>
+            </div>
+        </div>
+    `;
+
+    Swal.fire({
+        title: '<span class="font-black italic text-slate-800 text-lg uppercase tracking-wider">Detail Kritik & Saran</span>',
+        html: detailHtml,
+        showCloseButton: true,
+        confirmButtonText: 'Tutup',
+        confirmButtonColor: '#4F46E5',
+        width: '500px'
+    });
 }
 
 function openReplyModal(id, sender, reply) {
