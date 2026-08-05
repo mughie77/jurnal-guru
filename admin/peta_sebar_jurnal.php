@@ -48,19 +48,27 @@ require_once __DIR__ . '/../includes/header.php';
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
-<div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
     <div>
         <h1 class="text-3xl font-bold text-slate-800 tracking-tight italic">Peta Sebar Jurnal</h1>
         <p class="text-slate-500">Visualisasi sebaran posisi GPS guru saat melakukan pengisian jurnal mengajar.</p>
     </div>
-    <form action="" method="GET" class="flex items-center gap-3">
-        <label class="text-xs font-bold text-slate-400 uppercase tracking-widest hidden sm:block">Pilih Tanggal:</label>
-        <input type="date" name="tanggal" value="<?= htmlspecialchars($date_filter) ?>" onchange="this.form.submit()" class="px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-100 bg-white shadow-sm font-bold text-slate-700 text-xs">
-    </form>
+    <div class="flex flex-wrap items-center gap-3">
+        <button onclick="exportPetaSebarToJPEG()" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-100 transition-all flex items-center text-xs uppercase tracking-wider gap-2">
+            <i class="fa fa-camera text-sm"></i> Ekspor JPEG
+        </button>
+        <form action="" method="GET" class="flex items-center gap-2">
+            <label class="text-xs font-bold text-slate-400 uppercase tracking-widest hidden sm:block">Tanggal:</label>
+            <input type="date" name="tanggal" value="<?= htmlspecialchars($date_filter) ?>" onchange="this.form.submit()" class="px-4 py-2 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-100 bg-white shadow-sm font-bold text-slate-700 text-xs">
+        </form>
+    </div>
 </div>
 
+<!-- Capture/Export Area Container -->
+<div id="sebaran-export-area" class="p-1 sm:p-6 bg-slate-50 rounded-[32px]">
+
 <!-- Map Container Area -->
-<div class="grid grid-cols-1 lg:grid-cols-4 gap-8 mb-8">
+<div class="grid grid-cols-1 lg:grid-cols-4 gap-8 mb-4">
     <div class="lg:col-span-3">
         <div class="lux-card overflow-hidden p-1 bg-white relative">
             <div id="sebaran-map" class="w-full h-[600px] rounded-3xl z-10"></div>
@@ -97,7 +105,52 @@ require_once __DIR__ . '/../includes/header.php';
     </div>
 </div>
 
+</div>
+
+<!-- html2canvas library for perfect image capture -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" integrity="sha512-BNaRQnYcabRBOA6yXSUDq5gOPa62sK6B6sEHNXXnKID77+qesEdfI5y6859dYQgSxcGvB8vG9h97YwT7dD54eg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script>
+function exportPetaSebarToJPEG() {
+    Swal.fire({
+        title: 'Mempersiapkan Gambar...',
+        text: 'Sedang mengekspor peta sebaran jurnal ke format JPEG.',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
+    const exportArea = document.getElementById('sebaran-export-area');
+
+    html2canvas(exportArea, {
+        useCORS: true,
+        scale: 2, // High definition
+        backgroundColor: '#F8FAFC' // bg-slate-50
+    }).then(canvas => {
+        Swal.close();
+
+        // Convert to JPEG format
+        const imgData = canvas.toDataURL('image/jpeg', 0.95);
+
+        // Auto trigger download
+        const link = document.createElement('a');
+        link.download = 'Peta_Sebaran_Jurnal_' + '<?= $date_filter ?>' + '.jpg';
+        link.href = imgData;
+        link.click();
+
+        Swal.fire({
+            icon: 'success',
+            title: 'Berhasil!',
+            text: 'Gambar peta sebaran jurnal berhasil diekspor dan diunduh.',
+            confirmButtonColor: '#4F46E5',
+            timer: 2000
+        });
+    }).catch(err => {
+        Swal.close();
+        Swal.fire('Gagal', 'Terjadi kesalahan saat mengekspor gambar: ' + err.message, 'error');
+    });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize map
     const map = L.map('sebaran-map').setView([<?= $school_lat ?>, <?= $school_lng ?>], 15);
