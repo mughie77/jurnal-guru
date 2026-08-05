@@ -81,16 +81,24 @@ require_once __DIR__ . '/../includes/header.php';
 }
 </style>
 
-<div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
     <div>
         <h1 class="text-3xl font-bold text-slate-800 tracking-tight italic">Status Kelas Hari Ini</h1>
         <p class="text-slate-500">Peta visual status pengajaran dan aktivitas di seluruh kelas.</p>
     </div>
-    <form action="" method="GET" class="flex items-center gap-3">
-        <label class="text-xs font-bold text-slate-400 uppercase tracking-widest hidden sm:block">Pilih Tanggal:</label>
-        <input type="date" name="tanggal" value="<?= htmlspecialchars($date_filter) ?>" onchange="this.form.submit()" class="px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-100 bg-white shadow-sm font-bold text-slate-700">
-    </form>
+    <div class="flex flex-wrap items-center gap-3">
+        <button onclick="exportPetaKelasToJPEG()" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-100 transition-all flex items-center text-xs uppercase tracking-wider gap-2">
+            <i class="fa fa-camera text-sm"></i> Ekspor JPEG
+        </button>
+        <form action="" method="GET" class="flex items-center gap-2">
+            <label class="text-xs font-bold text-slate-400 uppercase tracking-widest hidden sm:block">Tanggal:</label>
+            <input type="date" name="tanggal" value="<?= htmlspecialchars($date_filter) ?>" onchange="this.form.submit()" class="px-4 py-2 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-100 bg-white shadow-sm font-bold text-slate-700 text-xs">
+        </form>
+    </div>
 </div>
+
+<!-- Capture/Export Area Container -->
+<div id="peta-kelas-export-area" class="p-1 sm:p-6 bg-slate-50 rounded-[32px]">
 
 <!-- Rekap Kelas Cards -->
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -118,7 +126,7 @@ require_once __DIR__ . '/../includes/header.php';
 </div>
 
 <!-- Kotak-kotak Besar (Peta Kelas Grid) -->
-<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6 mb-4">
     <?php foreach ($classes as $c): ?>
         <?php
         $has_teacher = isset($jurnals_by_class[$c['id']]);
@@ -173,5 +181,52 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
     <?php endforeach; ?>
 </div>
+
+</div>
+
+<!-- html2canvas library for perfect image capture -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" integrity="sha512-BNaRQnYcabRBOA6yXSUDq5gOPa62sK6B6sEHNXXnKID77+qesEdfI5y6859dYQgSxcGvB8vG9h97YwT7dD54eg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script>
+function exportPetaKelasToJPEG() {
+    Swal.fire({
+        title: 'Mempersiapkan Gambar...',
+        text: 'Sedang mengekspor peta status kelas ke format JPEG.',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
+    const exportArea = document.getElementById('peta-kelas-export-area');
+
+    html2canvas(exportArea, {
+        useCORS: true,
+        scale: 2, // High definition
+        backgroundColor: '#F8FAFC' // bg-slate-50
+    }).then(canvas => {
+        Swal.close();
+
+        // Convert to JPEG format
+        const imgData = canvas.toDataURL('image/jpeg', 0.95);
+
+        // Auto trigger download
+        const link = document.createElement('a');
+        link.download = 'Peta_Status_Kelas_' + '<?= $date_filter ?>' + '.jpg';
+        link.href = imgData;
+        link.click();
+
+        Swal.fire({
+            icon: 'success',
+            title: 'Berhasil!',
+            text: 'Gambar peta status kelas berhasil diekspor dan diunduh.',
+            confirmButtonColor: '#4F46E5',
+            timer: 2000
+        });
+    }).catch(err => {
+        Swal.close();
+        Swal.fire('Gagal', 'Terjadi kesalahan saat mengekspor gambar: ' + err.message, 'error');
+    });
+}
+</script>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>
