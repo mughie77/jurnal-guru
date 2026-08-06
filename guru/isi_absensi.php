@@ -117,7 +117,7 @@ require_once __DIR__ . '/../includes/header.php';
                 </div>
                 <div>
                     <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Tanggal</label>
-                    <input type="date" name="tanggal" value="<?= date('Y-m-d') ?>" required class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-100 font-bold">
+                    <input type="date" name="tanggal" id="tanggal_absen" value="<?= date('Y-m-d') ?>" required class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-100 font-bold">
                 </div>
                 <div>
                     <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Jam Ke-</label>
@@ -150,6 +150,7 @@ require_once __DIR__ . '/../includes/header.php';
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const kSelect = document.getElementById('kelas_id');
+    const tInput = document.getElementById('tanggal_absen');
     const attSection = document.getElementById('attendance_section');
     const sGrid = document.getElementById('siswa_grid');
 
@@ -159,9 +160,16 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     };
 
-    kSelect.addEventListener('change', function() {
-        if (!this.value) { attSection.classList.add('hidden'); return; }
-        fetch(`../api/get_siswa_kelas.php?kelas_id=${this.value}`)
+    function fetchSiswa() {
+        const kelasId = kSelect.value;
+        const tanggal = tInput ? tInput.value : '';
+
+        if (!kelasId) {
+            attSection.classList.add('hidden');
+            return;
+        }
+
+        fetch(`../api/get_siswa_kelas.php?kelas_id=${kelasId}&tanggal=${tanggal}`)
             .then(async r => {
                 const data = await r.json();
                 if (!r.ok) throw new Error(data.error || 'Terjadi kesalahan sistem');
@@ -173,23 +181,37 @@ document.addEventListener('DOMContentLoaded', function() {
                     sGrid.innerHTML = '<div class="col-span-full p-8 text-center text-slate-400 italic bg-slate-50 rounded-2xl">Tidak ada siswa terdaftar di kelas ini untuk tahun pelajaran aktif.</div>';
                 } else {
                     data.forEach(s => {
-                    const card = document.createElement('div');
-                    card.className = "lux-card p-4 flex items-center justify-between";
-                    card.innerHTML = `
-                        <div class="min-w-0 pr-4"><div class="font-bold text-slate-700 truncate text-sm">${s.nama_siswa}</div></div>
-                        <div class="flex gap-1">
-                            ${['H','S','I','A'].map(st => `
-                                <label class="w-8 h-8 flex items-center justify-center cursor-pointer">
-                                    <input type="radio" name="absen[${s.id}]" value="${st}" ${st=='H'?'checked':''} class="peer hidden">
-                                    <div class="w-full h-full rounded-lg border-2 flex items-center justify-center text-[10px] font-black transition-all
-                                        ${st=='H'?'border-emerald-50 text-emerald-300 peer-checked:bg-emerald-500 peer-checked:text-white':''}
-                                        ${st=='S'?'border-amber-50 text-amber-300 peer-checked:bg-amber-500 peer-checked:text-white':''}
-                                        ${st=='I'?'border-blue-50 text-blue-300 peer-checked:bg-blue-500 peer-checked:text-white':''}
-                                        ${st=='A'?'border-rose-50 text-rose-300 peer-checked:bg-rose-500 peer-checked:text-white':''}
-                                    ">${st}</div>
-                                </label>`).join('')}
-                        </div>`;
-                    sGrid.appendChild(card);
+                        // Determine the default checked option
+                        let checkedOption = 'H'; // Default to Present (Hadir)
+                        if (s.gps_active) {
+                            if (s.gps_status === 'Hadir' || s.gps_status === 'Terlambat') {
+                                checkedOption = 'H';
+                            } else if (s.gps_status === 'Sakit') {
+                                checkedOption = 'S';
+                            } else if (s.gps_status === 'Izin') {
+                                checkedOption = 'I';
+                            } else {
+                                checkedOption = 'A'; // If GPS is active and no record is found, mark as Alfa
+                            }
+                        }
+
+                        const card = document.createElement('div');
+                        card.className = "lux-card p-4 flex items-center justify-between";
+                        card.innerHTML = `
+                            <div class="min-w-0 pr-4"><div class="font-bold text-slate-700 truncate text-sm">${s.nama_siswa}</div></div>
+                            <div class="flex gap-1">
+                                ${['H','S','I','A'].map(st => `
+                                    <label class="w-8 h-8 flex items-center justify-center cursor-pointer">
+                                        <input type="radio" name="absen[${s.id}]" value="${st}" ${st==checkedOption?'checked':''} class="peer hidden">
+                                        <div class="w-full h-full rounded-lg border-2 flex items-center justify-center text-[10px] font-black transition-all
+                                            ${st=='H'?'border-emerald-50 text-emerald-300 peer-checked:bg-emerald-500 peer-checked:text-white':''}
+                                            ${st=='S'?'border-amber-50 text-amber-300 peer-checked:bg-amber-500 peer-checked:text-white':''}
+                                            ${st=='I'?'border-blue-50 text-blue-300 peer-checked:bg-blue-500 peer-checked:text-white':''}
+                                            ${st=='A'?'border-rose-50 text-rose-300 peer-checked:bg-rose-500 peer-checked:text-white':''}
+                                        ">${st}</div>
+                                    </label>`).join('')}
+                            </div>`;
+                        sGrid.appendChild(card);
                     });
                 }
                 attSection.classList.remove('hidden'); updateCounts();
@@ -200,7 +222,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 Swal.fire('Gagal Memuat Siswa', err.message, 'error');
                 attSection.classList.add('hidden');
             });
-    });
+    }
+
+    kSelect.addEventListener('change', fetchSiswa);
+    if (tInput) {
+        tInput.addEventListener('change', fetchSiswa);
+    }
 });
 </script>
 

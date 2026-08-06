@@ -93,6 +93,12 @@ require_once __DIR__ . '/../includes/header.php';
                         <div class="text-[9px] text-slate-400 font-bold truncate w-24 mx-auto" title="<?= htmlspecialchars($j['nama_mapel']) ?>"><?= htmlspecialchars($j['nama_mapel']) ?></div>
                     </th>
                     <?php endforeach; ?>
+                    <?php if (!empty($jurnals)): ?>
+                    <th class="px-4 py-4 text-center border-l border-slate-100 bg-emerald-50 text-emerald-700 font-black text-[10px] uppercase">H</th>
+                    <th class="px-4 py-4 text-center border-l border-slate-100 bg-amber-50 text-amber-700 font-black text-[10px] uppercase">S</th>
+                    <th class="px-4 py-4 text-center border-l border-slate-100 bg-blue-50 text-blue-700 font-black text-[10px] uppercase">I</th>
+                    <th class="px-4 py-4 text-center border-l border-slate-100 bg-rose-50 text-rose-700 font-black text-[10px] uppercase">A</th>
+                    <?php endif; ?>
                     <?php if(empty($jurnals)): ?>
                         <th class="px-6 py-4 text-center text-slate-400 italic text-sm">Belum ada data jurnal untuk hari ini.</th>
                     <?php endif; ?>
@@ -100,6 +106,9 @@ require_once __DIR__ . '/../includes/header.php';
             </thead>
             <tbody class="divide-y divide-slate-50">
                 <?php foreach ($siswas as $s): ?>
+                <?php
+                $cnt_h = 0; $cnt_s = 0; $cnt_i = 0; $cnt_a = 0;
+                ?>
                 <tr class="hover:bg-slate-50/50 transition-colors">
                     <td class="px-6 py-4 font-bold text-slate-700 text-sm sticky left-0 bg-white group-hover:bg-slate-50/50 z-10 border-r border-slate-50">
                         <?= htmlspecialchars($s['nama_siswa']) ?>
@@ -109,6 +118,11 @@ require_once __DIR__ . '/../includes/header.php';
                     <td class="px-4 py-4 text-center border-l border-slate-50">
                         <?php
                         $status = $j['absensi'][$s['id']] ?? '-';
+                        if ($status == 'H') $cnt_h++;
+                        elseif ($status == 'S') $cnt_s++;
+                        elseif ($status == 'I') $cnt_i++;
+                        elseif ($status == 'A') $cnt_a++;
+
                         $colors = [
                             'H' => 'bg-emerald-500 text-white',
                             'S' => 'bg-amber-500 text-white',
@@ -120,6 +134,12 @@ require_once __DIR__ . '/../includes/header.php';
                         <span class="inline-flex items-center justify-center w-7 h-7 rounded-lg font-black text-[10px] <?= $colors[$status] ?>"><?= $status ?></span>
                     </td>
                     <?php endforeach; ?>
+                    <?php if (!empty($jurnals)): ?>
+                    <td class="px-4 py-4 text-center border-l border-slate-50 font-black text-emerald-600 text-xs bg-emerald-50/20"><?= $cnt_h ?></td>
+                    <td class="px-4 py-4 text-center border-l border-slate-50 font-black text-amber-600 text-xs bg-amber-50/20"><?= $cnt_s ?></td>
+                    <td class="px-4 py-4 text-center border-l border-slate-50 font-black text-blue-600 text-xs bg-blue-50/20"><?= $cnt_i ?></td>
+                    <td class="px-4 py-4 text-center border-l border-slate-50 font-black text-rose-600 text-xs bg-rose-50/20"><?= $cnt_a ?></td>
+                    <?php endif; ?>
                 </tr>
                 <?php endforeach; ?>
                 <?php if(empty($siswas)): ?>

@@ -34,8 +34,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['simpan_jurnal'])) {
     if (!verify_csrf_token($_POST['csrf_token'] ?? '')) die("CSRF Token Invalid");
     $materi = mysqli_real_escape_string($conn, $_POST['materi']);
     $keterangan = mysqli_real_escape_string($conn, $_POST['keterangan']);
+    $latitude = mysqli_real_escape_string($conn, $_POST['latitude'] ?? '');
+    $longitude = mysqli_real_escape_string($conn, $_POST['longitude'] ?? '');
 
-    if (mysqli_query($conn, "UPDATE jurnal SET materi = '$materi', keterangan = '$keterangan' WHERE id = $jurnal_id")) {
+    if (mysqli_query($conn, "UPDATE jurnal SET materi = '$materi', keterangan = '$keterangan', latitude = '$latitude', longitude = '$longitude' WHERE id = $jurnal_id")) {
         $message = "Jurnal berhasil disimpan!"; $message_type = 'success';
         header("Location: riwayat.php?success=1");
         exit;
@@ -95,8 +97,10 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
         <?php endif; ?>
 
-        <form action="" method="POST" class="space-y-6 sm:space-y-8">
+        <form action="" method="POST" id="jurnal-form" class="space-y-6 sm:space-y-8">
             <input type="hidden" name="csrf_token" value="<?= get_csrf_token() ?>">
+            <input type="hidden" name="latitude" id="lat-input">
+            <input type="hidden" name="longitude" id="lng-input">
             <div>
                 <label class="block text-[10px] sm:text-xs font-black text-slate-400 uppercase tracking-widest mb-2 sm:mb-3 ml-1">Materi Pembahasan Hari Ini</label>
                 <textarea name="materi" rows="5" required placeholder="Jelaskan pokok bahasan, kompetensi dasar, atau aktivitas yang dilakukan..." class="w-full px-4 sm:px-6 py-3 sm:py-4 rounded-2xl sm:rounded-3xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-100 font-medium text-slate-600 text-base sm:text-lg transition-all"></textarea>
@@ -113,5 +117,103 @@ require_once __DIR__ . '/../includes/header.php';
         </form>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('jurnal-form');
+    const latInput = document.getElementById('lat-input');
+    const lngInput = document.getElementById('lng-input');
+    let hasLocation = false;
+
+    function verifyAntiFakeGPS(position) {
+        const accuracy = position.coords.accuracy;
+        const isMocked = position.mocked || (position.coords && position.coords.mocked) || false;
+        const isAutomated = navigator.webdriver;
+
+        if (isMocked || isAutomated || accuracy <= 1) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Fake GPS Terdeteksi',
+                text: 'Sistem mendeteksi penggunaan Fake GPS atau browser otomatis. Anda dilarang melakukan submit jurnal!',
+                confirmButtonColor: '#4F46E5'
+            });
+            return false;
+        }
+        return true;
+    }
+
+    // Pre-fetch location on page load to speed up submission
+    if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+            if (verifyAntiFakeGPS(position)) {
+                latInput.value = position.coords.latitude;
+                lngInput.value = position.coords.longitude;
+                hasLocation = true;
+            }
+        }, function(error) {
+            console.warn("Pre-fetch location failed:", error);
+        }, { enableHighAccuracy: true, timeout: 10000 });
+    }
+
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            if (hasLocation && latInput.value && lngInput.value) {
+                return true;
+            }
+
+            e.preventDefault(); // Stop submission to obtain location
+
+            if (!("geolocation" in navigator)) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'GPS Tidak Didukung',
+                    text: 'Browser Anda tidak mendukung deteksi lokasi (Geolocation). Gunakan browser modern.',
+                    confirmButtonColor: '#4F46E5'
+                });
+                return false;
+            }
+
+            Swal.fire({
+                title: 'Mendeteksi Lokasi...',
+                text: 'Mengambil koordinat GPS Anda untuk mencatat lokasi pengisian jurnal.',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            navigator.geolocation.getCurrentPosition(function(position) {
+                Swal.close();
+                if (verifyAntiFakeGPS(position)) {
+                    latInput.value = position.coords.latitude;
+                    lngInput.value = position.coords.longitude;
+                    hasLocation = true;
+                    form.submit(); // Resubmit the form
+                }
+            }, function(error) {
+                Swal.close();
+                let errorMsg = 'Gagal mendapatkan koordinat lokasi GPS Anda.';
+                if (error.code === 1) {
+                    errorMsg = 'Akses lokasi ditolak. Silakan aktifkan GPS dan izinkan akses lokasi pada browser Anda.';
+                } else if (error.code === 2) {
+                    errorMsg = 'Sinyal lokasi/GPS tidak tersedia atau lemah.';
+                } else if (error.code === 3) {
+                    errorMsg = 'Waktu pengambilan lokasi habis (timeout).';
+                }
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Lokasi Tidak Ditemukan',
+                    text: errorMsg + ' Pengisian jurnal memerlukan lokasi GPS aktif.',
+                    confirmButtonColor: '#4F46E5'
+                });
+            }, {
+                enableHighAccuracy: true,
+                timeout: 15000
+            });
+        });
+    }
+});
+</script>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

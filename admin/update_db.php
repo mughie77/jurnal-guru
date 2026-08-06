@@ -25,7 +25,7 @@ authorize_role(['admin']);
             <p class="text-slate-500 text-sm">System Update & Schema Synchronization</p>
         </div>
 
-        <div class="space-y-4">
+        <div class="space-y-4 max-h-[400px] overflow-y-auto pr-2">
             <?php
             $tables = [
                 'siswa' => [
@@ -39,7 +39,15 @@ authorize_role(['admin']);
                     'tanggal_lahir' => "DATE DEFAULT NULL AFTER tempat_lahir"
                 ],
                 'absensi_harian' => [
-                    'file_surat' => "VARCHAR(255) DEFAULT NULL AFTER keterangan"
+                    'file_surat' => "VARCHAR(255) DEFAULT NULL AFTER keterangan",
+                    'status_verifikasi' => "ENUM('pending','disetujui','ditolak') DEFAULT 'pending' AFTER file_surat"
+                ],
+                'jurnal' => [
+                    'latitude' => "VARCHAR(50) DEFAULT NULL AFTER keterangan",
+                    'longitude' => "VARCHAR(50) DEFAULT NULL AFTER latitude"
+                ],
+                'kelas' => [
+                    'jadwal_pdf' => "VARCHAR(255) DEFAULT NULL AFTER wali_kelas_id"
                 ]
             ];
 
@@ -65,7 +73,8 @@ authorize_role(['admin']);
             $new_settings = [
                 'school_lat' => '-7.9135',
                 'school_lng' => '113.8217',
-                'radius_absen' => '30'
+                'radius_absen' => '30',
+                'siswa_gps_absen' => 'nonaktif'
             ];
 
             foreach ($new_settings as $key => $val) {
@@ -97,15 +106,89 @@ authorize_role(['admin']);
                 $logs[] = ['status' => 'error', 'msg' => "Failed creating <b>perangkat_kelas</b>: " . mysqli_error($conn)];
             }
 
+            // Create mood_survey table
+            $create_mood = "CREATE TABLE IF NOT EXISTS `mood_survey` (
+                `id` int(11) NOT NULL AUTO_INCREMENT,
+                `user_id` int(11) NOT NULL,
+                `role` enum('siswa','guru') NOT NULL,
+                `mood` varchar(50) NOT NULL,
+                `tanggal` date NOT NULL,
+                `created_at` timestamp NULL DEFAULT current_timestamp(),
+                PRIMARY KEY (`id`),
+                UNIQUE KEY `unique_user_daily` (`user_id`, `role`, `tanggal`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci";
+
+            if (mysqli_query($conn, $create_mood)) {
+                $logs[] = ['status' => 'success', 'msg' => "Table <b>mood_survey</b> created successfully"];
+            } else {
+                $logs[] = ['status' => 'error', 'msg' => "Failed creating <b>mood_survey</b>: " . mysqli_error($conn)];
+            }
+
+            // Create panic_button table
+            $create_panic = "CREATE TABLE IF NOT EXISTS `panic_button` (
+                `id` int(11) NOT NULL AUTO_INCREMENT,
+                `siswa_id` int(11) NOT NULL,
+                `nama_siswa` varchar(150) NOT NULL,
+                `keterangan` text NOT NULL,
+                `latitude` decimal(11,8) NOT NULL,
+                `longitude` decimal(11,8) NOT NULL,
+                `akurasi` float NOT NULL,
+                `tanggal` timestamp NULL DEFAULT current_timestamp(),
+                PRIMARY KEY (`id`),
+                CONSTRAINT `panic_button_ibfk_1` FOREIGN KEY (`siswa_id`) REFERENCES `siswa` (`id`) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci";
+
+            if (mysqli_query($conn, $create_panic)) {
+                $logs[] = ['status' => 'success', 'msg' => "Table <b>panic_button</b> created successfully"];
+            } else {
+                $logs[] = ['status' => 'error', 'msg' => "Failed creating <b>panic_button</b>: " . mysqli_error($conn)];
+            }
+
+            // Create kritik_saran table
+            $create_kritik = "CREATE TABLE IF NOT EXISTS `kritik_saran` (
+                `id` int(11) NOT NULL AUTO_INCREMENT,
+                `user_id` int(11) DEFAULT NULL,
+                `nama_pengirim` varchar(150) NOT NULL,
+                `role` enum('siswa','guru') NOT NULL,
+                `subjek` varchar(255) NOT NULL,
+                `isi` text NOT NULL,
+                `umpan_balik` text DEFAULT NULL,
+                `tanggal` timestamp NULL DEFAULT current_timestamp(),
+                PRIMARY KEY (`id`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci";
+
+            if (mysqli_query($conn, $create_kritik)) {
+                $logs[] = ['status' => 'success', 'msg' => "Table <b>kritik_saran</b> created successfully"];
+            } else {
+                $logs[] = ['status' => 'error', 'msg' => "Failed creating <b>kritik_saran</b>: " . mysqli_error($conn)];
+            }
+
+            // Create kategori_perangkat table
+            $create_kat = "CREATE TABLE IF NOT EXISTS `kategori_perangkat` (
+                `id` int(11) NOT NULL AUTO_INCREMENT,
+                `nama_kategori` varchar(100) NOT NULL,
+                PRIMARY KEY (`id`),
+                UNIQUE KEY `nama_kategori_unique` (`nama_kategori`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
+
+            if (mysqli_query($conn, $create_kat)) {
+                $logs[] = ['status' => 'success', 'msg' => "Table <b>kategori_perangkat</b> created successfully"];
+                // Seed default categories
+                $defaults = ['RPP', 'Silabus', 'Modul Ajar', 'Buku Digital', 'Video Pembelajaran', 'Lainnya'];
+                foreach ($defaults as $d) {
+                    $d_esc = mysqli_real_escape_string($conn, $d);
+                    mysqli_query($conn, "INSERT IGNORE INTO kategori_perangkat (nama_kategori) VALUES ('$d_esc')");
+                }
+            } else {
+                $logs[] = ['status' => 'error', 'msg' => "Failed creating <b>kategori_perangkat</b>: " . mysqli_error($conn)];
+            }
+
             foreach ($logs as $log) {
                 $color = 'text-blue-600 bg-blue-50';
-                $icon = 'info-circle';
                 if ($log['status'] == 'success') {
                     $color = 'text-green-600 bg-green-50';
-                    $icon = 'check-circle';
                 } elseif ($log['status'] == 'error') {
                     $color = 'text-red-600 bg-red-50';
-                    $icon = 'exclamation-circle';
                 }
 
                 echo "<div class='p-4 rounded-2xl text-sm $color flex items-start gap-3'>";

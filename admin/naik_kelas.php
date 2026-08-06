@@ -2,6 +2,19 @@
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../config/database.php';
 
+// Handle AJAX action for dynamic classes fetch
+if (isset($_GET['action']) && $_GET['action'] === 'get_classes') {
+    authorize_role(['admin']);
+    $res = mysqli_query($conn, "SELECT id, nama_kelas FROM kelas ORDER BY nama_kelas ASC");
+    $classes = [];
+    while ($r = mysqli_fetch_assoc($res)) {
+        $classes[] = $r;
+    }
+    header('Content-Type: application/json');
+    echo json_encode($classes);
+    exit();
+}
+
 authorize_role(['admin']);
 $page_title = "Kenaikan Kelas";
 $message = ''; $message_type = '';
@@ -16,29 +29,53 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && (isset($_POST['proses_naik']) || iss
     $kelas_asal = (int)$_POST['kelas_asal'];
 
     if (isset($_POST['proses_naik'])) {
+        $target_tahun_id = (int)$_POST['tahun_tujuan'];
         $kelas_tujuan = (int)$_POST['kelas_tujuan'];
-        if ($kelas_asal == $kelas_tujuan) {
-            $message = "Gagal: Kelas asal dan tujuan tidak boleh sama."; $message_type = 'error';
+
+        if ($kelas_asal == $kelas_tujuan && $active_tahun_id == $target_tahun_id) {
+            $message = "Gagal: Kelas asal & tujuan serta tahun pelajaran tidak boleh sama."; $message_type = 'error';
         } else {
             mysqli_begin_transaction($conn);
             try {
                 $query_siswa = mysqli_query($conn, "SELECT siswa_id FROM siswa_kelas WHERE kelas_id = $kelas_asal AND tahun_pelajaran_id = $active_tahun_id");
                 $count = 0;
                 while ($s = mysqli_fetch_assoc($query_siswa)) {
-                    $sid = $s['siswa_id'];
-                    mysqli_query($conn, "UPDATE siswa_kelas SET kelas_id = $kelas_tujuan WHERE siswa_id = $sid AND tahun_pelajaran_id = $active_tahun_id");
+                    $sid = (int)$s['siswa_id'];
+                    mysqli_query($conn, "INSERT INTO siswa_kelas (siswa_id, kelas_id, tahun_pelajaran_id) VALUES ($sid, $kelas_tujuan, $target_tahun_id) ON DUPLICATE KEY UPDATE kelas_id = $kelas_tujuan");
                     $count++;
                 }
-                foreach([$kelas_asal, $kelas_tujuan] as $kid) {
-                    $qL = mysqli_query($conn, "SELECT COUNT(*) as jml FROM siswa_kelas sk JOIN siswa s ON sk.siswa_id = s.id WHERE sk.kelas_id = $kid AND sk.tahun_pelajaran_id = $active_tahun_id AND s.jenis_kelamin = 'L'");
-                    $jL = mysqli_fetch_assoc($qL)['jml'];
-                    $qP = mysqli_query($conn, "SELECT COUNT(*) as jml FROM siswa_kelas sk JOIN siswa s ON sk.siswa_id = s.id WHERE sk.kelas_id = $kid AND sk.tahun_pelajaran_id = $active_tahun_id AND s.jenis_kelamin = 'P'");
-                    $jP = mysqli_fetch_assoc($qP)['jml'];
-                    mysqli_query($conn, "UPDATE kelas SET jumlah_siswa_L = $jL, jumlah_siswa_P = $jP WHERE id = $kid");
+
+                // Copy Homeroom Teacher (Wali Kelas) from kelas_asal to kelas_tujuan
+                $q_wali = mysqli_query($conn, "SELECT wali_kelas_id FROM kelas WHERE id = $kelas_asal");
+                if ($row_wali = mysqli_fetch_assoc($q_wali)) {
+                    $wali_id = $row_wali['wali_kelas_id'];
+                    if (!empty($wali_id)) {
+                        mysqli_query($conn, "UPDATE kelas SET wali_kelas_id = $wali_id WHERE id = $kelas_tujuan");
+                    }
                 }
+
+                // Recalculate counts for both kelas asal (in active year) and kelas tujuan (in target year)
+                // For kelas asal (active year):
+                $qL_asal = mysqli_query($conn, "SELECT COUNT(*) as jml FROM siswa_kelas sk JOIN siswa s ON sk.siswa_id = s.id WHERE sk.kelas_id = $kelas_asal AND sk.tahun_pelajaran_id = $active_tahun_id AND s.jenis_kelamin = 'L'");
+                $jL_asal = mysqli_fetch_assoc($qL_asal)['jml'] ?? 0;
+                $qP_asal = mysqli_query($conn, "SELECT COUNT(*) as jml FROM siswa_kelas sk JOIN siswa s ON sk.siswa_id = s.id WHERE sk.kelas_id = $kelas_asal AND sk.tahun_pelajaran_id = $active_tahun_id AND s.jenis_kelamin = 'P'");
+                $jP_asal = mysqli_fetch_assoc($qP_asal)['jml'] ?? 0;
+                mysqli_query($conn, "UPDATE kelas SET jumlah_siswa_L = $jL_asal, jumlah_siswa_P = $jP_asal WHERE id = $kelas_asal");
+
+                // For kelas tujuan (target year):
+                $qL_tuj = mysqli_query($conn, "SELECT COUNT(*) as jml FROM siswa_kelas sk JOIN siswa s ON sk.siswa_id = s.id WHERE sk.kelas_id = $kelas_tujuan AND sk.tahun_pelajaran_id = $target_tahun_id AND s.jenis_kelamin = 'L'");
+                $jL_tuj = mysqli_fetch_assoc($qL_tuj)['jml'] ?? 0;
+                $qP_tuj = mysqli_query($conn, "SELECT COUNT(*) as jml FROM siswa_kelas sk JOIN siswa s ON sk.siswa_id = s.id WHERE sk.kelas_id = $kelas_tujuan AND sk.tahun_pelajaran_id = $target_tahun_id AND s.jenis_kelamin = 'P'");
+                $jP_tuj = mysqli_fetch_assoc($qP_tuj)['jml'] ?? 0;
+                mysqli_query($conn, "UPDATE kelas SET jumlah_siswa_L = $jL_tuj, jumlah_siswa_P = $jP_tuj WHERE id = $kelas_tujuan");
+
                 mysqli_commit($conn);
-                $message = "Berhasil menaikkan $count siswa ke kelas tujuan."; $message_type = 'success';
-            } catch (Exception $e) { mysqli_rollback($conn); $message = "Error: " . $e->getMessage(); $message_type = 'error'; }
+                $message = "Berhasil memproses kenaikan kelas untuk $count siswa."; $message_type = 'success';
+            } catch (Exception $e) {
+                mysqli_rollback($conn);
+                $message = "Error: " . $e->getMessage();
+                $message_type = 'error';
+            }
         }
     } elseif (isset($_POST['proses_lulus'])) {
         mysqli_begin_transaction($conn);
@@ -50,14 +87,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && (isset($_POST['proses_naik']) || iss
             while ($s = mysqli_fetch_assoc($query_siswa)) {
                 $sid = $s['siswa_id'];
                 mysqli_query($conn, "DELETE FROM siswa_kelas WHERE siswa_id = $sid AND tahun_pelajaran_id = $active_tahun_id");
-                // Tandai di tabel siswa bahwa dia sudah alumni (opsional, bisa lewat query joins saja)
                 $count++;
             }
             // Update counts for kelas asal
             $qL = mysqli_query($conn, "SELECT COUNT(*) as jml FROM siswa_kelas sk JOIN siswa s ON sk.siswa_id = s.id WHERE sk.kelas_id = $kelas_asal AND sk.tahun_pelajaran_id = $active_tahun_id AND s.jenis_kelamin = 'L'");
-            $jL = mysqli_fetch_assoc($qL)['jml'];
+            $jL = mysqli_fetch_assoc($qL)['jml'] ?? 0;
             $qP = mysqli_query($conn, "SELECT COUNT(*) as jml FROM siswa_kelas sk JOIN siswa s ON sk.siswa_id = s.id WHERE sk.kelas_id = $kelas_asal AND sk.tahun_pelajaran_id = $active_tahun_id AND s.jenis_kelamin = 'P'");
-            $jP = mysqli_fetch_assoc($qP)['jml'];
+            $jP = mysqli_fetch_assoc($qP)['jml'] ?? 0;
             mysqli_query($conn, "UPDATE kelas SET jumlah_siswa_L = $jL, jumlah_siswa_P = $jP WHERE id = $kelas_asal");
 
             mysqli_commit($conn);
@@ -67,6 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && (isset($_POST['proses_naik']) || iss
 }
 
 $kelases = mysqli_query($conn, "SELECT id, nama_kelas FROM kelas ORDER BY nama_kelas");
+$tahun_pelajarans = mysqli_query($conn, "SELECT id, tahun FROM tahun_pelajaran ORDER BY tahun DESC");
 require_once __DIR__ . '/../includes/header.php';
 ?>
 
@@ -88,7 +125,7 @@ require_once __DIR__ . '/../includes/header.php';
             <input type="hidden" name="csrf_token" value="<?= get_csrf_token() ?>">
             <div class="space-y-4 p-5 rounded-2xl bg-slate-50 border border-slate-100">
                 <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Kelas Asal</label>
-                <select name="kelas_asal" required class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 bg-white">
+                <select name="kelas_asal" required class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 bg-white font-bold text-slate-700">
                     <option value="">-- Pilih Kelas Asal --</option>
                     <?php mysqli_data_seek($kelases, 0); while($k = mysqli_fetch_assoc($kelases)): ?>
                         <option value="<?= $k['id'] ?>"><?= htmlspecialchars($k['nama_kelas']) ?></option>
@@ -99,13 +136,22 @@ require_once __DIR__ . '/../includes/header.php';
             <div class="flex justify-center"><i class="fa fa-chevron-down text-slate-300"></i></div>
 
             <div class="space-y-4 p-5 rounded-2xl bg-indigo-50/50 border border-indigo-100">
-                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Kelas Tujuan</label>
-                <select name="kelas_tujuan" required class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 bg-white">
-                    <option value="">-- Pilih Kelas Tujuan --</option>
-                    <?php mysqli_data_seek($kelases, 0); while($k = mysqli_fetch_assoc($kelases)): ?>
-                        <option value="<?= $k['id'] ?>"><?= htmlspecialchars($k['nama_kelas']) ?></option>
-                    <?php endwhile; ?>
-                </select>
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2">Tahun Pelajaran Tujuan</label>
+                    <select id="tahun_tujuan" name="tahun_tujuan" required class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 bg-white font-bold text-slate-700">
+                        <option value="">-- Pilih Tahun Pelajaran --</option>
+                        <?php mysqli_data_seek($tahun_pelajarans, 0); while($tp = mysqli_fetch_assoc($tahun_pelajarans)): ?>
+                            <option value="<?= $tp['id'] ?>" <?= $tp['id'] == $active_tahun_id ? 'selected' : '' ?>><?= htmlspecialchars($tp['tahun']) ?></option>
+                        <?php endwhile; ?>
+                    </select>
+                </div>
+
+                <div class="mt-4">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2">Kelas Tujuan</label>
+                    <select id="kelas_tujuan" name="kelas_tujuan" required disabled class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 bg-slate-100 font-bold text-slate-500">
+                        <option value="">-- Pilih Tahun Pelajaran dahulu --</option>
+                    </select>
+                </div>
             </div>
 
             <button type="submit" name="proses_naik" onclick="return confirm('Proses kenaikan kelas akan memindahkan semua siswa di kelas asal ke kelas tujuan. Lanjutkan?')"
@@ -125,7 +171,7 @@ require_once __DIR__ . '/../includes/header.php';
             <input type="hidden" name="csrf_token" value="<?= get_csrf_token() ?>">
             <div class="space-y-4 p-5 rounded-2xl bg-rose-50 border border-rose-100">
                 <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Pilih Kelas yang Lulus</label>
-                <select name="kelas_asal" required class="w-full px-4 py-3 rounded-xl border border-rose-200 outline-none focus:ring-4 focus:ring-rose-50 bg-white">
+                <select name="kelas_asal" required class="w-full px-4 py-3 rounded-xl border border-rose-200 outline-none focus:ring-4 focus:ring-rose-50 bg-white font-bold text-slate-700">
                     <option value="">-- Pilih Kelas --</option>
                     <?php mysqli_data_seek($kelases, 0); while($k = mysqli_fetch_assoc($kelases)): ?>
                         <option value="<?= $k['id'] ?>"><?= htmlspecialchars($k['nama_kelas']) ?></option>
@@ -140,5 +186,51 @@ require_once __DIR__ . '/../includes/header.php';
         </form>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const tahunTujuan = document.getElementById('tahun_tujuan');
+    const kelasTujuan = document.getElementById('kelas_tujuan');
+
+    function loadClasses() {
+        const selectedYear = tahunTujuan.value;
+        if (!selectedYear) {
+            kelasTujuan.disabled = true;
+            kelasTujuan.innerHTML = '<option value="">-- Pilih Tahun Pelajaran dahulu --</option>';
+            kelasTujuan.classList.add('bg-slate-100', 'text-slate-500');
+            kelasTujuan.classList.remove('bg-white', 'text-slate-700');
+            return;
+        }
+
+        // Add a loading text
+        kelasTujuan.innerHTML = '<option value="">Loading Kelas...</option>';
+        kelasTujuan.disabled = true;
+
+        fetch('naik_kelas.php?action=get_classes')
+            .then(response => response.json())
+            .then(data => {
+                let html = '<option value="">-- Pilih Kelas Tujuan --</option>';
+                data.forEach(item => {
+                    html += `<option value="${item.id}">${item.nama_kelas}</option>`;
+                });
+                kelasTujuan.innerHTML = html;
+                kelasTujuan.disabled = false;
+                kelasTujuan.classList.remove('bg-slate-100', 'text-slate-500');
+                kelasTujuan.classList.add('bg-white', 'text-slate-700');
+            })
+            .catch(err => {
+                console.error('Error fetching classes:', err);
+                kelasTujuan.innerHTML = '<option value="">Gagal memuat Kelas</option>';
+            });
+    }
+
+    tahunTujuan.addEventListener('change', loadClasses);
+
+    // Call on load if a year is pre-selected
+    if (tahunTujuan.value) {
+        loadClasses();
+    }
+});
+</script>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

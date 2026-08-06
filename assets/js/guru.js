@@ -48,24 +48,40 @@ function openEditModal(data) {
     document.getElementById('edit_tempat_lahir').value = data.tempat_lahir || '';
     document.getElementById('edit_tanggal_lahir').value = data.tanggal_lahir || '';
 
-    // Set mapel selects
-    const select = document.querySelector('#editModal select[name="mapel_ids[]"]');
-    if (select) {
-        // Clear all selections first
-        Array.from(select.options).forEach(opt => opt.selected = false);
-
-        if (data.mapel_diampu) {
-            const mapels = data.mapel_diampu.split(', ');
-            Array.from(select.options).forEach(opt => {
-                // Trim to match precisely
-                if (mapels.includes(opt.text.trim())) {
-                    opt.selected = true;
-                }
-            });
-        }
-    }
-
     openModal('editModal');
+}
+
+function openMapelModal(id, nama, mapelDiampu) {
+    document.getElementById('mapel_guru_id').value = id;
+    document.getElementById('mapel_guru_nama').textContent = 'Nama Guru: ' + nama;
+    document.getElementById('mapel_search_input').value = '';
+    filterMapelList(); // Reset search filter
+
+    const activeMapels = mapelDiampu ? mapelDiampu.split(', ').map(s => s.trim()) : [];
+
+    const checkboxes = document.querySelectorAll('#mapel_checklist_container input[type="checkbox"]');
+    checkboxes.forEach(cb => {
+        const labelText = cb.getAttribute('data-text').trim();
+        if (activeMapels.includes(labelText)) {
+            cb.checked = true;
+        } else {
+            cb.checked = false;
+        }
+    });
+
+    openModal('mapelModal');
+}
+
+function filterMapelList() {
+    const q = document.getElementById('mapel_search_input').value.toLowerCase();
+    document.querySelectorAll('.mapel-item').forEach(item => {
+        const name = item.getAttribute('data-name');
+        if (name.includes(q)) {
+            item.style.display = 'flex';
+        } else {
+            item.style.display = 'none';
+        }
+    });
 }
 
 function openDeleteModal(id, uid, nama) {

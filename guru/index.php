@@ -30,13 +30,13 @@ require_once __DIR__ . '/../includes/header.php';
     <div class="p-8 lg:p-12 max-w-7xl mx-auto">
         <div class="flex items-center justify-between mb-12">
             <div class="flex items-center gap-6">
-                <div class="w-20 h-20 rounded-2xl bg-indigo-600 border-4 border-white shadow-xl overflow-hidden flex items-center justify-center">
+                <a href="profil.php" class="w-20 h-20 rounded-2xl bg-indigo-600 border-4 border-white shadow-xl overflow-hidden flex items-center justify-center block hover:scale-105 transition-transform">
                     <?php if(!empty($guru_foto)): ?>
                         <img src="<?= BASE_URL ?>uploads/guru/<?= $guru_foto ?>" class="w-full h-full object-cover">
                     <?php else: ?>
                         <i class="fa fa-user-tie text-white text-3xl"></i>
                     <?php endif; ?>
-                </div>
+                </a>
                 <div>
                     <h1 class="text-3xl font-black text-slate-800 tracking-tight italic">Beranda Guru <span class="text-indigo-600">(<?= htmlspecialchars($_SESSION['nama_lengkap']) ?>)</span></h1>
                     <p class="text-slate-400 font-medium tracking-wide"><?= date('l, d F Y') ?></p>
@@ -80,7 +80,21 @@ require_once __DIR__ . '/../includes/header.php';
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
             <!-- Quick Actions Grid Design -->
-            <div class="grid grid-cols-2 gap-4">
+            <?php
+            $wali_info = get_wali_kelas_info();
+            $pending_permits_count = 0;
+            if ($wali_info) {
+                $w_kelas_id = $wali_info['kelas_id'];
+                $q_perm = mysqli_query($conn, "SELECT COUNT(*) as pending_count FROM absensi_harian ah
+                                                JOIN siswa_kelas sk ON ah.siswa_id = sk.siswa_id
+                                                WHERE sk.kelas_id = $w_kelas_id AND ah.status_verifikasi = 'pending' AND ah.status IN ('Izin', 'Sakit')");
+                if ($p_data = mysqli_fetch_assoc($q_perm)) {
+                    $pending_permits_count = (int)$p_data['pending_count'];
+                }
+            }
+            $grid_cols_class = $wali_info ? "grid-cols-2 lg:grid-cols-3" : "grid-cols-2";
+            ?>
+            <div class="grid <?= $grid_cols_class ?> gap-4 col-span-1 lg:col-span-2">
                 <a href="isi_absensi.php" class="p-6 rounded-[32px] bg-indigo-600 text-white shadow-xl shadow-indigo-200 flex flex-col gap-4 group transition-all hover:scale-[1.02] active:scale-95">
                     <div class="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-xl shadow-inner group-hover:bg-white/30 transition-all">
                         <i class="fa fa-user-check"></i>
@@ -120,6 +134,53 @@ require_once __DIR__ . '/../includes/header.php';
                         <div class="text-[9px] font-bold text-rose-100 uppercase tracking-widest mt-1 opacity-70">Upload Media</div>
                     </div>
                 </a>
+
+                <a href="rekan.php" class="p-6 rounded-[32px] bg-sky-500 text-white shadow-xl shadow-sky-200 flex flex-col gap-4 group transition-all hover:scale-[1.02] active:scale-95">
+                    <div class="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-xl shadow-inner group-hover:bg-white/30 transition-all">
+                        <i class="fa fa-users"></i>
+                    </div>
+                    <div>
+                        <div class="text-lg font-black italic tracking-tighter uppercase leading-none">Rekan Guru</div>
+                        <div class="text-[9px] font-bold text-sky-100 uppercase tracking-widest mt-1 opacity-70">Kontak Sejawat</div>
+                    </div>
+                </a>
+
+                <a href="kritik_saran.php" class="p-6 rounded-[32px] bg-indigo-500 text-white shadow-xl shadow-indigo-200 flex flex-col gap-4 group transition-all hover:scale-[1.02] active:scale-95">
+                    <div class="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-xl shadow-inner group-hover:bg-white/30 transition-all">
+                        <i class="fa fa-comment-dots"></i>
+                    </div>
+                    <div>
+                        <div class="text-lg font-black italic tracking-tighter uppercase leading-none">Kritik & Saran</div>
+                        <div class="text-[9px] font-bold text-indigo-100 uppercase tracking-widest mt-1 opacity-70">Umpan Balik</div>
+                    </div>
+                </a>
+
+                <?php if ($wali_info): ?>
+                <a href="<?= BASE_URL ?>admin/rekap_persiswa.php" class="p-6 rounded-[32px] bg-violet-600 text-white shadow-xl shadow-violet-200 flex flex-col gap-4 group transition-all hover:scale-[1.02] active:scale-95 col-span-1">
+                    <div class="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-xl shadow-inner group-hover:bg-white/30 transition-all">
+                        <i class="fa fa-user-check"></i>
+                    </div>
+                    <div>
+                        <div class="text-lg font-black italic tracking-tighter uppercase leading-none">Rekap Kelas</div>
+                        <div class="text-[9px] font-bold text-violet-100 uppercase tracking-widest mt-1 opacity-70">Wali: <?= htmlspecialchars($wali_info['nama_kelas']) ?></div>
+                    </div>
+                </a>
+
+                <a href="rekap_izin.php" class="p-6 rounded-[32px] bg-rose-600 text-white shadow-xl shadow-rose-200 flex flex-col gap-4 group transition-all hover:scale-[1.02] active:scale-95 col-span-1 relative">
+                    <?php if ($pending_permits_count > 0): ?>
+                        <span class="absolute top-4 right-4 bg-yellow-400 text-slate-950 font-black text-[10px] uppercase px-2 py-0.5 rounded-full animate-bounce shadow-md">
+                            <?= $pending_permits_count ?> PENDING
+                        </span>
+                    <?php endif; ?>
+                    <div class="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-xl shadow-inner group-hover:bg-white/30 transition-all">
+                        <i class="fa fa-envelope-open-text"></i>
+                    </div>
+                    <div>
+                        <div class="text-lg font-black italic tracking-tighter uppercase leading-none">Siswa Izin</div>
+                        <div class="text-[9px] font-bold text-rose-100 uppercase tracking-widest mt-1 opacity-70">Verifikasi Izin/Sakit</div>
+                    </div>
+                </a>
+                <?php endif; ?>
             </div>
 
             <!-- Activity Table -->

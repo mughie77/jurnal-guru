@@ -14,6 +14,27 @@ document.addEventListener('DOMContentLoaded', () => {
             sidebar.classList.add('-translate-x-full');
         }
     });
+
+    // Restore and save sidebar scroll position
+    const sidebarNav = document.getElementById('sidebar-nav');
+    if (sidebarNav) {
+        const savedScrollTop = localStorage.getItem('sidebar-scroll-position');
+        if (savedScrollTop !== null) {
+            sidebarNav.scrollTop = parseInt(savedScrollTop, 10);
+        }
+
+        // Save scroll position when a link inside sidebar is clicked
+        sidebarNav.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                localStorage.setItem('sidebar-scroll-position', sidebarNav.scrollTop);
+            });
+        });
+
+        // Also save position on unload
+        window.addEventListener('beforeunload', () => {
+            localStorage.setItem('sidebar-scroll-position', sidebarNav.scrollTop);
+        });
+    }
 });
 
 // Shared Modal Logic

@@ -23,24 +23,108 @@ $pagin = get_pagination_data($conn, "kelas LEFT JOIN guru ON kelas.wali_kelas_id
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (!verify_csrf_token($_POST['csrf_token'] ?? '')) die("CSRF Token Invalid");
     if (isset($_POST['tambah'])) {
-        $nama_kelas = mysqli_real_escape_string($conn, $_POST['nama_kelas']);
-        $wali_kelas_id = !empty($_POST['wali_kelas_id']) ? $_POST['wali_kelas_id'] : 'NULL';
-        if (mysqli_query($conn, "INSERT INTO kelas (nama_kelas, wali_kelas_id) VALUES ('$nama_kelas', $wali_kelas_id)")) {
-            $message = "Kelas ditambahkan!";
-            $message_type = 'success';
+        try {
+            $nama_kelas = mysqli_real_escape_string($conn, $_POST['nama_kelas']);
+            $wali_kelas_id = !empty($_POST['wali_kelas_id']) ? (int)$_POST['wali_kelas_id'] : 'NULL';
+
+            $jadwal_pdf = 'NULL';
+            if (!empty($_FILES['jadwal_pdf']['name'])) {
+                $target_dir = __DIR__ . "/../uploads/jadwal/";
+                if (!is_dir($target_dir)) mkdir($target_dir, 0777, true);
+
+                $file_ext = strtolower(pathinfo($_FILES["jadwal_pdf"]["name"], PATHINFO_EXTENSION));
+                if ($file_ext === 'pdf') {
+                    $filename = "jadwal_" . preg_replace('/[^a-zA-Z0-9]/', '_', $nama_kelas) . "_" . time() . ".pdf";
+                    $target_file = $target_dir . $filename;
+                    if (move_uploaded_file($_FILES["jadwal_pdf"]["tmp_name"], $target_file)) {
+                        $jadwal_pdf = "'" . mysqli_real_escape_string($conn, $filename) . "'";
+                    }
+                } else {
+                    throw new Exception("Format file tidak didukung. Harus berformat PDF.");
+                }
+            }
+
+            if (mysqli_query($conn, "INSERT INTO kelas (nama_kelas, wali_kelas_id, jadwal_pdf) VALUES ('$nama_kelas', $wali_kelas_id, $jadwal_pdf)")) {
+                $message = "Kelas ditambahkan!";
+                $message_type = 'success';
+            }
+        } catch (Exception $e) {
+            $message = $e->getMessage();
+            $message_type = 'error';
         }
     } elseif (isset($_POST['edit'])) {
-        $id = $_POST['id'];
-        $nama_kelas = mysqli_real_escape_string($conn, $_POST['nama_kelas']);
-        $wali_kelas_id = !empty($_POST['wali_kelas_id']) ? $_POST['wali_kelas_id'] : 'NULL';
-        mysqli_query($conn, "UPDATE kelas SET nama_kelas = '$nama_kelas', wali_kelas_id = $wali_kelas_id WHERE id = $id");
-        $message = "Kelas diperbarui!";
-        $message_type = 'success';
+        try {
+            $id = (int)$_POST['id'];
+            $nama_kelas = mysqli_real_escape_string($conn, $_POST['nama_kelas']);
+            $wali_kelas_id = !empty($_POST['wali_kelas_id']) ? (int)$_POST['wali_kelas_id'] : 'NULL';
+
+            $jadwal_pdf_q = "";
+            if (!empty($_FILES['jadwal_pdf']['name'])) {
+                $target_dir = __DIR__ . "/../uploads/jadwal/";
+                if (!is_dir($target_dir)) mkdir($target_dir, 0777, true);
+
+                $file_ext = strtolower(pathinfo($_FILES["jadwal_pdf"]["name"], PATHINFO_EXTENSION));
+                if ($file_ext === 'pdf') {
+                    $filename = "jadwal_" . preg_replace('/[^a-zA-Z0-9]/', '_', $nama_kelas) . "_" . time() . ".pdf";
+                    $target_file = $target_dir . $filename;
+                    if (move_uploaded_file($_FILES["jadwal_pdf"]["tmp_name"], $target_file)) {
+                        // Delete old schedule file
+                        $old_res = mysqli_query($conn, "SELECT jadwal_pdf FROM kelas WHERE id = $id");
+                        if ($old_row = mysqli_fetch_assoc($old_res)) {
+                            if (!empty($old_row['jadwal_pdf']) && file_exists($target_dir . $old_row['jadwal_pdf'])) {
+                                @unlink($target_dir . $old_row['jadwal_pdf']);
+                            }
+                        }
+                        $jadwal_pdf_q = ", jadwal_pdf = '" . mysqli_real_escape_string($conn, $filename) . "'";
+                    }
+                } else {
+                    throw new Exception("Format file tidak didukung. Harus berformat PDF.");
+                }
+            } elseif (isset($_POST['hapus_jadwal']) && $_POST['hapus_jadwal'] == '1') {
+                $target_dir = __DIR__ . "/../uploads/jadwal/";
+                $old_res = mysqli_query($conn, "SELECT jadwal_pdf FROM kelas WHERE id = $id");
+                if ($old_row = mysqli_fetch_assoc($old_res)) {
+                    if (!empty($old_row['jadwal_pdf']) && file_exists($target_dir . $old_row['jadwal_pdf'])) {
+                        @unlink($target_dir . $old_row['jadwal_pdf']);
+                    }
+                }
+                $jadwal_pdf_q = ", jadwal_pdf = NULL";
+            }
+
+            if (mysqli_query($conn, "UPDATE kelas SET nama_kelas = '$nama_kelas', wali_kelas_id = $wali_kelas_id $jadwal_pdf_q WHERE id = $id")) {
+                $message = "Kelas diperbarui!";
+                $message_type = 'success';
+            }
+        } catch (Exception $e) {
+            $message = $e->getMessage();
+            $message_type = 'error';
+        }
     } elseif (isset($_POST['hapus'])) {
-        $id = $_POST['id'];
-        if (mysqli_query($conn, "DELETE FROM kelas WHERE id = $id")) {
-            $message = "Kelas dihapus!";
-            $message_type = 'success';
+        $id = (int)$_POST['id'];
+        try {
+            // Get old file to delete
+            $old_res = mysqli_query($conn, "SELECT jadwal_pdf FROM kelas WHERE id = $id");
+            $old_file = '';
+            if ($old_row = mysqli_fetch_assoc($old_res)) {
+                $old_file = $old_row['jadwal_pdf'];
+            }
+            if (mysqli_query($conn, "DELETE FROM kelas WHERE id = $id")) {
+                if (!empty($old_file) && file_exists(__DIR__ . "/../uploads/jadwal/" . $old_file)) {
+                    @unlink(__DIR__ . "/../uploads/jadwal/" . $old_file);
+                }
+                $message = "Kelas dihapus!";
+                $message_type = 'success';
+            } else {
+                $message = "Gagal menghapus kelas.";
+                $message_type = 'error';
+            }
+        } catch (mysqli_sql_exception $e) {
+            if ($e->getCode() == 1451 || strpos($e->getMessage(), 'foreign key constraint fails') !== false) {
+                $message = "Gagal: Kelas ini tidak dapat dihapus karena masih digunakan di dalam data siswa, jurnal mengajar, atau tabel lainnya.";
+            } else {
+                $message = "Gagal: " . $e->getMessage();
+            }
+            $message_type = 'error';
         }
     }
 }
@@ -104,6 +188,7 @@ require_once __DIR__ . '/../includes/header.php';
                     <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Wali Kelas</th>
                     <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Siswa (L/P)</th>
                     <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Total</th>
+                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Jadwal PDF</th>
                     <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Aksi</th>
                 </tr>
             </thead>
@@ -119,6 +204,15 @@ require_once __DIR__ . '/../includes/header.php';
                         <span class="px-3 py-1 rounded-lg bg-slate-100 text-slate-800 font-bold text-sm border border-slate-200">
                             <?= $row['jumlah_siswa_L'] + $row['jumlah_siswa_P'] ?>
                         </span>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <?php if(!empty($row['jadwal_pdf'])): ?>
+                            <a href="<?= BASE_URL ?>uploads/jadwal/<?= $row['jadwal_pdf'] ?>" target="_blank" class="inline-flex items-center px-3 py-1 bg-indigo-50 border border-indigo-100 text-indigo-600 rounded-lg text-xs font-bold hover:bg-indigo-600 hover:text-white transition-all">
+                                <i class="fa fa-file-pdf mr-1.5"></i> PDF
+                            </a>
+                        <?php else: ?>
+                            <span class="text-xs text-slate-400 italic">Belum Ada</span>
+                        <?php endif; ?>
                     </td>
                     <td class="px-6 py-4">
                         <div class="flex justify-center gap-2">
@@ -141,9 +235,12 @@ require_once __DIR__ . '/../includes/header.php';
 
 <div id="modalOverlay" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] hidden transition-opacity duration-300 opacity-0" onclick="closeAllModals()"></div>
 
-<div id="tambahModal" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-white rounded-3xl shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0 overflow-hidden">
-    <div class="bg-indigo-600 px-8 py-6 text-white font-bold italic text-2xl">Tambah Kelas</div>
-    <form action="" method="POST" class="p-8 space-y-4">
+<div id="tambahModal" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] sm:w-full max-w-lg max-h-[90vh] overflow-y-auto bg-white rounded-3xl shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0">
+    <div class="bg-indigo-600 px-6 sm:px-8 py-4 sm:py-6 text-white font-bold italic text-xl sm:text-2xl sticky top-0 z-10 flex justify-between items-center">
+        <span>Tambah Kelas</span>
+        <button type="button" onclick="closeModal('tambahModal')" class="text-white/80 hover:text-white text-lg"><i class="fa fa-times"></i></button>
+    </div>
+    <form action="" method="POST" enctype="multipart/form-data" class="p-6 sm:p-8 space-y-4">
         <input type="hidden" name="csrf_token" value="<?= get_csrf_token() ?>">
         <div><label class="block text-sm font-bold text-slate-700 mb-1">Nama Kelas</label><input type="text" name="nama_kelas" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50"></div>
         <div><label class="block text-sm font-bold text-slate-700 mb-1">Wali Kelas (Opsional)</label>
@@ -154,14 +251,21 @@ require_once __DIR__ . '/../includes/header.php';
                 <?php endwhile; ?>
             </select>
         </div>
-        <div class="pt-4 flex gap-3"><button type="button" onclick="closeModal('tambahModal')" class="flex-1 px-6 py-2.5 rounded-xl border border-slate-200 font-bold text-slate-600">Batal</button><button type="submit" name="tambah" class="flex-1 px-6 py-2.5 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-100">Simpan</button></div>
+        <div>
+            <label class="block text-sm font-bold text-slate-700 mb-1">Jadwal Pelajaran (PDF)</label>
+            <input type="file" name="jadwal_pdf" accept="application/pdf" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 bg-white shadow-sm text-sm">
+        </div>
+        <div class="pt-4 flex flex-col sm:flex-row gap-3"><button type="button" onclick="closeModal('tambahModal')" class="flex-1 px-6 py-2.5 rounded-xl border border-slate-200 font-bold text-slate-600">Batal</button><button type="submit" name="tambah" class="flex-1 px-6 py-2.5 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-100">Simpan</button></div>
     </form>
 </div>
 
 <?php mysqli_data_seek($result, 0); while ($row = mysqli_fetch_assoc($result)): ?>
-<div id="editModal-<?= $row['id'] ?>" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-white rounded-3xl shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0 overflow-hidden">
-    <div class="bg-amber-500 px-8 py-6 text-white font-bold italic text-2xl">Edit Kelas</div>
-    <form action="" method="POST" class="p-8 space-y-4">
+<div id="editModal-<?= $row['id'] ?>" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] sm:w-full max-w-lg max-h-[90vh] overflow-y-auto bg-white rounded-3xl shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0">
+    <div class="bg-amber-500 px-6 sm:px-8 py-4 sm:py-6 text-white font-bold italic text-xl sm:text-2xl sticky top-0 z-10 flex justify-between items-center">
+        <span>Edit Kelas</span>
+        <button type="button" onclick="closeModal('editModal-<?= $row['id'] ?>')" class="text-white/80 hover:text-white text-lg"><i class="fa fa-times"></i></button>
+    </div>
+    <form action="" method="POST" enctype="multipart/form-data" class="p-6 sm:p-8 space-y-4">
         <input type="hidden" name="csrf_token" value="<?= get_csrf_token() ?>">
         <input type="hidden" name="id" value="<?= $row['id'] ?>">
         <div><label class="block text-sm font-bold text-slate-700 mb-1">Nama Kelas</label><input type="text" name="nama_kelas" value="<?= htmlspecialchars($row['nama_kelas']) ?>" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"></div>
@@ -173,11 +277,26 @@ require_once __DIR__ . '/../includes/header.php';
                 <?php endwhile; ?>
             </select>
         </div>
-        <div class="pt-4 flex gap-3"><button type="button" onclick="closeModal('editModal-<?= $row['id'] ?>')" class="flex-1 px-6 py-2.5 rounded-xl border border-slate-200 font-bold text-slate-600">Batal</button><button type="submit" name="edit" class="flex-1 px-6 py-2.5 rounded-xl bg-amber-500 text-white font-bold hover:bg-amber-600 shadow-lg shadow-amber-100">Simpan</button></div>
+        <div>
+            <label class="block text-sm font-bold text-slate-700 mb-1">Jadwal Pelajaran (PDF)</label>
+            <input type="file" name="jadwal_pdf" accept="application/pdf" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50 bg-white shadow-sm text-sm">
+            <?php if (!empty($row['jadwal_pdf'])): ?>
+                <div class="mt-2 p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between">
+                    <a href="<?= BASE_URL ?>uploads/jadwal/<?= $row['jadwal_pdf'] ?>" target="_blank" class="text-xs font-bold text-indigo-600 hover:underline flex items-center">
+                        <i class="fa fa-file-pdf mr-1.5 text-rose-500"></i> Lihat Jadwal Aktif
+                    </a>
+                    <label class="inline-flex items-center cursor-pointer select-none">
+                        <input type="checkbox" name="hapus_jadwal" value="1" class="rounded border-slate-300 text-rose-600 focus:ring-rose-500 mr-2">
+                        <span class="text-xs text-rose-600 font-bold">Hapus Jadwal Aktif</span>
+                    </label>
+                </div>
+            <?php endif; ?>
+        </div>
+        <div class="pt-4 flex flex-col sm:flex-row gap-3"><button type="button" onclick="closeModal('editModal-<?= $row['id'] ?>')" class="flex-1 px-6 py-2.5 rounded-xl border border-slate-200 font-bold text-slate-600">Batal</button><button type="submit" name="edit" class="flex-1 px-6 py-2.5 rounded-xl bg-amber-500 text-white font-bold hover:bg-amber-600 shadow-lg shadow-amber-100">Simpan</button></div>
     </form>
 </div>
 
-<div id="hapusModal-<?= $row['id'] ?>" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-sm bg-white rounded-3xl shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0 overflow-hidden">
+<div id="hapusModal-<?= $row['id'] ?>" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] sm:w-full max-w-sm bg-white rounded-3xl shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0 overflow-hidden">
     <div class="p-8 text-center">
         <div class="w-16 h-16 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl"><i class="fa fa-trash"></i></div>
         <h3 class="text-xl font-bold text-slate-800 mb-2 italic">Hapus Kelas?</h3>

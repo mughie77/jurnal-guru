@@ -2,16 +2,63 @@
 // Set Timezone to UTC+7 (Asia/Jakarta)
 date_default_timezone_set('Asia/Jakarta');
 
+// --- Security Headers to Prevent Deface, Clickjacking & XSS ---
+header("X-Frame-Options: SAMEORIGIN");
+header("X-Content-Type-Options: nosniff");
+header("X-XSS-Protection: 1; mode=block");
+
+// --- Mulai Session dengan Pengaturan Aman ---
+if (session_status() == PHP_SESSION_NONE) {
+    ini_set('session.cookie_httponly', 1);
+    ini_set('session.use_only_cookies', 1);
+    if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
+        ini_set('session.cookie_secure', 1);
+    }
+    ini_set('session.gc_maxlifetime', 30 * 24 * 60 * 60);
+    session_start();
+}
+
+// --- Anti DDOS / Rate Limiting (Maksimal 150 request per menit per session) ---
+if (isset($_SESSION)) {
+    if (!isset($_SESSION['req_count'])) {
+        $_SESSION['req_count'] = 0;
+        $_SESSION['req_start_time'] = time();
+    }
+    $_SESSION['req_count']++;
+    if (time() - $_SESSION['req_start_time'] > 60) {
+        $_SESSION['req_count'] = 1;
+        $_SESSION['req_start_time'] = time();
+    }
+    if ($_SESSION['req_count'] > 150) {
+        http_response_code(429);
+        die("<h1>429 Too Many Requests</h1><p>Terlalu banyak permintaan (Spam/DDOS Terdeteksi). Mohon tunggu beberapa saat sebelum mencoba kembali.</p>");
+    }
+}
+
+// --- Anti Session Hijacking (Kunci Session ke User Agent) ---
+if (isset($_SESSION['user_id'])) {
+    if (!isset($_SESSION['user_agent'])) {
+        $_SESSION['user_agent'] = $_SERVER['HTTP_USER_AGENT'] ?? '';
+    } elseif ($_SESSION['user_agent'] !== ($_SERVER['HTTP_USER_AGENT'] ?? '')) {
+        // Kemungkinan Session di-hijack/cloning. Hancurkan session untuk keamanan!
+        session_unset();
+        session_destroy();
+        header('Location: ' . (defined('BASE_URL') ? BASE_URL : '/login.php') . '?error=session_hijacked');
+        exit();
+    }
+}
+
 // --- Koneksi Database ---
 $db_host = 'localhost';
 $db_user = 'root'; // Sesuaikan dengan username database Anda
 $db_pass = ''; // Sesuaikan dengan password database Anda
 $db_name = 'jurnal_mengajar';
 
-$conn = mysqli_connect($db_host, $db_user, $db_pass, $db_name);
+$conn = @mysqli_connect($db_host, $db_user, $db_pass, $db_name);
 
 if (!$conn) {
-    die("Koneksi Gagal: " . mysqli_connect_error());
+    include __DIR__ . '/setup_db.php';
+    exit();
 }
 
 // --- URL Konfigurasi ---
@@ -28,7 +75,7 @@ if (!empty($base_url_config)) {
     $scriptName = $_SERVER['SCRIPT_NAME'];
 
     // Cari path root aplikasi (naik dari folder core jika perlu)
-    $app_root_path = str_replace(['/admin/', '/guru/', '/waka/', '/api/', '/siswa/', '/error/'], '/', dirname($scriptName));
+    $app_root_path = str_replace(['/admin', '/guru', '/waka', '/api', '/siswa', '/error'], '/', dirname($scriptName));
 
     // Normalisasi path agar selalu diakhiri dengan satu slash
     $app_root_path = str_replace('\\', '/', $app_root_path);
@@ -37,21 +84,7 @@ if (!empty($base_url_config)) {
     define('BASE_URL', $protocol . $domainName . $app_root_path);
 }
 
-// --- Mulai Session ---
-// Panggil session_start() di sini agar tersedia di semua halaman
-if (session_status() == PHP_SESSION_NONE) {
-    // Check for persistent session before starting
-    if (isset($_COOKIE[session_name()])) {
-        // If we want to support long sessions, we might need to increase gc_maxlifetime
-        // Default is usually 1440 (24 mins). Let's set it to 30 days if remember_me was used.
-        // But we don't know yet if remember_me was used until session is started.
-        ini_set('session.gc_maxlifetime', 30 * 24 * 60 * 60);
-    }
-    session_start();
-
-    // After starting, if remember_me is set, we can ensure cookie is refreshed if needed
-    // though usually browser handles the expiration set during login.
-}
+// Session sudah dimulai di bagian atas dengan proteksi keamanan.
 
 // --- Fungsi Helper untuk Tahun Pelajaran Aktif ---
 function get_active_tahun_pelajaran_id($conn) {

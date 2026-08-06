@@ -87,19 +87,25 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             mysqli_stmt_bind_param($stmt2, $types, ...$params);
             mysqli_stmt_execute($stmt2);
 
-            $stmt3 = mysqli_prepare($conn, "DELETE FROM guru_mapel WHERE guru_id = ?");
-            mysqli_stmt_bind_param($stmt3, "i", $gid);
-            mysqli_stmt_execute($stmt3);
+            mysqli_commit($conn); $message = "Data guru diperbarui!"; $message_type = 'success';
+        } catch (Exception $e) { mysqli_rollback($conn); $message = "Gagal: " . $e->getMessage(); $message_type = 'error'; }
+    } elseif (isset($_POST['update_mapel'])) {
+        $gid = (int)$_POST['id'];
+        mysqli_begin_transaction($conn);
+        try {
+            $stmt_del = mysqli_prepare($conn, "DELETE FROM guru_mapel WHERE guru_id = ?");
+            mysqli_stmt_bind_param($stmt_del, "i", $gid);
+            mysqli_stmt_execute($stmt_del);
 
             if (!empty($_POST['mapel_ids'])) {
-                $stmt4 = mysqli_prepare($conn, "INSERT INTO guru_mapel (guru_id, mapel_id) VALUES (?, ?)");
+                $stmt_ins = mysqli_prepare($conn, "INSERT INTO guru_mapel (guru_id, mapel_id) VALUES (?, ?)");
                 foreach ($_POST['mapel_ids'] as $mid) {
                     $mid_int = (int)$mid;
-                    mysqli_stmt_bind_param($stmt4, "ii", $gid, $mid_int);
-                    mysqli_stmt_execute($stmt4);
+                    mysqli_stmt_bind_param($stmt_ins, "ii", $gid, $mid_int);
+                    mysqli_stmt_execute($stmt_ins);
                 }
             }
-            mysqli_commit($conn); $message = "Data guru diperbarui!"; $message_type = 'success';
+            mysqli_commit($conn); $message = "Mata pelajaran guru berhasil diperbarui!"; $message_type = 'success';
         } catch (Exception $e) { mysqli_rollback($conn); $message = "Gagal: " . $e->getMessage(); $message_type = 'error'; }
     } elseif (isset($_POST['hapus'])) {
         $uid = (int)$_POST['user_id'];
@@ -206,6 +212,9 @@ require_once __DIR__ . '/../includes/header.php';
                     </td>
                     <td class="px-6 py-4">
                         <div class="flex justify-center gap-2">
+                            <button onclick="openMapelModal(<?= $row['id'] ?>, '<?= addslashes($row['nama_lengkap']) ?>', '<?= htmlspecialchars($row['mapel_diampu'] ?? '') ?>')" class="w-9 h-9 flex items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all shadow-sm" title="Set Mata Pelajaran">
+                                <i class="fa fa-book"></i>
+                            </button>
                             <button onclick='openEditModal(this.getAttribute("data-guru"))' data-guru='<?= htmlspecialchars(json_encode($row), ENT_QUOTES, "UTF-8") ?>' class="w-9 h-9 flex items-center justify-center rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-600 hover:text-white transition-all shadow-sm">
                                 <i class="fa fa-edit"></i>
                             </button>
@@ -227,37 +236,27 @@ require_once __DIR__ . '/../includes/header.php';
 <div id="modalOverlay" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] hidden transition-opacity duration-300 opacity-0" onclick="closeAllModals()"></div>
 
 <!-- Tambah Modal -->
-<div id="tambahModal" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl bg-white rounded-3xl shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0 overflow-hidden">
-    <div class="bg-indigo-600 px-8 py-6 text-white"><h3 class="text-2xl font-bold italic">Tambah Guru</h3></div>
-    <form action="" method="POST" enctype="multipart/form-data" class="p-8 space-y-5">
+<div id="tambahModal" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] sm:w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white rounded-3xl shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0">
+    <div class="bg-indigo-600 px-6 sm:px-8 py-4 sm:py-6 text-white flex justify-between items-center sticky top-0 z-10"><h3 class="text-xl sm:text-2xl font-bold italic">Tambah Guru</h3><button type="button" onclick="closeModal('tambahModal')" class="text-white/80 hover:text-white text-lg"><i class="fa fa-times"></i></button></div>
+    <form action="" method="POST" enctype="multipart/form-data" class="p-6 sm:p-8 space-y-5">
         <input type="hidden" name="csrf_token" value="<?= get_csrf_token() ?>">
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div><label class="block text-sm font-bold text-slate-700 mb-2">Nama Lengkap</label><input type="text" name="nama_lengkap" required class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50"></div>
             <div><label class="block text-sm font-bold text-slate-700 mb-2">NIP (Username)</label><input type="text" name="nip" required class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50"></div>
         </div>
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div><label class="block text-sm font-bold text-slate-700 mb-2">Tempat Lahir</label><input type="text" name="tempat_lahir" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50"></div>
             <div><label class="block text-sm font-bold text-slate-700 mb-2">Tanggal Lahir</label><input type="date" name="tanggal_lahir" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 bg-white"></div>
         </div>
-        <div class="grid grid-cols-2 gap-6">
-            <div class="space-y-4">
-                <div><label class="block text-sm font-bold text-slate-700 mb-2">No. Telp/HP</label><input type="text" name="no_telp" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50"></div>
-                <div><label class="block text-sm font-bold text-slate-700 mb-2">Alamat</label><textarea name="alamat" rows="2" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50"></textarea></div>
-            </div>
-            <div>
-                <label class="block text-sm font-bold text-slate-700 mb-2">Mata Pelajaran</label>
-                <select name="mapel_ids[]" multiple class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 h-[180px]">
-                    <?php mysqli_data_seek($mapel_list, 0); while($m = mysqli_fetch_assoc($mapel_list)): ?>
-                        <option value="<?= $m['id'] ?>"><?= htmlspecialchars($m['nama_mapel']) ?></option>
-                    <?php endwhile; ?>
-                </select>
-            </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div><label class="block text-sm font-bold text-slate-700 mb-2">No. Telp/HP</label><input type="text" name="no_telp" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50"></div>
+            <div><label class="block text-sm font-bold text-slate-700 mb-2">Alamat</label><textarea name="alamat" rows="1" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50"></textarea></div>
         </div>
         <div>
             <label class="block text-sm font-bold text-slate-700 mb-2">Foto Guru</label>
             <input type="file" name="foto" accept="image/*" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 bg-white shadow-sm">
         </div>
-        <div class="pt-4 flex gap-4">
+        <div class="pt-4 flex flex-col sm:flex-row gap-4">
             <button type="button" onclick="closeModal('tambahModal')" class="flex-1 px-6 py-3 rounded-xl border border-slate-200 font-bold text-slate-600 hover:bg-slate-50 transition-all">Batal</button>
             <button type="submit" name="tambah" class="flex-[2] px-6 py-3 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all">Simpan Data</button>
         </div>
@@ -265,46 +264,74 @@ require_once __DIR__ . '/../includes/header.php';
 </div>
 
 <!-- Edit Modal -->
-<div id="editModal" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl bg-white rounded-3xl shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0 overflow-hidden">
-    <div class="bg-amber-500 px-8 py-6 text-white"><h3 class="text-2xl font-bold italic">Edit Data Guru</h3></div>
-    <form action="" method="POST" enctype="multipart/form-data" class="p-8 space-y-5">
+<div id="editModal" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] sm:w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white rounded-3xl shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0">
+    <div class="bg-amber-500 px-6 sm:px-8 py-4 sm:py-6 text-white flex justify-between items-center sticky top-0 z-10"><h3 class="text-xl sm:text-2xl font-bold italic">Edit Data Guru</h3><button type="button" onclick="closeModal('editModal')" class="text-white/80 hover:text-white text-lg"><i class="fa fa-times"></i></button></div>
+    <form action="" method="POST" enctype="multipart/form-data" class="p-6 sm:p-8 space-y-5">
         <input type="hidden" name="csrf_token" value="<?= get_csrf_token() ?>">
         <input type="hidden" name="id" id="edit_id"><input type="hidden" name="user_id" id="edit_user_id">
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div><label class="block text-sm font-bold text-slate-700 mb-2">Nama Lengkap</label><input type="text" name="nama_lengkap" id="edit_nama" required class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"></div>
             <div><label class="block text-sm font-bold text-slate-700 mb-2">NIP</label><input type="text" name="nip" id="edit_nip" required class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"></div>
         </div>
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div><label class="block text-sm font-bold text-slate-700 mb-2">Tempat Lahir</label><input type="text" name="tempat_lahir" id="edit_tempat_lahir" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"></div>
             <div><label class="block text-sm font-bold text-slate-700 mb-2">Tanggal Lahir</label><input type="date" name="tanggal_lahir" id="edit_tanggal_lahir" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50 bg-white"></div>
         </div>
-        <div class="grid grid-cols-2 gap-6">
-            <div class="space-y-4">
-                <div><label class="block text-sm font-bold text-slate-700 mb-2">No. Telp/HP</label><input type="text" name="no_telp" id="edit_telp" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"></div>
-                <div><label class="block text-sm font-bold text-slate-700 mb-2">Alamat</label><textarea name="alamat" id="edit_alamat" rows="2" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"></textarea></div>
-            </div>
-            <div>
-                <label class="block text-sm font-bold text-slate-700 mb-2">Mata Pelajaran</label>
-                <select name="mapel_ids[]" multiple class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50 h-[180px]">
-                    <?php mysqli_data_seek($mapel_list, 0); while($m = mysqli_fetch_assoc($mapel_list)): ?>
-                        <option value="<?= $m['id'] ?>"><?= htmlspecialchars($m['nama_mapel']) ?></option>
-                    <?php endwhile; ?>
-                </select>
-            </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div><label class="block text-sm font-bold text-slate-700 mb-2">No. Telp/HP</label><input type="text" name="no_telp" id="edit_telp" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"></div>
+            <div><label class="block text-sm font-bold text-slate-700 mb-2">Alamat</label><textarea name="alamat" id="edit_alamat" rows="1" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"></textarea></div>
         </div>
         <div>
             <label class="block text-sm font-bold text-slate-700 mb-2">Foto Guru</label>
             <input type="file" name="foto" accept="image/*" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50 bg-white shadow-sm">
         </div>
-        <div class="pt-4 flex gap-4">
+        <div class="pt-4 flex flex-col sm:flex-row gap-4">
             <button type="button" onclick="closeModal('editModal')" class="flex-1 px-6 py-3 rounded-xl border border-slate-200 font-bold text-slate-600 hover:bg-slate-50 transition-all">Batal</button>
             <button type="submit" name="edit" class="flex-[2] px-6 py-3 rounded-xl bg-amber-500 text-white font-bold hover:bg-amber-600 shadow-lg shadow-amber-100 transition-all">Simpan Perubahan</button>
         </div>
     </form>
 </div>
 
+<!-- Mapel Modal (Popup Checklist with Search) -->
+<div id="mapelModal" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] sm:w-full max-w-lg max-h-[90vh] overflow-y-auto bg-white rounded-3xl shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0">
+    <div class="bg-indigo-600 px-6 sm:px-8 py-4 sm:py-6 text-white flex justify-between items-center sticky top-0 z-10">
+        <div>
+            <h3 class="text-xl sm:text-2xl font-bold italic">Mata Pelajaran Guru</h3>
+            <p id="mapel_guru_nama" class="text-xs text-indigo-100 font-bold mt-1"></p>
+        </div>
+        <button type="button" onclick="closeModal('mapelModal')" class="text-white/80 hover:text-white text-lg"><i class="fa fa-times"></i></button>
+    </div>
+    <form action="" method="POST" class="p-6 sm:p-8 space-y-4">
+        <input type="hidden" name="csrf_token" value="<?= get_csrf_token() ?>">
+        <input type="hidden" name="update_mapel" value="1">
+        <input type="hidden" name="id" id="mapel_guru_id">
+
+        <div class="space-y-1">
+            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Cari Mata Pelajaran</label>
+            <div class="relative">
+                <input type="text" id="mapel_search_input" oninput="filterMapelList()" placeholder="Ketik nama mapel..." class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-100 bg-white shadow-sm text-sm">
+                <i class="fa fa-search absolute left-4 top-3.5 text-slate-400 text-xs"></i>
+            </div>
+        </div>
+
+        <div id="mapel_checklist_container" class="max-h-60 overflow-y-auto border border-slate-100 rounded-2xl p-4 space-y-2 bg-slate-50 shadow-inner">
+            <?php mysqli_data_seek($mapel_list, 0); while($m = mysqli_fetch_assoc($mapel_list)): ?>
+                <label class="flex items-center gap-3 p-2.5 hover:bg-white rounded-xl transition-all cursor-pointer mapel-item" data-name="<?= strtolower(htmlspecialchars($m['nama_mapel'])) ?>">
+                    <input type="checkbox" name="mapel_ids[]" value="<?= $m['id'] ?>" data-text="<?= htmlspecialchars($m['nama_mapel']) ?>" class="rounded text-indigo-600 focus:ring-indigo-500 border-slate-300 w-5 h-5">
+                    <span class="text-sm font-bold text-slate-700"><?= htmlspecialchars($m['nama_mapel']) ?></span>
+                </label>
+            <?php endwhile; ?>
+        </div>
+
+        <div class="pt-4 flex flex-col sm:flex-row gap-3">
+            <button type="button" onclick="closeModal('mapelModal')" class="flex-1 px-4 py-3 rounded-xl border border-slate-200 font-bold text-slate-600 hover:bg-slate-50">Batal</button>
+            <button type="submit" class="flex-1 px-4 py-3 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-100">Simpan Perubahan</button>
+        </div>
+    </form>
+</div>
+
 <!-- Hapus Modal -->
-<div id="hapusModal" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-sm bg-white rounded-3xl shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0 overflow-hidden">
+<div id="hapusModal" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] sm:w-full max-w-sm bg-white rounded-3xl shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0 overflow-hidden">
     <div class="p-8 text-center">
         <div class="w-20 h-20 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl"><i class="fa fa-trash-alt"></i></div>
         <h3 class="text-xl font-bold text-slate-800 mb-2">Hapus Guru?</h3>

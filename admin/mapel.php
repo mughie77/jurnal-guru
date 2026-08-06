@@ -44,16 +44,27 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
     } elseif (isset($_POST['hapus'])) {
         $id = (int)$_POST['id'];
-        $stmt = mysqli_prepare($conn, "DELETE FROM mata_pelajaran WHERE id = ?");
-        mysqli_stmt_bind_param($stmt, "i", $id);
-        if (mysqli_stmt_execute($stmt)) {
-            $message = "Mata pelajaran dihapus!"; $message_type = 'success';
+        try {
+            $stmt = mysqli_prepare($conn, "DELETE FROM mata_pelajaran WHERE id = ?");
+            mysqli_stmt_bind_param($stmt, "i", $id);
+            if (mysqli_stmt_execute($stmt)) {
+                $message = "Mata pelajaran dihapus!"; $message_type = 'success';
+            } else {
+                $message = "Gagal menghapus mata pelajaran."; $message_type = 'error';
+            }
+        } catch (mysqli_sql_exception $e) {
+            if ($e->getCode() == 1451 || strpos($e->getMessage(), 'foreign key constraint fails') !== false) {
+                $message = "Gagal: Mata pelajaran ini tidak dapat dihapus karena masih digunakan di dalam data jurnal mengajar.";
+            } else {
+                $message = "Gagal: " . $e->getMessage();
+            }
+            $message_type = 'error';
         }
     }
 }
 
 $pagin = get_pagination_data($conn, "mata_pelajaran", 15, $where_sql);
-$result = mysqli_query($conn, "SELECT * FROM mata_pelajaran $where_sql ORDER BY nama_mapel ASC LIMIT {$pagin['limit']} OFFSET {$pagin['offset']}");
+$result = mysqli_query($conn, "SELECT mp.*, (SELECT COUNT(DISTINCT guru_id) FROM guru_mapel WHERE mapel_id = mp.id) as jml_guru FROM mata_pelajaran mp $where_sql ORDER BY mp.nama_mapel ASC LIMIT {$pagin['limit']} OFFSET {$pagin['offset']}");
 
 require_once __DIR__ . '/../includes/header.php';
 ?>
@@ -97,14 +108,33 @@ require_once __DIR__ . '/../includes/header.php';
                 <tr class="bg-slate-50 border-b border-slate-100">
                     <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Kode Mapel</th>
                     <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Nama Mata Pelajaran</th>
+                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Guru Pengampu</th>
                     <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Aksi</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-50">
-                <?php while ($row = mysqli_fetch_assoc($result)): ?>
+                <?php while ($row = mysqli_fetch_assoc($result)):
+                    $mapel_id = (int)$row['id'];
+                    $guru_res = mysqli_query($conn, "SELECT users.nama_lengkap, guru.nip
+                                                     FROM guru_mapel gm
+                                                     JOIN guru ON gm.guru_id = guru.id
+                                                     JOIN users ON guru.user_id = users.id
+                                                     WHERE gm.mapel_id = $mapel_id
+                                                     ORDER BY users.nama_lengkap ASC");
+                    $gurus_list = [];
+                    while ($g_row = mysqli_fetch_assoc($guru_res)) {
+                        $gurus_list[] = htmlspecialchars($g_row['nama_lengkap'] . " (" . $g_row['nip'] . ")", ENT_QUOTES, 'UTF-8');
+                    }
+                    $gurus_json = json_encode($gurus_list);
+                ?>
                 <tr class="hover:bg-slate-50/50 transition-colors">
                     <td class="px-6 py-4 font-mono text-sm text-indigo-600 font-bold"><?= htmlspecialchars($row['kode_mapel']) ?></td>
                     <td class="px-6 py-4 font-semibold text-slate-700"><?= htmlspecialchars($row['nama_mapel']) ?></td>
+                    <td class="px-6 py-4 text-center">
+                        <button type="button" onclick='showTeachersModal(<?= json_encode($row['nama_mapel']) ?>, <?= htmlspecialchars($gurus_json, ENT_QUOTES, 'UTF-8') ?>)' class="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-50 hover:bg-indigo-600 hover:text-white text-indigo-600 rounded-lg text-xs font-bold transition-all shadow-sm">
+                            <i class="fa fa-users text-[10px]"></i> <?= $row['jml_guru'] ?> Guru
+                        </button>
+                    </td>
                     <td class="px-6 py-4">
                         <div class="flex justify-center gap-2">
                             <button onclick="openEditModal(<?= htmlspecialchars(json_encode($row)) ?>)" class="w-9 h-9 flex items-center justify-center rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-600 hover:text-white transition-all">
@@ -128,12 +158,12 @@ require_once __DIR__ . '/../includes/header.php';
 <div id="modalOverlay" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] hidden transition-opacity duration-300 opacity-0" onclick="closeAllModals()"></div>
 
 <!-- Tambah Modal -->
-<div id="tambahModal" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-white rounded-3xl shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0 overflow-hidden">
-    <div class="bg-indigo-600 px-8 py-6 text-white"><h3 class="text-2xl font-bold">Tambah Mapel</h3></div>
-    <form action="" method="POST" class="p-8 space-y-4">
+<div id="tambahModal" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] sm:w-full max-w-lg max-h-[90vh] overflow-y-auto bg-white rounded-3xl shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0">
+    <div class="bg-indigo-600 px-6 sm:px-8 py-4 sm:py-6 text-white flex justify-between items-center sticky top-0 z-10"><h3 class="text-xl sm:text-2xl font-bold">Tambah Mapel</h3><button type="button" onclick="closeModal('tambahModal')" class="text-white/80 hover:text-white text-lg"><i class="fa fa-times"></i></button></div>
+    <form action="" method="POST" class="p-6 sm:p-8 space-y-4">
         <input type="hidden" name="csrf_token" value="<?= get_csrf_token() ?>">
         <div><label class="block text-sm font-bold text-slate-700 mb-1">Nama Mapel</label><input type="text" name="nama_mapel" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50" placeholder="Contoh: Pemrograman Web"></div>
-        <div class="pt-4 flex gap-3">
+        <div class="pt-4 flex flex-col sm:flex-row gap-3">
             <button type="button" onclick="closeModal('tambahModal')" class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 font-bold text-slate-600 hover:bg-slate-50">Batal</button>
             <button type="submit" name="tambah" class="flex-1 px-4 py-2.5 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-100">Simpan</button>
         </div>
@@ -141,14 +171,14 @@ require_once __DIR__ . '/../includes/header.php';
 </div>
 
 <!-- Edit Modal -->
-<div id="editModal" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-white rounded-3xl shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0 overflow-hidden">
-    <div class="bg-amber-500 px-8 py-6 text-white"><h3 class="text-2xl font-bold">Edit Mapel</h3></div>
-    <form action="" method="POST" class="p-8 space-y-4">
+<div id="editModal" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] sm:w-full max-w-lg max-h-[90vh] overflow-y-auto bg-white rounded-3xl shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0">
+    <div class="bg-amber-500 px-6 sm:px-8 py-4 sm:py-6 text-white flex justify-between items-center sticky top-0 z-10"><h3 class="text-xl sm:text-2xl font-bold">Edit Mapel</h3><button type="button" onclick="closeModal('editModal')" class="text-white/80 hover:text-white text-lg"><i class="fa fa-times"></i></button></div>
+    <form action="" method="POST" class="p-6 sm:p-8 space-y-4">
         <input type="hidden" name="csrf_token" value="<?= get_csrf_token() ?>">
         <input type="hidden" name="id" id="edit_id">
         <div><label class="block text-sm font-bold text-slate-700 mb-1">Kode Mapel (Permanen)</label><input type="text" id="edit_kode" disabled class="w-full px-4 py-2.5 rounded-xl border border-slate-100 bg-slate-50 text-slate-400 font-mono font-bold outline-none cursor-not-allowed"></div>
         <div><label class="block text-sm font-bold text-slate-700 mb-1">Nama Mata Pelajaran</label><input type="text" name="nama_mapel" id="edit_nama" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"></div>
-        <div class="pt-4 flex gap-3">
+        <div class="pt-4 flex flex-col sm:flex-row gap-3">
             <button type="button" onclick="closeModal('editModal')" class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 font-bold text-slate-600 hover:bg-slate-50">Batal</button>
             <button type="submit" name="edit" class="flex-1 px-4 py-2.5 rounded-xl bg-amber-500 text-white font-bold hover:bg-amber-600">Simpan</button>
         </div>
@@ -156,7 +186,7 @@ require_once __DIR__ . '/../includes/header.php';
 </div>
 
 <!-- Delete Modal -->
-<div id="hapusModal" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-sm bg-white rounded-3xl shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0 overflow-hidden">
+<div id="hapusModal" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] sm:w-full max-w-sm bg-white rounded-3xl shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0 overflow-hidden">
     <div class="p-8 text-center">
         <div class="w-16 h-16 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl"><i class="fa fa-trash"></i></div>
         <h3 class="text-lg font-bold text-slate-800 mb-1">Hapus Mapel?</h3>
@@ -171,6 +201,25 @@ require_once __DIR__ . '/../includes/header.php';
 </div>
 
 <script>
+function showTeachersModal(mapelName, teachersList) {
+    let content = '';
+    if (!teachersList || teachersList.length === 0) {
+        content = '<p class="text-slate-500 italic p-4">Belum ada guru yang mengampu mata pelajaran ini.</p>';
+    } else {
+        content = '<ul class="text-left space-y-2 max-h-60 overflow-y-auto p-2 bg-slate-50 rounded-xl border border-slate-100">';
+        teachersList.forEach(t => {
+            content += `<li class="flex items-center gap-2.5 p-2.5 bg-white rounded-lg shadow-sm border border-slate-100 font-bold text-slate-700 text-sm"><i class="fa fa-user-tie text-indigo-500"></i> ${t}</li>`;
+        });
+        content += '</ul>';
+    }
+    Swal.fire({
+        title: 'Guru Pengampu: ' + mapelName,
+        html: content,
+        confirmButtonColor: '#4F46E5',
+        confirmButtonText: 'Tutup'
+    });
+}
+
 const overlay = document.getElementById('modalOverlay');
 function openModal(id) { const m = document.getElementById(id); overlay.classList.remove('hidden'); m.classList.remove('hidden'); setTimeout(() => { overlay.classList.add('opacity-100'); m.classList.add('opacity-100', 'scale-100'); }, 10); }
 function closeModal(id) { const m = document.getElementById(id); overlay.classList.remove('opacity-100'); m.classList.remove('opacity-100', 'scale-100'); setTimeout(() => { overlay.classList.add('hidden'); m.classList.add('hidden'); }, 300); }
