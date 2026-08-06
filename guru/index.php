@@ -166,6 +166,16 @@ require_once __DIR__ . '/../includes/header.php';
                     </div>
                 </a>
 
+                <a href="tugas_tidak_masuk.php" class="p-3.5 sm:p-6 rounded-2xl sm:rounded-[32px] bg-rose-600 text-white shadow-xl shadow-rose-200 flex flex-col gap-2.5 sm:gap-4 group transition-all hover:scale-[1.02] active:scale-95">
+                    <div class="w-8 h-8 sm:w-12 sm:h-12 rounded-xl bg-white/20 flex items-center justify-center text-sm sm:text-xl shadow-inner group-hover:bg-white/30 transition-all">
+                        <i class="fa fa-clipboard-list"></i>
+                    </div>
+                    <div>
+                        <div class="text-xs sm:text-lg font-black italic tracking-tighter uppercase leading-none">Tugas Guru</div>
+                        <div class="text-[7px] sm:text-[9px] font-bold text-rose-100 uppercase tracking-widest mt-1 opacity-70">Guru Tidak Masuk</div>
+                    </div>
+                </a>
+
                 <?php if ($wali_info): ?>
                 <a href="<?= BASE_URL ?>admin/rekap_persiswa.php" class="p-3.5 sm:p-6 rounded-2xl sm:rounded-[32px] bg-violet-600 text-white shadow-xl shadow-violet-200 flex flex-col gap-2.5 sm:gap-4 group transition-all hover:scale-[1.02] active:scale-95 col-span-1">
                     <div class="w-8 h-8 sm:w-12 sm:h-12 rounded-xl bg-white/20 flex items-center justify-center text-sm sm:text-xl shadow-inner group-hover:bg-white/30 transition-all">

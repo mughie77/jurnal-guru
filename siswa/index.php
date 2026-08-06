@@ -156,6 +156,16 @@ require_once __DIR__ . '/../includes/header.php';
                 </div>
             </a>
 
+            <a href="tugas_guru.php" class="p-3.5 sm:p-5 rounded-2xl sm:rounded-[32px] bg-amber-600 text-white shadow-xl shadow-amber-100 flex flex-col gap-2.5 sm:gap-3 group transition-all hover:scale-[1.02] active:scale-95">
+                <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-white/20 flex items-center justify-center text-sm sm:text-lg shadow-inner group-hover:bg-white/30 transition-all">
+                    <i class="fa fa-tasks"></i>
+                </div>
+                <div>
+                    <div class="text-xs sm:text-base font-black italic tracking-tighter uppercase leading-none">Tugas Guru</div>
+                    <div class="text-[7px] sm:text-[9px] font-bold text-amber-100 uppercase tracking-widest mt-1 opacity-80">Tugas Guru Tidak Masuk</div>
+                </div>
+            </a>
+
             <!-- Row 5 (Pengaduan Siswa, formerly Panic Button) -->
             <a href="pengaduan.php" class="p-3.5 sm:p-5 rounded-2xl sm:rounded-[32px] bg-rose-600 text-white shadow-xl shadow-rose-200 flex flex-col gap-2 sm:gap-3 group transition-all hover:scale-[1.02] active:scale-95 col-span-1 sm:col-span-2 relative overflow-hidden">
                 <div class="absolute inset-0 bg-red-700/10 animate-pulse pointer-events-none"></div>

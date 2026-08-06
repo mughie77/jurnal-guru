@@ -252,6 +252,38 @@ authorize_role(['admin']);
                 $logs[] = ['status' => 'error', 'msg' => "Failed creating <b>kategori_perangkat</b>: " . mysqli_error($conn)];
             }
 
+            // Create piket_guru table
+            $create_pg = "CREATE TABLE IF NOT EXISTS `piket_guru` (
+                `id` INT AUTO_INCREMENT PRIMARY KEY,
+                `hari` ENUM('Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat') NOT NULL,
+                `guru_id` INT NOT NULL,
+                UNIQUE KEY `unique_hari_guru` (`hari`, `guru_id`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
+
+            if (mysqli_query($conn, $create_pg)) {
+                $logs[] = ['status' => 'success', 'msg' => "Table <b>piket_guru</b> created successfully"];
+            } else {
+                $logs[] = ['status' => 'error', 'msg' => "Failed creating <b>piket_guru</b>: " . mysqli_error($conn)];
+            }
+
+            // Create tugas_kelas table
+            $create_tk = "CREATE TABLE IF NOT EXISTS `tugas_kelas` (
+                `id` INT AUTO_INCREMENT PRIMARY KEY,
+                `guru_id` INT NOT NULL,
+                `kelas_id` INT NOT NULL,
+                `tanggal` DATE NOT NULL,
+                `keterangan_tugas` TEXT NOT NULL,
+                `file_lampiran` VARCHAR(255) DEFAULT NULL,
+                `status_selesai` TINYINT(1) DEFAULT 0,
+                `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
+
+            if (mysqli_query($conn, $create_tk)) {
+                $logs[] = ['status' => 'success', 'msg' => "Table <b>tugas_kelas</b> created successfully"];
+            } else {
+                $logs[] = ['status' => 'error', 'msg' => "Failed creating <b>tugas_kelas</b>: " . mysqli_error($conn)];
+            }
+
             foreach ($logs as $log) {
                 $color = 'text-blue-600 bg-blue-50';
                 if ($log['status'] == 'success') {
