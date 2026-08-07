@@ -100,6 +100,82 @@ if (isset($_SESSION['user_id'])) {
                         <span id="digital-clock" class="text-sm font-black text-slate-700 italic tracking-tighter"><?= date('H:i:s') ?></span>
                     </div>
 
+                    <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'guru'): ?>
+                    <div id="header-gps-status-bar" class="hidden sm:flex items-center bg-slate-50 border border-slate-100 px-3 py-1.5 rounded-xl mr-2 text-xs font-bold text-slate-500 gap-2">
+                        <span class="relative flex h-2 w-2">
+                          <span id="gps-pulse-ping" class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-amber-400"></span>
+                          <span id="gps-pulse-dot" class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                        </span>
+                        <span id="gps-status-label" class="uppercase text-[10px] font-black tracking-wider text-amber-600">GPS Belum Dihidupkan</span>
+                        <span id="gps-details" class="text-[10px] text-slate-400 font-medium">• Menunggu izin lokasi...</span>
+                    </div>
+
+                    <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const statusLabel = document.getElementById('gps-status-label');
+                        const statusDetails = document.getElementById('gps-details');
+                        const pulsePing = document.getElementById('gps-pulse-ping');
+                        const pulseDot = document.getElementById('gps-pulse-dot');
+                        const statusBar = document.getElementById('header-gps-status-bar');
+
+                        const schoolLat = <?= (float)($app_sets['school_lat'] ?? -7.9135) ?>;
+                        const schoolLng = <?= (float)($app_sets['school_lng'] ?? 113.8217) ?>;
+
+                        function calculateDistance(lat1, lon1, lat2, lon2) {
+                            const R = 6371000; // Earth radius in meters
+                            const dLat = (lat2 - lat1) * Math.PI / 180;
+                            const dLon = (lon2 - lon1) * Math.PI / 180;
+                            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                                      Math.sin(dLon/2) * Math.sin(dLon/2);
+                            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                            return R * c;
+                        }
+
+                        if ("geolocation" in navigator) {
+                            statusBar.classList.remove('hidden');
+                            navigator.geolocation.watchPosition(function(position) {
+                                const lat = position.coords.latitude;
+                                const lng = position.coords.longitude;
+                                const accuracy = Math.round(position.coords.accuracy);
+                                const distance = Math.round(calculateDistance(lat, lng, schoolLat, schoolLng));
+
+                                statusLabel.textContent = "GPS Dihidupkan";
+                                statusLabel.className = "uppercase text-[10px] font-black tracking-wider text-emerald-600";
+
+                                pulsePing.className = "animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-emerald-400";
+                                pulseDot.className = "relative inline-flex rounded-full h-2 w-2 bg-emerald-500";
+
+                                statusDetails.innerHTML = `• Jarak: <span class="font-bold text-slate-700">${distance}m</span> dari sekolah (±${accuracy}m)`;
+                            }, function(error) {
+                                pulsePing.className = "animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-rose-400";
+                                pulseDot.className = "relative inline-flex rounded-full h-2 w-2 bg-rose-500";
+
+                                if (error.code === 1) { // PERMISSION_DENIED
+                                    statusLabel.textContent = "Akses GPS Ditolak";
+                                    statusLabel.className = "uppercase text-[10px] font-black tracking-wider text-rose-600";
+                                    statusDetails.innerHTML = `• Izinkan lokasi di browser`;
+                                } else {
+                                    statusLabel.textContent = "GPS Belum Dihidupkan";
+                                    statusLabel.className = "uppercase text-[10px] font-black tracking-wider text-rose-600";
+                                    statusDetails.innerHTML = `• Gagal melacak posisi`;
+                                }
+                            }, {
+                                enableHighAccuracy: true,
+                                timeout: 10000,
+                                maximumAge: 0
+                            });
+                        } else {
+                            statusBar.classList.remove('hidden');
+                            statusLabel.textContent = "GPS Tidak Didukung";
+                            statusLabel.className = "uppercase text-[10px] font-black tracking-wider text-rose-600";
+                            pulsePing.className = "animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-rose-400";
+                            pulseDot.className = "relative inline-flex rounded-full h-2 w-2 bg-rose-500";
+                        }
+                    });
+                    </script>
+                    <?php endif; ?>
+
                     <div class="hidden md:flex flex-col text-right">
                         <span class="text-sm font-semibold text-slate-700"><?= htmlspecialchars($_SESSION['nama_lengkap']); ?></span>
                         <span class="text-xs text-slate-500 uppercase tracking-wider font-bold"><?= htmlspecialchars($_SESSION['role']); ?></span>
