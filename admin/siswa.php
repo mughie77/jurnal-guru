@@ -25,6 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $no_telp = $_POST['no_telp'] ?: null;
             $tempat_lahir = $_POST['tempat_lahir'] ?: null;
             $tanggal_lahir = $_POST['tanggal_lahir'] ?: null;
+            $no_wa_ortu = $_POST['no_wa_ortu'] ?: null;
 
             // Pre-validation to avoid duplicate NIS
             $check_nis = mysqli_query($conn, "SELECT id, nama_siswa FROM siswa WHERE nis = '" . mysqli_real_escape_string($conn, $nis) . "'");
@@ -51,8 +52,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 }
             }
 
-            $stmt = mysqli_prepare($conn, "INSERT INTO siswa (nis, nisn, nama_siswa, jenis_kelamin, alamat, no_telp, foto, tempat_lahir, tanggal_lahir) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            mysqli_stmt_bind_param($stmt, "sssssssss", $nis, $nisn, $nama_siswa, $jenis_kelamin, $alamat, $no_telp, $foto, $tempat_lahir, $tanggal_lahir);
+            $stmt = mysqli_prepare($conn, "INSERT INTO siswa (nis, nisn, nama_siswa, jenis_kelamin, alamat, no_telp, foto, tempat_lahir, tanggal_lahir, no_wa_ortu) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            mysqli_stmt_bind_param($stmt, "ssssssssss", $nis, $nisn, $nama_siswa, $jenis_kelamin, $alamat, $no_telp, $foto, $tempat_lahir, $tanggal_lahir, $no_wa_ortu);
             if (mysqli_stmt_execute($stmt)) {
                 $message = "Siswa berhasil ditambahkan!";
                 $message_type = 'success';
@@ -68,6 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $no_telp = $_POST['no_telp'] ?: null;
             $tempat_lahir = $_POST['tempat_lahir'] ?: null;
             $tanggal_lahir = $_POST['tanggal_lahir'] ?: null;
+            $no_wa_ortu = $_POST['no_wa_ortu'] ?: null;
 
             // Pre-validation to avoid duplicate NIS
             $check_nis = mysqli_query($conn, "SELECT id, nama_siswa FROM siswa WHERE nis = '" . mysqli_real_escape_string($conn, $nis) . "' AND id != $id");
@@ -86,8 +88,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             }
 
             $q_foto = "";
-            $params = [$nis, $nisn, $nama_siswa, $jenis_kelamin, $alamat, $no_telp, $tempat_lahir, $tanggal_lahir];
-            $types = "ssssssss";
+            $params = [$nis, $nisn, $nama_siswa, $jenis_kelamin, $alamat, $no_telp, $tempat_lahir, $tanggal_lahir, $no_wa_ortu];
+            $types = "sssssssss";
 
             if (!empty($_FILES['foto']['name'])) {
                 $ext = strtolower(pathinfo($_FILES['foto']['name'], PATHINFO_EXTENSION));
@@ -103,7 +105,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $params[] = $id;
             $types .= "i";
 
-            $stmt = mysqli_prepare($conn, "UPDATE siswa SET nis = ?, nisn = ?, nama_siswa = ?, jenis_kelamin = ?, alamat = ?, no_telp = ?, tempat_lahir = ?, tanggal_lahir = ? $q_foto WHERE id = ?");
+            $stmt = mysqli_prepare($conn, "UPDATE siswa SET nis = ?, nisn = ?, nama_siswa = ?, jenis_kelamin = ?, alamat = ?, no_telp = ?, tempat_lahir = ?, tanggal_lahir = ?, no_wa_ortu = ? $q_foto WHERE id = ?");
             mysqli_stmt_bind_param($stmt, $types, ...$params);
             if (mysqli_stmt_execute($stmt)) {
                 $message = "Data siswa diperbarui!";
@@ -388,7 +390,11 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div><label class="block text-sm font-bold text-slate-700 mb-1">Alamat</label><textarea name="alamat" rows="2" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50"></textarea></div>
-            <div><label class="block text-sm font-bold text-slate-700 mb-1">Foto Siswa</label><input type="file" name="foto" accept="image/*" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 bg-white"></div>
+            <div><label class="block text-sm font-bold text-slate-700 mb-1">No. WA Orang Tua / Wali</label><input type="text" name="no_wa_ortu" placeholder="Contoh: 081234567890" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50"></div>
+        </div>
+        <div>
+            <label class="block text-sm font-bold text-slate-700 mb-1">Foto Siswa</label>
+            <input type="file" name="foto" accept="image/*" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 bg-white">
         </div>
         <div class="pt-4 flex flex-col sm:flex-row gap-3"><button type="button" onclick="closeModal('tambahModal')" class="flex-1 px-6 py-3 rounded-xl border border-slate-200 font-bold text-slate-600">Batal</button><button type="submit" name="tambah" class="flex-1 px-6 py-3 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-100">Simpan</button></div>
     </form>
@@ -423,13 +429,14 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div><label class="block text-sm font-bold text-slate-700 mb-1">Alamat</label><textarea name="alamat" rows="2" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"><?= htmlspecialchars($row['alamat'] ?? '') ?></textarea></div>
-            <div>
-                <label class="block text-sm font-bold text-slate-700 mb-1">Update Foto</label>
-                <input type="file" name="foto" accept="image/*" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50 bg-white">
-                <?php if(!empty($row['foto'])): ?>
-                    <p class="text-[10px] text-slate-400 mt-1 italic">Sudah ada foto. Unggah lagi untuk mengganti.</p>
-                <?php endif; ?>
-            </div>
+            <div><label class="block text-sm font-bold text-slate-700 mb-1">No. WA Orang Tua / Wali</label><input type="text" name="no_wa_ortu" value="<?= htmlspecialchars($row['no_wa_ortu'] ?? '') ?>" placeholder="Contoh: 081234567890" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"></div>
+        </div>
+        <div>
+            <label class="block text-sm font-bold text-slate-700 mb-1">Update Foto</label>
+            <input type="file" name="foto" accept="image/*" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50 bg-white">
+            <?php if(!empty($row['foto'])): ?>
+                <p class="text-[10px] text-slate-400 mt-1 italic">Sudah ada foto. Unggah lagi untuk mengganti.</p>
+            <?php endif; ?>
         </div>
         <div class="pt-4 flex flex-col sm:flex-row gap-3"><button type="button" onclick="closeModal('editModal-<?= $row['id'] ?>')" class="flex-1 px-6 py-3 rounded-xl border border-slate-200 font-bold text-slate-600">Batal</button><button type="submit" name="edit" class="flex-1 px-6 py-3 rounded-xl bg-amber-500 text-white font-bold hover:bg-amber-600 shadow-lg shadow-amber-100">Simpan</button></div>
     </form>
