@@ -103,11 +103,11 @@ if (isset($_SESSION['user_id'])) {
                     <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'guru'): ?>
                     <div id="header-gps-status-bar" class="hidden sm:flex items-center bg-slate-50 border border-slate-100 px-3 py-1.5 rounded-xl mr-2 text-xs font-bold text-slate-500 gap-2">
                         <span class="relative flex h-2 w-2">
-                          <span id="gps-pulse-ping" class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-amber-400"></span>
-                          <span id="gps-pulse-dot" class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                          <span id="gps-pulse-ping" class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-yellow-400"></span>
+                          <span id="gps-pulse-dot" class="relative inline-flex rounded-full h-2 w-2 bg-yellow-500"></span>
                         </span>
-                        <span id="gps-status-label" class="uppercase text-[10px] font-black tracking-wider text-amber-600">GPS Belum Dihidupkan</span>
-                        <span id="gps-details" class="text-[10px] text-slate-400 font-medium">• Menunggu izin lokasi...</span>
+                        <span id="gps-status-label" class="uppercase text-[10px] font-black tracking-wider text-yellow-600">Menunggu</span>
+                        <span id="gps-details" class="text-[10px] text-slate-400 font-medium">• GPS Belum Dihidupkan</span>
                     </div>
 
                     <script>
@@ -140,23 +140,23 @@ if (isset($_SESSION['user_id'])) {
                                 const accuracy = Math.round(position.coords.accuracy);
                                 const distance = Math.round(calculateDistance(lat, lng, schoolLat, schoolLng));
 
-                                statusLabel.textContent = "GPS Dihidupkan";
+                                statusLabel.textContent = "Hidup";
                                 statusLabel.className = "uppercase text-[10px] font-black tracking-wider text-emerald-600";
 
                                 pulsePing.className = "animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-emerald-400";
                                 pulseDot.className = "relative inline-flex rounded-full h-2 w-2 bg-emerald-500";
 
-                                statusDetails.innerHTML = `• Jarak: <span class="font-bold text-slate-700">${distance}m</span> dari sekolah (±${accuracy}m)`;
+                                statusDetails.innerHTML = `• <span class="font-bold text-slate-700">${distance}m</span>`;
                             }, function(error) {
                                 pulsePing.className = "animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-rose-400";
                                 pulseDot.className = "relative inline-flex rounded-full h-2 w-2 bg-rose-500";
 
                                 if (error.code === 1) { // PERMISSION_DENIED
-                                    statusLabel.textContent = "Akses GPS Ditolak";
+                                    statusLabel.textContent = "Ditolak";
                                     statusLabel.className = "uppercase text-[10px] font-black tracking-wider text-rose-600";
                                     statusDetails.innerHTML = `• Izinkan lokasi di browser`;
                                 } else {
-                                    statusLabel.textContent = "GPS Belum Dihidupkan";
+                                    statusLabel.textContent = "Ditolak";
                                     statusLabel.className = "uppercase text-[10px] font-black tracking-wider text-rose-600";
                                     statusDetails.innerHTML = `• Gagal melacak posisi`;
                                 }

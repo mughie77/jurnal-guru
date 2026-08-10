@@ -16,6 +16,18 @@ $hadir_avg = mysqli_fetch_assoc(mysqli_query($conn, "SELECT AVG(jml_hadir) as av
 $recent_jurnals = mysqli_query($conn, "SELECT j.*, k.nama_kelas, mp.nama_mapel FROM jurnal j JOIN kelas k ON j.kelas_id = k.id JOIN mata_pelajaran mp ON j.mapel_id = mp.id WHERE j.guru_id = $guru_id ORDER BY j.tanggal DESC LIMIT 5");
 
 $page_title = "Beranda Guru";
+
+// Compute time greeting
+$hour = (int)date('H');
+$greeting = "Selamat Malam";
+if ($hour >= 5 && $hour < 11) {
+    $greeting = "Selamat Pagi";
+} elseif ($hour >= 11 && $hour < 15) {
+    $greeting = "Selamat Siang";
+} elseif ($hour >= 15 && $hour < 18) {
+    $greeting = "Selamat Sore";
+}
+
 require_once __DIR__ . '/../includes/header.php';
 ?>
 
@@ -26,11 +38,11 @@ require_once __DIR__ . '/../includes/header.php';
 </style>
 
 <div class="bg-slate-50 min-h-screen pb-24">
-    <!-- Main Content -->
+    <!-- Main Content (Full-width max-w-full) -->
     <div class="p-8 lg:p-12 max-w-full w-full mx-auto">
         <div class="flex items-center justify-between mb-12">
             <div class="flex items-center gap-6">
-                <a href="profil.php" class="w-20 h-20 rounded-xl bg-indigo-600 border-4 border-white shadow-xl overflow-hidden flex items-center justify-center block hover:scale-105 transition-transform">
+                <a href="profil.php" class="w-20 h-20 rounded-full bg-indigo-600 border border-slate-200 overflow-hidden flex items-center justify-center block hover:scale-105 transition-transform">
                     <?php if(!empty($guru_foto)): ?>
                         <img src="<?= BASE_URL ?>uploads/guru/<?= $guru_foto ?>" class="w-full h-full object-cover rounded-none">
                     <?php else: ?>
@@ -38,8 +50,8 @@ require_once __DIR__ . '/../includes/header.php';
                     <?php endif; ?>
                 </a>
                 <div>
-                    <h1 class="text-3xl font-normal text-slate-800 tracking-tight italic">Beranda Guru <span class="text-indigo-600">(<?= htmlspecialchars($_SESSION['nama_lengkap']) ?>)</span></h1>
-                    <p class="text-slate-400 font-medium tracking-wide"><?= date('l, d F Y') ?></p>
+                    <h1 class="text-3xl font-normal text-slate-800 tracking-tight italic leading-tight"><?= $greeting ?><br /><span class="text-indigo-600 text-xl font-normal leading-normal"><?= htmlspecialchars($_SESSION['nama_lengkap']) ?></span></h1>
+                    <p class="text-slate-400 font-medium tracking-wide mt-1"><?= date('l, d F Y') ?></p>
                 </div>
             </div>
             <div class="flex items-center gap-4">
