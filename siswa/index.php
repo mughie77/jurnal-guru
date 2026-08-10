@@ -43,7 +43,7 @@ require_once __DIR__ . '/../includes/header.php';
 </style>
 
 <div class="bg-slate-50 min-h-screen pb-24">
-    <div class="p-4 lg:p-8 max-w-full w-full mx-auto">
+    <div class="p-4 sm:p-6 lg:p-8 max-w-full w-full mx-auto">
 
         <div class="lux-card p-6 mb-8 bg-gradient-to-br from-indigo-600 to-indigo-800 text-white relative overflow-hidden">
             <div class="relative z-10 flex items-center gap-6">

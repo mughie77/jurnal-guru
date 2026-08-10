@@ -39,7 +39,7 @@ require_once __DIR__ . '/../includes/header.php';
 
 <div class="bg-slate-50 min-h-screen pb-24">
     <!-- Main Content (Full-width max-w-full) -->
-    <div class="p-8 lg:p-12 max-w-full w-full mx-auto">
+    <div class="p-4 sm:p-6 lg:p-8 max-w-full w-full mx-auto">
         <div class="flex items-center justify-between mb-12">
             <div class="flex items-center gap-6">
                 <a href="profil.php" class="w-20 h-20 rounded-full bg-indigo-600 border border-slate-200 overflow-hidden flex items-center justify-center block hover:scale-105 transition-transform">
@@ -53,13 +53,6 @@ require_once __DIR__ . '/../includes/header.php';
                     <h1 class="text-3xl font-normal text-slate-800 tracking-tight italic leading-tight"><?= $greeting ?><br /><span class="text-indigo-600 text-xl font-normal leading-normal"><?= htmlspecialchars($_SESSION['nama_lengkap']) ?></span></h1>
                     <p class="text-slate-400 font-medium tracking-wide mt-1"><?= date('l, d F Y') ?></p>
                 </div>
-            </div>
-            <div class="flex items-center gap-4">
-                <button class="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-50 transition-all"><i class="fa fa-search"></i></button>
-                <button class="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-50 transition-all relative">
-                    <i class="fa fa-bell"></i>
-                    <span class="absolute top-0 right-0 w-2.5 h-2.5 bg-rose-500 border-2 border-white rounded-full"></span>
-                </button>
             </div>
         </div>
 

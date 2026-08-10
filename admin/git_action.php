@@ -166,7 +166,7 @@ switch ($action) {
             // Run staging, commit, and push in sequence
             $commands = [
                 'git add . 2>&1',
-                'git commit -m "' . escapeshellcmd($commit_msg) . '" 2>&1',
+                'git commit -m ' . escapeshellarg($commit_msg) . ' 2>&1',
                 'git push origin $(git rev-parse --abbrev-ref HEAD) 2>&1'
             ];
 

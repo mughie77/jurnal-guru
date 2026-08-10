@@ -140,13 +140,13 @@ if (isset($_SESSION['user_id'])) {
                                 const accuracy = Math.round(position.coords.accuracy);
                                 const distance = Math.round(calculateDistance(lat, lng, schoolLat, schoolLng));
 
-                                statusLabel.textContent = "Hidup";
-                                statusLabel.className = "uppercase text-[10px] font-black tracking-wider text-emerald-600";
+                                statusLabel.textContent = "";
+                                statusLabel.className = "hidden";
 
                                 pulsePing.className = "animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-emerald-400";
                                 pulseDot.className = "relative inline-flex rounded-full h-2 w-2 bg-emerald-500";
 
-                                statusDetails.innerHTML = `• <span class="font-bold text-slate-700">${distance}m</span>`;
+                                statusDetails.innerHTML = `<span class="font-bold text-slate-700">${distance}m</span>`;
                             }, function(error) {
                                 pulsePing.className = "animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-rose-400";
                                 pulseDot.className = "relative inline-flex rounded-full h-2 w-2 bg-rose-500";
