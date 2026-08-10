@@ -274,6 +274,8 @@ authorize_role(['admin']);
                 `tanggal` DATE NOT NULL,
                 `keterangan_tugas` TEXT NOT NULL,
                 `file_lampiran` VARCHAR(255) DEFAULT NULL,
+                `latitude` VARCHAR(50) DEFAULT NULL,
+                `longitude` VARCHAR(50) DEFAULT NULL,
                 `status_selesai` TINYINT(1) DEFAULT 0,
                 `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";

@@ -26,12 +26,26 @@ while ($row = mysqli_fetch_assoc($res_j)) {
     $jurnals_by_class[$row['kelas_id']][] = $row;
 }
 
+// Fetch all tasks for selected date
+$tasks_by_class = [];
+$res_t = mysqli_query($conn, "SELECT tk.*, u.nama_lengkap, u.username
+                             FROM tugas_kelas tk
+                             JOIN guru g ON tk.guru_id = g.id
+                             JOIN users u ON g.user_id = u.id
+                             WHERE tk.tanggal = '" . mysqli_real_escape_string($conn, $date_filter) . "'");
+while ($row = mysqli_fetch_assoc($res_t)) {
+    $tasks_by_class[$row['kelas_id']][] = $row;
+}
+
 // Calculate Rekap
 $kelas_ada_pengajar = 0;
+$kelas_dengan_tugas = 0;
 $kelas_kosong = 0;
 foreach ($classes as $c) {
     if (isset($jurnals_by_class[$c['id']])) {
         $kelas_ada_pengajar++;
+    } elseif (isset($tasks_by_class[$c['id']])) {
+        $kelas_dengan_tugas++;
     } else {
         $kelas_kosong++;
     }
@@ -101,25 +115,32 @@ require_once __DIR__ . '/../includes/header.php';
 <div id="peta-kelas-export-area" class="p-1 sm:p-6 bg-slate-50 rounded-[32px]">
 
 <!-- Rekap Kelas Cards -->
-<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
     <div class="lux-card p-6 bg-gradient-to-br from-indigo-500 to-indigo-700 text-white border-none shadow-lg shadow-indigo-100 flex items-center justify-between">
         <div>
             <p class="text-[10px] font-black uppercase tracking-[0.2em] opacity-80 mb-1">Total Kelas Terdaftar</p>
-            <h3 class="text-3xl font-black italic tracking-tighter"><?= $total_kelas ?> Kelas</h3>
+            <h3 class="text-2xl font-black italic tracking-tighter"><?= $total_kelas ?> Kelas</h3>
         </div>
         <div class="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-2xl shadow-inner"><i class="fa fa-school"></i></div>
     </div>
     <div class="lux-card p-6 bg-white border-none shadow-lg shadow-emerald-100 flex items-center justify-between border-l-4 border-emerald-500">
         <div>
             <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Kelas Ada Pengajar</p>
-            <h3 class="text-3xl font-black italic text-emerald-600 tracking-tighter"><?= $kelas_ada_pengajar ?> Kelas</h3>
+            <h3 class="text-2xl font-black italic text-emerald-600 tracking-tighter"><?= $kelas_ada_pengajar ?> Kelas</h3>
         </div>
         <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-500 flex items-center justify-center text-2xl"><i class="fa fa-user-tie"></i></div>
     </div>
+    <div class="lux-card p-6 bg-white border-none shadow-lg shadow-amber-100 flex items-center justify-between border-l-4 border-amber-500">
+        <div>
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Kelas Dengan Tugas</p>
+            <h3 class="text-2xl font-black italic text-amber-600 tracking-tighter"><?= $kelas_dengan_tugas ?> Kelas</h3>
+        </div>
+        <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-500 flex items-center justify-center text-2xl"><i class="fa fa-tasks"></i></div>
+    </div>
     <div class="lux-card p-6 bg-white border-none shadow-lg shadow-rose-100 flex items-center justify-between border-l-4 border-rose-500">
         <div>
-            <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Kelas Kosong (Tanpa Pengajar)</p>
-            <h3 class="text-3xl font-black italic text-rose-500 tracking-tighter"><?= $kelas_kosong ?> Kelas</h3>
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Kelas Kosong</p>
+            <h3 class="text-2xl font-black italic text-rose-500 tracking-tighter"><?= $kelas_kosong ?> Kelas</h3>
         </div>
         <div class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center text-2xl"><i class="fa fa-user-times"></i></div>
     </div>
@@ -131,6 +152,9 @@ require_once __DIR__ . '/../includes/header.php';
         <?php
         $has_teacher = isset($jurnals_by_class[$c['id']]);
         $teacher_details = $has_teacher ? $jurnals_by_class[$c['id']] : [];
+
+        $has_task = isset($tasks_by_class[$c['id']]);
+        $task_details = $has_task ? $tasks_by_class[$c['id']] : [];
         ?>
         <div class="tooltip-trigger">
             <?php if ($has_teacher): ?>
@@ -163,8 +187,40 @@ require_once __DIR__ . '/../includes/header.php';
                         <?php if (count($teacher_details) > 1): ?><hr class="border-slate-800 my-2"><?php endif; ?>
                     <?php endforeach; ?>
                 </div>
+            <?php elseif ($has_task): ?>
+                <!-- Cell Kuning (Ada Tugas / Guru Tidak Masuk) -->
+                <div class="p-6 rounded-[24px] bg-amber-500 text-white shadow-xl shadow-amber-100 hover:shadow-amber-200 transition-all hover:scale-[1.03] active:scale-95 flex flex-col justify-between h-40 border border-amber-400 cursor-default">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-black uppercase tracking-widest bg-white/20 px-2 py-0.5 rounded-full border border-white/10">TUGAS</span>
+                        <i class="fa fa-tasks text-lg opacity-85"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-xl font-black tracking-tight italic"><?= htmlspecialchars($c['nama_kelas']) ?></h4>
+                        <p class="text-xs font-bold text-amber-500 truncate mt-1 bg-white/20 px-2 py-1 rounded">
+                            Tugas: <?= htmlspecialchars($task_details[0]['username'] ?? $task_details[0]['nama_lengkap']) ?>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Hover Details Tooltip -->
+                <div class="tooltip-content space-y-3">
+                    <div class="border-b border-slate-700/60 pb-1.5 mb-1.5 flex items-center justify-between">
+                        <span class="font-black text-[9px] text-amber-400 uppercase tracking-widest">Detail Tugas Guru</span>
+                        <span class="text-[9px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded">Hari Ini</span>
+                    </div>
+                    <?php foreach ($task_details as $tk): ?>
+                        <div class="space-y-1">
+                            <p class="font-bold text-slate-200 text-xs"><i class="fa fa-user-circle mr-1 text-slate-400"></i> <?= htmlspecialchars($tk['nama_lengkap']) ?> (Absen)</p>
+                            <p class="text-[10px] text-slate-300"><i class="fa fa-clipboard-list mr-1 text-slate-400"></i> Tugas: <span class="font-semibold text-slate-100"><?= htmlspecialchars($tk['keterangan_tugas']) ?></span></p>
+                            <?php if ($tk['file_lampiran']): ?>
+                                <p class="text-[10px] text-slate-300"><i class="fa fa-file-download mr-1 text-slate-400"></i> Lampiran file tersedia</p>
+                            <?php endif; ?>
+                        </div>
+                        <?php if (count($task_details) > 1): ?><hr class="border-slate-800 my-2"><?php endif; ?>
+                    <?php endforeach; ?>
+                </div>
             <?php else: ?>
-                <!-- Cell Merah (Tidak Ada Pengajar) -->
+                <!-- Cell Merah (Tidak Ada Pengajar & No Tasks) -->
                 <div class="p-6 rounded-[24px] bg-rose-500 text-white shadow-xl shadow-rose-100 hover:shadow-rose-200 transition-all hover:scale-[1.03] active:scale-95 flex flex-col justify-between h-40 border border-rose-400 cursor-default">
                     <div class="flex items-center justify-between">
                         <span class="text-xs font-black uppercase tracking-widest bg-white/20 px-2 py-0.5 rounded-full border border-white/10">KOSONG</span>

@@ -40,6 +40,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['tambah_tugas'])) {
     $kelas_id = (int)$_POST['kelas_id'];
     $tanggal = $_POST['tanggal'];
     $keterangan_tugas = mysqli_real_escape_string($conn, $_POST['keterangan_tugas']);
+    $latitude = $_POST['latitude'] ?: null;
+    $longitude = $_POST['longitude'] ?: null;
 
     // Handle File Lampiran upload
     $file_lampiran = null;
@@ -68,8 +70,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['tambah_tugas'])) {
     }
 
     if ($message_type !== 'error' && $kelas_id > 0 && !empty($tanggal)) {
-        $stmt = mysqli_prepare($conn, "INSERT INTO tugas_kelas (guru_id, kelas_id, tanggal, keterangan_tugas, file_lampiran) VALUES (?, ?, ?, ?, ?)");
-        mysqli_stmt_bind_param($stmt, "iisss", $guru_id, $kelas_id, $tanggal, $keterangan_tugas, $file_lampiran);
+        $stmt = mysqli_prepare($conn, "INSERT INTO tugas_kelas (guru_id, kelas_id, tanggal, keterangan_tugas, file_lampiran, latitude, longitude) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        mysqli_stmt_bind_param($stmt, "iisssss", $guru_id, $kelas_id, $tanggal, $keterangan_tugas, $file_lampiran, $latitude, $longitude);
         if (mysqli_stmt_execute($stmt)) {
             $message = "Tugas kelas berhasil dikirim!";
             $message_type = "success";
@@ -209,12 +211,19 @@ require_once __DIR__ . '/../includes/header.php';
                             <td class="px-4 py-3 font-black text-slate-800 text-sm"><?= htmlspecialchars($pt['nama_kelas']) ?></td>
                             <td class="px-4 py-3 font-semibold text-slate-700 text-xs"><?= htmlspecialchars($pt['nama_guru']) ?></td>
                             <td class="px-4 py-3 text-xs text-slate-600 max-w-sm">
-                                <div class="italic mb-1 leading-relaxed">"<?= htmlspecialchars($pt['keterangan_tugas']) ?>"</div>
-                                <?php if ($pt['file_lampiran']): ?>
-                                    <a href="<?= BASE_URL ?>uploads/tugas/<?= $pt['file_lampiran'] ?>" target="_blank" class="text-indigo-600 font-bold hover:underline inline-flex items-center gap-1 mt-1 text-[10px]">
-                                        <i class="fa fa-download"></i> Unduh Lampiran
-                                    </a>
-                                <?php endif; ?>
+                                <div class="italic mb-1 leading-relaxed font-semibold">"<?= htmlspecialchars($pt['keterangan_tugas']) ?>"</div>
+                                <div class="flex items-center gap-2.5 mt-2 flex-wrap">
+                                    <?php if ($pt['file_lampiran']): ?>
+                                        <a href="<?= BASE_URL ?>uploads/tugas/<?= $pt['file_lampiran'] ?>" target="_blank" class="text-indigo-600 font-black hover:underline inline-flex items-center gap-1 text-[10px] bg-indigo-50 px-2 py-0.5 rounded">
+                                            <i class="fa fa-download"></i> Lampiran File
+                                        </a>
+                                    <?php endif; ?>
+                                    <?php if (!empty($pt['latitude']) && !empty($pt['longitude'])): ?>
+                                        <a href="https://www.google.com/maps?q=<?= $pt['latitude'] ?>,<?= $pt['longitude'] ?>" target="_blank" class="text-rose-600 font-black hover:underline inline-flex items-center gap-1 text-[10px] bg-rose-50 px-2 py-0.5 rounded">
+                                            <i class="fa fa-map-marker-alt"></i> Pin Lokasi
+                                        </a>
+                                    <?php endif; ?>
+                                </div>
                             </td>
                             <td class="px-4 py-3 text-center">
                                 <?php if ($pt['status_selesai']): ?>
@@ -267,12 +276,19 @@ require_once __DIR__ . '/../includes/header.php';
                             <td class="px-4 py-3 font-semibold text-slate-700 text-xs"><?= date('d M Y', strtotime($mt['tanggal'])) ?></td>
                             <td class="px-4 py-3 font-black text-slate-800 text-sm"><?= htmlspecialchars($mt['nama_kelas']) ?></td>
                             <td class="px-4 py-3 text-xs text-slate-600 max-w-md">
-                                <div class="italic leading-relaxed">"<?= htmlspecialchars($mt['keterangan_tugas']) ?>"</div>
-                                <?php if ($mt['file_lampiran']): ?>
-                                    <a href="<?= BASE_URL ?>uploads/tugas/<?= $mt['file_lampiran'] ?>" target="_blank" class="text-indigo-600 font-bold hover:underline inline-flex items-center gap-1 mt-1 text-[10px]">
-                                        <i class="fa fa-download"></i> Unduh Lampiran
-                                    </a>
-                                <?php endif; ?>
+                                <div class="italic leading-relaxed font-semibold">"<?= htmlspecialchars($mt['keterangan_tugas']) ?>"</div>
+                                <div class="flex items-center gap-2.5 mt-2 flex-wrap">
+                                    <?php if ($mt['file_lampiran']): ?>
+                                        <a href="<?= BASE_URL ?>uploads/tugas/<?= $mt['file_lampiran'] ?>" target="_blank" class="text-indigo-600 font-black hover:underline inline-flex items-center gap-1 text-[10px] bg-indigo-50 px-2 py-0.5 rounded">
+                                            <i class="fa fa-download"></i> Lampiran File
+                                        </a>
+                                    <?php endif; ?>
+                                    <?php if (!empty($mt['latitude']) && !empty($mt['longitude'])): ?>
+                                        <a href="https://www.google.com/maps?q=<?= $mt['latitude'] ?>,<?= $mt['longitude'] ?>" target="_blank" class="text-rose-600 font-black hover:underline inline-flex items-center gap-1 text-[10px] bg-rose-50 px-2 py-0.5 rounded">
+                                            <i class="fa fa-map-marker-alt"></i> Pin Lokasi
+                                        </a>
+                                    <?php endif; ?>
+                                </div>
                             </td>
                             <td class="px-4 py-3 text-center">
                                 <?php if ($mt['status_selesai']): ?>
@@ -297,8 +313,10 @@ require_once __DIR__ . '/../includes/header.php';
         <span>Kirim Tugas Kelas (Guru Absen)</span>
         <button type="button" onclick="closeModal('addTugasModal')" class="text-white/80 hover:text-white text-lg"><i class="fa fa-times"></i></button>
     </div>
-    <form action="" method="POST" enctype="multipart/form-data" class="p-6 space-y-4">
+    <form action="" method="POST" enctype="multipart/form-data" id="add-tugas-form" class="p-6 space-y-4">
         <input type="hidden" name="csrf_token" value="<?= get_csrf_token() ?>">
+        <input type="hidden" name="latitude" id="task-lat">
+        <input type="hidden" name="longitude" id="task-lng">
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
@@ -362,6 +380,54 @@ function closeAllModals() {
         if (!m.classList.contains('hidden')) closeModal(m.id);
     });
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    const taskForm = document.getElementById('add-tugas-form');
+    const taskLat = document.getElementById('task-lat');
+    const taskLng = document.getElementById('task-lng');
+
+    if (taskForm) {
+        taskForm.addEventListener('submit', function(e) {
+            if (taskLat.value && taskLng.value) {
+                return true;
+            }
+
+            e.preventDefault();
+
+            Swal.fire({
+                title: 'Mendeteksi Lokasi GPS...',
+                text: 'Mengambil koordinat Anda untuk melampirkan pin lokasi pengiriman tugas kelas.',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    Swal.close();
+                    taskLat.value = position.coords.latitude;
+                    taskLng.value = position.coords.longitude;
+                    taskForm.submit();
+                }, function(error) {
+                    Swal.close();
+                    // Fallback proceed even if GPS fails but log warning
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Akses Lokasi Gagal',
+                        text: 'Koordinat GPS tidak terdeteksi. Tugas akan tetap dikirim tanpa pin lokasi.',
+                        confirmButtonColor: '#4F46E5'
+                    }).then(() => {
+                        taskForm.submit();
+                    });
+                }, { enableHighAccuracy: true, timeout: 8000 });
+            } else {
+                Swal.close();
+                taskForm.submit();
+            }
+        });
+    }
+});
 </script>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

@@ -172,11 +172,18 @@ require_once __DIR__ . '/../includes/header.php';
                         </td>
                         <td class="px-6 py-4 text-xs text-slate-600 max-w-sm">
                             <div class="italic leading-relaxed">"<?= htmlspecialchars($row['keterangan_tugas']) ?>"</div>
-                            <?php if ($row['file_lampiran']): ?>
-                                <a href="<?= BASE_URL ?>uploads/tugas/<?= $row['file_lampiran'] ?>" target="_blank" class="text-indigo-600 font-bold hover:underline inline-flex items-center gap-1 mt-1 text-[10px]">
-                                    <i class="fa fa-download"></i> Unduh Lampiran
-                                </a>
-                            <?php endif; ?>
+                            <div class="flex items-center gap-3 mt-1.5 flex-wrap">
+                                <?php if ($row['file_lampiran']): ?>
+                                    <a href="<?= BASE_URL ?>uploads/tugas/<?= $row['file_lampiran'] ?>" target="_blank" class="text-indigo-600 font-black hover:underline inline-flex items-center gap-1 text-[10px] bg-indigo-50 px-2 py-0.5 rounded">
+                                        <i class="fa fa-download"></i> Unduh Lampiran
+                                    </a>
+                                <?php endif; ?>
+                                <?php if (!empty($row['latitude']) && !empty($row['longitude'])): ?>
+                                    <a href="https://www.google.com/maps?q=<?= $row['latitude'] ?>,<?= $row['longitude'] ?>" target="_blank" class="text-rose-600 font-black hover:underline inline-flex items-center gap-1 text-[10px] bg-rose-50 px-2 py-0.5 rounded">
+                                        <i class="fa fa-map-marker-alt"></i> Pin Lokasi Kirim
+                                    </a>
+                                <?php endif; ?>
+                            </div>
                         </td>
                         <td class="px-6 py-4 text-center whitespace-nowrap">
                             <?php if ($row['status_selesai']): ?>
