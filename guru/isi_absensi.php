@@ -183,10 +183,10 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
 
                         const card = document.createElement('div');
-                        card.className = "lux-card p-4 flex items-center justify-between";
+                        card.className = "lux-card p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3";
                         card.innerHTML = `
                             <div class="min-w-0 pr-4"><div class="font-bold text-slate-700 break-words whitespace-normal text-sm">${s.nama_siswa}</div></div>
-                            <div class="flex gap-1">
+                            <div class="flex gap-1 justify-end">
                                 ${['H','S','I','A'].map(st => `
                                     <label class="w-8 h-8 flex items-center justify-center cursor-pointer">
                                         <input type="radio" name="absen[${s.id}]" value="${st}" ${st==checkedOption?'checked':''} class="peer hidden">

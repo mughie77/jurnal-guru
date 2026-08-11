@@ -280,7 +280,7 @@ function showJurnalDetail(jurnalId) {
                 <!-- Student List -->
                 <div>
                     <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Daftar Kehadiran Siswa</span>
-                    <div class="border border-slate-100 rounded-xl overflow-hidden shadow-sm">
+                    <div class="border border-slate-100 rounded-xl overflow-hidden shadow-sm overflow-x-auto">
                         <table class="w-full border-collapse">
                             <thead>
                                 <tr class="bg-slate-50 border-b border-slate-100 text-left">
