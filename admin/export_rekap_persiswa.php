@@ -98,7 +98,7 @@ $nama_kelas = $kls_data['nama_kelas'] ?? 'Semua';
 $active_tahun_id_clean = (int)($active_tahun_id ?? 0);
 $where_siswa = " WHERE sk.kelas_id = $kelas_id AND sk.tahun_pelajaran_id = $active_tahun_id_clean";
 
-$query = "SELECT s.id, s.nis, s.nama_siswa, s.jenis_kelamin
+$query = "SELECT s.id, s.nis, s.nisn, s.nama_siswa, s.jenis_kelamin
           FROM siswa s
           JOIN siswa_kelas sk ON s.id = sk.siswa_id
           $where_siswa
@@ -165,6 +165,7 @@ if (!empty($student_ids)) {
         $rekap_data[] = [
             'nama_siswa' => $s['nama_siswa'],
             'nis' => $s['nis'],
+            'nisn' => $s['nisn'],
             'jenis_kelamin' => $s['jenis_kelamin'],
             'count_h' => $count_h,
             'count_s' => $count_s,
@@ -176,15 +177,16 @@ if (!empty($student_ids)) {
 
 $data = [];
 // Title and Metadata
-$data[] = ['<b>REKAP KEHADIRAN SISWA</b>', '', '', '', '', '', '', ''];
-$data[] = ['Kelas:', $nama_kelas, '', '', '', '', '', ''];
-$data[] = ['Rentang Tanggal:', date('d-m-Y', strtotime($start_date)) . ' s/d ' . date('d-m-Y', strtotime($end_date)), '', '', '', '', '', ''];
-$data[] = ['', '', '', '', '', '', '', '']; // Empty spacer
+$data[] = ['<b>REKAP KEHADIRAN SISWA</b>', '', '', '', '', '', '', '', ''];
+$data[] = ['Kelas:', $nama_kelas, '', '', '', '', '', '', ''];
+$data[] = ['Rentang Tanggal:', date('d-m-Y', strtotime($start_date)) . ' s/d ' . date('d-m-Y', strtotime($end_date)), '', '', '', '', '', '', ''];
+$data[] = ['', '', '', '', '', '', '', '', '']; // Empty spacer
 
 // Header with styling
 $data[] = [
     '<b>Nama Siswa</b>',
     '<b>NIS</b>',
+    '<b>NISN</b>',
     '<b>L/P</b>',
     '<b>Hadir (H)</b>',
     '<b>Sakit (S)</b>',
@@ -198,6 +200,7 @@ foreach ($rekap_data as $row) {
     $data[] = [
         $row['nama_siswa'],
         $row['nis'],
+        $row['nisn'] ?? '-',
         $row['jenis_kelamin'],
         $row['count_h'],
         $row['count_s'],

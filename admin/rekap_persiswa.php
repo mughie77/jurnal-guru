@@ -94,7 +94,7 @@ if ($kelas_id > 0 && $start_date && $end_date) {
     $pagin = get_pagination_data($conn, "siswa s JOIN siswa_kelas sk ON s.id = sk.siswa_id", 50, $where_siswa);
 
     // Get the page of students
-    $query = "SELECT s.id, s.nis, s.nama_siswa, s.jenis_kelamin
+    $query = "SELECT s.id, s.nis, s.nisn, s.nama_siswa, s.jenis_kelamin
               FROM siswa s
               JOIN siswa_kelas sk ON s.id = sk.siswa_id
               $where_siswa
@@ -160,6 +160,7 @@ if ($kelas_id > 0 && $start_date && $end_date) {
             $rekap[] = [
                 'id' => $s['id'],
                 'nis' => $s['nis'],
+                'nisn' => $s['nisn'],
                 'nama_siswa' => $s['nama_siswa'],
                 'jenis_kelamin' => $s['jenis_kelamin'],
                 'count_h' => $count_h,
@@ -292,6 +293,7 @@ require_once __DIR__ . '/../includes/header.php';
                 <tr class="bg-slate-50 border-b border-slate-100">
                     <th class="px-6 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest z-10">Nama Siswa</th>
                     <th class="px-6 py-4 text-center text-[10px] font-black text-slate-500 uppercase tracking-widest">NIS</th>
+                    <th class="px-6 py-4 text-center text-[10px] font-black text-slate-500 uppercase tracking-widest">NISN</th>
                     <th class="px-6 py-4 text-center text-[10px] font-black text-slate-500 uppercase tracking-widest">L/P</th>
                     <th class="px-4 py-4 text-center bg-emerald-50 text-emerald-700 font-black text-[10px] uppercase border-l border-slate-100">Hadir (H)</th>
                     <th class="px-4 py-4 text-center bg-amber-50 text-amber-700 font-black text-[10px] uppercase border-l border-slate-100">Sakit (S)</th>
@@ -310,6 +312,7 @@ require_once __DIR__ . '/../includes/header.php';
                         <?= htmlspecialchars($r['nama_siswa']) ?>
                     </td>
                     <td class="px-6 py-4 text-center font-mono text-xs text-slate-500 font-bold"><?= htmlspecialchars($r['nis']) ?></td>
+                    <td class="px-6 py-4 text-center font-mono text-xs text-slate-500 font-bold"><?= htmlspecialchars($r['nisn'] ?? '-') ?></td>
                     <td class="px-6 py-4 text-center text-xs font-bold text-slate-500"><?= $r['jenis_kelamin'] ?></td>
                     <td class="px-4 py-4 text-center border-l border-slate-50 font-black text-emerald-600 text-sm bg-emerald-50/10"><?= $r['count_h'] ?></td>
                     <td class="px-4 py-4 text-center border-l border-slate-50 font-black text-amber-600 text-sm bg-amber-50/10"><?= $r['count_s'] ?></td>
@@ -319,7 +322,7 @@ require_once __DIR__ . '/../includes/header.php';
                 </tr>
                 <?php endforeach; ?>
                 <?php if(empty($rekap)): ?>
-                    <tr><td colspan="8" class="px-6 py-12 text-center text-slate-400 italic">Tidak ada data rekap siswa di kelas ini.</td></tr>
+                    <tr><td colspan="9" class="px-6 py-12 text-center text-slate-400 italic">Tidak ada data rekap siswa di kelas ini.</td></tr>
                 <?php endif; ?>
             </tbody>
         </table>
