@@ -329,7 +329,12 @@ require_once __DIR__ . '/../includes/header.php';
                         </td>
                         <td class="px-6 py-4 font-semibold text-slate-700">
                             <?= htmlspecialchars($row['nama_siswa']) ?>
-                            <div class="text-[10px] text-slate-400 font-normal italic"><?= htmlspecialchars($row['no_telp'] ?? '') ?></div>
+                            <div class="text-[10px] text-slate-400 font-normal italic">
+                                Telp: <?= htmlspecialchars($row['no_telp'] ?? '-') ?>
+                                <?php if (!empty($row['no_wa_ortu'])): ?>
+                                    | WA Ortu: <?= htmlspecialchars($row['no_wa_ortu']) ?>
+                                <?php endif; ?>
+                            </div>
                         </td>
                         <td class="px-6 py-4 text-center">
                             <span class="px-2 py-0.5 rounded text-xs font-bold <?= $row['jenis_kelamin'] == 'L' ? 'bg-blue-100 text-blue-600' : 'bg-pink-100 text-pink-600' ?>">

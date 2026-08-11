@@ -23,7 +23,7 @@ $table_join = "siswa s
 $pagin = get_pagination_data($conn, $table_join, 15, $where);
 
 // Get Data
-$query = "SELECT s.id, s.nis, s.nama_siswa, s.berkas_kk, s.berkas_ijazah, k.nama_kelas
+$query = "SELECT s.id, s.nis, s.nama_siswa, s.berkas_kk, s.berkas_ijazah, s.no_wa_ortu, k.nama_kelas
           FROM siswa s
           JOIN siswa_kelas sk ON s.id = sk.siswa_id
           JOIN kelas k ON sk.kelas_id = k.id
@@ -83,7 +83,16 @@ require_once __DIR__ . '/../includes/header.php';
                             <tr class="hover:bg-slate-50/80 transition-colors">
                                 <td class="p-6">
                                     <div class="font-black text-slate-800 italic uppercase text-sm"><?= htmlspecialchars($row['nama_siswa']) ?></div>
-                                    <div class="text-[10px] font-bold text-slate-400 mt-0.5 tracking-widest"><?= $row['nis'] ?></div>
+                                    <div class="text-[10px] font-bold text-slate-400 mt-0.5 tracking-widest">NIS: <?= $row['nis'] ?></div>
+                                    <?php if (!empty($row['no_wa_ortu'])): ?>
+                                        <div class="mt-1 flex items-center gap-1.5 text-[10px] font-black text-emerald-600 uppercase tracking-wider">
+                                            <i class="fab fa-whatsapp text-xs"></i> WA Ortu: <?= htmlspecialchars($row['no_wa_ortu']) ?>
+                                        </div>
+                                    <?php else: ?>
+                                        <div class="mt-1 flex items-center gap-1.5 text-[10px] font-bold text-rose-400 uppercase tracking-wider italic">
+                                            <i class="fab fa-whatsapp text-xs"></i> WA Ortu: Belum Diisi
+                                        </div>
+                                    <?php endif; ?>
                                 </td>
                                 <td class="p-6 text-center">
                                     <span class="px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-[10px] font-black uppercase tracking-widest"><?= $row['nama_kelas'] ?></span>

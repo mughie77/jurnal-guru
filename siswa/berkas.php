@@ -8,6 +8,12 @@ $siswa_id = $_SESSION['user_id'];
 $msg = '';
 $msg_type = '';
 
+// Auto-heal missing no_wa_ortu column if it does not exist (robust against production environment lags)
+$check_col = mysqli_query($conn, "SHOW COLUMNS FROM `siswa` LIKE 'no_wa_ortu'");
+if (mysqli_num_rows($check_col) == 0) {
+    mysqli_query($conn, "ALTER TABLE `siswa` ADD `no_wa_ortu` VARCHAR(20) DEFAULT NULL AFTER berkas_ijazah");
+}
+
 // Handle WA Ortu Update
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_wa_ortu'])) {
     if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
