@@ -30,9 +30,17 @@ if (isset($_GET['action']) && $_GET['action'] == 'delete') {
 
 $where_clause = "jurnal.guru_id = $guru_id";
 if ($active_tahun_id) $where_clause .= " AND jurnal.tahun_pelajaran_id = $active_tahun_id";
-if (!empty($_GET['tanggal'])) {
-    $tgl = mysqli_real_escape_string($conn, $_GET['tanggal']);
-    $where_clause .= " AND jurnal.tanggal = '$tgl'";
+
+$tgl_mulai = $_GET['tanggal_mulai'] ?? '';
+$tgl_selesai = $_GET['tanggal_selesai'] ?? '';
+
+if (!empty($tgl_mulai)) {
+    $tgl_mulai_escaped = mysqli_real_escape_string($conn, $tgl_mulai);
+    $where_clause .= " AND jurnal.tanggal >= '$tgl_mulai_escaped'";
+}
+if (!empty($tgl_selesai)) {
+    $tgl_selesai_escaped = mysqli_real_escape_string($conn, $tgl_selesai);
+    $where_clause .= " AND jurnal.tanggal <= '$tgl_selesai_escaped'";
 }
 
 $sql = "SELECT jurnal.*, mp.nama_mapel, k.nama_kelas
@@ -100,6 +108,9 @@ require_once __DIR__ . '/../includes/header.php';
             <p class="text-slate-500">Kumpulan catatan aktivitas mengajar Anda.</p>
         </div>
         <div class="flex gap-3">
+            <a href="export_riwayat_excel.php?<?= http_build_query($_GET) ?>" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold transition-all shadow-lg shadow-emerald-100 flex items-center">
+                <i class="fa fa-file-excel mr-2"></i> Ekspor Excel
+            </a>
             <a href="index.php" class="px-6 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-50 transition-all bg-white shadow-sm flex items-center">
                 <i class="fa fa-arrow-left mr-2"></i> Kembali
             </a>
@@ -108,9 +119,13 @@ require_once __DIR__ . '/../includes/header.php';
 
     <div class="lux-card p-6 mb-8 bg-gradient-to-br from-emerald-50/50 to-white">
         <form action="" method="GET" class="flex flex-wrap items-end gap-4">
-            <div class="flex-1 min-w-[200px]">
-                <label class="block text-xs font-bold text-slate-500 uppercase mb-2 tracking-widest">Filter Tanggal</label>
-                <input type="date" name="tanggal" value="<?= htmlspecialchars($_GET['tanggal'] ?? '') ?>" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-emerald-100 bg-white">
+            <div class="flex-1 min-w-[150px]">
+                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2">Tanggal Mulai</label>
+                <input type="date" name="tanggal_mulai" value="<?= htmlspecialchars($tgl_mulai) ?>" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-emerald-100 bg-white font-bold text-slate-700">
+            </div>
+            <div class="flex-1 min-w-[150px]">
+                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2">Tanggal Selesai</label>
+                <input type="date" name="tanggal_selesai" value="<?= htmlspecialchars($tgl_selesai) ?>" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-emerald-100 bg-white font-bold text-slate-700">
             </div>
             <button type="submit" class="px-8 py-2.5 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100">Cari Jurnal</button>
             <a href="riwayat.php" class="px-6 py-2.5 bg-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-300 transition-all">Reset</a>
