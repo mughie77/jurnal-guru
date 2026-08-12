@@ -36,6 +36,21 @@ $result = mysqli_query($conn, $query);
 // Get Classes for filter
 $classes = mysqli_query($conn, "SELECT * FROM kelas ORDER BY nama_kelas ASC");
 
+// Calculate summary stats matching the active filter
+$stats_query = "SELECT
+    COUNT(*) as total_siswa,
+    SUM(CASE WHEN (s.berkas_kk IS NOT NULL AND s.berkas_kk != '') AND (s.berkas_ijazah IS NOT NULL AND s.berkas_ijazah != '') THEN 1 ELSE 0 END) as lengkap,
+    SUM(CASE WHEN (s.berkas_kk IS NULL OR s.berkas_kk = '') OR (s.berkas_ijazah IS NULL OR s.berkas_ijazah = '') THEN 1 ELSE 0 END) as belum_lengkap
+FROM siswa s
+JOIN siswa_kelas sk ON s.id = sk.siswa_id
+JOIN tahun_pelajaran tp ON sk.tahun_pelajaran_id = tp.id
+$where";
+$stats_res = mysqli_query($conn, $stats_query);
+$stats = mysqli_fetch_assoc($stats_res);
+$total_siswa = (int)($stats['total_siswa'] ?? 0);
+$total_lengkap = (int)($stats['lengkap'] ?? 0);
+$total_belum_lengkap = (int)($stats['belum_lengkap'] ?? 0);
+
 $page_title = "Rekap Berkas Siswa";
 require_once __DIR__ . '/../includes/header.php';
 ?>
@@ -45,6 +60,37 @@ require_once __DIR__ . '/../includes/header.php';
         <div>
             <h1 class="text-2xl font-black italic text-slate-800 uppercase tracking-widest">Rekap Berkas Siswa</h1>
             <p class="text-slate-400 font-bold text-xs uppercase tracking-[0.3em] mt-1">Pemantauan Dokumen KK & Ijazah</p>
+        </div>
+    </div>
+
+    <!-- Stats Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="lux-card p-6 flex items-center justify-between">
+            <div>
+                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Total Siswa</span>
+                <span class="text-3xl font-black text-slate-800 italic"><?= $total_siswa ?></span>
+            </div>
+            <div class="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-500">
+                <i class="fa fa-users text-xl"></i>
+            </div>
+        </div>
+        <div class="lux-card p-6 flex items-center justify-between border-l-4 border-l-emerald-500">
+            <div>
+                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Berkas Lengkap</span>
+                <span class="text-3xl font-black text-emerald-600 italic"><?= $total_lengkap ?></span>
+            </div>
+            <div class="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-500">
+                <i class="fa fa-check-circle text-xl"></i>
+            </div>
+        </div>
+        <div class="lux-card p-6 flex items-center justify-between border-l-4 border-l-rose-500">
+            <div>
+                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Belum Lengkap</span>
+                <span class="text-3xl font-black text-rose-600 italic"><?= $total_belum_lengkap ?></span>
+            </div>
+            <div class="w-12 h-12 bg-rose-50 rounded-2xl flex items-center justify-center text-rose-500">
+                <i class="fa fa-times-circle text-xl"></i>
+            </div>
         </div>
     </div>
 
@@ -75,6 +121,7 @@ require_once __DIR__ . '/../includes/header.php';
                         <th class="p-6 font-black text-center">Kelas</th>
                         <th class="p-6 font-black text-center">Kartu Keluarga</th>
                         <th class="p-6 font-black text-center">Ijazah</th>
+                        <th class="p-6 font-black text-center">Status Berkas</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
@@ -117,11 +164,21 @@ require_once __DIR__ . '/../includes/header.php';
                                         <span class="text-[10px] font-black text-rose-400 uppercase tracking-widest italic">Belum Upload</span>
                                     <?php endif; ?>
                                 </td>
+                                <td class="p-6 text-center">
+                                    <?php
+                                    $has_kk = !empty($row['berkas_kk']);
+                                    $has_ijazah = !empty($row['berkas_ijazah']);
+                                    if ($has_kk && $has_ijazah): ?>
+                                        <span class="px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-100">Lengkap</span>
+                                    <?php else: ?>
+                                        <span class="px-3 py-1 bg-rose-50 text-rose-600 rounded-full text-[10px] font-black uppercase tracking-widest border border-rose-100">Belum Lengkap</span>
+                                    <?php endif; ?>
+                                </td>
                             </tr>
                         <?php endwhile; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="4" class="p-12 text-center">
+                            <td colspan="5" class="p-12 text-center">
                                 <div class="flex flex-col items-center gap-4">
                                     <i class="fa fa-folder-open text-5xl text-slate-100"></i>
                                     <p class="text-xs font-black text-slate-400 uppercase tracking-widest italic">Data tidak ditemukan</p>
