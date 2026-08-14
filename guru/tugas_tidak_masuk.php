@@ -91,12 +91,17 @@ if (isset($_GET['action']) && $_GET['action'] == 'toggle_status') {
         die("CSRF Token Invalid");
     }
 
-    // Toggle completed status (Guru Piket or the Owner can check/uncheck)
-    $stmt = mysqli_prepare($conn, "UPDATE tugas_kelas SET status_selesai = ? WHERE id = ?");
-    mysqli_stmt_bind_param($stmt, "ii", $new_status, $task_id);
-    if (mysqli_stmt_execute($stmt)) {
-        header("Location: tugas_tidak_masuk.php?success_toggle=1");
-        exit;
+    // Verify ownership/role to prevent IDOR manipulation
+    $check_access = mysqli_query($conn, "SELECT id FROM tugas_kelas WHERE id = $task_id AND (guru_id = $guru_id OR " . ($is_piket_today ? '1=1' : '1=0') . " OR '" . $_SESSION['role'] . "' = 'admin') LIMIT 1");
+    if (mysqli_num_rows($check_access) > 0) {
+        $stmt = mysqli_prepare($conn, "UPDATE tugas_kelas SET status_selesai = ? WHERE id = ?");
+        mysqli_stmt_bind_param($stmt, "ii", $new_status, $task_id);
+        if (mysqli_stmt_execute($stmt)) {
+            header("Location: tugas_tidak_masuk.php?success_toggle=1");
+            exit;
+        }
+    } else {
+        die("Akses ditolak: Anda tidak memiliki wewenang untuk memperbarui status tugas ini.");
     }
 }
 
