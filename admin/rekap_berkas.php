@@ -146,20 +146,20 @@ require_once __DIR__ . '/../includes/header.php';
                                 </td>
                                 <td class="p-6 text-center">
                                     <?php if ($row['berkas_kk']): ?>
-                                        <a href="<?= BASE_URL ?>uploads/siswa/berkas/<?= $row['berkas_kk'] ?>" target="_blank"
+                                        <button onclick="viewImage('<?= BASE_URL ?>uploads/siswa/berkas/<?= $row['berkas_kk'] ?>', 'Kartu Keluarga - <?= htmlspecialchars(addslashes($row['nama_siswa'])) ?>')"
                                             class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-600 hover:text-white transition-all">
                                             <i class="fa fa-eye"></i> Lihat
-                                        </a>
+                                        </button>
                                     <?php else: ?>
                                         <span class="text-[10px] font-black text-rose-400 uppercase tracking-widest italic">Belum Upload</span>
                                     <?php endif; ?>
                                 </td>
                                 <td class="p-6 text-center">
                                     <?php if ($row['berkas_ijazah']): ?>
-                                        <a href="<?= BASE_URL ?>uploads/siswa/berkas/<?= $row['berkas_ijazah'] ?>" target="_blank"
+                                        <button onclick="viewImage('<?= BASE_URL ?>uploads/siswa/berkas/<?= $row['berkas_ijazah'] ?>', 'Ijazah - <?= htmlspecialchars(addslashes($row['nama_siswa'])) ?>')"
                                             class="inline-flex items-center gap-2 px-4 py-2 bg-amber-50 text-amber-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-amber-600 hover:text-white transition-all">
                                             <i class="fa fa-eye"></i> Lihat
-                                        </a>
+                                        </button>
                                     <?php else: ?>
                                         <span class="text-[10px] font-black text-rose-400 uppercase tracking-widest italic">Belum Upload</span>
                                     <?php endif; ?>
@@ -197,5 +197,22 @@ require_once __DIR__ . '/../includes/header.php';
         <?php endif; ?>
     </div>
 </div>
+
+<script>
+function viewImage(url, title) {
+    Swal.fire({
+        title: title,
+        imageUrl: url,
+        imageAlt: title,
+        confirmButtonText: 'TUTUP',
+        confirmButtonColor: '#0f172a',
+        customClass: {
+            popup: 'rounded-2xl',
+            confirmButton: 'rounded-xl font-black uppercase tracking-widest text-[10px] px-6 py-3',
+            title: 'font-black italic text-slate-800 uppercase tracking-wider text-sm'
+        }
+    });
+}
+</script>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>
