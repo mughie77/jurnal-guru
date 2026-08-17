@@ -40,7 +40,9 @@ $classes = mysqli_query($conn, "SELECT * FROM kelas ORDER BY nama_kelas ASC");
 $stats_query = "SELECT
     COUNT(*) as total_siswa,
     SUM(CASE WHEN (s.berkas_kk IS NOT NULL AND s.berkas_kk != '') AND (s.berkas_ijazah IS NOT NULL AND s.berkas_ijazah != '') THEN 1 ELSE 0 END) as lengkap,
-    SUM(CASE WHEN (s.berkas_kk IS NULL OR s.berkas_kk = '') OR (s.berkas_ijazah IS NULL OR s.berkas_ijazah = '') THEN 1 ELSE 0 END) as belum_lengkap
+    SUM(CASE WHEN (s.berkas_kk IS NULL OR s.berkas_kk = '') OR (s.berkas_ijazah IS NULL OR s.berkas_ijazah = '') THEN 1 ELSE 0 END) as belum_lengkap,
+    SUM(CASE WHEN (s.berkas_kk IS NOT NULL AND s.berkas_kk != '') THEN 1 ELSE 0 END) as sudah_kk,
+    SUM(CASE WHEN (s.berkas_ijazah IS NOT NULL AND s.berkas_ijazah != '') THEN 1 ELSE 0 END) as sudah_ijazah
 FROM siswa s
 JOIN siswa_kelas sk ON s.id = sk.siswa_id
 JOIN tahun_pelajaran tp ON sk.tahun_pelajaran_id = tp.id
@@ -50,6 +52,8 @@ $stats = mysqli_fetch_assoc($stats_res);
 $total_siswa = (int)($stats['total_siswa'] ?? 0);
 $total_lengkap = (int)($stats['lengkap'] ?? 0);
 $total_belum_lengkap = (int)($stats['belum_lengkap'] ?? 0);
+$total_sudah_kk = (int)($stats['sudah_kk'] ?? 0);
+$total_sudah_ijazah = (int)($stats['sudah_ijazah'] ?? 0);
 
 $page_title = "Rekap Berkas Siswa";
 require_once __DIR__ . '/../includes/header.php';
@@ -61,35 +65,59 @@ require_once __DIR__ . '/../includes/header.php';
             <h1 class="text-2xl font-black italic text-slate-800 uppercase tracking-widest">Rekap Berkas Siswa</h1>
             <p class="text-slate-400 font-bold text-xs uppercase tracking-[0.3em] mt-1">Pemantauan Dokumen KK & Ijazah</p>
         </div>
+        <div>
+            <a href="export_wa_ortu.php?search=<?= urlencode($search) ?>&kelas_id=<?= urlencode($kelas_id) ?>"
+                class="inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-2xl shadow-lg shadow-emerald-100 transition-all text-xs uppercase tracking-widest italic">
+                <i class="fa fa-file-excel"></i> Ekspor WA Ortu (Excel)
+            </a>
+        </div>
     </div>
 
     <!-- Stats Summary Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div class="lux-card p-6 flex items-center justify-between">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+        <div class="lux-card p-5 flex items-center justify-between">
             <div>
-                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Total Siswa</span>
-                <span class="text-3xl font-black text-slate-800 italic"><?= $total_siswa ?></span>
+                <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-0.5">Total Siswa</span>
+                <span class="text-2xl font-black text-slate-800 italic"><?= $total_siswa ?></span>
             </div>
-            <div class="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-500">
-                <i class="fa fa-users text-xl"></i>
+            <div class="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500">
+                <i class="fa fa-users text-lg"></i>
             </div>
         </div>
-        <div class="lux-card p-6 flex items-center justify-between border-l-4 border-l-emerald-500">
+        <div class="lux-card p-5 flex items-center justify-between border-l-4 border-l-indigo-500">
             <div>
-                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Berkas Lengkap</span>
-                <span class="text-3xl font-black text-emerald-600 italic"><?= $total_lengkap ?></span>
+                <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-0.5">Upload KK</span>
+                <span class="text-2xl font-black text-indigo-600 italic"><?= $total_sudah_kk ?></span>
             </div>
-            <div class="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-500">
-                <i class="fa fa-check-circle text-xl"></i>
+            <div class="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-500">
+                <i class="fa fa-id-card text-lg"></i>
             </div>
         </div>
-        <div class="lux-card p-6 flex items-center justify-between border-l-4 border-l-rose-500">
+        <div class="lux-card p-5 flex items-center justify-between border-l-4 border-l-amber-500">
             <div>
-                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Belum Lengkap</span>
-                <span class="text-3xl font-black text-rose-600 italic"><?= $total_belum_lengkap ?></span>
+                <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-0.5">Upload Ijazah</span>
+                <span class="text-2xl font-black text-amber-600 italic"><?= $total_sudah_ijazah ?></span>
             </div>
-            <div class="w-12 h-12 bg-rose-50 rounded-2xl flex items-center justify-center text-rose-500">
-                <i class="fa fa-times-circle text-xl"></i>
+            <div class="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center text-amber-500">
+                <i class="fa fa-graduation-cap text-lg"></i>
+            </div>
+        </div>
+        <div class="lux-card p-5 flex items-center justify-between border-l-4 border-l-emerald-500">
+            <div>
+                <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-0.5">Berkas Lengkap</span>
+                <span class="text-2xl font-black text-emerald-600 italic"><?= $total_lengkap ?></span>
+            </div>
+            <div class="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-500">
+                <i class="fa fa-check-circle text-lg"></i>
+            </div>
+        </div>
+        <div class="lux-card p-5 flex items-center justify-between border-l-4 border-l-rose-500">
+            <div>
+                <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-0.5">Belum Lengkap</span>
+                <span class="text-2xl font-black text-rose-600 italic"><?= $total_belum_lengkap ?></span>
+            </div>
+            <div class="w-10 h-10 bg-rose-50 rounded-xl flex items-center justify-center text-rose-500">
+                <i class="fa fa-times-circle text-lg"></i>
             </div>
         </div>
     </div>
