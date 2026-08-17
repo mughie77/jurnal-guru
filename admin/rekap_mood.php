@@ -176,6 +176,31 @@ require_once __DIR__ . '/../includes/header.php';
     </div>
 </div>
 
+<!-- Filter Hari / Tanggal Spesifik untuk Grafik -->
+<div class="mb-6 flex flex-wrap items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+    <div class="flex items-center gap-2">
+        <i class="fa fa-calendar-alt text-indigo-500"></i>
+        <h3 class="text-sm font-bold text-slate-800">Filter Tanggal Grafik & Distribusi Mood</h3>
+    </div>
+    <div class="flex items-center gap-3">
+        <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Pilih Hari:</span>
+        <input type="date" id="chart-single-date" value="<?= ($start_date === $end_date && !empty($start_date)) ? htmlspecialchars($start_date) : '' ?>" onchange="applySingleDateFilter(this.value)" class="px-4 py-2 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-100 bg-white shadow-sm font-bold text-slate-700 text-xs">
+        <?php if (!empty($start_date) || !empty($end_date)): ?>
+            <a href="rekap_mood.php" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-xl text-xs transition-all">Clear Filter</a>
+        <?php endif; ?>
+    </div>
+</div>
+
+<script>
+function applySingleDateFilter(val) {
+    if (val) {
+        window.location.href = '?start_date=' + val + '&end_date=' + val;
+    } else {
+        window.location.href = 'rekap_mood.php';
+    }
+}
+</script>
+
 <!-- Visual Charts & Analytics Layout -->
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
     <!-- Chart.js Doughnut Section -->

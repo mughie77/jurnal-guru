@@ -223,6 +223,48 @@ require_once __DIR__ . '/../includes/header.php';
             </div>
         </div>
 
+        <div class="lux-card p-6 border-t-4 border-slate-700">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-slate-800 font-bold flex items-center italic">
+                    <i class="fab fa-github mr-2 text-slate-800 text-lg"></i> Sinkronisasi GitHub
+                </h3>
+                <span class="px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded text-[9px] font-black uppercase tracking-wider">DevOps</span>
+            </div>
+            <p class="text-xs text-slate-500 leading-relaxed mb-4">Kelola pembaruan source code aplikasi langsung dari panel admin ini untuk ditarik atau didorong ke repositori GitHub.</p>
+
+            <div class="p-3 bg-slate-50 rounded-xl mb-4 space-y-2 border border-slate-100">
+                <div class="flex flex-col">
+                    <span class="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">GitHub CLI (gh)</span>
+                    <code class="text-[10px] font-mono font-bold text-slate-600 bg-white p-1.5 rounded border border-slate-100 break-all select-all">gh repo clone mughie77/jurnal-guru</code>
+                </div>
+                <div class="flex flex-col">
+                    <span class="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Git URL</span>
+                    <code class="text-[10px] font-mono font-bold text-slate-600 bg-white p-1.5 rounded border border-slate-100 break-all select-all">https://github.com/mughie77/jurnal-guru.git</code>
+                </div>
+            </div>
+
+            <div class="space-y-3">
+                <button type="button" onclick="runGitAction('status', '<?= get_csrf_token() ?>')" class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-2">
+                    <i class="fa fa-info-circle"></i> Cek Status Git
+                </button>
+                <button type="button" onclick="runGitAction('init_origin', '<?= get_csrf_token() ?>')" class="w-full py-2.5 bg-amber-50 hover:bg-amber-100 text-amber-700 font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-2 border border-amber-100">
+                    <i class="fa fa-link"></i> Set Remote origin URL
+                </button>
+                <button type="button" onclick="runGitAction('pull', '<?= get_csrf_token() ?>')" class="w-full py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-2 border border-emerald-100">
+                    <i class="fa fa-cloud-download-alt"></i> Tarik Pembaruan (Pull)
+                </button>
+                <button type="button" onclick="confirmGitPush('<?= get_csrf_token() ?>')" class="w-full py-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-2 border border-indigo-100">
+                    <i class="fa fa-cloud-upload-alt"></i> Kirim Pembaruan (Push)
+                </button>
+            </div>
+
+            <!-- Logger box for git terminal output -->
+            <div id="git_log_container" class="mt-6 hidden">
+                <label class="block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Terminal Output</label>
+                <pre id="git_log_box" class="w-full p-4 bg-slate-900 text-slate-200 text-[11px] font-mono rounded-xl overflow-x-auto max-h-48 whitespace-pre-wrap leading-relaxed shadow-inner"></pre>
+            </div>
+        </div>
+
         <div class="lux-card p-6">
             <h3 class="text-slate-800 font-bold mb-3 flex items-center">
                 <i class="fa fa-lightbulb mr-2 text-amber-500"></i> Tips
@@ -245,19 +287,47 @@ document.addEventListener('DOMContentLoaded', function() {
         attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
+    var radiusAbsen = <?= (int)($sets['radius_absen'] ?? 30) ?>;
+
     var marker = L.marker([lat, lng], {draggable: true}).addTo(map);
+
+    // Tambahkan lingkaran batas radius absensi
+    var circle = L.circle([lat, lng], {
+        color: '#4F46E5',
+        fillColor: '#4F46E5',
+        fillOpacity: 0.15,
+        radius: radiusAbsen,
+        weight: 2
+    }).addTo(map);
+
+    // Sesuaikan zoom peta agar lingkaran terlihat dengan baik
+    map.fitBounds(circle.getBounds(), { padding: [20, 20] });
 
     marker.on('dragend', function(e) {
         var pos = marker.getLatLng();
         document.getElementById('school_lat').value = pos.lat.toFixed(6);
         document.getElementById('school_lng').value = pos.lng.toFixed(6);
+        circle.setLatLng(pos);
     });
 
     map.on('click', function(e) {
         marker.setLatLng(e.latlng);
         document.getElementById('school_lat').value = e.latlng.lat.toFixed(6);
         document.getElementById('school_lng').value = e.latlng.lng.toFixed(6);
+        circle.setLatLng(e.latlng);
     });
+
+    // Update radius lingkaran secara dinamis saat input Radius Absensi diubah
+    var radiusInput = document.querySelector('input[name="radius_absen"]');
+    if (radiusInput) {
+        radiusInput.addEventListener('input', function() {
+            var rVal = parseInt(this.value, 10);
+            if (!isNaN(rVal) && rVal > 0) {
+                circle.setRadius(rVal);
+                map.fitBounds(circle.getBounds(), { padding: [20, 20] });
+            }
+        });
+    }
 });
 </script>
 

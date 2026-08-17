@@ -120,6 +120,7 @@ require_once __DIR__ . '/../includes/header.php';
                     <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Kelas</th>
                     <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Materi</th>
                     <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Absensi</th>
+                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Aksi</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-50">
@@ -153,6 +154,11 @@ require_once __DIR__ . '/../includes/header.php';
                                 <span class="w-8 h-8 flex items-center justify-center rounded-lg bg-rose-50 text-rose-600 text-[10px] font-black border border-rose-100"><?= $row['jml_alfa'] ?></span>
                             </div>
                         </td>
+                        <td class="px-6 py-4 text-center">
+                            <button onclick="showJurnalDetail(<?= $row['id'] ?>)" class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all shadow-sm border border-indigo-100" title="Lihat Detail Jurnal">
+                                <i class="fa fa-eye text-xs"></i>
+                            </button>
+                        </td>
                     </tr>
                     <?php endwhile; ?>
                 <?php else: ?>
@@ -164,5 +170,127 @@ require_once __DIR__ . '/../includes/header.php';
 </div>
 
 <?= render_pagination($pagin['page'], $pagin['total_pages'], $_GET) ?>
+
+<script>
+function showJurnalDetail(jurnalId) {
+    Swal.fire({
+        title: 'Memuat Detail...',
+        text: 'Mengambil data absensi siswa dan jurnal mengajar.',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
+    fetch('../admin/get_jurnal_detail.php?id=' + jurnalId)
+    .then(response => response.json())
+    .then(data => {
+        Swal.close();
+        if (!data.success) {
+            Swal.fire('Gagal', data.message, 'error');
+            return;
+        }
+
+        const j = data.jurnal;
+        let studentsHtml = '';
+
+        if (data.students && data.students.length > 0) {
+            data.students.forEach(s => {
+                let badgeClass = 'bg-emerald-100 text-emerald-800';
+                let statusLabel = 'Hadir';
+                if (s.status === 'S') { badgeClass = 'bg-amber-100 text-amber-800'; statusLabel = 'Sakit'; }
+                if (s.status === 'I') { badgeClass = 'bg-blue-100 text-blue-800'; statusLabel = 'Izin'; }
+                if (s.status === 'A') { badgeClass = 'bg-rose-100 text-rose-800'; statusLabel = 'Alfa'; }
+
+                studentsHtml += `
+                    <tr class="border-b border-slate-100 text-left">
+                        <td class="px-4 py-2 text-xs font-mono text-slate-500">${s.nis}</td>
+                        <td class="px-4 py-2 text-xs font-bold text-slate-700">${s.nama_siswa}</td>
+                        <td class="px-4 py-2 text-xs text-center">
+                            <span class="px-2 py-0.5 rounded text-[10px] font-black uppercase ${badgeClass}">${statusLabel}</span>
+                        </td>
+                    </tr>
+                `;
+            });
+        } else {
+            studentsHtml = `<tr><td colspan="3" class="px-4 py-6 text-center text-xs text-slate-400 italic">Tidak ada siswa yang diabsen.</td></tr>`;
+        }
+
+        const detailHtml = `
+            <div class="text-left space-y-4 max-h-[70vh] overflow-y-auto pr-1">
+                <!-- Meta Grid -->
+                <div class="grid grid-cols-2 gap-3 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                    <div>
+                        <span class="text-[8px] font-black text-slate-400 uppercase tracking-widest block">Guru Pengajar</span>
+                        <span class="text-xs font-bold text-slate-800">${j.nama_lengkap}</span>
+                    </div>
+                    <div>
+                        <span class="text-[8px] font-black text-slate-400 uppercase tracking-widest block">Mata Pelajaran</span>
+                        <span class="text-xs font-bold text-slate-800">${j.nama_mapel}</span>
+                    </div>
+                    <div>
+                        <span class="text-[8px] font-black text-slate-400 uppercase tracking-widest block">Kelas / Jam</span>
+                        <span class="text-xs font-bold text-indigo-600">${j.nama_kelas} (Jam ke-${j.jam_ke})</span>
+                    </div>
+                    <div>
+                        <span class="text-[8px] font-black text-slate-400 uppercase tracking-widest block">Tanggal</span>
+                        <span class="text-xs font-bold text-slate-800">${j.tanggal}</span>
+                    </div>
+                </div>
+
+                <!-- Jurnal Content -->
+                <div class="p-4 bg-indigo-50/50 rounded-2xl border border-indigo-100/50 space-y-2">
+                    <div>
+                        <span class="text-[8px] font-black text-indigo-500 uppercase tracking-widest block">Materi Pembahasan</span>
+                        <p class="text-xs text-slate-700 font-semibold italic whitespace-pre-wrap leading-relaxed">${j.materi}</p>
+                    </div>
+                    <div>
+                        <span class="text-[8px] font-black text-indigo-400 uppercase tracking-widest block mt-2">Catatan Tambahan</span>
+                        <p class="text-xs text-slate-500">${j.keterangan}</p>
+                    </div>
+                    ${j.latitude ? `
+                    <div class="pt-2 flex items-center gap-1.5">
+                        <i class="fa fa-map-marker-alt text-rose-500 text-xs"></i>
+                        <a href="https://www.google.com/maps?q=${j.latitude},${j.longitude}" target="_blank" class="text-[10px] font-black text-indigo-600 hover:underline">LIHAT LOKASI SUBMIT DI MAP</a>
+                    </div>
+                    ` : ''}
+                </div>
+
+                <!-- Student List -->
+                <div>
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Daftar Kehadiran Siswa</span>
+                    <div class="border border-slate-100 rounded-xl overflow-hidden shadow-sm">
+                        <table class="w-full border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50 border-b border-slate-100 text-left">
+                                    <th class="px-4 py-2 text-[9px] font-black text-slate-400 uppercase tracking-wider">NIS</th>
+                                    <th class="px-4 py-2 text-[9px] font-black text-slate-400 uppercase tracking-wider">Siswa</th>
+                                    <th class="px-4 py-2 text-[9px] font-black text-slate-400 uppercase tracking-wider text-center">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${studentsHtml}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        Swal.fire({
+            title: '<span class="font-black italic text-slate-800 text-lg uppercase tracking-wider">Detail Jurnal Mengajar</span>',
+            html: detailHtml,
+            showCloseButton: true,
+            confirmButtonText: 'Tutup',
+            confirmButtonColor: '#4F46E5',
+            width: '600px'
+        });
+    })
+    .catch(err => {
+        Swal.close();
+        Swal.fire('Error', 'Gagal memuat detail jurnal: ' + err.message, 'error');
+    });
+}
+</script>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

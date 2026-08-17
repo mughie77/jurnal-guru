@@ -4,29 +4,87 @@ require_once __DIR__ . '/../config/database.php';
 
 authorize_role(['guru', 'admin']);
 
-$jurnal_id = (int)($_GET['jid'] ?? 0);
-if ($jurnal_id <= 0) {
-    // If accessed directly without ID, redirect to attendance
+if (!isset($_SESSION['draft_jurnal'])) {
     header("Location: isi_absensi.php");
     exit;
 }
 
-$res_j = mysqli_query($conn, "SELECT j.*, mp.nama_mapel, k.nama_kelas
-                               FROM jurnal j
-                               JOIN mata_pelajaran mp ON j.mapel_id = mp.id
-                               JOIN kelas k ON j.kelas_id = k.id
-                               WHERE j.id = $jurnal_id");
-$j = mysqli_fetch_assoc($res_j);
+$draft = $_SESSION['draft_jurnal'];
+$guru_id = $draft['guru_id'];
+$mid = (int)$draft['mapel_id'];
+$kid = (int)$draft['kelas_id'];
+$tahun_pelajaran_id = $draft['tahun_pelajaran_id'];
+$tanggal = $draft['tanggal'];
+$jam_ke = $draft['jam_ke'];
+$absen_list = $draft['absen'];
+
+$res_meta = mysqli_query($conn, "SELECT mp.nama_mapel, k.nama_kelas
+                                  FROM mata_pelajaran mp, kelas k
+                                  WHERE mp.id = $mid AND k.id = $kid");
+$meta = mysqli_fetch_assoc($res_meta);
+
+$count_hadir = 0;
+foreach ($absen_list as $status) {
+    if ($status === 'H') $count_hadir++;
+}
+
+$nama_mapel = $meta['nama_mapel'] ?? '';
+$is_pjok = false;
+$lower_mapel = strtolower($nama_mapel);
+if (strpos($lower_mapel, 'pjok') !== false || strpos($lower_mapel, 'olahraga') !== false || strpos($lower_mapel, 'penjas') !== false || strpos($lower_mapel, 'penjaskes') !== false) {
+    $is_pjok = true;
+}
+
+$j = [
+    'nama_mapel' => $nama_mapel,
+    'nama_kelas' => $meta['nama_kelas'] ?? '',
+    'jam_ke' => $jam_ke,
+    'jml_hadir' => $count_hadir
+];
 
 // Ambil siswa yang tidak hadir (S/I/A)
-$res_abs = mysqli_query($conn, "SELECT s.nama_siswa, aj.status
-                                 FROM absensi_jurnal aj
-                                 JOIN siswa s ON aj.siswa_id = s.id
-                                 WHERE aj.jurnal_id = $jurnal_id AND aj.status != 'H'
-                                 ORDER BY aj.status ASC, s.nama_siswa ASC");
 $tidak_hadir = [];
-while ($row = mysqli_fetch_assoc($res_abs)) {
-    $tidak_hadir[] = $row;
+$absent_student_ids = [];
+$student_status_map = [];
+foreach ($absen_list as $sid => $status) {
+    if ($status !== 'H') {
+        $absent_student_ids[] = (int)$sid;
+        $student_status_map[(int)$sid] = $status;
+    }
+}
+if (!empty($absent_student_ids)) {
+    $ids_str = implode(',', $absent_student_ids);
+    $res_stud = mysqli_query($conn, "SELECT id, nama_siswa FROM siswa WHERE id IN ($ids_str) ORDER BY nama_siswa ASC");
+    while ($row = mysqli_fetch_assoc($res_stud)) {
+        $tidak_hadir[] = [
+            'nama_siswa' => $row['nama_siswa'],
+            'status' => $student_status_map[$row['id']]
+        ];
+    }
+}
+
+// Ambil setting lokasi sekolah dan radius absensi
+$res_set = mysqli_query($conn, "SELECT * FROM pengaturan");
+$sets = [];
+while ($r = mysqli_fetch_assoc($res_set)) {
+    $sets[$r['nama_setting']] = $r['nilai_setting'];
+}
+$school_lat = (float)($sets['school_lat'] ?? -7.9135);
+$school_lng = (float)($sets['school_lng'] ?? 113.8217);
+$radius_absen = (int)($sets['radius_absen'] ?? 30);
+
+function vincentyGreatCircleDistance($lat1, $lon1, $lat2, $lon2, $earthRadius = 6371000) {
+    $latFrom = deg2rad($lat1);
+    $lonFrom = deg2rad($lon1);
+    $latTo = deg2rad($lat2);
+    $lonTo = deg2rad($lon2);
+
+    $lonDelta = $lonTo - $lonFrom;
+    $a = pow(cos($latTo) * sin($lonDelta), 2) + pow(cos($latFrom) * sin($latTo) - sin($latFrom) * cos($latTo) * cos($lonDelta), 2);
+    $b = sin($latFrom) * sin($latTo) + cos($latFrom) * cos($latTo) * cos($lonDelta);
+
+    $angle = atan2(sqrt($a), $b);
+    return $angle * $earthRadius;
 }
 
 $message = ''; $message_type = '';
@@ -37,12 +95,62 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['simpan_jurnal'])) {
     $latitude = mysqli_real_escape_string($conn, $_POST['latitude'] ?? '');
     $longitude = mysqli_real_escape_string($conn, $_POST['longitude'] ?? '');
 
-    if (mysqli_query($conn, "UPDATE jurnal SET materi = '$materi', keterangan = '$keterangan', latitude = '$latitude', longitude = '$longitude' WHERE id = $jurnal_id")) {
-        $message = "Jurnal berhasil disimpan!"; $message_type = 'success';
-        header("Location: riwayat.php?success=1");
-        exit;
+    if (trim($materi) === '') {
+        $message = "Materi pembahasan wajib diisi!";
+        $message_type = 'error';
+    } else if (empty($latitude) || empty($longitude)) {
+        $message = "Akses lokasi GPS Anda wajib aktif dan terdeteksi untuk mengisi jurnal!";
+        $message_type = 'error';
     } else {
-        $message = "Error: " . mysqli_error($conn); $message_type = 'error';
+        $distance = vincentyGreatCircleDistance((float)$latitude, (float)$longitude, $school_lat, $school_lng);
+        if (!$is_pjok && $distance > ($radius_absen + 5)) { // 5m buffer for GPS jitter
+            $message = "Anda berada di luar radius lokasi sekolah (" . round($distance) . "m dari sekolah). Pengisian jurnal wajib dilakukan di dalam area sekolah (maksimal " . $radius_absen . "m)!";
+            $message_type = 'error';
+        } else {
+            mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+            mysqli_begin_transaction($conn);
+        try {
+            // 1. Insert into jurnal
+            $stmt = mysqli_prepare($conn, "INSERT INTO jurnal (guru_id, mapel_id, kelas_id, tahun_pelajaran_id, tanggal, jam_ke, materi, keterangan, latitude, longitude, jml_hadir, jml_sakit, jml_izin, jml_alfa) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, 0, 0)");
+            mysqli_stmt_bind_param($stmt, "iiiissssss", $guru_id, $mid, $kid, $tahun_pelajaran_id, $tanggal, $jam_ke, $materi, $keterangan, $latitude, $longitude);
+            mysqli_stmt_execute($stmt);
+            $jurnal_id = mysqli_insert_id($conn);
+
+            if (!$jurnal_id) throw new Exception("Gagal membuat record jurnal.");
+
+            // 2. Save individual attendance
+            if (!empty($absen_list)) {
+                $stmt_absen = mysqli_prepare($conn, "INSERT INTO absensi_jurnal (jurnal_id, siswa_id, status) VALUES (?, ?, ?)");
+                foreach ($absen_list as $siswa_id => $status) {
+                    mysqli_stmt_bind_param($stmt_absen, "iis", $jurnal_id, $siswa_id, $status);
+                    mysqli_stmt_execute($stmt_absen);
+                }
+
+                // Sync counts
+                $res_counts = mysqli_query($conn, "SELECT
+                    COUNT(CASE WHEN status='H' THEN 1 END) as h,
+                    COUNT(CASE WHEN status='S' THEN 1 END) as s,
+                    COUNT(CASE WHEN status='I' THEN 1 END) as i,
+                    COUNT(CASE WHEN status='A' THEN 1 END) as a
+                    FROM absensi_jurnal WHERE jurnal_id = $jurnal_id");
+                $c = mysqli_fetch_assoc($res_counts);
+                mysqli_query($conn, "UPDATE jurnal SET jml_hadir={$c['h']}, jml_sakit={$c['s']}, jml_izin={$c['i']}, jml_alfa={$c['a']} WHERE id = $jurnal_id");
+            }
+
+            mysqli_commit($conn);
+
+            // Bersihkan draft dari session setelah sukses disimpan
+            unset($_SESSION['draft_jurnal']);
+
+            header("Location: riwayat.php?success=1");
+            exit;
+
+        } catch (Exception $e) {
+            mysqli_rollback($conn);
+            $message = "Gagal menyimpan jurnal: " . $e->getMessage();
+            $message_type = 'error';
+        }
+        }
     }
 }
 
@@ -51,7 +159,7 @@ require_once __DIR__ . '/../includes/header.php';
 
 <style>#sidebar, header, nav.navbar { display: none !important; } .lg\:ml-64 { margin-left: 0 !important; } .main-content { margin-left: 0 !important; padding-top: 2rem !important; }</style>
 
-<div class="max-w-4xl mx-auto pb-32 px-2 sm:px-4">
+<div class="max-w-full w-full mx-auto pb-32 px-2 sm:px-4">
     <!-- Progress Indicator -->
     <div class="flex items-center gap-2 mb-6 sm:mb-10 overflow-hidden rounded-full bg-slate-200 h-2">
         <div class="w-1/2 h-full bg-emerald-500"></div>
@@ -72,7 +180,15 @@ require_once __DIR__ . '/../includes/header.php';
         <div class="absolute top-0 left-0 w-1 h-full bg-indigo-600"></div>
 
         <div class="mb-8 sm:mb-10 grid grid-cols-1 xs:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 pb-6 sm:pb-8 border-b border-slate-50">
-            <div><p class="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5 sm:mb-1">Mata Pelajaran</p><p class="text-sm sm:text-base font-bold text-slate-800 italic"><?= htmlspecialchars($j['nama_mapel']) ?></p></div>
+            <div>
+                <p class="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5 sm:mb-1">Mata Pelajaran</p>
+                <p class="text-sm sm:text-base font-bold text-slate-800 italic">
+                    <?= htmlspecialchars($j['nama_mapel']) ?>
+                    <?php if ($is_pjok): ?>
+                        <span class="inline-block ml-2 px-2 py-0.5 bg-rose-100 text-rose-700 text-[9px] font-black uppercase rounded">Bebas GPS</span>
+                    <?php endif; ?>
+                </p>
+            </div>
             <div><p class="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5 sm:mb-1">Kelas</p><p class="text-sm sm:text-base font-bold text-slate-800"><?= htmlspecialchars($j['nama_kelas']) ?></p></div>
             <div><p class="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5 sm:mb-1">Jam Ke-</p><p class="text-sm sm:text-base font-bold text-slate-800"><?= htmlspecialchars($j['jam_ke']) ?></p></div>
             <div><p class="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5 sm:mb-1">Kehadiran</p><p class="text-sm sm:text-base font-bold text-emerald-600"><?= $j['jml_hadir'] ?> Siswa</p></div>
@@ -125,6 +241,25 @@ document.addEventListener('DOMContentLoaded', function() {
     const lngInput = document.getElementById('lng-input');
     let hasLocation = false;
 
+    const schoolPos = [<?= $school_lat ?>, <?= $school_lng ?>];
+    const radiusAbsen = <?= $radius_absen ?>;
+    const isPjok = <?= $is_pjok ? 'true' : 'false' ?>;
+
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371000; // metres
+        const φ1 = lat1 * Math.PI/180;
+        const φ2 = lat2 * Math.PI/180;
+        const Δφ = (lat2-lat1) * Math.PI/180;
+        const Δλ = (lon2-lon1) * Math.PI/180;
+
+        const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+                Math.cos(φ1) * Math.cos(φ2) *
+                Math.sin(Δλ/2) * Math.sin(Δλ/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+        return R * c; // in metres
+    }
+
     function verifyAntiFakeGPS(position) {
         const accuracy = position.coords.accuracy;
         const isMocked = position.mocked || (position.coords && position.coords.mocked) || false;
@@ -146,9 +281,14 @@ document.addEventListener('DOMContentLoaded', function() {
     if ("geolocation" in navigator) {
         navigator.geolocation.getCurrentPosition(function(position) {
             if (verifyAntiFakeGPS(position)) {
-                latInput.value = position.coords.latitude;
-                lngInput.value = position.coords.longitude;
-                hasLocation = true;
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                const distance = calculateDistance(lat, lng, schoolPos[0], schoolPos[1]);
+                if (isPjok || distance <= (radiusAbsen + 5)) {
+                    latInput.value = lat;
+                    lngInput.value = lng;
+                    hasLocation = true;
+                }
             }
         }, function(error) {
             console.warn("Pre-fetch location failed:", error);
@@ -157,6 +297,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (form) {
         form.addEventListener('submit', function(e) {
+            if (!form.reportValidity()) {
+                e.preventDefault();
+                return false;
+            }
+
             if (hasLocation && latInput.value && lngInput.value) {
                 return true;
             }
@@ -185,8 +330,22 @@ document.addEventListener('DOMContentLoaded', function() {
             navigator.geolocation.getCurrentPosition(function(position) {
                 Swal.close();
                 if (verifyAntiFakeGPS(position)) {
-                    latInput.value = position.coords.latitude;
-                    lngInput.value = position.coords.longitude;
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    const distance = calculateDistance(lat, lng, schoolPos[0], schoolPos[1]);
+
+                    if (!isPjok && distance > (radiusAbsen + 5)) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Di Luar Radius Sekolah',
+                            text: 'Akses ditolak: Anda berada ' + Math.round(distance) + 'm dari sekolah. Pengisian jurnal wajib dilakukan di dalam area sekolah (maksimal ' + radiusAbsen + 'm)!',
+                            confirmButtonColor: '#4F46E5'
+                        });
+                        return false;
+                    }
+
+                    latInput.value = lat;
+                    lngInput.value = lng;
                     hasLocation = true;
                     form.submit(); // Resubmit the form
                 }
@@ -215,5 +374,18 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+
+<?php if ($message !== ''): ?>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    Swal.fire({
+        icon: '<?= $message_type ?>',
+        title: '<?= $message_type === 'success' ? 'Berhasil' : 'Peringatan' ?>',
+        text: '<?= addslashes($message) ?>',
+        confirmButtonColor: '#4F46E5'
+    });
+});
+</script>
+<?php endif; ?>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

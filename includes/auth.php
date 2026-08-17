@@ -56,6 +56,31 @@ function get_wali_kelas_info() {
     return null;
 }
 
+// Helper to check if a user is a BK (Bimbingan Konseling) teacher and return their information
+function get_bk_info() {
+    global $conn;
+    if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'guru') {
+        return null;
+    }
+    $user_id = (int)$_SESSION['user_id'];
+    // Find teacher (guru) id
+    $q_guru = mysqli_query($conn, "SELECT id FROM guru WHERE user_id = $user_id");
+    if ($g_data = mysqli_fetch_assoc($q_guru)) {
+        $guru_id = (int)$g_data['id'];
+        // Check if assigned to Bimbingan Konseling or BK mapel
+        $q_bk = mysqli_query($conn, "SELECT COUNT(*) as count FROM guru_mapel gm
+                                     JOIN mata_pelajaran mp ON gm.mapel_id = mp.id
+                                     WHERE gm.guru_id = $guru_id AND (mp.nama_mapel LIKE '%Bimbingan Konseling%' OR mp.nama_mapel LIKE '%BK%')");
+        $bk_count = mysqli_fetch_assoc($q_bk)['count'] ?? 0;
+        if ($bk_count > 0) {
+            return [
+                'guru_id' => $guru_id
+            ];
+        }
+    }
+    return null;
+}
+
 // Role Authorization
 function authorize_role(array $allowed_roles) {
     $role = $_SESSION['role'] ?? '';
@@ -68,7 +93,15 @@ function authorize_role(array $allowed_roles) {
         }
     }
 
-    if (!isset($_SESSION['role']) || (!in_array($_SESSION['role'], $allowed_roles) && !$is_wali_kelas)) {
+    // Support "guru_bk" dynamic role
+    $is_guru_bk = false;
+    if (in_array('guru_bk', $allowed_roles) && $role === 'guru') {
+        if (get_bk_info() !== null) {
+            $is_guru_bk = true;
+        }
+    }
+
+    if (!isset($_SESSION['role']) || (!in_array($_SESSION['role'], $allowed_roles) && !$is_wali_kelas && !$is_guru_bk)) {
         switch ($role) {
             case 'admin': header('Location: ' . BASE_URL . 'admin/'); break;
             case 'waka': header('Location: ' . BASE_URL . 'waka/'); break;

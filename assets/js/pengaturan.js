@@ -42,3 +42,94 @@ function checkDapodikConnection(csrfToken) {
         Swal.fire('Error', err.message || 'Gagal melakukan request ke server.', 'error');
     });
 }
+
+function runGitAction(action, csrfToken, additionalData = {}) {
+    const logContainer = document.getElementById('git_log_container');
+    const logBox = document.getElementById('git_log_box');
+
+    logContainer.classList.remove('hidden');
+    logBox.textContent = "Menjalankan perintah Git... Silakan tunggu...\n";
+
+    Swal.fire({
+        title: 'Memproses Perintah Git...',
+        text: 'Sedang berkomunikasi dengan repositori GitHub.',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
+    let bodyParams = `action=${encodeURIComponent(action)}&csrf_token=${csrfToken}`;
+    for (const key in additionalData) {
+        bodyParams += `&${encodeURIComponent(key)}=${encodeURIComponent(additionalData[key])}`;
+    }
+
+    fetch('git_action.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: bodyParams
+    })
+    .then(async response => {
+        const text = await response.text();
+        try {
+            return JSON.parse(text);
+        } catch (e) {
+            console.error("Malformed Git JSON Response:", text);
+            // Put raw html or text in logs for clear debugging
+            logBox.textContent = text;
+            throw new Error("Server mengembalikan format non-JSON. Periksa log box di bawah.");
+        }
+    })
+    .then(data => {
+        Swal.close();
+        logBox.textContent = data.log || "Tidak ada output terminal.";
+        if (data.success) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil!',
+                text: data.message,
+                confirmButtonColor: '#4F46E5'
+            });
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal',
+                text: data.message,
+                confirmButtonColor: '#EF4444'
+            });
+        }
+    })
+    .catch(err => {
+        Swal.close();
+        if (!logBox.textContent || logBox.textContent.includes("Menjalankan perintah Git")) {
+            logBox.textContent = "Terjadi kesalahan jaringan atau server error:\n" + err.message;
+        }
+        Swal.fire({
+            icon: 'error',
+            title: 'Gagal Memproses',
+            text: err.message || 'Gagal menjalankan perintah Git.',
+            confirmButtonColor: '#EF4444'
+        });
+    });
+}
+
+function confirmGitPush(csrfToken) {
+    Swal.fire({
+        title: 'Kirim Pembaruan ke GitHub?',
+        text: 'Tindakan ini akan melakukan commit dan push semua perubahan kode saat ini ke repositori remote.',
+        icon: 'warning',
+        input: 'text',
+        inputLabel: 'Pesan Commit (Opsional)',
+        inputPlaceholder: 'Masukkan pesan commit jika ada...',
+        showCancelButton: true,
+        confirmButtonColor: '#4F46E5',
+        cancelButtonColor: '#6B7280',
+        confirmButtonText: 'Ya, Push!',
+        cancelButtonText: 'Batal'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const commitMsg = result.value || '';
+            runGitAction('push', csrfToken, { commit_message: commitMsg });
+        }
+    });
+}

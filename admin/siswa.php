@@ -16,14 +16,32 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
     try {
         if (isset($_POST['tambah'])) {
-            $nis = $_POST['nis'];
-            $nisn = $_POST['nisn'] ?: null;
+            $nis = trim($_POST['nis']);
+            $nisn = trim($_POST['nisn'] ?: '');
+            $nisn = $nisn !== '' ? $nisn : null;
             $nama_siswa = $_POST['nama_siswa'];
             $jenis_kelamin = $_POST['jenis_kelamin'];
             $alamat = $_POST['alamat'] ?: null;
             $no_telp = $_POST['no_telp'] ?: null;
             $tempat_lahir = $_POST['tempat_lahir'] ?: null;
             $tanggal_lahir = $_POST['tanggal_lahir'] ?: null;
+            $no_wa_ortu = $_POST['no_wa_ortu'] ?: null;
+
+            // Pre-validation to avoid duplicate NIS
+            $check_nis = mysqli_query($conn, "SELECT id, nama_siswa FROM siswa WHERE nis = '" . mysqli_real_escape_string($conn, $nis) . "'");
+            if (mysqli_num_rows($check_nis) > 0) {
+                $dup = mysqli_fetch_assoc($check_nis);
+                throw new Exception("NIS '$nis' sudah terdaftar atas nama '" . $dup['nama_siswa'] . "'.");
+            }
+
+            // Pre-validation to avoid duplicate NISN (only check if NISN is supplied)
+            if ($nisn !== null) {
+                $check_nisn = mysqli_query($conn, "SELECT id, nama_siswa FROM siswa WHERE nisn = '" . mysqli_real_escape_string($conn, $nisn) . "'");
+                if (mysqli_num_rows($check_nisn) > 0) {
+                    $dup = mysqli_fetch_assoc($check_nisn);
+                    throw new Exception("NISN '$nisn' sudah terdaftar atas nama '" . $dup['nama_siswa'] . "'.");
+                }
+            }
 
             $foto = null;
             if (!empty($_FILES['foto']['name'])) {
@@ -34,26 +52,44 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 }
             }
 
-            $stmt = mysqli_prepare($conn, "INSERT INTO siswa (nis, nisn, nama_siswa, jenis_kelamin, alamat, no_telp, foto, tempat_lahir, tanggal_lahir) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            mysqli_stmt_bind_param($stmt, "sssssssss", $nis, $nisn, $nama_siswa, $jenis_kelamin, $alamat, $no_telp, $foto, $tempat_lahir, $tanggal_lahir);
+            $stmt = mysqli_prepare($conn, "INSERT INTO siswa (nis, nisn, nama_siswa, jenis_kelamin, alamat, no_telp, foto, tempat_lahir, tanggal_lahir, no_wa_ortu) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            mysqli_stmt_bind_param($stmt, "ssssssssss", $nis, $nisn, $nama_siswa, $jenis_kelamin, $alamat, $no_telp, $foto, $tempat_lahir, $tanggal_lahir, $no_wa_ortu);
             if (mysqli_stmt_execute($stmt)) {
                 $message = "Siswa berhasil ditambahkan!";
                 $message_type = 'success';
             }
         } elseif (isset($_POST['edit'])) {
             $id = (int)$_POST['id'];
-            $nis = $_POST['nis'];
-            $nisn = $_POST['nisn'] ?: null;
+            $nis = trim($_POST['nis']);
+            $nisn = trim($_POST['nisn'] ?: '');
+            $nisn = $nisn !== '' ? $nisn : null;
             $nama_siswa = $_POST['nama_siswa'];
             $jenis_kelamin = $_POST['jenis_kelamin'];
             $alamat = $_POST['alamat'] ?: null;
             $no_telp = $_POST['no_telp'] ?: null;
             $tempat_lahir = $_POST['tempat_lahir'] ?: null;
             $tanggal_lahir = $_POST['tanggal_lahir'] ?: null;
+            $no_wa_ortu = $_POST['no_wa_ortu'] ?: null;
+
+            // Pre-validation to avoid duplicate NIS
+            $check_nis = mysqli_query($conn, "SELECT id, nama_siswa FROM siswa WHERE nis = '" . mysqli_real_escape_string($conn, $nis) . "' AND id != $id");
+            if (mysqli_num_rows($check_nis) > 0) {
+                $dup = mysqli_fetch_assoc($check_nis);
+                throw new Exception("NIS '$nis' sudah digunakan oleh siswa lain ('" . $dup['nama_siswa'] . "').");
+            }
+
+            // Pre-validation to avoid duplicate NISN
+            if ($nisn !== null) {
+                $check_nisn = mysqli_query($conn, "SELECT id, nama_siswa FROM siswa WHERE nisn = '" . mysqli_real_escape_string($conn, $nisn) . "' AND id != $id");
+                if (mysqli_num_rows($check_nisn) > 0) {
+                    $dup = mysqli_fetch_assoc($check_nisn);
+                    throw new Exception("NISN '$nisn' sudah digunakan oleh siswa lain ('" . $dup['nama_siswa'] . "').");
+                }
+            }
 
             $q_foto = "";
-            $params = [$nis, $nisn, $nama_siswa, $jenis_kelamin, $alamat, $no_telp, $tempat_lahir, $tanggal_lahir];
-            $types = "ssssssss";
+            $params = [$nis, $nisn, $nama_siswa, $jenis_kelamin, $alamat, $no_telp, $tempat_lahir, $tanggal_lahir, $no_wa_ortu];
+            $types = "sssssssss";
 
             if (!empty($_FILES['foto']['name'])) {
                 $ext = strtolower(pathinfo($_FILES['foto']['name'], PATHINFO_EXTENSION));
@@ -69,7 +105,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $params[] = $id;
             $types .= "i";
 
-            $stmt = mysqli_prepare($conn, "UPDATE siswa SET nis = ?, nisn = ?, nama_siswa = ?, jenis_kelamin = ?, alamat = ?, no_telp = ?, tempat_lahir = ?, tanggal_lahir = ? $q_foto WHERE id = ?");
+            $stmt = mysqli_prepare($conn, "UPDATE siswa SET nis = ?, nisn = ?, nama_siswa = ?, jenis_kelamin = ?, alamat = ?, no_telp = ?, tempat_lahir = ?, tanggal_lahir = ?, no_wa_ortu = ? $q_foto WHERE id = ?");
             mysqli_stmt_bind_param($stmt, $types, ...$params);
             if (mysqli_stmt_execute($stmt)) {
                 $message = "Data siswa diperbarui!";
@@ -83,8 +119,32 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $message = "Siswa dihapus!";
                 $message_type = 'success';
             }
+        } elseif (isset($_POST['hapus_masal'])) {
+            $ids = $_POST['bulk_ids'] ?? [];
+            if (!empty($ids) && is_array($ids)) {
+                $sanitized_ids = array_map('intval', $ids);
+                $ids_list = implode(',', $sanitized_ids);
+
+                // Delete linked records if needed or rely on database schema
+                mysqli_query($conn, "DELETE FROM siswa_kelas WHERE siswa_id IN ($ids_list)");
+                mysqli_query($conn, "DELETE FROM absensi_harian WHERE siswa_id IN ($ids_list)");
+                mysqli_query($conn, "DELETE FROM absensi_jurnal WHERE siswa_id IN ($ids_list)");
+                mysqli_query($conn, "DELETE FROM mood_survey WHERE siswa_id IN ($ids_list)");
+                mysqli_query($conn, "DELETE FROM pengaduan WHERE siswa_id IN ($ids_list)");
+                mysqli_query($conn, "DELETE FROM konsultasi WHERE siswa_id IN ($ids_list)");
+
+                $res = mysqli_query($conn, "DELETE FROM siswa WHERE id IN ($ids_list)");
+                if ($res) {
+                    $message = "Berhasil menghapus " . count($sanitized_ids) . " data siswa secara massal!";
+                    $message_type = 'success';
+                } else {
+                    throw new Exception("Gagal menghapus siswa dari database.");
+                }
+            } else {
+                throw new Exception("Tidak ada siswa yang dipilih untuk dihapus.");
+            }
         }
-    } catch (mysqli_sql_exception $e) {
+    } catch (Exception $e) {
         if ($e->getCode() == 1062) {
             $message = "Gagal: NIS/NISN sudah terdaftar di sistem.";
             $message_type = 'error';
@@ -213,65 +273,96 @@ require_once __DIR__ . '/../includes/header.php';
     </div>
 </div>
 
-<div class="lux-card overflow-hidden">
-    <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse">
-            <thead>
-                <tr class="bg-slate-50 border-b border-slate-100">
-                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Foto</th>
-                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">NIS / NISN</th>
-                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Nama Siswa</th>
-                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">JK</th>
-                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Kelas Aktif</th>
-                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Aksi</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-50">
-                <?php while ($row = mysqli_fetch_assoc($result)): ?>
-                <tr class="hover:bg-slate-50/50 transition-colors">
-                    <td class="px-6 py-4">
-                        <div class="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 overflow-hidden shadow-sm flex items-center justify-center mx-auto">
-                            <?php if(!empty($row['foto'])): ?>
-                                <img src="<?= BASE_URL ?>uploads/siswa/<?= $row['foto'] ?>" class="w-full h-full object-cover">
-                            <?php else: ?>
-                                <i class="fa fa-user-graduate text-slate-300"></i>
-                            <?php endif; ?>
-                        </div>
-                    </td>
-                    <td class="px-6 py-4 font-mono text-sm">
-                        <div class="text-indigo-600 font-bold"><?= htmlspecialchars($row['nis']) ?></div>
-                        <div class="text-slate-400 text-[10px]"><?= htmlspecialchars($row['nisn'] ?? '-') ?></div>
-                    </td>
-                    <td class="px-6 py-4 font-semibold text-slate-700">
-                        <?= htmlspecialchars($row['nama_siswa']) ?>
-                        <div class="text-[10px] text-slate-400 font-normal italic"><?= htmlspecialchars($row['no_telp'] ?? '') ?></div>
-                    </td>
-                    <td class="px-6 py-4 text-center">
-                        <span class="px-2 py-0.5 rounded text-xs font-bold <?= $row['jenis_kelamin'] == 'L' ? 'bg-blue-100 text-blue-600' : 'bg-pink-100 text-pink-600' ?>">
-                            <?= $row['jenis_kelamin'] ?>
-                        </span>
-                    </td>
-                    <td class="px-6 py-4 text-sm text-slate-600"><?= htmlspecialchars($row['nama_kelas'] ?? 'N/A') ?></td>
-                    <td class="px-6 py-4">
-                        <div class="flex justify-center gap-2">
-                            <?php if($_SESSION['role'] == 'admin'): ?>
-                            <button onclick="openModal('editModal-<?= $row['id'] ?>')" class="w-9 h-9 flex items-center justify-center rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-600 hover:text-white transition-all">
-                                <i class="fa fa-edit"></i>
-                            </button>
-                            <button onclick="openModal('hapusModal-<?= $row['id'] ?>')" class="w-9 h-9 flex items-center justify-center rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white transition-all">
-                                <i class="fa fa-trash"></i>
-                            </button>
-                            <?php else: ?>
-                                <span class="text-[10px] text-slate-400 italic">View only</span>
-                            <?php endif; ?>
-                        </div>
-                    </td>
-                </tr>
-                <?php endwhile; ?>
-            </tbody>
-        </table>
+<form action="" method="POST" id="bulk-delete-form" onsubmit="confirmBulkDelete(event)">
+    <input type="hidden" name="csrf_token" value="<?= get_csrf_token() ?>">
+    <input type="hidden" name="hapus_masal" value="1">
+
+    <?php if($_SESSION['role'] == 'admin'): ?>
+    <div class="mb-4 flex items-center justify-between bg-slate-50 border border-slate-100 p-4 rounded-2xl">
+        <div class="flex items-center gap-3">
+            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider"><span id="selected-count">0</span> Siswa Terpilih</span>
+        </div>
+        <button type="submit" id="bulk-delete-btn" disabled class="px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all bg-slate-200 text-slate-400 flex items-center gap-2 cursor-not-allowed">
+            <i class="fa fa-trash-alt"></i> Hapus Terpilih
+        </button>
     </div>
-</div>
+    <?php endif; ?>
+
+    <div class="lux-card overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50 border-b border-slate-100">
+                        <?php if($_SESSION['role'] == 'admin'): ?>
+                        <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center w-12">
+                            <input type="checkbox" id="select-all-siswa" class="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500 cursor-pointer transition-all">
+                        </th>
+                        <?php endif; ?>
+                        <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Foto</th>
+                        <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">NIS / NISN</th>
+                        <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Nama Siswa</th>
+                        <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">JK</th>
+                        <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Kelas Aktif</th>
+                        <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-50">
+                    <?php while ($row = mysqli_fetch_assoc($result)): ?>
+                    <tr class="hover:bg-slate-50/50 transition-colors">
+                        <?php if($_SESSION['role'] == 'admin'): ?>
+                        <td class="px-6 py-4 text-center">
+                            <input type="checkbox" name="bulk_ids[]" value="<?= $row['id'] ?>" class="siswa-checkbox w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500 cursor-pointer transition-all">
+                        </td>
+                        <?php endif; ?>
+                        <td class="px-6 py-4">
+                            <div class="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 overflow-hidden shadow-sm flex items-center justify-center mx-auto">
+                                <?php if(!empty($row['foto'])): ?>
+                                    <img src="<?= BASE_URL ?>uploads/siswa/<?= $row['foto'] ?>" class="w-full h-full object-cover">
+                                <?php else: ?>
+                                    <i class="fa fa-user-graduate text-slate-300"></i>
+                                <?php endif; ?>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 font-mono text-sm">
+                            <div class="text-indigo-600 font-bold"><?= htmlspecialchars($row['nis']) ?></div>
+                            <div class="text-slate-400 text-[10px]"><?= htmlspecialchars($row['nisn'] ?? '-') ?></div>
+                        </td>
+                        <td class="px-6 py-4 font-semibold text-slate-700">
+                            <?= htmlspecialchars($row['nama_siswa']) ?>
+                            <div class="text-[10px] text-slate-400 font-normal italic">
+                                Telp: <?= htmlspecialchars($row['no_telp'] ?? '-') ?>
+                                <?php if (!empty($row['no_wa_ortu'])): ?>
+                                    | WA Ortu: <?= htmlspecialchars($row['no_wa_ortu']) ?>
+                                <?php endif; ?>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            <span class="px-2 py-0.5 rounded text-xs font-bold <?= $row['jenis_kelamin'] == 'L' ? 'bg-blue-100 text-blue-600' : 'bg-pink-100 text-pink-600' ?>">
+                                <?= $row['jenis_kelamin'] ?>
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-slate-600"><?= htmlspecialchars($row['nama_kelas'] ?? 'N/A') ?></td>
+                        <td class="px-6 py-4">
+                            <div class="flex justify-center gap-2">
+                                <?php if($_SESSION['role'] == 'admin'): ?>
+                                <button type="button" onclick="openModal('editModal-<?= $row['id'] ?>')" class="w-9 h-9 flex items-center justify-center rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-600 hover:text-white transition-all">
+                                    <i class="fa fa-edit"></i>
+                                </button>
+                                <button type="button" onclick="openModal('hapusModal-<?= $row['id'] ?>')" class="w-9 h-9 flex items-center justify-center rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white transition-all">
+                                    <i class="fa fa-trash"></i>
+                                </button>
+                                <?php else: ?>
+                                    <span class="text-[10px] text-slate-400 italic">View only</span>
+                                <?php endif; ?>
+                            </div>
+                        </td>
+                    </tr>
+                    <?php endwhile; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</form>
 
 <?= render_pagination($pagin['page'], $pagin['total_pages'], $_GET) ?>
 
@@ -304,7 +395,11 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div><label class="block text-sm font-bold text-slate-700 mb-1">Alamat</label><textarea name="alamat" rows="2" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50"></textarea></div>
-            <div><label class="block text-sm font-bold text-slate-700 mb-1">Foto Siswa</label><input type="file" name="foto" accept="image/*" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 bg-white"></div>
+            <div><label class="block text-sm font-bold text-slate-700 mb-1">No. WA Orang Tua / Wali</label><input type="text" name="no_wa_ortu" placeholder="Contoh: 081234567890" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50"></div>
+        </div>
+        <div>
+            <label class="block text-sm font-bold text-slate-700 mb-1">Foto Siswa</label>
+            <input type="file" name="foto" accept="image/*" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 bg-white">
         </div>
         <div class="pt-4 flex flex-col sm:flex-row gap-3"><button type="button" onclick="closeModal('tambahModal')" class="flex-1 px-6 py-3 rounded-xl border border-slate-200 font-bold text-slate-600">Batal</button><button type="submit" name="tambah" class="flex-1 px-6 py-3 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-100">Simpan</button></div>
     </form>
@@ -339,13 +434,14 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div><label class="block text-sm font-bold text-slate-700 mb-1">Alamat</label><textarea name="alamat" rows="2" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"><?= htmlspecialchars($row['alamat'] ?? '') ?></textarea></div>
-            <div>
-                <label class="block text-sm font-bold text-slate-700 mb-1">Update Foto</label>
-                <input type="file" name="foto" accept="image/*" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50 bg-white">
-                <?php if(!empty($row['foto'])): ?>
-                    <p class="text-[10px] text-slate-400 mt-1 italic">Sudah ada foto. Unggah lagi untuk mengganti.</p>
-                <?php endif; ?>
-            </div>
+            <div><label class="block text-sm font-bold text-slate-700 mb-1">No. WA Orang Tua / Wali</label><input type="text" name="no_wa_ortu" value="<?= htmlspecialchars($row['no_wa_ortu'] ?? '') ?>" placeholder="Contoh: 081234567890" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50"></div>
+        </div>
+        <div>
+            <label class="block text-sm font-bold text-slate-700 mb-1">Update Foto</label>
+            <input type="file" name="foto" accept="image/*" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-50 bg-white">
+            <?php if(!empty($row['foto'])): ?>
+                <p class="text-[10px] text-slate-400 mt-1 italic">Sudah ada foto. Unggah lagi untuk mengganti.</p>
+            <?php endif; ?>
         </div>
         <div class="pt-4 flex flex-col sm:flex-row gap-3"><button type="button" onclick="closeModal('editModal-<?= $row['id'] ?>')" class="flex-1 px-6 py-3 rounded-xl border border-slate-200 font-bold text-slate-600">Batal</button><button type="submit" name="edit" class="flex-1 px-6 py-3 rounded-xl bg-amber-500 text-white font-bold hover:bg-amber-600 shadow-lg shadow-amber-100">Simpan</button></div>
     </form>

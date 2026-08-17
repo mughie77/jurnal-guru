@@ -19,7 +19,7 @@ $q_class = mysqli_query($conn, "SELECT k.nama_kelas FROM siswa_kelas sk JOIN kel
 $student_class = mysqli_fetch_assoc($q_class)['nama_kelas'] ?? 'Tanpa Kelas';
 
 // Handle Form Submission
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['trigger_panic'])) {
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_pengaduan'])) {
     if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
         $message = "Token CSRF tidak valid.";
         $message_type = "error";
@@ -30,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['trigger_panic'])) {
         $accuracy = $_POST['accuracy'] ?? null;
 
         if (empty($keterangan)) {
-            $message = "Harap masukkan keterangan kejadian perundungan/bullying.";
+            $message = "Harap masukkan keterangan laporan pengaduan Anda.";
             $message_type = "error";
         } elseif (empty($lat) || empty($lng)) {
             $message = "Koordinat lokasi GPS diperlukan. Harap aktifkan GPS ponsel Anda.";
@@ -38,11 +38,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['trigger_panic'])) {
         } else {
             $accuracy_val = !empty($accuracy) ? (float)$accuracy : 0.0;
 
-            $stmt = mysqli_prepare($conn, "INSERT INTO panic_button (siswa_id, nama_siswa, keterangan, latitude, longitude, akurasi) VALUES (?, ?, ?, ?, ?, ?)");
+            $stmt = mysqli_prepare($conn, "INSERT INTO pengaduan (siswa_id, nama_siswa, keterangan, latitude, longitude, akurasi) VALUES (?, ?, ?, ?, ?, ?)");
             mysqli_stmt_bind_param($stmt, "issssd", $siswa_id, $nama_siswa, $keterangan, $lat, $lng, $accuracy_val);
 
             if (mysqli_stmt_execute($stmt)) {
-                $message = "Laporan darurat berhasil dikirim! Tim konseling / kesiswaan akan segera menindaklanjuti.";
+                $message = "Laporan pengaduan berhasil dikirim! Tim konseling / kesiswaan akan segera menindaklanjuti.";
                 $message_type = "success";
             } else {
                 $message = "Gagal mengirim laporan: " . mysqli_error($conn);
@@ -53,7 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['trigger_panic'])) {
     }
 }
 
-$page_title = "Anti-Bullying Panic Button";
+$page_title = "Layanan Pengaduan Siswa";
 require_once __DIR__ . '/../includes/header.php';
 ?>
 
@@ -61,13 +61,13 @@ require_once __DIR__ . '/../includes/header.php';
     #sidebar, header { display: none; }
     .lg\:ml-64 { margin-left: 0; }
     body { background-color: #FBFBFB; }
-    @keyframes pulse-red {
-        0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); }
-        70% { transform: scale(1); box-shadow: 0 0 0 20px rgba(220, 38, 38, 0); }
-        100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+    @keyframes pulse-rose {
+        0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.7); }
+        70% { transform: scale(1); box-shadow: 0 0 0 20px rgba(244, 63, 94, 0); }
+        100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(244, 63, 94, 0); }
     }
-    .btn-panic-pulse {
-        animation: pulse-red 2s infinite;
+    .btn-pengaduan-pulse {
+        animation: pulse-rose 2s infinite;
     }
 </style>
 
@@ -76,22 +76,22 @@ require_once __DIR__ . '/../includes/header.php';
         <!-- Header -->
         <div class="flex items-center justify-between mb-8">
             <div>
-                <h1 class="text-2xl font-black italic text-slate-800 tracking-tight text-rose-600">PANIC BUTTON</h1>
-                <p class="text-slate-400 font-bold text-[10px] uppercase tracking-widest mt-1">Layanan Pengaduan Darurat Anti-Bullying</p>
+                <h1 class="text-2xl font-black italic text-slate-800 tracking-tight text-rose-600">PENGADUAN SISWA</h1>
+                <p class="text-slate-400 font-bold text-[10px] uppercase tracking-widest mt-1">Layanan Pengaduan Keamanan & Perundungan (Anti-Bullying)</p>
             </div>
             <a href="index.php" class="w-10 h-10 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-slate-600 transition-all">
                 <i class="fa fa-times"></i>
             </a>
         </div>
 
-        <div class="lux-card p-8 mb-8 bg-gradient-to-br from-rose-600 to-red-800 text-white relative overflow-hidden text-center rounded-[32px]">
+        <div class="lux-card p-8 mb-8 bg-gradient-to-br from-rose-500 to-rose-700 text-white relative overflow-hidden text-center rounded-[32px]">
             <div class="relative z-10 flex flex-col items-center">
-                <div class="w-24 h-24 rounded-full bg-white text-rose-600 flex items-center justify-center text-4xl shadow-2xl mb-6 btn-panic-pulse">
-                    <i class="fa fa-bell"></i>
+                <div class="w-24 h-24 rounded-full bg-white text-rose-600 flex items-center justify-center text-4xl shadow-2xl mb-6 btn-pengaduan-pulse">
+                    <i class="fa fa-bullhorn"></i>
                 </div>
-                <h2 class="text-2xl font-black italic tracking-tight leading-tight mb-2">Anda Mengalami / Melihat Perundungan?</h2>
+                <h2 class="text-2xl font-black italic tracking-tight leading-tight mb-2">Butuh Bantuan atau Ingin Melapor?</h2>
                 <p class="text-rose-100 font-bold text-xs max-w-md mx-auto leading-relaxed">
-                    Jangan takut, Anda tidak sendiri! Tekan dan laporkan kejadian perundungan (bullying) sekarang juga. Lokasi presisi Anda akan langsung terkirim ke tim bimbingan konseling dan kesiswaan untuk segera ditolong.
+                    Jangan takut, Anda tidak sendiri! Laporkan kejadian perundungan (bullying) atau masalah lainnya sekarang juga. Lokasi presisi Anda akan terkirim ke tim Bimbingan Konseling (BK) dan kesiswaan untuk segera ditolong.
                 </p>
             </div>
             <i class="fa fa-shield-alt absolute -bottom-10 -right-10 text-[200px] opacity-10"></i>
@@ -99,16 +99,16 @@ require_once __DIR__ . '/../includes/header.php';
 
         <!-- Form Card -->
         <div class="lux-card p-6 bg-white border-none shadow-xl">
-            <form id="panicForm" action="" method="POST" class="space-y-6">
+            <form id="pengaduanForm" action="" method="POST" class="space-y-6">
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
-                <input type="hidden" name="lat" id="panicLat">
-                <input type="hidden" name="lng" id="panicLng">
-                <input type="hidden" name="accuracy" id="panicAccuracy">
+                <input type="hidden" name="lat" id="pengaduanLat">
+                <input type="hidden" name="lng" id="pengaduanLng">
+                <input type="hidden" name="accuracy" id="pengaduanAccuracy">
 
                 <div>
-                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Keterangan Kejadian</label>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Keterangan Laporan Kejadian</label>
                     <textarea name="keterangan" rows="4" required
-                              placeholder="Ceritakan kejadian secara singkat (siapa korbannya, di mana, dan apa yang sedang terjadi)..."
+                              placeholder="Ceritakan kejadian secara singkat (siapa, di mana, dan apa yang sedang terjadi)..."
                               class="w-full px-5 py-4 rounded-2xl border border-slate-200 outline-none focus:ring-4 focus:ring-rose-50 focus:border-rose-500 font-medium text-slate-700 transition-all italic text-sm"></textarea>
                 </div>
 
@@ -123,9 +123,9 @@ require_once __DIR__ . '/../includes/header.php';
                     </div>
                 </div>
 
-                <button type="submit" name="trigger_panic" id="submitPanicBtn"
+                <button type="submit" name="submit_pengaduan" id="submitPengaduanBtn"
                         class="w-full py-4 bg-rose-600 hover:bg-rose-700 text-white font-black rounded-2xl shadow-xl shadow-rose-100 transition-all flex items-center justify-center gap-3 uppercase tracking-widest italic">
-                    <i class="fa fa-exclamation-triangle text-xl"></i> Kirim Laporan Darurat
+                    <i class="fa fa-paper-plane text-lg"></i> Kirim Laporan Pengaduan
                 </button>
             </form>
         </div>
@@ -151,9 +151,9 @@ require_once __DIR__ . '/../includes/header.php';
             const lng = position.coords.longitude;
             const accuracy = position.coords.accuracy;
 
-            document.getElementById('panicLat').value = lat;
-            document.getElementById('panicLng').value = lng;
-            document.getElementById('panicAccuracy').value = accuracy;
+            document.getElementById('pengaduanLat').value = lat;
+            document.getElementById('pengaduanLng').value = lng;
+            document.getElementById('pengaduanAccuracy').value = accuracy;
 
             // Update GPS badge
             const statusText = document.getElementById('gpsStatus');
@@ -174,9 +174,9 @@ require_once __DIR__ . '/../includes/header.php';
         document.getElementById('gpsStatus').innerText = "Ponsel Anda tidak mendukung pendeteksian lokasi.";
     }
 
-    const form = document.getElementById('panicForm');
+    const form = document.getElementById('pengaduanForm');
     form.addEventListener('submit', function(e) {
-        const lat = document.getElementById('panicLat').value;
+        const lat = document.getElementById('pengaduanLat').value;
         if (!lat) {
             e.preventDefault();
             Swal.fire({

@@ -205,6 +205,111 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['restore'])) {
     }
 }
 
+// Handle Selected Reset Data
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reset_system_data'])) {
+    if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
+        die("CSRF Token Invalid");
+    }
+
+    $reset_guru = isset($_POST['reset_guru']);
+    $reset_siswa = isset($_POST['reset_siswa']);
+    $reset_laporan = isset($_POST['reset_laporan']);
+
+    if (!$reset_guru && !$reset_siswa && !$reset_laporan) {
+        $message = "Pilih minimal satu kategori data yang ingin di-reset.";
+        $message_type = 'error';
+    } else {
+        mysqli_begin_transaction($conn);
+        try {
+            mysqli_query($conn, "SET FOREIGN_KEY_CHECKS=0");
+            $success_logs = [];
+
+            if ($reset_guru) {
+                mysqli_query($conn, "TRUNCATE TABLE `guru_mapel`");
+                mysqli_query($conn, "TRUNCATE TABLE `guru`");
+                mysqli_query($conn, "DELETE FROM users WHERE role = 'guru'");
+
+                // Clear uploads/guru/
+                $guru_dir = realpath(__DIR__ . '/../uploads/guru/');
+                if ($guru_dir && is_dir($guru_dir)) {
+                    $files = new RecursiveIteratorIterator(
+                        new RecursiveDirectoryIterator($guru_dir),
+                        RecursiveIteratorIterator::LEAVES_ONLY
+                    );
+                    foreach ($files as $name => $file) {
+                        if (!$file->isDir() && basename($file->getRealPath()) !== '.htaccess') {
+                            @unlink($file->getRealPath());
+                        }
+                    }
+                }
+                $success_logs[] = "Data Guru";
+            }
+
+            if ($reset_siswa) {
+                mysqli_query($conn, "TRUNCATE TABLE `siswa_kelas`");
+                mysqli_query($conn, "TRUNCATE TABLE `siswa`");
+
+                // Clear uploads/siswa/
+                $siswa_dir = realpath(__DIR__ . '/../uploads/siswa/');
+                if ($siswa_dir && is_dir($siswa_dir)) {
+                    $files = new RecursiveIteratorIterator(
+                        new RecursiveDirectoryIterator($siswa_dir),
+                        RecursiveIteratorIterator::LEAVES_ONLY
+                    );
+                    foreach ($files as $name => $file) {
+                        if (!$file->isDir() && basename($file->getRealPath()) !== '.htaccess') {
+                            @unlink($file->getRealPath());
+                        }
+                    }
+                }
+                $success_logs[] = "Data Siswa";
+            }
+
+            if ($reset_laporan) {
+                $laporan_tables = [
+                    'absensi_harian',
+                    'absensi_jurnal',
+                    'jurnal',
+                    'pengaduan',
+                    'konsultasi_pesan',
+                    'konsultasi',
+                    'mood_survey',
+                    'kritik_saran'
+                ];
+                foreach ($laporan_tables as $lt) {
+                    mysqli_query($conn, "TRUNCATE TABLE `$lt`");
+                }
+
+                // Clear uploads/konsultasi/
+                $kons_dir = realpath(__DIR__ . '/../uploads/konsultasi/');
+                if ($kons_dir && is_dir($kons_dir)) {
+                    $files = new RecursiveIteratorIterator(
+                        new RecursiveDirectoryIterator($kons_dir),
+                        RecursiveIteratorIterator::LEAVES_ONLY
+                    );
+                    foreach ($files as $name => $file) {
+                        if (!$file->isDir() && basename($file->getRealPath()) !== '.htaccess') {
+                            @unlink($file->getRealPath());
+                        }
+                    }
+                }
+                $success_logs[] = "Data Laporan & Transaksi";
+            }
+
+            mysqli_query($conn, "SET FOREIGN_KEY_CHECKS=1");
+            mysqli_commit($conn);
+
+            $message = "Sukses mereset " . implode(", ", $success_logs) . "!";
+            $message_type = 'success';
+        } catch (Exception $e) {
+            mysqli_rollback($conn);
+            mysqli_query($conn, "SET FOREIGN_KEY_CHECKS=1");
+            $message = "Gagal melakukan reset data: " . $e->getMessage();
+            $message_type = 'error';
+        }
+    }
+}
+
 require_once __DIR__ . '/../includes/header.php';
 ?>
 
@@ -224,7 +329,7 @@ require_once __DIR__ . '/../includes/header.php';
 </script>
 <?php endif; ?>
 
-<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
     <!-- Backup Card -->
     <div class="lux-card p-8 bg-white flex flex-col justify-between relative overflow-hidden">
         <div class="space-y-6">
@@ -287,6 +392,57 @@ require_once __DIR__ . '/../includes/header.php';
             </div>
         </form>
     </div>
+
+    <!-- Reset Card (New!) -->
+    <div class="lux-card p-8 bg-white flex flex-col justify-between relative overflow-hidden">
+        <form action="" method="POST" class="space-y-6 h-full flex flex-col justify-between">
+            <input type="hidden" name="csrf_token" value="<?= get_csrf_token() ?>">
+            <input type="hidden" name="reset_system_data" value="1">
+
+            <div class="space-y-5">
+                <div class="flex items-center gap-4">
+                    <div class="w-14 h-14 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center text-2xl shadow-sm">
+                        <i class="fa fa-trash-alt"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-slate-800 italic">Reset Data Sistem</h3>
+                        <p class="text-xs text-slate-400 mt-1 uppercase font-black tracking-wider">Hapus Data Secara Selektif</p>
+                    </div>
+                </div>
+                <p class="text-sm text-slate-500 leading-relaxed">
+                    Silakan pilih kategori data di bawah ini yang ingin Anda hapus secara permanen dari sistem CAKRA:
+                </p>
+
+                <div class="space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-100 shadow-inner">
+                    <label class="flex items-center gap-3 cursor-pointer p-1">
+                        <input type="checkbox" name="reset_guru" id="resetGuruCheck" class="rounded text-red-600 focus:ring-red-500 border-slate-300 w-5 h-5">
+                        <span class="text-xs font-bold text-slate-700">Data Guru (Master & Akun)</span>
+                    </label>
+                    <label class="flex items-center gap-3 cursor-pointer p-1">
+                        <input type="checkbox" name="reset_siswa" id="resetSiswaCheck" class="rounded text-red-600 focus:ring-red-500 border-slate-300 w-5 h-5">
+                        <span class="text-xs font-bold text-slate-700">Data Siswa (Master & Kelas)</span>
+                    </label>
+                    <label class="flex items-center gap-3 cursor-pointer p-1">
+                        <input type="checkbox" name="reset_laporan" id="resetLaporanCheck" class="rounded text-red-600 focus:ring-red-500 border-slate-300 w-5 h-5">
+                        <span class="text-xs font-bold text-slate-700">Data Laporan & Transaksi (Absen/Jurnal)</span>
+                    </label>
+                </div>
+
+                <div class="p-4 rounded-xl bg-red-50 border border-red-100 flex items-start gap-3">
+                    <i class="fa fa-exclamation-triangle text-red-600 text-sm mt-0.5"></i>
+                    <p class="text-[10px] text-red-800 font-bold leading-relaxed italic">
+                        Tindakan ini bersifat PERMANEN dan tidak dapat dibatalkan. Hanya akun Administrator & Waka yang dipertahankan.
+                    </p>
+                </div>
+            </div>
+
+            <div class="pt-8 border-t border-slate-50 mt-6">
+                <button type="submit" onclick="return confirmReset(event)" class="w-full py-4 bg-red-600 hover:bg-red-700 text-white font-black rounded-2xl shadow-xl shadow-red-100 transition-all flex items-center justify-center gap-3 text-base">
+                    <i class="fa fa-trash-alt text-lg"></i> RESET DATA TERPILIH
+                </button>
+            </div>
+        </form>
+    </div>
 </div>
 
 <script>
@@ -307,6 +463,53 @@ function confirmRestore(event) {
             Swal.fire({
                 title: 'Sedang Memulihkan Sistem...',
                 text: 'Harap jangan menutup halaman ini atau mematikan koneksi.',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+            form.submit();
+        }
+    });
+}
+
+function confirmReset(event) {
+    event.preventDefault();
+    const form = event.target.form;
+
+    const resetGuru = document.getElementById('resetGuruCheck').checked;
+    const resetSiswa = document.getElementById('resetSiswaCheck').checked;
+    const resetLaporan = document.getElementById('resetLaporanCheck').checked;
+
+    if (!resetGuru && !resetSiswa && !resetLaporan) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Pilih Data',
+            text: 'Harap centang minimal satu kategori data yang ingin di-reset.',
+            confirmButtonColor: '#4F46E5'
+        });
+        return;
+    }
+
+    let items = [];
+    if (resetGuru) items.push("Data Guru");
+    if (resetSiswa) items.push("Data Siswa");
+    if (resetLaporan) items.push("Data Laporan & Transaksi");
+
+    Swal.fire({
+        title: 'RESET DATA TERPILIH?',
+        text: "Tindakan ini akan MENGHAPUS secara PERMANEN: " + items.join(", ") + ". Tindakan ini bersifat PERMANEN dan TIDAK BISA DIBATALKAN!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Ya, Reset Sekarang!',
+        cancelButtonText: 'Batal'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            Swal.fire({
+                title: 'Sedang Mereset Data...',
+                text: 'Harap tunggu, proses ini sedang berjalan.',
                 allowOutsideClick: false,
                 didOpen: () => {
                     Swal.showLoading();
