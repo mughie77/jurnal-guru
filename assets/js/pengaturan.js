@@ -133,3 +133,47 @@ function confirmGitPush(csrfToken) {
         }
     });
 }
+
+function runDatabaseUpdate() {
+    Swal.fire({
+        title: 'Update Database Schema?',
+        text: 'Sistem akan memeriksa dan menyinkronkan tabel serta kolom database aplikasi.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#4F46E5',
+        cancelButtonColor: '#6B7280',
+        confirmButtonText: 'Ya, Jalankan Update',
+        cancelButtonText: 'Batal'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            Swal.fire({
+                title: 'Menyinkronkan Database...',
+                text: 'Proses migrasi sedang berlangsung.',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            fetch('update_db.php')
+                .then(r => r.text())
+                .then(html => {
+                    const temp = document.createElement('div');
+                    temp.innerHTML = html;
+                    const logContent = temp.querySelector('.space-y-4')?.innerHTML || html;
+
+                    Swal.fire({
+                        title: 'Hasil Migrasi Database',
+                        html: `<div class="text-left max-h-60 overflow-y-auto p-2 text-xs space-y-2">${logContent}</div>`,
+                        icon: 'info',
+                        confirmButtonColor: '#4F46E5',
+                        confirmButtonText: 'Selesai',
+                        customClass: { popup: 'rounded-3xl' }
+                    });
+                })
+                .catch(err => {
+                    Swal.fire('Gagal Migrasi', err.message || 'Terjadi kesalahan saat menjalankan update database.', 'error');
+                });
+        }
+    });
+}

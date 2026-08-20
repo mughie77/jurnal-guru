@@ -132,10 +132,24 @@ switch ($action) {
                 'log' => 'Error: Not a git repository.'
             ];
         } else {
+            // First attempt normal pull
+            $pull_logs = [];
             exec('git pull origin $(git rev-parse --abbrev-ref HEAD) 2>&1', $output, $return_var);
-            $log = implode("\n", $output);
-            $success = $return_var === 0;
+            $pull_logs[] = "> git pull origin";
+            $pull_logs[] = implode("\n", $output);
 
+            $success = ($return_var === 0);
+
+            // If pull failed due to untracked files or uncommitted local changes, try stashing/adding untracked files then pull
+            if (!$success && (strpos(implode("\n", $output), 'untracked working tree files') !== false || strpos(implode("\n", $output), 'overwritten by merge') !== false)) {
+                $output_retry = [];
+                exec('git add . 2>&1 && git stash 2>&1 && git pull origin $(git rev-parse --abbrev-ref HEAD) 2>&1', $output_retry, $return_var_retry);
+                $pull_logs[] = "> Auto-resolving untracked conflicts (git add . && git stash && git pull):";
+                $pull_logs[] = implode("\n", $output_retry);
+                $success = ($return_var_retry === 0);
+            }
+
+            $log = implode("\n\n", $pull_logs);
             $msg = $success ? 'Pembaruan berhasil ditarik dari GitHub!' : 'Gagal menarik pembaruan karena kesalahan jaringan, konflik lokal, atau kendala otentikasi.';
             if (!$success) {
                 $msg .= "\n\nSaran: Pastikan kunci SSH Anda terdaftar di GitHub atau repository diakses secara publik.";

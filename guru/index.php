@@ -83,7 +83,7 @@ require_once __DIR__ . '/../includes/header.php';
                         <p class="text-xs text-slate-500 line-clamp-3 leading-relaxed mb-4"><?= htmlspecialchars($ann['isi']) ?></p>
                     </div>
                     <div class="pt-3 border-t border-slate-50 flex items-center justify-between">
-                        <button type="button" onclick='showAnnouncementModal(<?= json_encode($ann) ?>)' class="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
+                        <button type="button" onclick='showAnnouncementModal(<?= htmlspecialchars(json_encode($ann), ENT_QUOTES, 'UTF-8') ?>)' class="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
                             Baca Selengkapnya <i class="fa fa-arrow-right text-[10px]"></i>
                         </button>
                         <?php if (!empty($ann['file_lampiran'])): ?>

@@ -221,6 +221,11 @@ require_once __DIR__ . '/../includes/header.php';
                     <span class="px-2 py-0.5 bg-emerald-400 text-emerald-900 rounded text-[10px] font-black uppercase tracking-tighter">Production</span>
                 </div>
             </div>
+            <div class="mt-6 pt-4 border-t border-white/10">
+                <button type="button" onclick="runDatabaseUpdate()" class="w-full py-3 bg-white text-indigo-700 hover:bg-indigo-50 font-black text-xs uppercase tracking-wider rounded-xl shadow-lg transition-all flex items-center justify-center gap-2">
+                    <i class="fa fa-database"></i> Update Database
+                </button>
+            </div>
         </div>
 
         <div class="lux-card p-6 border-t-4 border-slate-700">
