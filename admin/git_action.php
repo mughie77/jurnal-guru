@@ -149,6 +149,10 @@ switch ($action) {
             $output_str = implode("\n", $output);
             $success = ($return_var === 0);
 
+            // Ensure git user identity is configured locally if missing
+            exec('git config user.email "admin@cakra.local" 2>&1');
+            exec('git config user.name "Admin CAKRA" 2>&1');
+
             // If pull failed due to uncommitted/untracked files, invalid remote ref, or no initial commit, resolve automatically
             if (!$success) {
                 $output_retry = [];
@@ -186,6 +190,10 @@ switch ($action) {
             if ($commit_msg === '') {
                 $commit_msg = "Pembaruan otomatis dari Panel Pengaturan Sistem - " . date('Y-m-d H:i:s');
             }
+
+            // Ensure git user identity is configured locally if missing
+            exec('git config user.email "admin@cakra.local" 2>&1');
+            exec('git config user.name "Admin CAKRA" 2>&1');
 
             // Run staging, commit, and push in sequence
             $commands = [
