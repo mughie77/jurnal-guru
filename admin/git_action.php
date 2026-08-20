@@ -132,9 +132,11 @@ switch ($action) {
                 'log' => 'Error: Not a git repository.'
             ];
         } else {
-            // Get current branch or fallback to main
-            $current_branch = trim(shell_exec('git rev-parse --abbrev-ref HEAD 2>/dev/null') ?? '');
-            if (empty($current_branch) || $current_branch === 'HEAD') {
+            // Get current branch or fallback to main using exec (since shell_exec might be in disable_functions)
+            $branch_out = [];
+            exec('git rev-parse --abbrev-ref HEAD 2>&1', $branch_out, $branch_res);
+            $current_branch = trim(implode('', $branch_out));
+            if ($branch_res !== 0 || empty($current_branch) || $current_branch === 'HEAD') {
                 $current_branch = 'main';
             }
 
