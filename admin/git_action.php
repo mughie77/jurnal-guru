@@ -141,24 +141,20 @@ switch ($action) {
             }
 
             $pull_logs = [];
-            exec("git pull origin $current_branch 2>&1", $output, $return_var);
-            $pull_logs[] = "> git pull origin $current_branch";
+            // Try pulling origin HEAD (which targets the default branch on remote, e.g. HEAD/main/master/feat/...)
+            exec("git pull origin HEAD 2>&1", $output, $return_var);
+            $pull_logs[] = "> git pull origin HEAD";
             $pull_logs[] = implode("\n", $output);
 
             $output_str = implode("\n", $output);
             $success = ($return_var === 0);
 
-            // If pull failed due to uncommitted/untracked files or no initial commit, commit local files first or fetch & merge
-            if (!$success && (
-                strpos($output_str, 'overwritten by merge') !== false ||
-                strpos($output_str, 'untracked working tree files') !== false ||
-                strpos($output_str, 'You do not have the initial commit yet') !== false
-            )) {
+            // If pull failed due to uncommitted/untracked files, invalid remote ref, or no initial commit, resolve automatically
+            if (!$success) {
                 $output_retry = [];
-                // Create an initial commit if one doesn't exist yet, or commit local modifications
-                $auto_commit_cmd = 'git add . 2>&1 && (git commit -m "Pre-pull local state" 2>&1 || true) && git fetch origin 2>&1 && git merge origin/' . escapeshellarg($current_branch) . ' --allow-unrelated-histories -X ours 2>&1';
+                $auto_commit_cmd = 'git add . 2>&1 && (git commit -m "Pre-pull local state" 2>&1 || true) && git fetch origin 2>&1 && git merge FETCH_HEAD --allow-unrelated-histories -X ours 2>&1';
                 exec($auto_commit_cmd, $output_retry, $return_var_retry);
-                $pull_logs[] = "> Auto-resolving conflicts (git add & commit & fetch & merge):";
+                $pull_logs[] = "> Auto-resolving conflicts (git add & commit & fetch & merge FETCH_HEAD):";
                 $pull_logs[] = implode("\n", $output_retry);
                 $success = ($return_var_retry === 0);
             }
