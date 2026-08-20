@@ -313,6 +313,50 @@ if ($is_ajax) {
                 $logs[] = ['status' => 'error', 'msg' => "Failed creating <b>pengumuman</b>: " . mysqli_error($conn)];
             }
 
+            // Create tempat_pkl table
+            $create_tpkl = "CREATE TABLE IF NOT EXISTS `tempat_pkl` (
+                `id` int(11) NOT NULL AUTO_INCREMENT,
+                `nama_tempat` varchar(255) NOT NULL,
+                `alamat` text DEFAULT NULL,
+                `latitude` varchar(50) DEFAULT NULL,
+                `longitude` varchar(50) DEFAULT NULL,
+                `radius_absen` int(11) NOT NULL DEFAULT 50,
+                `guru_pembimbing_id` int(11) DEFAULT NULL,
+                `pembimbing_dudi` varchar(255) DEFAULT NULL,
+                `no_telp_dudi` varchar(50) DEFAULT NULL,
+                `created_at` timestamp NULL DEFAULT current_timestamp(),
+                PRIMARY KEY (`id`),
+                KEY `guru_pembimbing_id` (`guru_pembimbing_id`),
+                CONSTRAINT `tempat_pkl_ibfk_1` FOREIGN KEY (`guru_pembimbing_id`) REFERENCES `guru` (`id`) ON DELETE SET NULL
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
+
+            if (mysqli_query($conn, $create_tpkl)) {
+                $logs[] = ['status' => 'success', 'msg' => "Table <b>tempat_pkl</b> created successfully"];
+            } else {
+                $logs[] = ['status' => 'error', 'msg' => "Failed creating <b>tempat_pkl</b>: " . mysqli_error($conn)];
+            }
+
+            // Create siswa_pkl table
+            $create_spkl = "CREATE TABLE IF NOT EXISTS `siswa_pkl` (
+                `id` int(11) NOT NULL AUTO_INCREMENT,
+                `siswa_id` int(11) NOT NULL,
+                `tempat_pkl_id` int(11) NOT NULL,
+                `tahun_pelajaran_id` int(11) NOT NULL,
+                `status` enum('aktif','selesai') NOT NULL DEFAULT 'aktif',
+                `created_at` timestamp NULL DEFAULT current_timestamp(),
+                PRIMARY KEY (`id`),
+                UNIQUE KEY `unique_siswa_tahun_pkl` (`siswa_id`, `tahun_pelajaran_id`),
+                KEY `tempat_pkl_id` (`tempat_pkl_id`),
+                CONSTRAINT `siswa_pkl_ibfk_1` FOREIGN KEY (`siswa_id`) REFERENCES `siswa` (`id`) ON DELETE CASCADE,
+                CONSTRAINT `siswa_pkl_ibfk_2` FOREIGN KEY (`tempat_pkl_id`) REFERENCES `tempat_pkl` (`id`) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
+
+            if (mysqli_query($conn, $create_spkl)) {
+                $logs[] = ['status' => 'success', 'msg' => "Table <b>siswa_pkl</b> created successfully"];
+            } else {
+                $logs[] = ['status' => 'error', 'msg' => "Failed creating <b>siswa_pkl</b>: " . mysqli_error($conn)];
+            }
+
             foreach ($logs as $log) {
                 $color = 'text-blue-600 bg-blue-50';
                 if ($log['status'] == 'success') {

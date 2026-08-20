@@ -18,10 +18,30 @@ while ($r = mysqli_fetch_assoc($res_set)) $sets[$r['nama_setting']] = $r['nilai_
 
 $is_gps_disabled = (isset($sets['siswa_gps_absen']) && $sets['siswa_gps_absen'] === 'nonaktif');
 
-// Ensure coordinates are numeric and not empty
-$school_lat = (isset($sets['school_lat']) && $sets['school_lat'] !== '') ? $sets['school_lat'] : '-7.9135';
-$school_lng = (isset($sets['school_lng']) && $sets['school_lng'] !== '') ? $sets['school_lng'] : '113.8217';
-$radius_absen = (int)(($sets['radius_absen'] ?? '') !== '' ? $sets['radius_absen'] : 30);
+// Check PKL Status
+$q_pkl_check = "SELECT sp.*, tp.nama_tempat, tp.latitude as pkl_lat, tp.longitude as pkl_lng, tp.radius_absen as pkl_radius, tp.alamat as pkl_alamat, tp.pembimbing_dudi, u.nama_lengkap as nama_guru_pembimbing
+                FROM siswa_pkl sp
+                JOIN tempat_pkl tp ON sp.tempat_pkl_id = tp.id
+                LEFT JOIN guru g ON tp.guru_pembimbing_id = g.id
+                LEFT JOIN users u ON g.user_id = u.id
+                WHERE sp.siswa_id = $siswa_id AND sp.tahun_pelajaran_id = $active_tahun_id AND sp.status = 'aktif'
+                LIMIT 1";
+$res_pkl = mysqli_query($conn, $q_pkl_check);
+$pkl_info = ($res_pkl && mysqli_num_rows($res_pkl) > 0) ? mysqli_fetch_assoc($res_pkl) : null;
+$is_pkl = ($pkl_info !== null);
+
+// If PKL, GPS attendance is forced ACTIVE regardless of global setting, and uses PKL location
+if ($is_pkl) {
+    $is_gps_disabled = false;
+    $school_lat = (!empty($pkl_info['pkl_lat'])) ? $pkl_info['pkl_lat'] : '-7.9135';
+    $school_lng = (!empty($pkl_info['pkl_lng'])) ? $pkl_info['pkl_lng'] : '113.8217';
+    $radius_absen = (int)($pkl_info['pkl_radius'] ?? 50);
+} else {
+    // Ensure coordinates are numeric and not empty for normal school attendance
+    $school_lat = (isset($sets['school_lat']) && $sets['school_lat'] !== '') ? $sets['school_lat'] : '-7.9135';
+    $school_lng = (isset($sets['school_lng']) && $sets['school_lng'] !== '') ? $sets['school_lng'] : '113.8217';
+    $radius_absen = (int)(($sets['radius_absen'] ?? '') !== '' ? $sets['radius_absen'] : 30);
+}
 
 $page_title = "Absensi GPS Siswa";
 require_once __DIR__ . '/../includes/header.php';
@@ -55,12 +75,25 @@ require_once __DIR__ . '/../includes/header.php';
         <div class="flex items-center justify-between mb-8">
             <div>
                 <h1 class="text-2xl font-black italic text-slate-800 tracking-tight">Presensi Lokasi</h1>
-                <p class="text-slate-400 font-bold text-[10px] uppercase tracking-widest mt-1">Sistem Geofencing GPS</p>
+                <p class="text-slate-400 font-bold text-[10px] uppercase tracking-widest mt-1">
+                    <?= $is_pkl ? "Presensi PKL: " . htmlspecialchars($pkl_info['nama_tempat']) : "Sistem Geofencing GPS Sekolah" ?>
+                </p>
             </div>
             <a href="index.php" class="w-10 h-10 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-slate-600 transition-all">
                 <i class="fa fa-times"></i>
             </a>
         </div>
+
+        <?php if ($is_pkl): ?>
+        <div class="lux-card p-5 mb-6 bg-gradient-to-r from-indigo-600 to-indigo-800 text-white shadow-xl">
+            <div class="flex items-center justify-between mb-2">
+                <span class="px-3 py-1 bg-white/20 rounded-full text-[9px] font-black uppercase tracking-widest border border-white/20">Status: Siswa PKL</span>
+                <span class="text-[10px] font-bold text-indigo-100">Pembimbing: <?= htmlspecialchars($pkl_info['nama_guru_pembimbing'] ?? 'Guru Pembimbing') ?></span>
+            </div>
+            <h2 class="text-lg font-black italic"><?= htmlspecialchars($pkl_info['nama_tempat']) ?></h2>
+            <p class="text-xs text-indigo-100/80 mt-1 line-clamp-1"><?= htmlspecialchars($pkl_info['pkl_alamat'] ?? 'Lokasi Praktik Kerja Lapangan') ?></p>
+        </div>
+        <?php endif; ?>
 
         <div id="map-absensi" class="shadow-2xl shadow-indigo-100/50 border-4 border-white overflow-hidden relative">
             <div id="map-loader" class="absolute inset-0 flex flex-col items-center justify-center bg-slate-50 z-[1000] transition-opacity duration-500">

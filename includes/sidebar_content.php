@@ -86,9 +86,10 @@ if ($role == 'admin') {
     echo sidebar_section('Data Master', 'fa fa-database', $master_active, $master_links);
 
     // Group 2: Data Akademik
-    $akademik_active = in_array($current_page, ['kelas.php', 'siswa.php', 'import_foto_zip.php', 'alumni.php', 'mapping_siswa.php', 'naik_kelas.php', 'piket.php']);
+    $akademik_active = in_array($current_page, ['kelas.php', 'siswa.php', 'import_foto_zip.php', 'alumni.php', 'mapping_siswa.php', 'naik_kelas.php', 'piket.php', 'pkl.php']);
     $akademik_links = sub_nav_link('admin/kelas.php', 'Manajemen Kelas', $current_page == 'kelas.php') .
                       sub_nav_link('admin/siswa.php', 'Data Siswa', $current_page == 'siswa.php') .
+                      sub_nav_link('admin/pkl.php', 'Manajemen PKL', $current_page == 'pkl.php') .
                       sub_nav_link('admin/piket.php', 'Jadwal Piket', $current_page == 'piket.php') .
                       sub_nav_link('admin/import_foto_zip.php', 'Import Foto ZIP', $current_page == 'import_foto_zip.php') .
                       sub_nav_link('admin/alumni.php', 'Data Alumni', $current_page == 'alumni.php') .
@@ -135,9 +136,10 @@ if ($role == 'admin') {
     echo sidebar_section('Data Master', 'fa fa-database', $master_active, $master_links);
 
     // Group 2: Data Akademik (Waka)
-    $akademik_active = in_array($current_page, ['kelas.php', 'siswa.php', 'alumni.php', 'piket.php']);
+    $akademik_active = in_array($current_page, ['kelas.php', 'siswa.php', 'alumni.php', 'piket.php', 'pkl.php']);
     $akademik_links = sub_nav_link('waka/kelas.php', 'Manajemen Kelas', $current_page == 'kelas.php') .
                       sub_nav_link('admin/siswa.php', 'Data Siswa', $current_page == 'siswa.php') .
+                      sub_nav_link('admin/pkl.php', 'Manajemen PKL', $current_page == 'pkl.php') .
                       sub_nav_link('admin/piket.php', 'Jadwal Piket', $current_page == 'piket.php') .
                       sub_nav_link('admin/alumni.php', 'Data Alumni', $current_page == 'alumni.php');
     echo sidebar_section('Data Akademik', 'fa fa-graduation-cap', $akademik_active, $akademik_links);

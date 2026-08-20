@@ -284,3 +284,43 @@ CREATE TABLE `pengumuman` (
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tempat_pkl`
+--
+CREATE TABLE `tempat_pkl` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `nama_tempat` varchar(255) NOT NULL,
+  `alamat` text DEFAULT NULL,
+  `latitude` varchar(50) DEFAULT NULL,
+  `longitude` varchar(50) DEFAULT NULL,
+  `radius_absen` int(11) NOT NULL DEFAULT 50,
+  `guru_pembimbing_id` int(11) DEFAULT NULL,
+  `pembimbing_dudi` varchar(255) DEFAULT NULL,
+  `no_telp_dudi` varchar(50) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `guru_pembimbing_id` (`guru_pembimbing_id`),
+  CONSTRAINT `tempat_pkl_ibfk_1` FOREIGN KEY (`guru_pembimbing_id`) REFERENCES `guru` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `siswa_pkl`
+--
+CREATE TABLE `siswa_pkl` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `siswa_id` int(11) NOT NULL,
+  `tempat_pkl_id` int(11) NOT NULL,
+  `tahun_pelajaran_id` int(11) NOT NULL,
+  `status` enum('aktif','selesai') NOT NULL DEFAULT 'aktif',
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_siswa_tahun_pkl` (`siswa_id`, `tahun_pelajaran_id`),
+  KEY `tempat_pkl_id` (`tempat_pkl_id`),
+  CONSTRAINT `siswa_pkl_ibfk_1` FOREIGN KEY (`siswa_id`) REFERENCES `siswa` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `siswa_pkl_ibfk_2` FOREIGN KEY (`tempat_pkl_id`) REFERENCES `tempat_pkl` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
