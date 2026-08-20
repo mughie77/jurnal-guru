@@ -5,7 +5,13 @@ require_once __DIR__ . '/../includes/auth.php';
 // Only admin can run migration
 authorize_role(['admin']);
 
+$is_ajax = isset($_GET['ajax']) && $_GET['ajax'] == '1';
+
+if ($is_ajax) {
+    ob_start();
+}
 ?>
+<?php if (!$is_ajax): ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -24,6 +30,7 @@ authorize_role(['admin']);
             <h1 class="text-2xl font-black text-slate-800 uppercase tracking-tight">Database Migration</h1>
             <p class="text-slate-500 text-sm">System Update & Schema Synchronization</p>
         </div>
+<?php endif; ?>
 
         <div class="space-y-4 max-h-[400px] overflow-y-auto pr-2">
             <?php
@@ -313,13 +320,14 @@ authorize_role(['admin']);
                     $color = 'text-red-600 bg-red-50';
                 }
 
-                echo "<div class='p-4 rounded-2xl text-sm $color flex items-start gap-3'>";
+                echo "<div class='p-3 rounded-xl text-xs $color flex items-start gap-2'>";
                 echo "<div>{$log['msg']}</div>";
                 echo "</div>";
             }
             ?>
         </div>
 
+<?php if (!$is_ajax): ?>
         <div class="mt-8">
             <a href="index.php" class="block w-full py-4 bg-slate-800 text-white text-center font-bold rounded-2xl hover:bg-slate-900 transition-all">
                 Back to Dashboard
@@ -328,3 +336,4 @@ authorize_role(['admin']);
     </div>
 </body>
 </html>
+<?php endif; ?>

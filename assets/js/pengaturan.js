@@ -155,17 +155,23 @@ function runDatabaseUpdate() {
                 }
             });
 
-            fetch('update_db.php')
-                .then(r => r.text())
+            fetch('update_db.php?ajax=1')
+                .then(async r => {
+                    const text = await r.text();
+                    if (!r.ok) {
+                        throw new Error("Gagal memuat update_db.php (HTTP " + r.status + ")");
+                    }
+                    return text;
+                })
                 .then(html => {
                     const temp = document.createElement('div');
                     temp.innerHTML = html;
-                    const logContent = temp.querySelector('.space-y-4')?.innerHTML || html;
+                    const logContent = temp.querySelector('.space-y-4')?.innerHTML || temp.innerHTML;
 
                     Swal.fire({
                         title: 'Hasil Migrasi Database',
                         html: `<div class="text-left max-h-60 overflow-y-auto p-2 text-xs space-y-2">${logContent}</div>`,
-                        icon: 'info',
+                        icon: 'success',
                         confirmButtonColor: '#4F46E5',
                         confirmButtonText: 'Selesai',
                         customClass: { popup: 'rounded-3xl' }

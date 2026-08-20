@@ -132,19 +132,31 @@ switch ($action) {
                 'log' => 'Error: Not a git repository.'
             ];
         } else {
-            // First attempt normal pull
+            // Get current branch or fallback to main
+            $current_branch = trim(shell_exec('git rev-parse --abbrev-ref HEAD 2>/dev/null') ?? '');
+            if (empty($current_branch) || $current_branch === 'HEAD') {
+                $current_branch = 'main';
+            }
+
             $pull_logs = [];
-            exec('git pull origin $(git rev-parse --abbrev-ref HEAD) 2>&1', $output, $return_var);
-            $pull_logs[] = "> git pull origin";
+            exec("git pull origin $current_branch 2>&1", $output, $return_var);
+            $pull_logs[] = "> git pull origin $current_branch";
             $pull_logs[] = implode("\n", $output);
 
+            $output_str = implode("\n", $output);
             $success = ($return_var === 0);
 
-            // If pull failed due to untracked files or uncommitted local changes, try stashing/adding untracked files then pull
-            if (!$success && (strpos(implode("\n", $output), 'untracked working tree files') !== false || strpos(implode("\n", $output), 'overwritten by merge') !== false)) {
+            // If pull failed due to uncommitted/untracked files or no initial commit, commit local files first or fetch & merge
+            if (!$success && (
+                strpos($output_str, 'overwritten by merge') !== false ||
+                strpos($output_str, 'untracked working tree files') !== false ||
+                strpos($output_str, 'You do not have the initial commit yet') !== false
+            )) {
                 $output_retry = [];
-                exec('git add . 2>&1 && git stash 2>&1 && git pull origin $(git rev-parse --abbrev-ref HEAD) 2>&1', $output_retry, $return_var_retry);
-                $pull_logs[] = "> Auto-resolving untracked conflicts (git add . && git stash && git pull):";
+                // Create an initial commit if one doesn't exist yet, or commit local modifications
+                $auto_commit_cmd = 'git add . 2>&1 && (git commit -m "Pre-pull local state" 2>&1 || true) && git fetch origin 2>&1 && git merge origin/' . escapeshellarg($current_branch) . ' --allow-unrelated-histories -X ours 2>&1';
+                exec($auto_commit_cmd, $output_retry, $return_var_retry);
+                $pull_logs[] = "> Auto-resolving conflicts (git add & commit & fetch & merge):";
                 $pull_logs[] = implode("\n", $output_retry);
                 $success = ($return_var_retry === 0);
             }
