@@ -76,12 +76,13 @@ if ($role == 'admin') {
     echo nav_link('admin/index.php', 'fa fa-tachometer-alt', 'Beranda', $current_page == 'index.php' && strpos($_SERVER['PHP_SELF'], '/admin/') !== false);
 
     // Group 1: Data Master
-    $master_active = in_array($current_page, ['users.php', 'guru.php', 'mapel.php', 'tahun_pelajaran.php', 'kategori_perangkat.php']);
+    $master_active = in_array($current_page, ['users.php', 'guru.php', 'mapel.php', 'tahun_pelajaran.php', 'kategori_perangkat.php', 'pengumuman.php']);
     $master_links = sub_nav_link('admin/users.php', 'Manajemen User', $current_page == 'users.php') .
                     sub_nav_link('admin/guru.php', 'Data Guru', $current_page == 'guru.php') .
                     sub_nav_link('admin/mapel.php', 'Mata Pelajaran', $current_page == 'mapel.php') .
                     sub_nav_link('admin/tahun_pelajaran.php', 'Tahun Pelajaran', $current_page == 'tahun_pelajaran.php') .
-                    sub_nav_link('admin/kategori_perangkat.php', 'Kategori Perangkat', $current_page == 'kategori_perangkat.php');
+                    sub_nav_link('admin/kategori_perangkat.php', 'Kategori Perangkat', $current_page == 'kategori_perangkat.php') .
+                    sub_nav_link('admin/pengumuman.php', 'Pengumuman', $current_page == 'pengumuman.php');
     echo sidebar_section('Data Master', 'fa fa-database', $master_active, $master_links);
 
     // Group 2: Data Akademik
@@ -126,10 +127,11 @@ if ($role == 'admin') {
     echo nav_link('waka/index.php', 'fa fa-tachometer-alt', 'Beranda', $current_page == 'index.php' && strpos($_SERVER['PHP_SELF'], '/waka/') !== false);
 
     // Group 1: Data Master (Waka)
-    $master_active = in_array($current_page, ['guru.php', 'mapel.php', 'kategori_perangkat.php']);
+    $master_active = in_array($current_page, ['guru.php', 'mapel.php', 'kategori_perangkat.php', 'pengumuman.php']);
     $master_links = sub_nav_link('waka/guru.php', 'Data Guru', $current_page == 'guru.php') .
                     sub_nav_link('waka/mapel.php', 'Mata Pelajaran', $current_page == 'mapel.php') .
-                    sub_nav_link('admin/kategori_perangkat.php', 'Kategori Perangkat', $current_page == 'kategori_perangkat.php');
+                    sub_nav_link('admin/kategori_perangkat.php', 'Kategori Perangkat', $current_page == 'kategori_perangkat.php') .
+                    sub_nav_link('admin/pengumuman.php', 'Pengumuman', $current_page == 'pengumuman.php');
     echo sidebar_section('Data Master', 'fa fa-database', $master_active, $master_links);
 
     // Group 2: Data Akademik (Waka)

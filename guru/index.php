@@ -56,6 +56,48 @@ require_once __DIR__ . '/../includes/header.php';
             </div>
         </div>
 
+        <!-- Pengumuman Terbaru Widget -->
+        <?php
+        $q_announcements = mysqli_query($conn, "SELECT * FROM pengumuman WHERE target IN ('semua', 'guru') ORDER BY created_at DESC LIMIT 3");
+        if (mysqli_num_rows($q_announcements) > 0):
+        ?>
+        <div class="mb-12">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="font-black text-slate-800 italic uppercase tracking-wider text-base flex items-center gap-2">
+                    <i class="fa fa-bullhorn text-indigo-600"></i> Pengumuman Terbaru
+                </h3>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <?php while ($ann = mysqli_fetch_assoc($q_announcements)): ?>
+                <div class="lux-card p-6 bg-white border border-slate-100 shadow-xl rounded-3xl flex flex-col justify-between hover:border-indigo-200 transition-all">
+                    <div>
+                        <div class="flex items-center justify-between gap-2 mb-2">
+                            <span class="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-indigo-50 text-indigo-600 border border-indigo-100">
+                                <?= $ann['target'] == 'guru' ? 'Khusus Guru' : 'Semua' ?>
+                            </span>
+                            <span class="text-[10px] font-bold text-slate-400">
+                                <?= date('d M Y', strtotime($ann['created_at'])) ?>
+                            </span>
+                        </div>
+                        <h4 class="font-black text-slate-800 text-base mb-2 line-clamp-1"><?= htmlspecialchars($ann['judul']) ?></h4>
+                        <p class="text-xs text-slate-500 line-clamp-3 leading-relaxed mb-4"><?= htmlspecialchars($ann['isi']) ?></p>
+                    </div>
+                    <div class="pt-3 border-t border-slate-50 flex items-center justify-between">
+                        <button type="button" onclick='showAnnouncementModal(<?= json_encode($ann) ?>)' class="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
+                            Baca Selengkapnya <i class="fa fa-arrow-right text-[10px]"></i>
+                        </button>
+                        <?php if (!empty($ann['file_lampiran'])): ?>
+                        <a href="<?= BASE_URL ?>uploads/pengumuman/<?= $ann['file_lampiran'] ?>" target="_blank" class="text-[10px] font-black text-slate-500 bg-slate-100 hover:bg-slate-200 px-2.5 py-1 rounded-lg flex items-center gap-1 transition-colors">
+                            <i class="fa fa-paperclip text-indigo-500"></i> Lampiran
+                        </a>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <?php endwhile; ?>
+            </div>
+        </div>
+        <?php endif; ?>
+
         <!-- Stats Cards -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
             <div class="lux-card p-8 bg-indigo-600 text-white shadow-indigo-200 border-none relative overflow-hidden group">
@@ -268,5 +310,28 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
     </div>
 </div>
+
+<script>
+function showAnnouncementModal(ann) {
+    let lampiranHtml = '';
+    if (ann.file_lampiran) {
+        lampiranHtml = `<div class="mt-4 pt-4 border-t border-slate-100 text-left">
+            <a href="<?= BASE_URL ?>uploads/pengumuman/${ann.file_lampiran}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 font-bold rounded-xl text-xs hover:bg-indigo-100 transition-colors">
+                <i class="fa fa-paperclip"></i> Unduh Lampiran Berkas
+            </a>
+        </div>`;
+    }
+
+    Swal.fire({
+        title: ann.judul,
+        html: `<div class="text-left text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">${new Date(ann.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+               <div class="text-left text-sm text-slate-700 leading-relaxed whitespace-pre-line">${ann.isi}</div>
+               ${lampiranHtml}`,
+        confirmButtonColor: '#4f46e5',
+        confirmButtonText: 'Tutup',
+        customClass: { popup: 'rounded-3xl', title: 'font-black italic text-left text-slate-800 text-xl' }
+    });
+}
+</script>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

@@ -287,6 +287,24 @@ authorize_role(['admin']);
                 $logs[] = ['status' => 'error', 'msg' => "Failed creating <b>tugas_kelas</b>: " . mysqli_error($conn)];
             }
 
+            // Create pengumuman table
+            $create_pengumuman = "CREATE TABLE IF NOT EXISTS `pengumuman` (
+                `id` int(11) NOT NULL AUTO_INCREMENT,
+                `judul` varchar(255) NOT NULL,
+                `isi` text NOT NULL,
+                `target` enum('semua','guru','siswa') NOT NULL DEFAULT 'semua',
+                `file_lampiran` varchar(255) DEFAULT NULL,
+                `created_by` varchar(100) DEFAULT NULL,
+                `created_at` timestamp NULL DEFAULT current_timestamp(),
+                PRIMARY KEY (`id`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
+
+            if (mysqli_query($conn, $create_pengumuman)) {
+                $logs[] = ['status' => 'success', 'msg' => "Table <b>pengumuman</b> created successfully"];
+            } else {
+                $logs[] = ['status' => 'error', 'msg' => "Failed creating <b>pengumuman</b>: " . mysqli_error($conn)];
+            }
+
             foreach ($logs as $log) {
                 $color = 'text-blue-600 bg-blue-50';
                 if ($log['status'] == 'success') {
