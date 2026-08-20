@@ -92,7 +92,8 @@ if ($is_ajax) {
                 'school_lat' => '-7.9135',
                 'school_lng' => '113.8217',
                 'radius_absen' => '30',
-                'siswa_gps_absen' => 'nonaktif'
+                'siswa_gps_absen' => 'nonaktif',
+                'pilih_tanggal_jurnal' => 'nonaktif'
             ];
 
             foreach ($new_settings as $key => $val) {

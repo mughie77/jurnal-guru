@@ -13,6 +13,13 @@ if (!$active_tahun_id) die("Error: Tidak ada tahun pelajaran aktif.");
 $mapels = mysqli_query($conn, "SELECT mp.id, mp.nama_mapel FROM mata_pelajaran mp JOIN guru_mapel gm ON mp.id = gm.mapel_id WHERE gm.guru_id = $guru_id ORDER BY mp.nama_mapel");
 $kelases = mysqli_query($conn, "SELECT id, nama_kelas FROM kelas ORDER BY nama_kelas");
 
+// Check setting for date selection permission
+$res_tgl_opt = mysqli_query($conn, "SELECT nilai_setting FROM pengaturan WHERE nama_setting = 'pilih_tanggal_jurnal'");
+$allow_choose_date = 'nonaktif';
+if ($row_tgl_opt = mysqli_fetch_assoc($res_tgl_opt)) {
+    $allow_choose_date = $row_tgl_opt['nilai_setting'];
+}
+
 $message = ''; $message_type = '';
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['simpan_absensi'])) {
     try {
@@ -20,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['simpan_absensi'])) {
 
         $mid = $_POST['mapel_id'];
         $kid = $_POST['kelas_id'];
-        $tgl = $_POST['tanggal'];
+        $tgl = ($allow_choose_date === 'aktif' && !empty($_POST['tanggal'])) ? $_POST['tanggal'] : date('Y-m-d');
         $jam = $_POST['jam_ke'];
 
         if (empty($mid) || empty($kid) || empty($tgl) || empty($jam)) {
@@ -104,7 +111,12 @@ require_once __DIR__ . '/../includes/header.php';
                 </div>
                 <div>
                     <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Tanggal</label>
-                    <input type="date" name="tanggal" id="tanggal_absen" value="<?= date('Y-m-d') ?>" required class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-100 font-bold">
+                    <?php if ($allow_choose_date === 'aktif'): ?>
+                        <input type="date" name="tanggal" id="tanggal_absen" value="<?= date('Y-m-d') ?>" required class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-100 font-bold">
+                    <?php else: ?>
+                        <input type="text" value="<?= date('d M Y') ?>" readonly class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-100 text-slate-500 font-bold cursor-not-allowed">
+                        <input type="hidden" name="tanggal" id="tanggal_absen" value="<?= date('Y-m-d') ?>">
+                    <?php endif; ?>
                 </div>
                 <div>
                     <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Jam Ke-</label>
