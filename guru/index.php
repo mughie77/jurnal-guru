@@ -150,7 +150,11 @@ require_once __DIR__ . '/../includes/header.php';
                 }
             }
 
-            $grid_cols_class = ($wali_info || $bk_info) ? "grid-cols-2 lg:grid-cols-3" : "grid-cols-2";
+            // Check PKL Pembimbing Status
+            $q_pkl_guru = mysqli_query($conn, "SELECT COUNT(*) as count FROM tempat_pkl WHERE guru_pembimbing_id = $guru_id");
+            $is_pkl_pembimbing = (mysqli_fetch_assoc($q_pkl_guru)['count'] ?? 0) > 0;
+
+            $grid_cols_class = ($wali_info || $bk_info || $is_pkl_pembimbing) ? "grid-cols-2 lg:grid-cols-3" : "grid-cols-2";
             ?>
             <div class="grid <?= $grid_cols_class ?> gap-3 sm:gap-4 col-span-1 lg:col-span-2">
                 <a href="isi_absensi.php" class="p-3.5 sm:p-6 rounded-2xl sm:rounded-[32px] bg-indigo-600 text-white shadow-xl shadow-indigo-200 flex flex-col gap-2.5 sm:gap-4 group transition-all hover:scale-[1.02] active:scale-95">
@@ -222,6 +226,18 @@ require_once __DIR__ . '/../includes/header.php';
                         <div class="text-[7px] sm:text-[9px] font-bold text-rose-100 uppercase tracking-widest mt-1 opacity-70">Guru Tidak Masuk</div>
                     </div>
                 </a>
+
+                <?php if ($is_pkl_pembimbing): ?>
+                <a href="pkl_siswa.php" class="p-3.5 sm:p-6 rounded-2xl sm:rounded-[32px] bg-slate-900 text-white shadow-xl shadow-slate-300 flex flex-col gap-2.5 sm:gap-4 group transition-all hover:scale-[1.02] active:scale-95 border-2 border-indigo-400">
+                    <div class="w-8 h-8 sm:w-12 sm:h-12 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-sm sm:text-xl shadow-inner">
+                        <i class="fa fa-briefcase"></i>
+                    </div>
+                    <div>
+                        <div class="text-xs sm:text-lg font-black italic tracking-tighter uppercase leading-none text-indigo-400">Pembimbing PKL</div>
+                        <div class="text-[7px] sm:text-[9px] font-bold text-slate-300 uppercase tracking-widest mt-1">Siswa & Jurnal PKL</div>
+                    </div>
+                </a>
+                <?php endif; ?>
 
                 <?php if ($wali_info): ?>
                 <a href="<?= BASE_URL ?>admin/rekap_persiswa.php" class="p-3.5 sm:p-6 rounded-2xl sm:rounded-[32px] bg-violet-600 text-white shadow-xl shadow-violet-200 flex flex-col gap-2.5 sm:gap-4 group transition-all hover:scale-[1.02] active:scale-95 col-span-1">
