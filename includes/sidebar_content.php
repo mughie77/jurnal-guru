@@ -186,13 +186,6 @@ if ($role == 'admin') {
                   sub_nav_link('guru/perangkat.php', 'Perangkat Pembelajaran', $current_page == 'perangkat.php');
     echo sidebar_section('Akademik', 'fa fa-graduation-cap', $guru_active, $guru_links);
 
-    // PKL Pembimbing Group
-    $pkl_guru_active = in_array($current_page, ['pkl_siswa.php', 'pkl_absensi.php', 'pkl_jurnal.php', 'pkl_lokasi.php']);
-    $pkl_guru_links = sub_nav_link('guru/pkl_siswa.php', 'Siswa Bimbingan PKL', $current_page == 'pkl_siswa.php') .
-                       sub_nav_link('guru/pkl_absensi.php', 'Rekap Absensi PKL', $current_page == 'pkl_absensi.php') .
-                       sub_nav_link('guru/pkl_jurnal.php', 'Jurnal PKL Siswa', $current_page == 'pkl_jurnal.php') .
-                       sub_nav_link('guru/pkl_lokasi.php', 'Pointing Lokasi PKL', $current_page == 'pkl_lokasi.php');
-    echo sidebar_section('PKL Pembimbing', 'fa fa-briefcase', $pkl_guru_active, $pkl_guru_links);
 } elseif ($role == 'dudi') {
     echo nav_link('dudi/index.php', 'fa fa-tachometer-alt', 'Beranda DU/DI', $current_page == 'index.php' && strpos($_SERVER['PHP_SELF'], '/dudi/') !== false);
 
