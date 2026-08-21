@@ -178,14 +178,21 @@ if ($role == 'admin') {
     echo nav_link('guru/index.php', 'fa fa-tachometer-alt', 'Beranda', $current_page == 'index.php' && strpos($_SERVER['PHP_SELF'], '/guru/') !== false);
 
     // Guru Group
-    $guru_active = in_array($current_page, ['isi_absensi.php', 'isi_jurnal.php', 'rekap_absen.php', 'riwayat.php', 'perangkat.php', 'tugas_tidak_masuk.php', 'pkl_lokasi.php']);
+    $guru_active = in_array($current_page, ['isi_absensi.php', 'isi_jurnal.php', 'rekap_absen.php', 'riwayat.php', 'perangkat.php', 'tugas_tidak_masuk.php']);
     $guru_links = sub_nav_link('guru/isi_absensi.php', 'Isi Jurnal & Absensi', $current_page == 'isi_absensi.php' || $current_page == 'isi_jurnal.php') .
                   sub_nav_link('guru/rekap_absen.php', 'Laporan Kehadiran', $current_page == 'rekap_absen.php') .
                   sub_nav_link('guru/riwayat.php', 'Riwayat Jurnal', $current_page == 'riwayat.php') .
                   sub_nav_link('guru/tugas_tidak_masuk.php', 'Tugas Guru', $current_page == 'tugas_tidak_masuk.php') .
-                  sub_nav_link('guru/pkl_lokasi.php', 'PKL Pembimbing', $current_page == 'pkl_lokasi.php') .
                   sub_nav_link('guru/perangkat.php', 'Perangkat Pembelajaran', $current_page == 'perangkat.php');
     echo sidebar_section('Akademik', 'fa fa-graduation-cap', $guru_active, $guru_links);
+
+    // PKL Pembimbing Group
+    $pkl_guru_active = in_array($current_page, ['pkl_siswa.php', 'pkl_absensi.php', 'pkl_jurnal.php', 'pkl_lokasi.php']);
+    $pkl_guru_links = sub_nav_link('guru/pkl_siswa.php', 'Siswa Bimbingan PKL', $current_page == 'pkl_siswa.php') .
+                       sub_nav_link('guru/pkl_absensi.php', 'Rekap Absensi PKL', $current_page == 'pkl_absensi.php') .
+                       sub_nav_link('guru/pkl_jurnal.php', 'Jurnal PKL Siswa', $current_page == 'pkl_jurnal.php') .
+                       sub_nav_link('guru/pkl_lokasi.php', 'Pointing Lokasi PKL', $current_page == 'pkl_lokasi.php');
+    echo sidebar_section('PKL Pembimbing', 'fa fa-briefcase', $pkl_guru_active, $pkl_guru_links);
 } elseif ($role == 'dudi') {
     echo nav_link('dudi/index.php', 'fa fa-tachometer-alt', 'Beranda DU/DI', $current_page == 'index.php' && strpos($_SERVER['PHP_SELF'], '/dudi/') !== false);
 

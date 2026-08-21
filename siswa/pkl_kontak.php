@@ -7,7 +7,7 @@ authorize_role(['siswa']);
 $siswa_id = $_SESSION['user_id'];
 
 // Fetch PKL contact details
-$q_pkl = "SELECT sp.*, tp.nama_tempat, tp.alamat, tp.pembimbing_dudi, tp.no_telp_dudi, u.nama_lengkap as nama_guru_pembimbing, u.no_telp as no_telp_guru
+$q_pkl = "SELECT sp.*, tp.nama_tempat, tp.alamat, tp.pembimbing_dudi, tp.no_telp_dudi, u.nama_lengkap as nama_guru_pembimbing, g.no_telp as no_telp_guru
           FROM siswa_pkl sp
           JOIN tempat_pkl tp ON sp.tempat_pkl_id = tp.id
           LEFT JOIN guru g ON tp.guru_pembimbing_id = g.id
