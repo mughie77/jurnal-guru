@@ -18,6 +18,17 @@ mysqli_stmt_bind_param($stmt, "i", $siswa_id);
 mysqli_stmt_execute($stmt);
 $siswa = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
 
+// Check active PKL Mapping
+$q_pkl_check = "SELECT sp.*, tp.nama_tempat, tp.pembimbing_dudi, u.nama_lengkap as nama_guru_pembimbing
+                FROM siswa_pkl sp
+                JOIN tempat_pkl tp ON sp.tempat_pkl_id = tp.id
+                LEFT JOIN guru g ON tp.guru_pembimbing_id = g.id
+                LEFT JOIN users u ON g.user_id = u.id
+                WHERE sp.siswa_id = $siswa_id AND sp.tahun_pelajaran_id = $active_tahun_id AND sp.status = 'aktif'
+                LIMIT 1";
+$res_pkl = mysqli_query($conn, $q_pkl_check);
+$pkl_active = ($res_pkl && mysqli_num_rows($res_pkl) > 0) ? mysqli_fetch_assoc($res_pkl) : null;
+
 // GPS Attendance Recap (Harian)
 $query_gps = "SELECT
               SUM(CASE WHEN status = 'Hadir' THEN 1 ELSE 0 END) as hadir,
@@ -224,6 +235,24 @@ require_once __DIR__ . '/../includes/header.php';
                     <i class="fa fa-shield-alt text-xl sm:text-4xl opacity-20 mr-2"></i>
                 </div>
             </a>
+
+            <?php if ($pkl_active): ?>
+            <!-- Row PKL (Appears when student is mapped to active PKL) -->
+            <a href="pkl_jurnal.php" class="p-3.5 sm:p-5 rounded-2xl sm:rounded-[32px] bg-slate-900 text-white shadow-xl shadow-slate-300 flex flex-col gap-2 sm:gap-3 group transition-all hover:scale-[1.02] active:scale-95 col-span-1 sm:col-span-2 relative overflow-hidden border-2 border-indigo-400">
+                <div class="relative z-10 flex items-center justify-between w-full">
+                    <div class="flex items-center gap-4">
+                        <div class="w-9 h-9 sm:w-12 sm:h-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-sm sm:text-xl shadow-inner">
+                            <i class="fa fa-briefcase"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs sm:text-lg font-black italic tracking-tighter uppercase leading-none text-indigo-400">Portal Praktik Kerja Lapangan (PKL)</div>
+                            <div class="text-[8px] sm:text-[10px] font-bold text-slate-300 uppercase tracking-widest mt-1"><?= htmlspecialchars($pkl_active['nama_tempat']) ?></div>
+                        </div>
+                    </div>
+                    <i class="fa fa-arrow-right text-xl sm:text-2xl text-indigo-400 group-hover:translate-x-1 transition-transform mr-2"></i>
+                </div>
+            </a>
+            <?php endif; ?>
         </div>
 
         <!-- Rekap Absensi GPS (Monthly) -->

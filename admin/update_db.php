@@ -313,6 +313,9 @@ if ($is_ajax) {
                 $logs[] = ['status' => 'error', 'msg' => "Failed creating <b>pengumuman</b>: " . mysqli_error($conn)];
             }
 
+            // Update users table role enum to include 'dudi'
+            mysqli_query($conn, "ALTER TABLE `users` MODIFY COLUMN `role` ENUM('admin','waka','guru','dudi') NOT NULL");
+
             // Create tempat_pkl table
             $create_tpkl = "CREATE TABLE IF NOT EXISTS `tempat_pkl` (
                 `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -324,11 +327,19 @@ if ($is_ajax) {
                 `guru_pembimbing_id` int(11) DEFAULT NULL,
                 `pembimbing_dudi` varchar(255) DEFAULT NULL,
                 `no_telp_dudi` varchar(50) DEFAULT NULL,
+                `user_dudi_id` int(11) DEFAULT NULL,
                 `created_at` timestamp NULL DEFAULT current_timestamp(),
                 PRIMARY KEY (`id`),
                 KEY `guru_pembimbing_id` (`guru_pembimbing_id`),
+                KEY `user_dudi_id` (`user_dudi_id`),
                 CONSTRAINT `tempat_pkl_ibfk_1` FOREIGN KEY (`guru_pembimbing_id`) REFERENCES `guru` (`id`) ON DELETE SET NULL
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
+
+            // Check if user_dudi_id exists in tempat_pkl
+            $check_user_dudi = mysqli_query($conn, "SHOW COLUMNS FROM `tempat_pkl` LIKE 'user_dudi_id'");
+            if (mysqli_num_rows($check_user_dudi) == 0) {
+                mysqli_query($conn, "ALTER TABLE `tempat_pkl` ADD `user_dudi_id` INT(11) DEFAULT NULL AFTER `no_telp_dudi`");
+            }
 
             if (mysqli_query($conn, $create_tpkl)) {
                 $logs[] = ['status' => 'success', 'msg' => "Table <b>tempat_pkl</b> created successfully"];
@@ -355,6 +366,55 @@ if ($is_ajax) {
                 $logs[] = ['status' => 'success', 'msg' => "Table <b>siswa_pkl</b> created successfully"];
             } else {
                 $logs[] = ['status' => 'error', 'msg' => "Failed creating <b>siswa_pkl</b>: " . mysqli_error($conn)];
+            }
+
+            // Create jurnal_pkl table
+            $create_jpkl = "CREATE TABLE IF NOT EXISTS `jurnal_pkl` (
+                `id` int(11) NOT NULL AUTO_INCREMENT,
+                `siswa_id` int(11) NOT NULL,
+                `tempat_pkl_id` int(11) NOT NULL,
+                `tanggal` date NOT NULL,
+                `kegiatan` text NOT NULL,
+                `foto_kegiatan` varchar(255) DEFAULT NULL,
+                `status_verifikasi` enum('pending','disetujui','ditolak') NOT NULL DEFAULT 'pending',
+                `catatan_dudi` text DEFAULT NULL,
+                `created_at` timestamp NULL DEFAULT current_timestamp(),
+                PRIMARY KEY (`id`),
+                KEY `siswa_id` (`siswa_id`),
+                KEY `tempat_pkl_id` (`tempat_pkl_id`),
+                KEY `tanggal` (`tanggal`),
+                CONSTRAINT `jurnal_pkl_ibfk_1` FOREIGN KEY (`siswa_id`) REFERENCES `siswa` (`id`) ON DELETE CASCADE,
+                CONSTRAINT `jurnal_pkl_ibfk_2` FOREIGN KEY (`tempat_pkl_id`) REFERENCES `tempat_pkl` (`id`) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
+
+            if (mysqli_query($conn, $create_jpkl)) {
+                $logs[] = ['status' => 'success', 'msg' => "Table <b>jurnal_pkl</b> created successfully"];
+            } else {
+                $logs[] = ['status' => 'error', 'msg' => "Failed creating <b>jurnal_pkl</b>: " . mysqli_error($conn)];
+            }
+
+            // Create nilai_pkl table
+            $create_npkl = "CREATE TABLE IF NOT EXISTS `nilai_pkl` (
+                `id` int(11) NOT NULL AUTO_INCREMENT,
+                `siswa_id` int(11) NOT NULL,
+                `tempat_pkl_id` int(11) NOT NULL,
+                `user_dudi_id` int(11) DEFAULT NULL,
+                `nilai_disiplin` float DEFAULT 0,
+                `nilai_keterampilan` float DEFAULT 0,
+                `nilai_sikap` float DEFAULT 0,
+                `nilai_rata` float DEFAULT 0,
+                `catatan` text DEFAULT NULL,
+                `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+                PRIMARY KEY (`id`),
+                UNIQUE KEY `unique_siswa_tempat_nilai` (`siswa_id`, `tempat_pkl_id`),
+                CONSTRAINT `nilai_pkl_ibfk_1` FOREIGN KEY (`siswa_id`) REFERENCES `siswa` (`id`) ON DELETE CASCADE,
+                CONSTRAINT `nilai_pkl_ibfk_2` FOREIGN KEY (`tempat_pkl_id`) REFERENCES `tempat_pkl` (`id`) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
+
+            if (mysqli_query($conn, $create_npkl)) {
+                $logs[] = ['status' => 'success', 'msg' => "Table <b>nilai_pkl</b> created successfully"];
+            } else {
+                $logs[] = ['status' => 'error', 'msg' => "Failed creating <b>nilai_pkl</b>: " . mysqli_error($conn)];
             }
 
             foreach ($logs as $log) {
