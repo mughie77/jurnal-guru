@@ -13,6 +13,13 @@ if (!$active_tahun_id) die("Error: Tidak ada tahun pelajaran aktif.");
 $mapels = mysqli_query($conn, "SELECT mp.id, mp.nama_mapel FROM mata_pelajaran mp JOIN guru_mapel gm ON mp.id = gm.mapel_id WHERE gm.guru_id = $guru_id ORDER BY mp.nama_mapel");
 $kelases = mysqli_query($conn, "SELECT id, nama_kelas FROM kelas ORDER BY nama_kelas");
 
+// Check setting for date selection permission
+$res_tgl_opt = mysqli_query($conn, "SELECT nilai_setting FROM pengaturan WHERE nama_setting = 'pilih_tanggal_jurnal'");
+$allow_choose_date = 'nonaktif';
+if ($row_tgl_opt = mysqli_fetch_assoc($res_tgl_opt)) {
+    $allow_choose_date = $row_tgl_opt['nilai_setting'];
+}
+
 $message = ''; $message_type = '';
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['simpan_absensi'])) {
     try {
@@ -20,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['simpan_absensi'])) {
 
         $mid = $_POST['mapel_id'];
         $kid = $_POST['kelas_id'];
-        $tgl = $_POST['tanggal'];
+        $tgl = ($allow_choose_date === 'aktif' && !empty($_POST['tanggal'])) ? $_POST['tanggal'] : date('Y-m-d');
         $jam = $_POST['jam_ke'];
 
         if (empty($mid) || empty($kid) || empty($tgl) || empty($jam)) {
@@ -104,7 +111,12 @@ require_once __DIR__ . '/../includes/header.php';
                 </div>
                 <div>
                     <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Tanggal</label>
-                    <input type="date" name="tanggal" id="tanggal_absen" value="<?= date('Y-m-d') ?>" required class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-100 font-bold">
+                    <?php if ($allow_choose_date === 'aktif'): ?>
+                        <input type="date" name="tanggal" id="tanggal_absen" value="<?= date('Y-m-d') ?>" required class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-100 font-bold">
+                    <?php else: ?>
+                        <input type="text" value="<?= date('d M Y') ?>" readonly class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-100 text-slate-500 font-bold cursor-not-allowed">
+                        <input type="hidden" name="tanggal" id="tanggal_absen" value="<?= date('Y-m-d') ?>">
+                    <?php endif; ?>
                 </div>
                 <div>
                     <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Jam Ke-</label>
@@ -168,24 +180,38 @@ document.addEventListener('DOMContentLoaded', function() {
                     sGrid.innerHTML = '<div class="col-span-full p-8 text-center text-slate-400 italic bg-slate-50 rounded-2xl">Tidak ada siswa terdaftar di kelas ini untuk tahun pelajaran aktif.</div>';
                 } else {
                     data.forEach(s => {
-                        // Determine the default checked option
+                        // Determine default option
                         let checkedOption = 'H'; // Default to Present (Hadir)
-                        if (s.gps_active) {
-                            if (s.gps_status === 'Hadir' || s.gps_status === 'Terlambat') {
-                                checkedOption = 'H';
-                            } else if (s.gps_status === 'Sakit') {
+                        let badgeHtml = '';
+
+                        // Check if approved permit exists (disetujui)
+                        if (s.status_verifikasi === 'disetujui') {
+                            if (s.gps_status === 'Sakit') {
                                 checkedOption = 'S';
+                                badgeHtml = '<span class="px-2 py-0.5 rounded text-[8px] font-black bg-amber-100 text-amber-700 uppercase tracking-wider ml-2">Sakit (Disetujui)</span>';
                             } else if (s.gps_status === 'Izin') {
                                 checkedOption = 'I';
+                                badgeHtml = '<span class="px-2 py-0.5 rounded text-[8px] font-black bg-blue-100 text-blue-700 uppercase tracking-wider ml-2">Izin (Disetujui)</span>';
+                            }
+                        } else if (s.gps_active) {
+                            if (s.gps_status === 'Hadir' || s.gps_status === 'Terlambat') {
+                                checkedOption = 'H';
+                            } else if (s.gps_status === 'Sakit' && s.status_verifikasi !== 'disetujui') {
+                                checkedOption = 'H'; // If not approved, fall back to normal default
+                            } else if (s.gps_status === 'Izin' && s.status_verifikasi !== 'disetujui') {
+                                checkedOption = 'H';
                             } else {
-                                checkedOption = 'A'; // If GPS is active and no record is found, mark as Alfa
+                                checkedOption = 'A'; // If GPS is active and no record is found
                             }
                         }
 
                         const card = document.createElement('div');
                         card.className = "lux-card p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3";
                         card.innerHTML = `
-                            <div class="min-w-0 pr-4"><div class="font-bold text-slate-700 break-words whitespace-normal text-sm">${s.nama_siswa}</div></div>
+                            <div class="min-w-0 pr-4 flex items-center flex-wrap">
+                                <div class="font-bold text-slate-700 break-words whitespace-normal text-sm">${s.nama_siswa}</div>
+                                ${badgeHtml}
+                            </div>
                             <div class="flex gap-1 justify-end">
                                 ${['H','S','I','A'].map(st => `
                                     <label class="w-8 h-8 flex items-center justify-center cursor-pointer">

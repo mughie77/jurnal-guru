@@ -18,6 +18,17 @@ mysqli_stmt_bind_param($stmt, "i", $siswa_id);
 mysqli_stmt_execute($stmt);
 $siswa = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
 
+// Check active PKL Mapping
+$q_pkl_check = "SELECT sp.*, tp.nama_tempat, tp.pembimbing_dudi, u.nama_lengkap as nama_guru_pembimbing
+                FROM siswa_pkl sp
+                JOIN tempat_pkl tp ON sp.tempat_pkl_id = tp.id
+                LEFT JOIN guru g ON tp.guru_pembimbing_id = g.id
+                LEFT JOIN users u ON g.user_id = u.id
+                WHERE sp.siswa_id = $siswa_id AND sp.tahun_pelajaran_id = $active_tahun_id AND sp.status = 'aktif'
+                LIMIT 1";
+$res_pkl = mysqli_query($conn, $q_pkl_check);
+$pkl_active = ($res_pkl && mysqli_num_rows($res_pkl) > 0) ? mysqli_fetch_assoc($res_pkl) : null;
+
 // GPS Attendance Recap (Harian)
 $query_gps = "SELECT
               SUM(CASE WHEN status = 'Hadir' THEN 1 ELSE 0 END) as hadir,
@@ -44,6 +55,48 @@ require_once __DIR__ . '/../includes/header.php';
 
 <div class="bg-slate-50 min-h-screen pb-24">
     <div class="p-4 sm:p-6 lg:p-8 max-w-full w-full mx-auto">
+
+        <!-- Pengumuman Terbaru Widget -->
+        <?php
+        $q_announcements = mysqli_query($conn, "SELECT * FROM pengumuman WHERE target IN ('semua', 'siswa') ORDER BY created_at DESC LIMIT 3");
+        if (mysqli_num_rows($q_announcements) > 0):
+        ?>
+        <div class="mb-8">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="font-black text-slate-800 italic uppercase tracking-wider text-base flex items-center gap-2">
+                    <i class="fa fa-bullhorn text-indigo-600"></i> Pengumuman Terbaru
+                </h3>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <?php while ($ann = mysqli_fetch_assoc($q_announcements)): ?>
+                <div class="lux-card p-5 bg-white border border-slate-100 shadow-xl rounded-3xl flex flex-col justify-between hover:border-indigo-200 transition-all">
+                    <div>
+                        <div class="flex items-center justify-between gap-2 mb-2">
+                            <span class="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-indigo-50 text-indigo-600 border border-indigo-100">
+                                <?= $ann['target'] == 'siswa' ? 'Khusus Siswa' : 'Semua' ?>
+                            </span>
+                            <span class="text-[10px] font-bold text-slate-400">
+                                <?= date('d M Y', strtotime($ann['created_at'])) ?>
+                            </span>
+                        </div>
+                        <h4 class="font-black text-slate-800 text-base mb-1 line-clamp-1"><?= htmlspecialchars($ann['judul']) ?></h4>
+                        <p class="text-xs text-slate-500 line-clamp-3 leading-relaxed mb-4"><?= htmlspecialchars($ann['isi']) ?></p>
+                    </div>
+                    <div class="pt-3 border-t border-slate-50 flex items-center justify-between">
+                        <button type="button" onclick='showAnnouncementModal(<?= htmlspecialchars(json_encode($ann), ENT_QUOTES, 'UTF-8') ?>)' class="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
+                            Baca Selengkapnya <i class="fa fa-arrow-right text-[10px]"></i>
+                        </button>
+                        <?php if (!empty($ann['file_lampiran'])): ?>
+                        <a href="<?= BASE_URL ?>uploads/pengumuman/<?= $ann['file_lampiran'] ?>" target="_blank" class="text-[10px] font-black text-slate-500 bg-slate-100 hover:bg-slate-200 px-2.5 py-1 rounded-lg flex items-center gap-1 transition-colors">
+                            <i class="fa fa-paperclip text-indigo-500"></i> Lampiran
+                        </a>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <?php endwhile; ?>
+            </div>
+        </div>
+        <?php endif; ?>
 
         <div class="lux-card p-6 mb-8 bg-gradient-to-br from-indigo-600 to-indigo-800 text-white relative overflow-hidden">
             <div class="relative z-10 flex items-center gap-6">
@@ -182,6 +235,24 @@ require_once __DIR__ . '/../includes/header.php';
                     <i class="fa fa-shield-alt text-xl sm:text-4xl opacity-20 mr-2"></i>
                 </div>
             </a>
+
+            <?php if ($pkl_active): ?>
+            <!-- Row PKL (Appears when student is mapped to active PKL) -->
+            <a href="pkl_jurnal.php" class="p-3.5 sm:p-5 rounded-2xl sm:rounded-[32px] bg-slate-900 text-white shadow-xl shadow-slate-300 flex flex-col gap-2 sm:gap-3 group transition-all hover:scale-[1.02] active:scale-95 col-span-1 sm:col-span-2 relative overflow-hidden border-2 border-indigo-400">
+                <div class="relative z-10 flex items-center justify-between w-full">
+                    <div class="flex items-center gap-4">
+                        <div class="w-9 h-9 sm:w-12 sm:h-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-sm sm:text-xl shadow-inner">
+                            <i class="fa fa-briefcase"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs sm:text-lg font-black italic tracking-tighter uppercase leading-none text-indigo-400">Portal Praktik Kerja Lapangan (PKL)</div>
+                            <div class="text-[8px] sm:text-[10px] font-bold text-slate-300 uppercase tracking-widest mt-1"><?= htmlspecialchars($pkl_active['nama_tempat']) ?></div>
+                        </div>
+                    </div>
+                    <i class="fa fa-arrow-right text-xl sm:text-2xl text-indigo-400 group-hover:translate-x-1 transition-transform mr-2"></i>
+                </div>
+            </a>
+            <?php endif; ?>
         </div>
 
         <!-- Rekap Absensi GPS (Monthly) -->
@@ -213,5 +284,28 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
     </div>
 </div>
+
+<script>
+function showAnnouncementModal(ann) {
+    let lampiranHtml = '';
+    if (ann.file_lampiran) {
+        lampiranHtml = `<div class="mt-4 pt-4 border-t border-slate-100 text-left">
+            <a href="<?= BASE_URL ?>uploads/pengumuman/${ann.file_lampiran}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 font-bold rounded-xl text-xs hover:bg-indigo-100 transition-colors">
+                <i class="fa fa-paperclip"></i> Unduh Lampiran Berkas
+            </a>
+        </div>`;
+    }
+
+    Swal.fire({
+        title: ann.judul,
+        html: `<div class="text-left text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">${new Date(ann.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+               <div class="text-left text-sm text-slate-700 leading-relaxed whitespace-pre-line max-h-[60vh] overflow-y-auto pr-1">${ann.isi}</div>
+               ${lampiranHtml}`,
+        confirmButtonColor: '#4f46e5',
+        confirmButtonText: 'Tutup',
+        customClass: { popup: 'rounded-3xl max-w-[95vw] sm:max-w-xl w-full p-4 sm:p-6', title: 'font-black italic text-left text-slate-800 text-xl' }
+    });
+}
+</script>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

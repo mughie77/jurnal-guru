@@ -15,6 +15,10 @@ $total_jurnal = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as total
 $hadir_avg = mysqli_fetch_assoc(mysqli_query($conn, "SELECT AVG(jml_hadir) as avg FROM jurnal WHERE guru_id = $guru_id"))['avg'];
 $recent_jurnals = mysqli_query($conn, "SELECT j.*, k.nama_kelas, mp.nama_mapel FROM jurnal j JOIN kelas k ON j.kelas_id = k.id JOIN mata_pelajaran mp ON j.mapel_id = mp.id WHERE j.guru_id = $guru_id ORDER BY j.tanggal DESC LIMIT 5");
 
+// Check PKL Pembimbing Status
+$q_pkl_guru = mysqli_query($conn, "SELECT COUNT(*) as count FROM tempat_pkl WHERE guru_pembimbing_id = $guru_id");
+$is_pkl_pembimbing = (mysqli_fetch_assoc($q_pkl_guru)['count'] ?? 0) > 0;
+
 $page_title = "Beranda Guru";
 
 // Compute time greeting
@@ -55,6 +59,49 @@ require_once __DIR__ . '/../includes/header.php';
                 </div>
             </div>
         </div>
+
+        <!-- Pengumuman Terbaru Widget -->
+        <?php
+        $q_announcements = mysqli_query($conn, "SELECT * FROM pengumuman WHERE target IN ('semua', 'guru') ORDER BY created_at DESC LIMIT 3");
+        if (mysqli_num_rows($q_announcements) > 0):
+        ?>
+        <div class="mb-12">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="font-black text-slate-800 italic uppercase tracking-wider text-base flex items-center gap-2">
+                    <i class="fa fa-bullhorn text-indigo-600"></i> Pengumuman Terbaru
+                </h3>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <?php while ($ann = mysqli_fetch_assoc($q_announcements)): ?>
+                <div class="lux-card p-6 bg-white border border-slate-100 shadow-xl rounded-3xl flex flex-col justify-between hover:border-indigo-200 transition-all">
+                    <div>
+                        <div class="flex items-center justify-between gap-2 mb-2">
+                            <span class="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-indigo-50 text-indigo-600 border border-indigo-100">
+                                <?= $ann['target'] == 'guru' ? 'Khusus Guru' : 'Semua' ?>
+                            </span>
+                            <span class="text-[10px] font-bold text-slate-400">
+                                <?= date('d M Y', strtotime($ann['created_at'])) ?>
+                            </span>
+                        </div>
+                        <h4 class="font-black text-slate-800 text-base mb-2 line-clamp-1"><?= htmlspecialchars($ann['judul']) ?></h4>
+                        <p class="text-xs text-slate-500 line-clamp-3 leading-relaxed mb-4"><?= htmlspecialchars($ann['isi']) ?></p>
+                    </div>
+                    <div class="pt-3 border-t border-slate-50 flex items-center justify-between">
+                        <button type="button" onclick='showAnnouncementModal(<?= htmlspecialchars(json_encode($ann), ENT_QUOTES, 'UTF-8') ?>)' class="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
+                            Baca Selengkapnya <i class="fa fa-arrow-right text-[10px]"></i>
+                        </button>
+                        <?php if (!empty($ann['file_lampiran'])): ?>
+                        <a href="<?= BASE_URL ?>uploads/pengumuman/<?= $ann['file_lampiran'] ?>" target="_blank" class="text-[10px] font-black text-slate-500 bg-slate-100 hover:bg-slate-200 px-2.5 py-1 rounded-lg flex items-center gap-1 transition-colors">
+                            <i class="fa fa-paperclip text-indigo-500"></i> Lampiran
+                        </a>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <?php endwhile; ?>
+            </div>
+        </div>
+        <?php endif; ?>
+
 
         <!-- Stats Cards -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
@@ -108,7 +155,7 @@ require_once __DIR__ . '/../includes/header.php';
                 }
             }
 
-            $grid_cols_class = ($wali_info || $bk_info) ? "grid-cols-2 lg:grid-cols-3" : "grid-cols-2";
+            $grid_cols_class = ($wali_info || $bk_info || $is_pkl_pembimbing) ? "grid-cols-2 lg:grid-cols-3" : "grid-cols-2";
             ?>
             <div class="grid <?= $grid_cols_class ?> gap-3 sm:gap-4 col-span-1 lg:col-span-2">
                 <a href="isi_absensi.php" class="p-3.5 sm:p-6 rounded-2xl sm:rounded-[32px] bg-indigo-600 text-white shadow-xl shadow-indigo-200 flex flex-col gap-2.5 sm:gap-4 group transition-all hover:scale-[1.02] active:scale-95">
@@ -180,6 +227,19 @@ require_once __DIR__ . '/../includes/header.php';
                         <div class="text-[7px] sm:text-[9px] font-bold text-rose-100 uppercase tracking-widest mt-1 opacity-70">Guru Tidak Masuk</div>
                     </div>
                 </a>
+
+                <?php if ($is_pkl_pembimbing): ?>
+                <a href="pkl_index.php" class="p-3.5 sm:p-6 rounded-2xl sm:rounded-[32px] bg-slate-900 text-white shadow-xl shadow-slate-300 flex flex-col gap-2.5 sm:gap-4 group transition-all hover:scale-[1.02] active:scale-95 border-2 border-indigo-400">
+                    <div class="w-8 h-8 sm:w-12 sm:h-12 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-sm sm:text-xl shadow-inner">
+                        <i class="fa fa-briefcase"></i>
+                    </div>
+                    <div>
+                        <div class="text-xs sm:text-lg font-black italic tracking-tighter uppercase leading-none text-indigo-400">Pembimbing PKL</div>
+                        <div class="text-[7px] sm:text-[9px] font-bold text-slate-300 uppercase tracking-widest mt-1">Portal Menu PKL</div>
+                    </div>
+                </a>
+                <?php endif; ?>
+
 
                 <?php if ($wali_info): ?>
                 <a href="<?= BASE_URL ?>admin/rekap_persiswa.php" class="p-3.5 sm:p-6 rounded-2xl sm:rounded-[32px] bg-violet-600 text-white shadow-xl shadow-violet-200 flex flex-col gap-2.5 sm:gap-4 group transition-all hover:scale-[1.02] active:scale-95 col-span-1">
@@ -268,5 +328,28 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
     </div>
 </div>
+
+<script>
+function showAnnouncementModal(ann) {
+    let lampiranHtml = '';
+    if (ann.file_lampiran) {
+        lampiranHtml = `<div class="mt-4 pt-4 border-t border-slate-100 text-left">
+            <a href="<?= BASE_URL ?>uploads/pengumuman/${ann.file_lampiran}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 font-bold rounded-xl text-xs hover:bg-indigo-100 transition-colors">
+                <i class="fa fa-paperclip"></i> Unduh Lampiran Berkas
+            </a>
+        </div>`;
+    }
+
+    Swal.fire({
+        title: ann.judul,
+        html: `<div class="text-left text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">${new Date(ann.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+               <div class="text-left text-sm text-slate-700 leading-relaxed whitespace-pre-line max-h-[60vh] overflow-y-auto pr-1">${ann.isi}</div>
+               ${lampiranHtml}`,
+        confirmButtonColor: '#4f46e5',
+        confirmButtonText: 'Tutup',
+        customClass: { popup: 'rounded-3xl max-w-[95vw] sm:max-w-xl w-full p-4 sm:p-6', title: 'font-black italic text-left text-slate-800 text-xl' }
+    });
+}
+</script>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

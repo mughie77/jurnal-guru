@@ -13,7 +13,7 @@ CREATE TABLE `users` (
   `nama_lengkap` varchar(255) NOT NULL,
   `username` varchar(100) NOT NULL,
   `password` varchar(255) NOT NULL,
-  `role` enum('admin','waka','guru') NOT NULL,
+  `role` enum('admin','waka','guru','dudi') NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `username` (`username`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -267,4 +267,107 @@ CREATE TABLE `perangkat_kelas` (
   KEY `kelas_id` (`kelas_id`),
   CONSTRAINT `perangkat_kelas_ibfk_1` FOREIGN KEY (`perangkat_id`) REFERENCES `perangkat` (`id`) ON DELETE CASCADE,
   CONSTRAINT `perangkat_kelas_ibfk_2` FOREIGN KEY (`kelas_id`) REFERENCES `kelas` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `pengumuman`
+--
+CREATE TABLE `pengumuman` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `judul` varchar(255) NOT NULL,
+  `isi` text NOT NULL,
+  `target` enum('semua','guru','siswa') NOT NULL DEFAULT 'semua',
+  `file_lampiran` varchar(255) DEFAULT NULL,
+  `created_by` varchar(100) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tempat_pkl`
+--
+CREATE TABLE `tempat_pkl` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `nama_tempat` varchar(255) NOT NULL,
+  `alamat` text DEFAULT NULL,
+  `latitude` varchar(50) DEFAULT NULL,
+  `longitude` varchar(50) DEFAULT NULL,
+  `radius_absen` int(11) NOT NULL DEFAULT 50,
+  `guru_pembimbing_id` int(11) DEFAULT NULL,
+  `pembimbing_dudi` varchar(255) DEFAULT NULL,
+  `no_telp_dudi` varchar(50) DEFAULT NULL,
+  `user_dudi_id` int(11) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `guru_pembimbing_id` (`guru_pembimbing_id`),
+  KEY `user_dudi_id` (`user_dudi_id`),
+  CONSTRAINT `tempat_pkl_ibfk_1` FOREIGN KEY (`guru_pembimbing_id`) REFERENCES `guru` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `jurnal_pkl`
+--
+CREATE TABLE `jurnal_pkl` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `siswa_id` int(11) NOT NULL,
+  `tempat_pkl_id` int(11) NOT NULL,
+  `tanggal` date NOT NULL,
+  `kegiatan` text NOT NULL,
+  `foto_kegiatan` varchar(255) DEFAULT NULL,
+  `status_verifikasi` enum('pending','disetujui','ditolak') NOT NULL DEFAULT 'pending',
+  `catatan_dudi` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `siswa_id` (`siswa_id`),
+  KEY `tempat_pkl_id` (`tempat_pkl_id`),
+  KEY `tanggal` (`tanggal`),
+  CONSTRAINT `jurnal_pkl_ibfk_1` FOREIGN KEY (`siswa_id`) REFERENCES `siswa` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `jurnal_pkl_ibfk_2` FOREIGN KEY (`tempat_pkl_id`) REFERENCES `tempat_pkl` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `nilai_pkl`
+--
+CREATE TABLE `nilai_pkl` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `siswa_id` int(11) NOT NULL,
+  `tempat_pkl_id` int(11) NOT NULL,
+  `user_dudi_id` int(11) DEFAULT NULL,
+  `nilai_disiplin` float DEFAULT 0,
+  `nilai_keterampilan` float DEFAULT 0,
+  `nilai_sikap` float DEFAULT 0,
+  `nilai_rata` float DEFAULT 0,
+  `catatan` text DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_siswa_tempat_nilai` (`siswa_id`, `tempat_pkl_id`),
+  CONSTRAINT `nilai_pkl_ibfk_1` FOREIGN KEY (`siswa_id`) REFERENCES `siswa` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `nilai_pkl_ibfk_2` FOREIGN KEY (`tempat_pkl_id`) REFERENCES `tempat_pkl` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `siswa_pkl`
+--
+CREATE TABLE `siswa_pkl` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `siswa_id` int(11) NOT NULL,
+  `tempat_pkl_id` int(11) NOT NULL,
+  `tahun_pelajaran_id` int(11) NOT NULL,
+  `status` enum('aktif','selesai') NOT NULL DEFAULT 'aktif',
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_siswa_tahun_pkl` (`siswa_id`, `tahun_pelajaran_id`),
+  KEY `tempat_pkl_id` (`tempat_pkl_id`),
+  CONSTRAINT `siswa_pkl_ibfk_1` FOREIGN KEY (`siswa_id`) REFERENCES `siswa` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `siswa_pkl_ibfk_2` FOREIGN KEY (`tempat_pkl_id`) REFERENCES `tempat_pkl` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

@@ -319,7 +319,7 @@ function showJurnalDetail(jurnalId) {
             showCloseButton: true,
             confirmButtonText: 'Tutup',
             confirmButtonColor: '#4F46E5',
-            width: '600px'
+            customClass: { popup: 'rounded-3xl max-w-[95vw] sm:max-w-xl w-full p-4 sm:p-6' }
         });
     })
     .catch(err => {

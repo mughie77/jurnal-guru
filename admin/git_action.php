@@ -132,10 +132,38 @@ switch ($action) {
                 'log' => 'Error: Not a git repository.'
             ];
         } else {
-            exec('git pull origin $(git rev-parse --abbrev-ref HEAD) 2>&1', $output, $return_var);
-            $log = implode("\n", $output);
-            $success = $return_var === 0;
+            // Get current branch or fallback to main using exec (since shell_exec might be in disable_functions)
+            $branch_out = [];
+            exec('git rev-parse --abbrev-ref HEAD 2>&1', $branch_out, $branch_res);
+            $current_branch = trim(implode('', $branch_out));
+            if ($branch_res !== 0 || empty($current_branch) || $current_branch === 'HEAD') {
+                $current_branch = 'main';
+            }
 
+            $pull_logs = [];
+            // Try pulling origin HEAD (which targets the default branch on remote, e.g. HEAD/main/master/feat/...)
+            exec("git pull origin HEAD 2>&1", $output, $return_var);
+            $pull_logs[] = "> git pull origin HEAD";
+            $pull_logs[] = implode("\n", $output);
+
+            $output_str = implode("\n", $output);
+            $success = ($return_var === 0);
+
+            // Ensure git user identity is configured locally if missing
+            exec('git config user.email "admin@cakra.local" 2>&1');
+            exec('git config user.name "Admin CAKRA" 2>&1');
+
+            // If pull failed due to uncommitted/untracked files, invalid remote ref, or no initial commit, resolve automatically
+            if (!$success) {
+                $output_retry = [];
+                $auto_commit_cmd = 'git add . 2>&1 && (git commit -m "Pre-pull local state" 2>&1 || true) && git fetch origin 2>&1 && git merge FETCH_HEAD --allow-unrelated-histories -X ours 2>&1';
+                exec($auto_commit_cmd, $output_retry, $return_var_retry);
+                $pull_logs[] = "> Auto-resolving conflicts (git add & commit & fetch & merge FETCH_HEAD):";
+                $pull_logs[] = implode("\n", $output_retry);
+                $success = ($return_var_retry === 0);
+            }
+
+            $log = implode("\n\n", $pull_logs);
             $msg = $success ? 'Pembaruan berhasil ditarik dari GitHub!' : 'Gagal menarik pembaruan karena kesalahan jaringan, konflik lokal, atau kendala otentikasi.';
             if (!$success) {
                 $msg .= "\n\nSaran: Pastikan kunci SSH Anda terdaftar di GitHub atau repository diakses secara publik.";
@@ -162,6 +190,10 @@ switch ($action) {
             if ($commit_msg === '') {
                 $commit_msg = "Pembaruan otomatis dari Panel Pengaturan Sistem - " . date('Y-m-d H:i:s');
             }
+
+            // Ensure git user identity is configured locally if missing
+            exec('git config user.email "admin@cakra.local" 2>&1');
+            exec('git config user.name "Admin CAKRA" 2>&1');
 
             // Run staging, commit, and push in sequence
             $commands = [

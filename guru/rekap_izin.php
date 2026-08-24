@@ -207,7 +207,7 @@ require_once __DIR__ . '/../includes/header.php';
         title: '<?= $message_type == "success" ? "Berhasil" : ($message_type == "error" ? "Gagal" : "Info") ?>',
         text: '<?= $message ?>',
         confirmButtonColor: '#4f46e5',
-        customClass: { popup: 'rounded-3xl', title: 'font-black italic' }
+        customClass: { popup: 'rounded-3xl max-w-[90vw] sm:max-w-md w-full p-4 sm:p-6', title: 'font-black italic' }
     });
     <?php endif; ?>
 </script>
