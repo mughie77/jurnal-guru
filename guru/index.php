@@ -102,55 +102,6 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
         <?php endif; ?>
 
-        <?php if ($is_pkl_pembimbing): ?>
-        <!-- Menu Tile Khusus Guru Pembimbing PKL -->
-        <div class="mb-12">
-            <h3 class="font-black text-slate-800 italic uppercase tracking-wider text-base mb-4 flex items-center gap-2">
-                <i class="fa fa-briefcase text-indigo-600"></i> Menu Pembimbing PKL
-            </h3>
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-                <a href="pkl_siswa.php" class="p-3.5 sm:p-5 rounded-2xl sm:rounded-[32px] bg-slate-900 text-white shadow-xl shadow-slate-200 flex flex-col gap-2 sm:gap-3 group transition-all hover:scale-[1.02] active:scale-95 border-2 border-indigo-500">
-                    <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-sm sm:text-lg shadow-inner">
-                        <i class="fa fa-users"></i>
-                    </div>
-                    <div>
-                        <div class="text-xs sm:text-base font-black italic tracking-tighter uppercase leading-none text-indigo-400">Daftar Siswa</div>
-                        <div class="text-[7px] sm:text-[9px] font-bold text-slate-300 uppercase tracking-widest mt-1">Bimbingan PKL</div>
-                    </div>
-                </a>
-
-                <a href="pkl_absensi.php" class="p-3.5 sm:p-5 rounded-2xl sm:rounded-[32px] bg-emerald-600 text-white shadow-xl shadow-emerald-200 flex flex-col gap-2 sm:gap-3 group transition-all hover:scale-[1.02] active:scale-95">
-                    <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-white/20 flex items-center justify-center text-sm sm:text-lg shadow-inner">
-                        <i class="fa fa-user-check"></i>
-                    </div>
-                    <div>
-                        <div class="text-xs sm:text-base font-black italic tracking-tighter uppercase leading-none">Rekap Absensi</div>
-                        <div class="text-[7px] sm:text-[9px] font-bold text-emerald-100 uppercase tracking-widest mt-1 opacity-80">Presensi GPS PKL</div>
-                    </div>
-                </a>
-
-                <a href="pkl_jurnal.php" class="p-3.5 sm:p-5 rounded-2xl sm:rounded-[32px] bg-indigo-600 text-white shadow-xl shadow-indigo-200 flex flex-col gap-2 sm:gap-3 group transition-all hover:scale-[1.02] active:scale-95">
-                    <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-white/20 flex items-center justify-center text-sm sm:text-lg shadow-inner">
-                        <i class="fa fa-book-open"></i>
-                    </div>
-                    <div>
-                        <div class="text-xs sm:text-base font-black italic tracking-tighter uppercase leading-none">Jurnal Siswa</div>
-                        <div class="text-[7px] sm:text-[9px] font-bold text-indigo-100 uppercase tracking-widest mt-1 opacity-80">Laporan PKL Siswa</div>
-                    </div>
-                </a>
-
-                <a href="pkl_lokasi.php" class="p-3.5 sm:p-5 rounded-2xl sm:rounded-[32px] bg-rose-600 text-white shadow-xl shadow-rose-200 flex flex-col gap-2 sm:gap-3 group transition-all hover:scale-[1.02] active:scale-95">
-                    <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-white/20 flex items-center justify-center text-sm sm:text-lg shadow-inner">
-                        <i class="fa fa-map-marker-alt"></i>
-                    </div>
-                    <div>
-                        <div class="text-xs sm:text-base font-black italic tracking-tighter uppercase leading-none">Lokasi PKL</div>
-                        <div class="text-[7px] sm:text-[9px] font-bold text-rose-100 uppercase tracking-widest mt-1 opacity-80">Pointing GPS PKL</div>
-                    </div>
-                </a>
-            </div>
-        </div>
-        <?php endif; ?>
 
         <!-- Stats Cards -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
@@ -276,6 +227,18 @@ require_once __DIR__ . '/../includes/header.php';
                         <div class="text-[7px] sm:text-[9px] font-bold text-rose-100 uppercase tracking-widest mt-1 opacity-70">Guru Tidak Masuk</div>
                     </div>
                 </a>
+
+                <?php if ($is_pkl_pembimbing): ?>
+                <a href="pkl_index.php" class="p-3.5 sm:p-6 rounded-2xl sm:rounded-[32px] bg-slate-900 text-white shadow-xl shadow-slate-300 flex flex-col gap-2.5 sm:gap-4 group transition-all hover:scale-[1.02] active:scale-95 border-2 border-indigo-400">
+                    <div class="w-8 h-8 sm:w-12 sm:h-12 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-sm sm:text-xl shadow-inner">
+                        <i class="fa fa-briefcase"></i>
+                    </div>
+                    <div>
+                        <div class="text-xs sm:text-lg font-black italic tracking-tighter uppercase leading-none text-indigo-400">Pembimbing PKL</div>
+                        <div class="text-[7px] sm:text-[9px] font-bold text-slate-300 uppercase tracking-widest mt-1">Portal Menu PKL</div>
+                    </div>
+                </a>
+                <?php endif; ?>
 
 
                 <?php if ($wali_info): ?>
