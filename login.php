@@ -33,12 +33,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $lifetime = 30 * 24 * 60 * 60; // 30 hari persistent login
         if ($user = mysqli_fetch_assoc($result)) {
             if (password_verify($password, $user['password'])) {
-                session_set_cookie_params([
-                    'lifetime' => $lifetime,
-                    'path' => '/',
-                    'httponly' => true,
-                    'samesite' => 'Lax'
-                ]);
                 session_regenerate_id(true);
                 $_SESSION['remember_me'] = true;
                 $_SESSION['user_id'] = $user['id'];
@@ -59,12 +53,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
             if ($siswa = mysqli_fetch_assoc($res_s)) {
                 if (!empty($siswa['nisn']) && $password === $siswa['nisn']) {
-                    session_set_cookie_params([
-                        'lifetime' => $lifetime,
-                        'path' => '/',
-                        'httponly' => true,
-                        'samesite' => 'Lax'
-                    ]);
                     session_regenerate_id(true);
                     $_SESSION['remember_me'] = true;
                     $_SESSION['user_id'] = $siswa['id'];

@@ -343,11 +343,11 @@ function showAnnouncementModal(ann) {
     Swal.fire({
         title: ann.judul,
         html: `<div class="text-left text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">${new Date(ann.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
-               <div class="text-left text-sm text-slate-700 leading-relaxed whitespace-pre-line">${ann.isi}</div>
+               <div class="text-left text-sm text-slate-700 leading-relaxed whitespace-pre-line max-h-[60vh] overflow-y-auto pr-1">${ann.isi}</div>
                ${lampiranHtml}`,
         confirmButtonColor: '#4f46e5',
         confirmButtonText: 'Tutup',
-        customClass: { popup: 'rounded-3xl', title: 'font-black italic text-left text-slate-800 text-xl' }
+        customClass: { popup: 'rounded-3xl max-w-[95vw] sm:max-w-xl w-full p-4 sm:p-6', title: 'font-black italic text-left text-slate-800 text-xl' }
     });
 }
 </script>
