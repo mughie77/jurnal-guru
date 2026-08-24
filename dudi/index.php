@@ -49,7 +49,7 @@ require_once __DIR__ . '/../includes/header.php';
 
     <!-- Stats Cards -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <a href="siswa.php" class="lux-card p-6 bg-white shadow-xl rounded-3xl border border-slate-100 hover:border-indigo-200 transition-all flex items-center justify-between group">
+        <a href="<?= BASE_URL ?>dudi/siswa.php" class="lux-card p-6 bg-white shadow-xl rounded-3xl border border-slate-100 hover:border-indigo-200 transition-all flex items-center justify-between group">
             <div>
                 <p class="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1">Siswa PKL Murid</p>
                 <h2 class="text-4xl font-black text-slate-800 italic"><?= $total_siswa ?></h2>
@@ -60,7 +60,7 @@ require_once __DIR__ . '/../includes/header.php';
             </div>
         </a>
 
-        <a href="jurnal.php" class="lux-card p-6 bg-white shadow-xl rounded-3xl border border-slate-100 hover:border-amber-200 transition-all flex items-center justify-between group">
+        <a href="<?= BASE_URL ?>dudi/jurnal.php" class="lux-card p-6 bg-white shadow-xl rounded-3xl border border-slate-100 hover:border-amber-200 transition-all flex items-center justify-between group">
             <div>
                 <p class="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1">Jurnal Pending</p>
                 <h2 class="text-4xl font-black text-amber-500 italic"><?= $jurnal_pending ?></h2>
@@ -71,7 +71,7 @@ require_once __DIR__ . '/../includes/header.php';
             </div>
         </a>
 
-        <a href="nilai.php" class="lux-card p-6 bg-white shadow-xl rounded-3xl border border-slate-100 hover:border-emerald-200 transition-all flex items-center justify-between group">
+        <a href="<?= BASE_URL ?>dudi/nilai.php" class="lux-card p-6 bg-white shadow-xl rounded-3xl border border-slate-100 hover:border-emerald-200 transition-all flex items-center justify-between group">
             <div>
                 <p class="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1">Penilaian PKL</p>
                 <h2 class="text-2xl font-black text-emerald-600 italic uppercase tracking-wider">Input Nilai</h2>

@@ -49,7 +49,7 @@ require_once __DIR__ . '/../includes/header.php';
         <form action="" method="GET" class="flex flex-col sm:flex-row gap-3">
             <input type="text" name="search" value="<?= htmlspecialchars($search) ?>" placeholder="Cari nama siswa, NIS, kelas..." class="w-full sm:w-80 px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-100 bg-white text-xs font-semibold">
             <button type="submit" class="px-6 py-2.5 bg-indigo-600 text-white font-bold rounded-xl text-xs hover:bg-indigo-700 transition-all shadow-md shadow-indigo-100">Cari</button>
-            <a href="siswa.php" class="px-5 py-2.5 bg-slate-200 text-slate-600 font-bold rounded-xl text-xs hover:bg-slate-300 transition-all">Reset</a>
+            <a href="<?= BASE_URL ?>dudi/siswa.php" class="px-5 py-2.5 bg-slate-200 text-slate-600 font-bold rounded-xl text-xs hover:bg-slate-300 transition-all">Reset</a>
         </form>
     </div>
 
@@ -92,7 +92,7 @@ require_once __DIR__ . '/../includes/header.php';
                 </div>
 
                 <div class="mt-4 pt-3 border-t border-slate-50 flex gap-2">
-                    <a href="nilai.php?siswa_id=<?= $s['siswa_id'] ?>" class="w-full py-2.5 bg-emerald-600 text-white font-bold text-xs rounded-xl hover:bg-emerald-700 text-center transition-all shadow-md shadow-emerald-100">
+                    <a href="<?= BASE_URL ?>dudi/nilai.php?siswa_id=<?= $s['siswa_id'] ?>" class="w-full py-2.5 bg-emerald-600 text-white font-bold text-xs rounded-xl hover:bg-emerald-700 text-center transition-all shadow-md shadow-emerald-100">
                         <i class="fa fa-star mr-1"></i> Beri Nilai PKL
                     </a>
                 </div>

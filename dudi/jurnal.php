@@ -97,7 +97,7 @@ require_once __DIR__ . '/../includes/header.php';
             </div>
             <div class="flex items-end gap-3">
                 <button type="submit" class="px-6 py-2.5 bg-indigo-600 text-white font-bold rounded-xl text-xs hover:bg-indigo-700 transition-all shadow-md shadow-indigo-100">Filter</button>
-                <a href="jurnal.php" class="px-5 py-2.5 bg-slate-200 text-slate-600 font-bold rounded-xl text-xs hover:bg-slate-300 transition-all">Reset</a>
+                <a href="<?= BASE_URL ?>dudi/jurnal.php" class="px-5 py-2.5 bg-slate-200 text-slate-600 font-bold rounded-xl text-xs hover:bg-slate-300 transition-all">Reset</a>
             </div>
         </form>
     </div>
