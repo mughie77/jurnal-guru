@@ -18,16 +18,22 @@ mysqli_stmt_bind_param($stmt, "i", $siswa_id);
 mysqli_stmt_execute($stmt);
 $siswa = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
 
-// Check active PKL Mapping
-$q_pkl_check = "SELECT sp.*, tp.nama_tempat, tp.pembimbing_dudi, u.nama_lengkap as nama_guru_pembimbing
-                FROM siswa_pkl sp
-                JOIN tempat_pkl tp ON sp.tempat_pkl_id = tp.id
-                LEFT JOIN guru g ON tp.guru_pembimbing_id = g.id
-                LEFT JOIN users u ON g.user_id = u.id
-                WHERE sp.siswa_id = $siswa_id AND sp.tahun_pelajaran_id = $active_tahun_id AND sp.status = 'aktif'
-                LIMIT 1";
-$res_pkl = mysqli_query($conn, $q_pkl_check);
-$pkl_active = ($res_pkl && mysqli_num_rows($res_pkl) > 0) ? mysqli_fetch_assoc($res_pkl) : null;
+// Check active PKL Mapping safely (verify table existence)
+$pkl_active = null;
+$chk_spkl = mysqli_query($conn, "SHOW TABLES LIKE 'siswa_pkl'");
+if ($chk_spkl && mysqli_num_rows($chk_spkl) > 0) {
+    $q_pkl_check = "SELECT sp.*, tp.nama_tempat, tp.pembimbing_dudi, u.nama_lengkap as nama_guru_pembimbing
+                    FROM siswa_pkl sp
+                    JOIN tempat_pkl tp ON sp.tempat_pkl_id = tp.id
+                    LEFT JOIN guru g ON tp.guru_pembimbing_id = g.id
+                    LEFT JOIN users u ON g.user_id = u.id
+                    WHERE sp.siswa_id = $siswa_id AND sp.tahun_pelajaran_id = $active_tahun_id AND sp.status = 'aktif'
+                    LIMIT 1";
+    $res_pkl = mysqli_query($conn, $q_pkl_check);
+    if ($res_pkl && mysqli_num_rows($res_pkl) > 0) {
+        $pkl_active = mysqli_fetch_assoc($res_pkl);
+    }
+}
 
 // GPS Attendance Recap (Harian)
 $query_gps = "SELECT

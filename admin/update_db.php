@@ -335,16 +335,16 @@ if ($is_ajax) {
                 CONSTRAINT `tempat_pkl_ibfk_1` FOREIGN KEY (`guru_pembimbing_id`) REFERENCES `guru` (`id`) ON DELETE SET NULL
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
 
-            // Check if user_dudi_id exists in tempat_pkl
-            $check_user_dudi = mysqli_query($conn, "SHOW COLUMNS FROM `tempat_pkl` LIKE 'user_dudi_id'");
-            if (mysqli_num_rows($check_user_dudi) == 0) {
-                mysqli_query($conn, "ALTER TABLE `tempat_pkl` ADD `user_dudi_id` INT(11) DEFAULT NULL AFTER `no_telp_dudi`");
-            }
-
             if (mysqli_query($conn, $create_tpkl)) {
                 $logs[] = ['status' => 'success', 'msg' => "Table <b>tempat_pkl</b> created successfully"];
             } else {
                 $logs[] = ['status' => 'error', 'msg' => "Failed creating <b>tempat_pkl</b>: " . mysqli_error($conn)];
+            }
+
+            // Check if user_dudi_id exists in tempat_pkl
+            $check_user_dudi = mysqli_query($conn, "SHOW COLUMNS FROM `tempat_pkl` LIKE 'user_dudi_id'");
+            if ($check_user_dudi && mysqli_num_rows($check_user_dudi) == 0) {
+                mysqli_query($conn, "ALTER TABLE `tempat_pkl` ADD `user_dudi_id` INT(11) DEFAULT NULL AFTER `no_telp_dudi`");
             }
 
             // Create siswa_pkl table

@@ -15,9 +15,15 @@ $total_jurnal = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as total
 $hadir_avg = mysqli_fetch_assoc(mysqli_query($conn, "SELECT AVG(jml_hadir) as avg FROM jurnal WHERE guru_id = $guru_id"))['avg'];
 $recent_jurnals = mysqli_query($conn, "SELECT j.*, k.nama_kelas, mp.nama_mapel FROM jurnal j JOIN kelas k ON j.kelas_id = k.id JOIN mata_pelajaran mp ON j.mapel_id = mp.id WHERE j.guru_id = $guru_id ORDER BY j.tanggal DESC LIMIT 5");
 
-// Check PKL Pembimbing Status
-$q_pkl_guru = mysqli_query($conn, "SELECT COUNT(*) as count FROM tempat_pkl WHERE guru_pembimbing_id = $guru_id");
-$is_pkl_pembimbing = (mysqli_fetch_assoc($q_pkl_guru)['count'] ?? 0) > 0;
+// Check PKL Pembimbing Status safely (verify table existence)
+$is_pkl_pembimbing = false;
+$chk_tpkl = mysqli_query($conn, "SHOW TABLES LIKE 'tempat_pkl'");
+if ($chk_tpkl && mysqli_num_rows($chk_tpkl) > 0) {
+    $q_pkl_guru = mysqli_query($conn, "SELECT COUNT(*) as count FROM tempat_pkl WHERE guru_pembimbing_id = $guru_id");
+    if ($q_pkl_guru) {
+        $is_pkl_pembimbing = (mysqli_fetch_assoc($q_pkl_guru)['count'] ?? 0) > 0;
+    }
+}
 
 $page_title = "Beranda Guru";
 
