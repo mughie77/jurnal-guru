@@ -1,9 +1,10 @@
 <?php
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/pagination.php';
 
 authorize_role(['guru', 'admin']);
-$page_title = "Rekap Absensi Saya";
+$page_title = "Rekap Absensi Jurnal Saya";
 
 $user_id = $_SESSION['user_id'];
 $guru_res = mysqli_query($conn, "SELECT id FROM guru WHERE user_id = $user_id");
@@ -25,24 +26,66 @@ $mapel_id = (int)($_GET['mapel_id'] ?? 0);
 $tgl_mulai = $_GET['tanggal_mulai'] ?? date('Y-m-01');
 $tgl_selesai = $_GET['tanggal_selesai'] ?? date('Y-m-d');
 
+$jurnals = [];
+$siswas = [];
+$pagin = null;
+
+if ($kelas_id > 0 && $mapel_id > 0) {
+    $tgl_m_escaped = mysqli_real_escape_string($conn, $tgl_mulai);
+    $tgl_s_escaped = mysqli_real_escape_string($conn, $tgl_selesai);
+    $where_guru = ($_SESSION['role'] === 'admin') ? "1=1" : "j.guru_id = $guru_id";
+
+    // 1. Fetch all journals for this teacher, class, subject, and date range
+    $query_jurnal = "SELECT j.id, j.tanggal, j.jam_ke, mp.nama_mapel
+                     FROM jurnal j
+                     JOIN mata_pelajaran mp ON j.mapel_id = mp.id
+                     WHERE j.kelas_id = $kelas_id AND j.mapel_id = $mapel_id AND $where_guru AND j.tanggal BETWEEN '$tgl_m_escaped' AND '$tgl_s_escaped'
+                     ORDER BY j.tanggal ASC, j.jam_ke ASC";
+    $res_jurnal = mysqli_query($conn, $query_jurnal);
+
+    while ($j = mysqli_fetch_assoc($res_jurnal)) {
+        $j['absensi'] = [];
+        $res_abs = mysqli_query($conn, "SELECT siswa_id, status FROM absensi_jurnal WHERE jurnal_id = " . $j['id']);
+        while ($a = mysqli_fetch_assoc($res_abs)) {
+            $j['absensi'][$a['siswa_id']] = $a['status'];
+        }
+        $jurnals[] = $j;
+    }
+
+    // 2. Fetch paginated list of students in the selected class
+    $where_siswa = " WHERE sk.kelas_id = $kelas_id AND sk.tahun_pelajaran_id = $active_tahun_id";
+    $pagin = get_pagination_data($conn, "siswa s JOIN siswa_kelas sk ON s.id = sk.siswa_id", 30, $where_siswa);
+
+    $query_siswa = "SELECT s.id, s.nama_siswa, s.nis, s.nisn
+                    FROM siswa s
+                    JOIN siswa_kelas sk ON s.id = sk.siswa_id
+                    $where_siswa
+                    ORDER BY s.nama_siswa ASC LIMIT {$pagin['limit']} OFFSET {$pagin['offset']}";
+    $res_siswa = mysqli_query($conn, $query_siswa);
+
+    while ($s = mysqli_fetch_assoc($res_siswa)) {
+        $siswas[] = $s;
+    }
+}
+
 require_once __DIR__ . '/../includes/header.php';
 ?>
 
 <style>#sidebar, header, nav.navbar { display: none !important; } .lg\:ml-64 { margin-left: 0 !important; } .main-content { margin-left: 0 !important; padding-top: 2rem !important; }</style>
 
-<div class="max-w-6xl mx-auto pb-20 px-4">
+<div class="max-w-7xl mx-auto pb-20 px-4">
     <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
         <div>
-            <h1 class="text-3xl font-black text-slate-800 tracking-tight italic">Rekap Absensi Siswa Per Mapel</h1>
-            <p class="text-slate-500 font-medium">Monitoring rekapitulasi kehadiran per-siswa pada mata pelajaran yang Anda ampu.</p>
+            <h1 class="text-3xl font-black text-slate-800 tracking-tight italic">Rekap Absensi Jurnal Per Mapel</h1>
+            <p class="text-slate-500 font-medium">Monitoring rincian kehadiran siswa per-sesi jam pelajaran pada mata pelajaran Anda.</p>
         </div>
         <div class="flex gap-3">
             <?php if ($kelas_id > 0 && $mapel_id > 0): ?>
-            <a href="export_rekap_absen_excel.php?<?= http_build_query($_GET) ?>" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold transition-all shadow-lg shadow-emerald-100 flex items-center">
+            <a href="export_rekap_absen_excel.php?<?= http_build_query($_GET) ?>" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold transition-all shadow-lg shadow-emerald-100 flex items-center text-xs">
                 <i class="fa fa-file-excel mr-2"></i> Ekspor Excel
             </a>
             <?php endif; ?>
-            <a href="index.php" class="w-11 h-11 flex items-center justify-center rounded-2xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition-all shadow-sm">
+            <a href="index.php" class="w-10 h-10 flex items-center justify-center rounded-2xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition-all shadow-sm">
                 <i class="fa fa-arrow-left"></i>
             </a>
         </div>
@@ -87,80 +130,84 @@ require_once __DIR__ . '/../includes/header.php';
         </form>
     </div>
 
-    <?php if ($kelas_id > 0 && $mapel_id > 0):
-        $tgl_m_escaped = mysqli_real_escape_string($conn, $tgl_mulai);
-        $tgl_s_escaped = mysqli_real_escape_string($conn, $tgl_selesai);
-
-        // Fetch student aggregated attendance for this specific subject and teacher
-        $where_guru = ($_SESSION['role'] === 'admin') ? "1=1" : "j.guru_id = $guru_id";
-
-        $sql = "SELECT s.id as siswa_id, s.nama_siswa, s.nis, s.nisn,
-                COUNT(CASE WHEN aj.status = 'H' THEN 1 END) as hadir,
-                COUNT(CASE WHEN aj.status = 'S' THEN 1 END) as sakit,
-                COUNT(CASE WHEN aj.status = 'I' THEN 1 END) as izin,
-                COUNT(CASE WHEN aj.status = 'A' THEN 1 END) as alfa,
-                COUNT(aj.id) as total_pertemuan
-                FROM siswa s
-                JOIN siswa_kelas sk ON s.id = sk.siswa_id
-                LEFT JOIN absensi_jurnal aj ON s.id = aj.siswa_id
-                LEFT JOIN jurnal j ON aj.jurnal_id = j.id AND j.mapel_id = $mapel_id AND j.kelas_id = $kelas_id AND $where_guru AND j.tanggal BETWEEN '$tgl_m_escaped' AND '$tgl_s_escaped'
-                WHERE sk.kelas_id = $kelas_id AND sk.tahun_pelajaran_id = $active_tahun_id
-                GROUP BY s.id
-                ORDER BY s.nama_siswa ASC";
-        $res = mysqli_query($conn, $sql);
-    ?>
-    <div class="lux-card overflow-hidden bg-white shadow-2xl rounded-3xl">
+    <?php if ($kelas_id > 0 && $mapel_id > 0): ?>
+    <div class="lux-card overflow-hidden bg-white shadow-2xl rounded-3xl mb-6">
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
                     <tr class="bg-slate-50 border-b border-slate-100">
-                        <th class="px-6 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">Siswa</th>
-                        <th class="px-4 py-4 text-center text-[10px] font-black text-emerald-600 uppercase tracking-widest">Hadir (H)</th>
-                        <th class="px-4 py-4 text-center text-[10px] font-black text-amber-600 uppercase tracking-widest">Sakit (S)</th>
-                        <th class="px-4 py-4 text-center text-[10px] font-black text-blue-600 uppercase tracking-widest">Izin (I)</th>
-                        <th class="px-4 py-4 text-center text-[10px] font-black text-rose-600 uppercase tracking-widest">Alfa (A)</th>
-                        <th class="px-4 py-4 text-center text-[10px] font-black text-slate-600 uppercase tracking-widest">Total Sesi</th>
-                        <th class="px-6 py-4 text-center text-[10px] font-black text-indigo-600 uppercase tracking-widest">Persentase</th>
+                        <th class="px-6 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest sticky left-0 bg-slate-50 z-10 min-w-[200px]">Nama Siswa</th>
+                        <?php foreach ($jurnals as $j): ?>
+                        <th class="px-3 py-4 text-center border-l border-slate-100 min-w-[80px]">
+                            <div class="text-[10px] font-black text-indigo-600 uppercase whitespace-nowrap"><?= date('d/m', strtotime($j['tanggal'])) ?></div>
+                            <div class="text-[9px] text-slate-400 font-bold whitespace-nowrap">Jam: <?= htmlspecialchars($j['jam_ke']) ?></div>
+                        </th>
+                        <?php endforeach; ?>
+                        <?php if (!empty($jurnals)): ?>
+                        <th class="px-3 py-4 text-center border-l border-slate-100 bg-emerald-50 text-emerald-700 font-black text-[10px] uppercase">H</th>
+                        <th class="px-3 py-4 text-center border-l border-slate-100 bg-amber-50 text-amber-700 font-black text-[10px] uppercase">S</th>
+                        <th class="px-3 py-4 text-center border-l border-slate-100 bg-blue-50 text-blue-700 font-black text-[10px] uppercase">I</th>
+                        <th class="px-3 py-4 text-center border-l border-slate-100 bg-rose-50 text-rose-700 font-black text-[10px] uppercase">A</th>
+                        <?php endif; ?>
+                        <?php if (empty($jurnals)): ?>
+                            <th class="px-6 py-4 text-center text-slate-400 italic text-sm">Belum ada data jurnal mengajar pada rentang tanggal terpilih.</th>
+                        <?php endif; ?>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-50">
-                    <?php if (mysqli_num_rows($res) == 0): ?>
-                        <tr><td colspan="7" class="px-6 py-12 text-center text-slate-400 font-bold italic">Tidak ada siswa terdaftar di kelas ini.</td></tr>
-                    <?php else: ?>
-                        <?php while($row = mysqli_fetch_assoc($res)):
-                            $total = (int)$row['total_pertemuan'];
-                            $hadir = (int)$row['hadir'];
-                            $pct = $total > 0 ? round(($hadir / $total) * 100) : 0;
-                        ?>
-                        <tr class="hover:bg-slate-50/50 transition-colors">
-                            <td class="px-6 py-4">
-                                <div class="font-bold text-slate-800 text-sm"><?= htmlspecialchars($row['nama_siswa']) ?></div>
-                                <div class="text-[10px] text-slate-400 font-bold">NIS: <?= htmlspecialchars($row['nis']) ?> <?= !empty($row['nisn']) ? "| NISN: " . htmlspecialchars($row['nisn']) : '' ?></div>
-                            </td>
-                            <td class="px-4 py-4 text-center font-black text-emerald-600 text-sm bg-emerald-50/20"><?= $row['hadir'] ?></td>
-                            <td class="px-4 py-4 text-center font-black text-amber-600 text-sm bg-amber-50/20"><?= $row['sakit'] ?></td>
-                            <td class="px-4 py-4 text-center font-black text-blue-600 text-sm bg-blue-50/20"><?= $row['izin'] ?></td>
-                            <td class="px-4 py-4 text-center font-black text-rose-600 text-sm bg-rose-50/20"><?= $row['alfa'] ?></td>
-                            <td class="px-4 py-4 text-center font-black text-slate-700 text-sm"><?= $total ?></td>
-                            <td class="px-6 py-4">
-                                <div class="flex items-center justify-center gap-3">
-                                    <div class="w-20 bg-slate-100 h-2 rounded-full overflow-hidden">
-                                        <div class="bg-indigo-600 h-full transition-all" style="width: <?= $pct ?>%"></div>
-                                    </div>
-                                    <span class="text-xs font-black text-slate-700"><?= $pct ?>%</span>
-                                </div>
-                            </td>
-                        </tr>
-                        <?php endwhile; ?>
+                    <?php foreach ($siswas as $s): ?>
+                    <?php
+                    $cnt_h = 0; $cnt_s = 0; $cnt_i = 0; $cnt_a = 0;
+                    ?>
+                    <tr class="hover:bg-slate-50/50 transition-colors">
+                        <td class="px-6 py-4 font-bold text-slate-700 text-sm sticky left-0 bg-white group-hover:bg-slate-50/50 z-10 border-r border-slate-50">
+                            <?= htmlspecialchars($s['nama_siswa']) ?>
+                            <div class="text-[9px] text-slate-400 font-mono tracking-tighter">NIS: <?= htmlspecialchars($s['nis']) ?></div>
+                        </td>
+                        <?php foreach ($jurnals as $j): ?>
+                        <td class="px-3 py-4 text-center border-l border-slate-50">
+                            <?php
+                            $status = $j['absensi'][$s['id']] ?? '-';
+                            if ($status == 'H') $cnt_h++;
+                            elseif ($status == 'S') $cnt_s++;
+                            elseif ($status == 'I') $cnt_i++;
+                            elseif ($status == 'A') $cnt_a++;
+
+                            $colors = [
+                                'H' => 'bg-emerald-500 text-white',
+                                'S' => 'bg-amber-500 text-white',
+                                'I' => 'bg-blue-500 text-white',
+                                'A' => 'bg-rose-500 text-white',
+                                '-' => 'bg-slate-100 text-slate-300'
+                            ];
+                            ?>
+                            <span class="inline-flex items-center justify-center w-7 h-7 rounded-lg font-black text-[10px] <?= $colors[$status] ?>"><?= $status ?></span>
+                        </td>
+                        <?php endforeach; ?>
+                        <?php if (!empty($jurnals)): ?>
+                        <td class="px-3 py-4 text-center border-l border-slate-50 font-black text-emerald-600 text-xs bg-emerald-50/20"><?= $cnt_h ?></td>
+                        <td class="px-3 py-4 text-center border-l border-slate-50 font-black text-amber-600 text-xs bg-amber-50/20"><?= $cnt_s ?></td>
+                        <td class="px-3 py-4 text-center border-l border-slate-50 font-black text-blue-600 text-xs bg-blue-50/20"><?= $cnt_i ?></td>
+                        <td class="px-3 py-4 text-center border-l border-slate-50 font-black text-rose-600 text-xs bg-rose-50/20"><?= $cnt_a ?></td>
+                        <?php endif; ?>
+                    </tr>
+                    <?php endforeach; ?>
+                    <?php if (empty($siswas)): ?>
+                        <tr><td colspan="<?= count($jurnals) + 5 ?>" class="px-6 py-12 text-center text-slate-400 italic">Tidak ada siswa terdaftar di kelas ini.</td></tr>
                     <?php endif; ?>
                 </tbody>
             </table>
         </div>
     </div>
+
+    <?php if ($pagin): ?>
+    <?= render_pagination($pagin['page'], $pagin['total_pages'], $_GET) ?>
+    <?php endif; ?>
+
     <?php else: ?>
     <div class="lux-card p-16 text-center">
         <div class="w-16 h-16 bg-slate-50 text-slate-300 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl"><i class="fa fa-filter"></i></div>
-        <p class="text-slate-400 font-medium italic text-sm">Silakan pilih kelas dan mata pelajaran untuk menampilkan rekap absensi siswa per-mapel.</p>
+        <p class="text-slate-400 font-medium italic text-sm">Silakan pilih kelas, mata pelajaran, dan rentang tanggal untuk menampilkan rekap absensi.</p>
     </div>
     <?php endif; ?>
 </div>

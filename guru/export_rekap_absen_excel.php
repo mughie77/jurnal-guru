@@ -37,60 +37,86 @@ $tgl_s_escaped = mysqli_real_escape_string($conn, $tgl_selesai);
 
 $where_guru = ($_SESSION['role'] === 'admin') ? "1=1" : "j.guru_id = $guru_id";
 
-$sql = "SELECT s.nama_siswa, s.nis, s.nisn,
-        COUNT(CASE WHEN aj.status = 'H' THEN 1 END) as hadir,
-        COUNT(CASE WHEN aj.status = 'S' THEN 1 END) as sakit,
-        COUNT(CASE WHEN aj.status = 'I' THEN 1 END) as izin,
-        COUNT(CASE WHEN aj.status = 'A' THEN 1 END) as alfa,
-        COUNT(aj.id) as total_pertemuan
-        FROM siswa s
-        JOIN siswa_kelas sk ON s.id = sk.siswa_id
-        LEFT JOIN absensi_jurnal aj ON s.id = aj.siswa_id
-        LEFT JOIN jurnal j ON aj.jurnal_id = j.id AND j.mapel_id = $mapel_id AND j.kelas_id = $kelas_id AND $where_guru AND j.tanggal BETWEEN '$tgl_m_escaped' AND '$tgl_s_escaped'
-        WHERE sk.kelas_id = $kelas_id AND sk.tahun_pelajaran_id = $active_tahun_id
-        GROUP BY s.id
-        ORDER BY s.nama_siswa ASC";
-$result = mysqli_query($conn, $sql);
+// 1. Fetch Jurnals
+$query_jurnal = "SELECT j.id, j.tanggal, j.jam_ke
+                 FROM jurnal j
+                 WHERE j.kelas_id = $kelas_id AND j.mapel_id = $mapel_id AND $where_guru AND j.tanggal BETWEEN '$tgl_m_escaped' AND '$tgl_s_escaped'
+                 ORDER BY j.tanggal ASC, j.jam_ke ASC";
+$res_jurnal = mysqli_query($conn, $query_jurnal);
+
+$jurnals = [];
+while ($j = mysqli_fetch_assoc($res_jurnal)) {
+    $j['absensi'] = [];
+    $res_abs = mysqli_query($conn, "SELECT siswa_id, status FROM absensi_jurnal WHERE jurnal_id = " . $j['id']);
+    while ($a = mysqli_fetch_assoc($res_abs)) {
+        $j['absensi'][$a['siswa_id']] = $a['status'];
+    }
+    $jurnals[] = $j;
+}
+
+// 2. Fetch Siswas
+$where_siswa = " WHERE sk.kelas_id = $kelas_id AND sk.tahun_pelajaran_id = $active_tahun_id";
+$query_siswa = "SELECT s.id, s.nama_siswa, s.nis, s.nisn
+                FROM siswa s
+                JOIN siswa_kelas sk ON s.id = sk.siswa_id
+                $where_siswa
+                ORDER BY s.nama_siswa ASC";
+$res_siswa = mysqli_query($conn, $query_siswa);
 
 $data = [];
-$data[] = ['<b>REKAP KEHADIRAN SISWA PER MATA PELAJARAN</b>', '', '', '', '', '', '', '', ''];
-$data[] = ['Guru Pengajar:', $nama_guru, '', '', '', '', '', '', ''];
-$data[] = ['Kelas:', $nama_kelas, '', '', '', '', '', '', ''];
-$data[] = ['Mata Pelajaran:', $nama_mapel, '', '', '', '', '', '', ''];
-$data[] = ['Periode Tanggal:', date('d-m-Y', strtotime($tgl_mulai)) . ' s/d ' . date('d-m-Y', strtotime($tgl_selesai)), '', '', '', '', '', '', ''];
-$data[] = ['', '', '', '', '', '', '', '', '']; // Spacer
+$data[] = ['<b>REKAP ABSENSI JURNAL SISWA PER MATA PELAJARAN</b>', '', '', ''];
+$data[] = ['Guru Pengajar:', $nama_guru, '', ''];
+$data[] = ['Kelas:', $nama_kelas, '', ''];
+$data[] = ['Mata Pelajaran:', $nama_mapel, '', ''];
+$data[] = ['Periode Tanggal:', date('d-m-Y', strtotime($tgl_mulai)) . ' s/d ' . date('d-m-Y', strtotime($tgl_selesai)), '', ''];
+$data[] = ['', '', '', '']; // Spacer
 
-$data[] = [
+// Build Table Header
+$header_row = [
     '<b>No</b>',
     '<b>NIS</b>',
     '<b>NISN</b>',
-    '<b>Nama Siswa</b>',
-    '<b>Hadir (H)</b>',
-    '<b>Sakit (S)</b>',
-    '<b>Izin (I)</b>',
-    '<b>Alfa (A)</b>',
-    '<b>Total Sesi</b>',
-    '<b>Persentase Hadir (%)</b>'
+    '<b>Nama Siswa</b>'
 ];
 
-$no = 1;
-while ($row = mysqli_fetch_assoc($result)) {
-    $total = (int)$row['total_pertemuan'];
-    $hadir = (int)$row['hadir'];
-    $pct = $total > 0 ? round(($hadir / $total) * 100) : 0;
+foreach ($jurnals as $j) {
+    $header_row[] = '<b>' . date('d/m', strtotime($j['tanggal'])) . ' (Jam ' . $j['jam_ke'] . ')</b>';
+}
 
-    $data[] = [
+$header_row[] = '<b>Hadir (H)</b>';
+$header_row[] = '<b>Sakit (S)</b>';
+$header_row[] = '<b>Izin (I)</b>';
+$header_row[] = '<b>Alfa (A)</b>';
+
+$data[] = $header_row;
+
+$no = 1;
+while ($s = mysqli_fetch_assoc($res_siswa)) {
+    $row_data = [
         $no++,
-        $row['nis'],
-        $row['nisn'] ?? '-',
-        $row['nama_siswa'],
-        $row['hadir'],
-        $row['sakit'],
-        $row['izin'],
-        $row['alfa'],
-        $total,
-        $pct . '%'
+        $s['nis'],
+        $s['nisn'] ?? '-',
+        $s['nama_siswa']
     ];
+
+    $cnt_h = 0; $cnt_s = 0; $cnt_i = 0; $cnt_a = 0;
+
+    foreach ($jurnals as $j) {
+        $st = $j['absensi'][$s['id']] ?? '-';
+        if ($st == 'H') $cnt_h++;
+        elseif ($st == 'S') $cnt_s++;
+        elseif ($st == 'I') $cnt_i++;
+        elseif ($st == 'A') $cnt_a++;
+
+        $row_data[] = $st;
+    }
+
+    $row_data[] = $cnt_h;
+    $row_data[] = $cnt_s;
+    $row_data[] = $cnt_i;
+    $row_data[] = $cnt_a;
+
+    $data[] = $row_data;
 }
 
 foreach ($data as $rowIndex => &$row) {
@@ -105,7 +131,7 @@ foreach ($data as $rowIndex => &$row) {
 }
 
 $xlsx = SimpleXLSXGen::fromArray($data);
-$filename = "Rekap_Absen_" . str_replace(' ', '_', $nama_mapel) . "_" . str_replace(' ', '_', $nama_kelas) . "_" . date('Ymd') . ".xlsx";
+$filename = "Rekap_Absensi_Matrix_" . str_replace(' ', '_', $nama_mapel) . "_" . str_replace(' ', '_', $nama_kelas) . "_" . date('Ymd') . ".xlsx";
 $xlsx->downloadAs($filename);
 exit();
 ?>
