@@ -3,19 +3,18 @@ require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/pagination.php';
 
-authorize_role(['guru', 'admin']);
+authorize_role(['guru', 'admin', 'waka']);
 $page_title = "Rekap Absensi Jurnal";
 
 $user_id = $_SESSION['user_id'];
 $guru_res = mysqli_query($conn, "SELECT id FROM guru WHERE user_id = $user_id");
-if (mysqli_num_rows($guru_res) == 0) die("Error: Data guru tidak ditemukan.");
-$guru_id = mysqli_fetch_assoc($guru_res)['id'];
+$guru_id = (mysqli_num_rows($guru_res) > 0) ? mysqli_fetch_assoc($guru_res)['id'] : 0;
 
 // Get classes
 $kelases = mysqli_query($conn, "SELECT id, nama_kelas FROM kelas ORDER BY nama_kelas ASC");
 
-// Get subjects assigned to this teacher (or all mapels if admin)
-if ($_SESSION['role'] === 'admin') {
+// Get subjects assigned to this teacher (or all mapels if admin/waka)
+if (in_array($_SESSION['role'], ['admin', 'waka'])) {
     $mapels = mysqli_query($conn, "SELECT id, nama_mapel FROM mata_pelajaran ORDER BY nama_mapel ASC");
 } else {
     $mapels = mysqli_query($conn, "SELECT mp.id, mp.nama_mapel FROM mata_pelajaran mp JOIN guru_mapel gm ON mp.id = gm.mapel_id WHERE gm.guru_id = $guru_id ORDER BY mp.nama_mapel ASC");
@@ -23,8 +22,9 @@ if ($_SESSION['role'] === 'admin') {
 
 $kelas_id = (int)($_GET['kelas_id'] ?? 0);
 $mapel_id = (int)($_GET['mapel_id'] ?? 0);
-$tgl_mulai = $_GET['tanggal_mulai'] ?? date('Y-m-d');
-$tgl_selesai = $_GET['tanggal_selesai'] ?? date('Y-m-d');
+
+$tgl_mulai = !empty($_GET['tanggal_mulai']) ? $_GET['tanggal_mulai'] : date('Y-m-01');
+$tgl_selesai = !empty($_GET['tanggal_selesai']) ? $_GET['tanggal_selesai'] : date('Y-m-d');
 
 $jurnals = [];
 $siswas = [];
@@ -33,14 +33,15 @@ $pagin = null;
 if ($kelas_id > 0) {
     $tgl_m_escaped = mysqli_real_escape_string($conn, $tgl_mulai);
     $tgl_s_escaped = mysqli_real_escape_string($conn, $tgl_selesai);
-    $where_guru = ($_SESSION['role'] === 'admin') ? "1=1" : "j.guru_id = $guru_id";
+    $where_guru = in_array($_SESSION['role'], ['admin', 'waka']) ? "1=1" : "j.guru_id = $guru_id";
     $where_mapel = ($mapel_id > 0) ? " AND j.mapel_id = $mapel_id" : "";
+    $where_tahun = $active_tahun_id ? " AND j.tahun_pelajaran_id = $active_tahun_id" : "";
 
     // 1. Fetch all journals for this teacher, class, date range (and optional mapel)
     $query_jurnal = "SELECT j.id, j.tanggal, j.jam_ke, mp.nama_mapel
                      FROM jurnal j
                      JOIN mata_pelajaran mp ON j.mapel_id = mp.id
-                     WHERE j.kelas_id = $kelas_id AND $where_guru $where_mapel AND j.tanggal BETWEEN '$tgl_m_escaped' AND '$tgl_s_escaped'
+                     WHERE j.kelas_id = $kelas_id AND $where_guru $where_mapel $where_tahun AND j.tanggal BETWEEN '$tgl_m_escaped' AND '$tgl_s_escaped'
                      ORDER BY j.tanggal ASC, j.jam_ke ASC";
     $res_jurnal = mysqli_query($conn, $query_jurnal);
 

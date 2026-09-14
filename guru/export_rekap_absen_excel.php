@@ -4,22 +4,19 @@ require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/SimpleXLSXGen.php';
 use Shuchkin\SimpleXLSXGen;
 
-authorize_role(['guru', 'admin']);
+authorize_role(['guru', 'admin', 'waka']);
 
 $user_id = $_SESSION['user_id'];
 $nama_guru = $_SESSION['nama_lengkap'] ?? 'Guru';
 
 $guru_res = mysqli_query($conn, "SELECT id FROM guru WHERE user_id = $user_id");
-if (mysqli_num_rows($guru_res) == 0) {
-    die("Error: Data guru tidak ditemukan.");
-}
-$guru_row = mysqli_fetch_assoc($guru_res);
-$guru_id = $guru_row['id'];
+$guru_id = (mysqli_num_rows($guru_res) > 0) ? mysqli_fetch_assoc($guru_res)['id'] : 0;
 
 $kelas_id = (int)($_GET['kelas_id'] ?? 0);
 $mapel_id = (int)($_GET['mapel_id'] ?? 0);
-$tgl_mulai = $_GET['tanggal_mulai'] ?? date('Y-m-d');
-$tgl_selesai = $_GET['tanggal_selesai'] ?? date('Y-m-d');
+
+$tgl_mulai = !empty($_GET['tanggal_mulai']) ? $_GET['tanggal_mulai'] : date('Y-m-01');
+$tgl_selesai = !empty($_GET['tanggal_selesai']) ? $_GET['tanggal_selesai'] : date('Y-m-d');
 
 if ($kelas_id <= 0) {
     die("Error: Parameter kelas wajib dipilih.");
@@ -38,14 +35,15 @@ if ($mapel_id > 0) {
 $tgl_m_escaped = mysqli_real_escape_string($conn, $tgl_mulai);
 $tgl_s_escaped = mysqli_real_escape_string($conn, $tgl_selesai);
 
-$where_guru = ($_SESSION['role'] === 'admin') ? "1=1" : "j.guru_id = $guru_id";
+$where_guru = in_array($_SESSION['role'], ['admin', 'waka']) ? "1=1" : "j.guru_id = $guru_id";
 $where_mapel = ($mapel_id > 0) ? " AND j.mapel_id = $mapel_id" : "";
+$where_tahun = $active_tahun_id ? " AND j.tahun_pelajaran_id = $active_tahun_id" : "";
 
 // 1. Fetch Jurnals
 $query_jurnal = "SELECT j.id, j.tanggal, j.jam_ke, mp.nama_mapel
                  FROM jurnal j
                  JOIN mata_pelajaran mp ON j.mapel_id = mp.id
-                 WHERE j.kelas_id = $kelas_id AND $where_guru $where_mapel AND j.tanggal BETWEEN '$tgl_m_escaped' AND '$tgl_s_escaped'
+                 WHERE j.kelas_id = $kelas_id AND $where_guru $where_mapel $where_tahun AND j.tanggal BETWEEN '$tgl_m_escaped' AND '$tgl_s_escaped'
                  ORDER BY j.tanggal ASC, j.jam_ke ASC";
 $res_jurnal = mysqli_query($conn, $query_jurnal);
 
