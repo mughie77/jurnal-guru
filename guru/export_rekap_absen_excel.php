@@ -15,7 +15,7 @@ $guru_id = (mysqli_num_rows($guru_res) > 0) ? mysqli_fetch_assoc($guru_res)['id'
 $kelas_id = (int)($_GET['kelas_id'] ?? 0);
 $mapel_id = (int)($_GET['mapel_id'] ?? 0);
 
-$tgl_mulai = !empty($_GET['tanggal_mulai']) ? $_GET['tanggal_mulai'] : date('Y-m-01');
+$tgl_mulai = !empty($_GET['tanggal_mulai']) ? $_GET['tanggal_mulai'] : date('Y-m-d');
 $tgl_selesai = !empty($_GET['tanggal_selesai']) ? $_GET['tanggal_selesai'] : date('Y-m-d');
 
 if ($kelas_id <= 0) {
@@ -35,15 +35,21 @@ if ($mapel_id > 0) {
 $tgl_m_escaped = mysqli_real_escape_string($conn, $tgl_mulai);
 $tgl_s_escaped = mysqli_real_escape_string($conn, $tgl_selesai);
 
-$where_guru = in_array($_SESSION['role'], ['admin', 'waka']) ? "1=1" : "j.guru_id = $guru_id";
-$where_mapel = ($mapel_id > 0) ? " AND j.mapel_id = $mapel_id" : "";
-$where_tahun = $active_tahun_id ? " AND j.tahun_pelajaran_id = $active_tahun_id" : "";
+if (in_array($_SESSION['role'], ['admin', 'waka'])) {
+    $where_mapel = ($mapel_id > 0) ? " AND j.mapel_id = $mapel_id" : "";
+} else {
+    if ($mapel_id > 0) {
+        $where_mapel = " AND j.mapel_id = $mapel_id AND (j.guru_id = $guru_id OR j.mapel_id IN (SELECT mapel_id FROM guru_mapel WHERE guru_id = $guru_id))";
+    } else {
+        $where_mapel = " AND (j.guru_id = $guru_id OR j.mapel_id IN (SELECT mapel_id FROM guru_mapel WHERE guru_id = $guru_id))";
+    }
+}
 
 // 1. Fetch Jurnals
 $query_jurnal = "SELECT j.id, j.tanggal, j.jam_ke, mp.nama_mapel
                  FROM jurnal j
                  JOIN mata_pelajaran mp ON j.mapel_id = mp.id
-                 WHERE j.kelas_id = $kelas_id AND $where_guru $where_mapel $where_tahun AND j.tanggal BETWEEN '$tgl_m_escaped' AND '$tgl_s_escaped'
+                 WHERE j.kelas_id = $kelas_id $where_mapel AND j.tanggal BETWEEN '$tgl_m_escaped' AND '$tgl_s_escaped'
                  ORDER BY j.tanggal ASC, j.jam_ke ASC";
 $res_jurnal = mysqli_query($conn, $query_jurnal);
 
@@ -58,13 +64,23 @@ while ($j = mysqli_fetch_assoc($res_jurnal)) {
 }
 
 // 2. Fetch Siswas
-$where_siswa = " WHERE sk.kelas_id = $kelas_id AND sk.tahun_pelajaran_id = $active_tahun_id";
+$where_siswa = " WHERE sk.kelas_id = $kelas_id" . ($active_tahun_id ? " AND sk.tahun_pelajaran_id = $active_tahun_id" : "");
 $query_siswa = "SELECT s.id, s.nama_siswa, s.nis
                 FROM siswa s
                 JOIN siswa_kelas sk ON s.id = sk.siswa_id
                 $where_siswa
                 ORDER BY s.nama_siswa ASC";
 $res_siswa = mysqli_query($conn, $query_siswa);
+
+if (mysqli_num_rows($res_siswa) == 0) {
+    $where_siswa_fallback = " WHERE sk.kelas_id = $kelas_id";
+    $query_siswa = "SELECT s.id, s.nama_siswa, s.nis
+                    FROM siswa s
+                    JOIN siswa_kelas sk ON s.id = sk.siswa_id
+                    $where_siswa_fallback
+                    ORDER BY s.nama_siswa ASC";
+    $res_siswa = mysqli_query($conn, $query_siswa);
+}
 
 $data = [];
 $data[] = ['<b>REKAP ABSENSI JURNAL SISWA PER JAM MATA PELAJARAN</b>', '', '', ''];

@@ -13,17 +13,22 @@ $guru_id = (mysqli_num_rows($guru_res) > 0) ? mysqli_fetch_assoc($guru_res)['id'
 // Get classes
 $kelases = mysqli_query($conn, "SELECT id, nama_kelas FROM kelas ORDER BY nama_kelas ASC");
 
-// Get subjects assigned to this teacher (or all mapels if admin/waka)
+// Get subjects assigned to this teacher or taught in journals (or all mapels if admin/waka)
 if (in_array($_SESSION['role'], ['admin', 'waka'])) {
     $mapels = mysqli_query($conn, "SELECT id, nama_mapel FROM mata_pelajaran ORDER BY nama_mapel ASC");
 } else {
-    $mapels = mysqli_query($conn, "SELECT mp.id, mp.nama_mapel FROM mata_pelajaran mp JOIN guru_mapel gm ON mp.id = gm.mapel_id WHERE gm.guru_id = $guru_id ORDER BY mp.nama_mapel ASC");
+    $mapels = mysqli_query($conn, "SELECT DISTINCT mp.id, mp.nama_mapel
+                                   FROM mata_pelajaran mp
+                                   LEFT JOIN guru_mapel gm ON mp.id = gm.mapel_id
+                                   LEFT JOIN jurnal j ON mp.id = j.mapel_id
+                                   WHERE gm.guru_id = $guru_id OR j.guru_id = $guru_id
+                                   ORDER BY mp.nama_mapel ASC");
 }
 
 $kelas_id = (int)($_GET['kelas_id'] ?? 0);
 $mapel_id = (int)($_GET['mapel_id'] ?? 0);
 
-$tgl_mulai = !empty($_GET['tanggal_mulai']) ? $_GET['tanggal_mulai'] : date('Y-m-01');
+$tgl_mulai = !empty($_GET['tanggal_mulai']) ? $_GET['tanggal_mulai'] : date('Y-m-d');
 $tgl_selesai = !empty($_GET['tanggal_selesai']) ? $_GET['tanggal_selesai'] : date('Y-m-d');
 
 $jurnals = [];
@@ -33,15 +38,23 @@ $pagin = null;
 if ($kelas_id > 0) {
     $tgl_m_escaped = mysqli_real_escape_string($conn, $tgl_mulai);
     $tgl_s_escaped = mysqli_real_escape_string($conn, $tgl_selesai);
-    $where_guru = in_array($_SESSION['role'], ['admin', 'waka']) ? "1=1" : "j.guru_id = $guru_id";
-    $where_mapel = ($mapel_id > 0) ? " AND j.mapel_id = $mapel_id" : "";
-    $where_tahun = $active_tahun_id ? " AND j.tahun_pelajaran_id = $active_tahun_id" : "";
 
-    // 1. Fetch all journals for this teacher, class, date range (and optional mapel)
+    // Mapel & Guru Filter for Jurnal Query
+    if (in_array($_SESSION['role'], ['admin', 'waka'])) {
+        $where_mapel = ($mapel_id > 0) ? " AND j.mapel_id = $mapel_id" : "";
+    } else {
+        if ($mapel_id > 0) {
+            $where_mapel = " AND j.mapel_id = $mapel_id AND (j.guru_id = $guru_id OR j.mapel_id IN (SELECT mapel_id FROM guru_mapel WHERE guru_id = $guru_id))";
+        } else {
+            $where_mapel = " AND (j.guru_id = $guru_id OR j.mapel_id IN (SELECT mapel_id FROM guru_mapel WHERE guru_id = $guru_id))";
+        }
+    }
+
+    // 1. Fetch all journals for this class and date range
     $query_jurnal = "SELECT j.id, j.tanggal, j.jam_ke, mp.nama_mapel
                      FROM jurnal j
                      JOIN mata_pelajaran mp ON j.mapel_id = mp.id
-                     WHERE j.kelas_id = $kelas_id AND $where_guru $where_mapel $where_tahun AND j.tanggal BETWEEN '$tgl_m_escaped' AND '$tgl_s_escaped'
+                     WHERE j.kelas_id = $kelas_id $where_mapel AND j.tanggal BETWEEN '$tgl_m_escaped' AND '$tgl_s_escaped'
                      ORDER BY j.tanggal ASC, j.jam_ke ASC";
     $res_jurnal = mysqli_query($conn, $query_jurnal);
 
@@ -54,9 +67,9 @@ if ($kelas_id > 0) {
         $jurnals[] = $j;
     }
 
-    // 2. Fetch paginated list of students in the selected class
-    $where_siswa = " WHERE sk.kelas_id = $kelas_id AND sk.tahun_pelajaran_id = $active_tahun_id";
-    $pagin = get_pagination_data($conn, "siswa s JOIN siswa_kelas sk ON s.id = sk.siswa_id", 30, $where_siswa);
+    // 2. Fetch list of students in the selected class (with fallback if active_tahun_id has no records)
+    $where_siswa = " WHERE sk.kelas_id = $kelas_id" . ($active_tahun_id ? " AND sk.tahun_pelajaran_id = $active_tahun_id" : "");
+    $pagin = get_pagination_data($conn, "siswa s JOIN siswa_kelas sk ON s.id = sk.siswa_id", 50, $where_siswa);
 
     $query_siswa = "SELECT s.id, s.nama_siswa, s.nis
                     FROM siswa s
@@ -64,6 +77,18 @@ if ($kelas_id > 0) {
                     $where_siswa
                     ORDER BY s.nama_siswa ASC LIMIT {$pagin['limit']} OFFSET {$pagin['offset']}";
     $res_siswa = mysqli_query($conn, $query_siswa);
+
+    // Fallback if active_tahun_id filtered out students
+    if (mysqli_num_rows($res_siswa) == 0) {
+        $where_siswa_fallback = " WHERE sk.kelas_id = $kelas_id";
+        $pagin = get_pagination_data($conn, "siswa s JOIN siswa_kelas sk ON s.id = sk.siswa_id", 50, $where_siswa_fallback);
+        $query_siswa = "SELECT s.id, s.nama_siswa, s.nis
+                        FROM siswa s
+                        JOIN siswa_kelas sk ON s.id = sk.siswa_id
+                        $where_siswa_fallback
+                        ORDER BY s.nama_siswa ASC LIMIT {$pagin['limit']} OFFSET {$pagin['offset']}";
+        $res_siswa = mysqli_query($conn, $query_siswa);
+    }
 
     while ($s = mysqli_fetch_assoc($res_siswa)) {
         $siswas[] = $s;
@@ -78,7 +103,7 @@ require_once __DIR__ . '/../includes/header.php';
 <div class="max-w-7xl mx-auto pb-20 px-4">
     <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
         <div>
-            <h1 class="text-3xl font-black text-slate-800 tracking-tight italic">Rekap Absensi</h1>
+            <h1 class="text-3xl font-black text-slate-800 tracking-tight italic">Rekap Absensi Jurnal</h1>
             <p class="text-slate-500 font-medium">Pantau kehadiran siswa per jam mata pelajaran yang Anda ampu.</p>
         </div>
         <div class="flex gap-3">
@@ -109,7 +134,7 @@ require_once __DIR__ . '/../includes/header.php';
             <div>
                 <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2">Mata Pelajaran (Opsional)</label>
                 <select name="mapel_id" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-100 bg-white font-bold text-xs text-slate-700">
-                    <option value="">-- Semua Mapel --</option>
+                    <option value="">-- Semua Mapel Saya --</option>
                     <?php mysqli_data_seek($mapels, 0); while($m = mysqli_fetch_assoc($mapels)): ?>
                         <option value="<?= $m['id'] ?>" <?= $m['id'] == $mapel_id ? 'selected' : '' ?>><?= htmlspecialchars($m['nama_mapel']) ?></option>
                     <?php endwhile; ?>
@@ -153,7 +178,7 @@ require_once __DIR__ . '/../includes/header.php';
                         <th class="px-4 py-4 text-center border-l border-slate-100 bg-rose-50 text-rose-700 font-black text-[10px] uppercase">A</th>
                         <?php endif; ?>
                         <?php if (empty($jurnals)): ?>
-                            <th class="px-6 py-4 text-center text-slate-400 italic text-sm">Belum ada data jurnal untuk kelas dan rentang tanggal terpilih.</th>
+                            <th class="px-6 py-4 text-center text-slate-400 italic text-sm">Belum ada data jurnal untuk kelas dan rentang tanggal terpilih. Silakan ubah filter rentang tanggal.</th>
                         <?php endif; ?>
                     </tr>
                 </thead>
@@ -165,7 +190,7 @@ require_once __DIR__ . '/../includes/header.php';
                     <tr class="hover:bg-slate-50/50 transition-colors">
                         <td class="px-6 py-4 font-bold text-slate-700 text-sm sticky left-0 bg-white group-hover:bg-slate-50/50 z-10 border-r border-slate-50">
                             <?= htmlspecialchars($s['nama_siswa']) ?>
-                            <div class="text-[9px] text-slate-400 font-mono tracking-tighter"><?= $s['nis'] ?></div>
+                            <div class="text-[9px] text-slate-400 font-mono tracking-tighter">NIS: <?= htmlspecialchars($s['nis']) ?></div>
                         </td>
                         <?php foreach ($jurnals as $j): ?>
                         <td class="px-4 py-4 text-center border-l border-slate-50">
@@ -196,7 +221,7 @@ require_once __DIR__ . '/../includes/header.php';
                     </tr>
                     <?php endforeach; ?>
                     <?php if (empty($siswas)): ?>
-                        <tr><td colspan="<?= count($jurnals) + 5 ?>" class="px-6 py-12 text-center text-slate-400 italic">Tidak ada data siswa di kelas ini.</td></tr>
+                        <tr><td colspan="<?= count($jurnals) + 5 ?>" class="px-6 py-12 text-center text-slate-400 italic">Tidak ada data siswa terdaftar di kelas ini.</td></tr>
                     <?php endif; ?>
                 </tbody>
             </table>
