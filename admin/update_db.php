@@ -72,18 +72,25 @@ if ($is_ajax) {
             }
 
             foreach ($tables as $table => $columns) {
-                foreach ($columns as $column => $definition) {
-                    $check = mysqli_query($conn, "SHOW COLUMNS FROM `$table` LIKE '$column'");
-                    if (mysqli_num_rows($check) == 0) {
-                        $alter = mysqli_query($conn, "ALTER TABLE `$table` ADD `$column` $definition");
-                        if ($alter) {
-                            $logs[] = ['status' => 'success', 'msg' => "Added <b>$column</b> to <b>$table</b>"];
-                        } else {
-                            $logs[] = ['status' => 'error', 'msg' => "Failed adding <b>$column</b>: " . mysqli_error($conn)];
+                try {
+                    $chk_tbl = mysqli_query($conn, "SHOW TABLES LIKE '$table'");
+                    if ($chk_tbl && mysqli_num_rows($chk_tbl) > 0) {
+                        foreach ($columns as $column => $definition) {
+                            $check = mysqli_query($conn, "SHOW COLUMNS FROM `$table` LIKE '$column'");
+                            if ($check && mysqli_num_rows($check) == 0) {
+                                $alter = mysqli_query($conn, "ALTER TABLE `$table` ADD `$column` $definition");
+                                if ($alter) {
+                                    $logs[] = ['status' => 'success', 'msg' => "Added <b>$column</b> to <b>$table</b>"];
+                                } else {
+                                    $logs[] = ['status' => 'error', 'msg' => "Failed adding <b>$column</b>: " . mysqli_error($conn)];
+                                }
+                            } else {
+                                $logs[] = ['status' => 'info', 'msg' => "Column <b>$column</b> already exists in <b>$table</b>"];
+                            }
                         }
-                    } else {
-                        $logs[] = ['status' => 'info', 'msg' => "Column <b>$column</b> already exists in <b>$table</b>"];
                     }
+                } catch (Throwable $e) {
+                    $logs[] = ['status' => 'error', 'msg' => "Error checking table <b>$table</b>: " . htmlspecialchars($e->getMessage())];
                 }
             }
 
@@ -342,9 +349,16 @@ if ($is_ajax) {
             }
 
             // Check if user_dudi_id exists in tempat_pkl
-            $check_user_dudi = mysqli_query($conn, "SHOW COLUMNS FROM `tempat_pkl` LIKE 'user_dudi_id'");
-            if ($check_user_dudi && mysqli_num_rows($check_user_dudi) == 0) {
-                mysqli_query($conn, "ALTER TABLE `tempat_pkl` ADD `user_dudi_id` INT(11) DEFAULT NULL AFTER `no_telp_dudi`");
+            try {
+                $chk_tpkl_tbl = mysqli_query($conn, "SHOW TABLES LIKE 'tempat_pkl'");
+                if ($chk_tpkl_tbl && mysqli_num_rows($chk_tpkl_tbl) > 0) {
+                    $check_user_dudi = mysqli_query($conn, "SHOW COLUMNS FROM `tempat_pkl` LIKE 'user_dudi_id'");
+                    if ($check_user_dudi && mysqli_num_rows($check_user_dudi) == 0) {
+                        mysqli_query($conn, "ALTER TABLE `tempat_pkl` ADD `user_dudi_id` INT(11) DEFAULT NULL AFTER `no_telp_dudi`");
+                    }
+                }
+            } catch (Throwable $e) {
+                $logs[] = ['status' => 'error', 'msg' => "Error checking column user_dudi_id: " . htmlspecialchars($e->getMessage())];
             }
 
             // Create siswa_pkl table
