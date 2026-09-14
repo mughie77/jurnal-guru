@@ -21,26 +21,31 @@ $mapel_id = (int)($_GET['mapel_id'] ?? 0);
 $tgl_mulai = $_GET['tanggal_mulai'] ?? date('Y-m-01');
 $tgl_selesai = $_GET['tanggal_selesai'] ?? date('Y-m-d');
 
-if ($kelas_id <= 0 || $mapel_id <= 0) {
-    die("Error: Parameter kelas dan mata pelajaran wajib dipilih.");
+if ($kelas_id <= 0) {
+    die("Error: Parameter kelas wajib dipilih.");
 }
 
 // Fetch metadata
 $q_kelas = mysqli_query($conn, "SELECT nama_kelas FROM kelas WHERE id = $kelas_id");
 $nama_kelas = mysqli_fetch_assoc($q_kelas)['nama_kelas'] ?? '-';
 
-$q_mapel = mysqli_query($conn, "SELECT nama_mapel FROM mata_pelajaran WHERE id = $mapel_id");
-$nama_mapel = mysqli_fetch_assoc($q_mapel)['nama_mapel'] ?? '-';
+$nama_mapel = 'Semua Mapel Saya';
+if ($mapel_id > 0) {
+    $q_mapel = mysqli_query($conn, "SELECT nama_mapel FROM mata_pelajaran WHERE id = $mapel_id");
+    $nama_mapel = mysqli_fetch_assoc($q_mapel)['nama_mapel'] ?? 'Semua Mapel';
+}
 
 $tgl_m_escaped = mysqli_real_escape_string($conn, $tgl_mulai);
 $tgl_s_escaped = mysqli_real_escape_string($conn, $tgl_selesai);
 
 $where_guru = ($_SESSION['role'] === 'admin') ? "1=1" : "j.guru_id = $guru_id";
+$where_mapel = ($mapel_id > 0) ? " AND j.mapel_id = $mapel_id" : "";
 
 // 1. Fetch Jurnals
-$query_jurnal = "SELECT j.id, j.tanggal, j.jam_ke
+$query_jurnal = "SELECT j.id, j.tanggal, j.jam_ke, mp.nama_mapel
                  FROM jurnal j
-                 WHERE j.kelas_id = $kelas_id AND j.mapel_id = $mapel_id AND $where_guru AND j.tanggal BETWEEN '$tgl_m_escaped' AND '$tgl_s_escaped'
+                 JOIN mata_pelajaran mp ON j.mapel_id = mp.id
+                 WHERE j.kelas_id = $kelas_id AND $where_guru $where_mapel AND j.tanggal BETWEEN '$tgl_m_escaped' AND '$tgl_s_escaped'
                  ORDER BY j.tanggal ASC, j.jam_ke ASC";
 $res_jurnal = mysqli_query($conn, $query_jurnal);
 
@@ -56,7 +61,7 @@ while ($j = mysqli_fetch_assoc($res_jurnal)) {
 
 // 2. Fetch Siswas
 $where_siswa = " WHERE sk.kelas_id = $kelas_id AND sk.tahun_pelajaran_id = $active_tahun_id";
-$query_siswa = "SELECT s.id, s.nama_siswa, s.nis, s.nisn
+$query_siswa = "SELECT s.id, s.nama_siswa, s.nis
                 FROM siswa s
                 JOIN siswa_kelas sk ON s.id = sk.siswa_id
                 $where_siswa
@@ -64,7 +69,7 @@ $query_siswa = "SELECT s.id, s.nama_siswa, s.nis, s.nisn
 $res_siswa = mysqli_query($conn, $query_siswa);
 
 $data = [];
-$data[] = ['<b>REKAP ABSENSI JURNAL SISWA PER MATA PELAJARAN</b>', '', '', ''];
+$data[] = ['<b>REKAP ABSENSI JURNAL SISWA PER JAM MATA PELAJARAN</b>', '', '', ''];
 $data[] = ['Guru Pengajar:', $nama_guru, '', ''];
 $data[] = ['Kelas:', $nama_kelas, '', ''];
 $data[] = ['Mata Pelajaran:', $nama_mapel, '', ''];
@@ -75,12 +80,11 @@ $data[] = ['', '', '', '']; // Spacer
 $header_row = [
     '<b>No</b>',
     '<b>NIS</b>',
-    '<b>NISN</b>',
     '<b>Nama Siswa</b>'
 ];
 
 foreach ($jurnals as $j) {
-    $header_row[] = '<b>' . date('d/m', strtotime($j['tanggal'])) . ' (Jam ' . $j['jam_ke'] . ')</b>';
+    $header_row[] = '<b>' . date('d/m', strtotime($j['tanggal'])) . ' (Jam ' . $j['jam_ke'] . ' - ' . $j['nama_mapel'] . ')</b>';
 }
 
 $header_row[] = '<b>Hadir (H)</b>';
@@ -95,7 +99,6 @@ while ($s = mysqli_fetch_assoc($res_siswa)) {
     $row_data = [
         $no++,
         $s['nis'],
-        $s['nisn'] ?? '-',
         $s['nama_siswa']
     ];
 
@@ -131,7 +134,7 @@ foreach ($data as $rowIndex => &$row) {
 }
 
 $xlsx = SimpleXLSXGen::fromArray($data);
-$filename = "Rekap_Absensi_Matrix_" . str_replace(' ', '_', $nama_mapel) . "_" . str_replace(' ', '_', $nama_kelas) . "_" . date('Ymd') . ".xlsx";
+$filename = "Rekap_Absensi_Matrix_" . str_replace(' ', '_', $nama_kelas) . "_" . date('Ymd') . ".xlsx";
 $xlsx->downloadAs($filename);
 exit();
 ?>

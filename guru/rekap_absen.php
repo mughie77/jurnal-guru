@@ -4,7 +4,7 @@ require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/pagination.php';
 
 authorize_role(['guru', 'admin']);
-$page_title = "Rekap Absensi Jurnal Saya";
+$page_title = "Rekap Absensi Jurnal";
 
 $user_id = $_SESSION['user_id'];
 $guru_res = mysqli_query($conn, "SELECT id FROM guru WHERE user_id = $user_id");
@@ -30,16 +30,17 @@ $jurnals = [];
 $siswas = [];
 $pagin = null;
 
-if ($kelas_id > 0 && $mapel_id > 0) {
+if ($kelas_id > 0) {
     $tgl_m_escaped = mysqli_real_escape_string($conn, $tgl_mulai);
     $tgl_s_escaped = mysqli_real_escape_string($conn, $tgl_selesai);
     $where_guru = ($_SESSION['role'] === 'admin') ? "1=1" : "j.guru_id = $guru_id";
+    $where_mapel = ($mapel_id > 0) ? " AND j.mapel_id = $mapel_id" : "";
 
-    // 1. Fetch all journals for this teacher, class, subject, and date range
+    // 1. Fetch all journals for this teacher, class, date range (and optional mapel)
     $query_jurnal = "SELECT j.id, j.tanggal, j.jam_ke, mp.nama_mapel
                      FROM jurnal j
                      JOIN mata_pelajaran mp ON j.mapel_id = mp.id
-                     WHERE j.kelas_id = $kelas_id AND j.mapel_id = $mapel_id AND $where_guru AND j.tanggal BETWEEN '$tgl_m_escaped' AND '$tgl_s_escaped'
+                     WHERE j.kelas_id = $kelas_id AND $where_guru $where_mapel AND j.tanggal BETWEEN '$tgl_m_escaped' AND '$tgl_s_escaped'
                      ORDER BY j.tanggal ASC, j.jam_ke ASC";
     $res_jurnal = mysqli_query($conn, $query_jurnal);
 
@@ -56,7 +57,7 @@ if ($kelas_id > 0 && $mapel_id > 0) {
     $where_siswa = " WHERE sk.kelas_id = $kelas_id AND sk.tahun_pelajaran_id = $active_tahun_id";
     $pagin = get_pagination_data($conn, "siswa s JOIN siswa_kelas sk ON s.id = sk.siswa_id", 30, $where_siswa);
 
-    $query_siswa = "SELECT s.id, s.nama_siswa, s.nis, s.nisn
+    $query_siswa = "SELECT s.id, s.nama_siswa, s.nis
                     FROM siswa s
                     JOIN siswa_kelas sk ON s.id = sk.siswa_id
                     $where_siswa
@@ -76,11 +77,11 @@ require_once __DIR__ . '/../includes/header.php';
 <div class="max-w-7xl mx-auto pb-20 px-4">
     <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
         <div>
-            <h1 class="text-3xl font-black text-slate-800 tracking-tight italic">Rekap Absensi Jurnal Per Mapel</h1>
-            <p class="text-slate-500 font-medium">Monitoring rincian kehadiran siswa per-sesi jam pelajaran pada mata pelajaran Anda.</p>
+            <h1 class="text-3xl font-black text-slate-800 tracking-tight italic">Rekap Absensi</h1>
+            <p class="text-slate-500 font-medium">Pantau kehadiran siswa per jam mata pelajaran yang Anda ampu.</p>
         </div>
         <div class="flex gap-3">
-            <?php if ($kelas_id > 0 && $mapel_id > 0): ?>
+            <?php if ($kelas_id > 0): ?>
             <a href="export_rekap_absen_excel.php?<?= http_build_query($_GET) ?>" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold transition-all shadow-lg shadow-emerald-100 flex items-center text-xs">
                 <i class="fa fa-file-excel mr-2"></i> Ekspor Excel
             </a>
@@ -105,9 +106,9 @@ require_once __DIR__ . '/../includes/header.php';
             </div>
 
             <div>
-                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2">Mata Pelajaran</label>
-                <select name="mapel_id" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-100 bg-white font-bold text-xs text-slate-700">
-                    <option value="">-- Pilih Mapel --</option>
+                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2">Mata Pelajaran (Opsional)</label>
+                <select name="mapel_id" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-100 bg-white font-bold text-xs text-slate-700">
+                    <option value="">-- Semua Mapel --</option>
                     <?php mysqli_data_seek($mapels, 0); while($m = mysqli_fetch_assoc($mapels)): ?>
                         <option value="<?= $m['id'] ?>" <?= $m['id'] == $mapel_id ? 'selected' : '' ?>><?= htmlspecialchars($m['nama_mapel']) ?></option>
                     <?php endwhile; ?>
@@ -124,13 +125,13 @@ require_once __DIR__ . '/../includes/header.php';
             </div>
 
             <div class="flex gap-2">
-                <button type="submit" class="flex-1 py-2.5 bg-indigo-600 text-white font-bold rounded-xl text-xs hover:bg-indigo-700 transition-all shadow-md shadow-indigo-100">Tampilkan</button>
+                <button type="submit" class="flex-1 py-2.5 bg-indigo-600 text-white font-bold rounded-xl text-xs hover:bg-indigo-700 transition-all shadow-md shadow-indigo-100">Tampilkan Rekap</button>
                 <a href="rekap_absen.php" class="px-4 py-2.5 bg-slate-200 text-slate-600 font-bold rounded-xl text-xs hover:bg-slate-300 transition-all">Reset</a>
             </div>
         </form>
     </div>
 
-    <?php if ($kelas_id > 0 && $mapel_id > 0): ?>
+    <?php if ($kelas_id > 0): ?>
     <div class="lux-card overflow-hidden bg-white shadow-2xl rounded-3xl mb-6">
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
@@ -138,19 +139,20 @@ require_once __DIR__ . '/../includes/header.php';
                     <tr class="bg-slate-50 border-b border-slate-100">
                         <th class="px-6 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest sticky left-0 bg-slate-50 z-10 min-w-[200px]">Nama Siswa</th>
                         <?php foreach ($jurnals as $j): ?>
-                        <th class="px-3 py-4 text-center border-l border-slate-100 min-w-[80px]">
-                            <div class="text-[10px] font-black text-indigo-600 uppercase whitespace-nowrap"><?= date('d/m', strtotime($j['tanggal'])) ?></div>
-                            <div class="text-[9px] text-slate-400 font-bold whitespace-nowrap">Jam: <?= htmlspecialchars($j['jam_ke']) ?></div>
+                        <th class="px-4 py-4 text-center border-l border-slate-100 min-w-[90px]">
+                            <div class="text-[10px] font-black text-indigo-500 uppercase whitespace-nowrap"><?= date('d/m', strtotime($j['tanggal'])) ?></div>
+                            <div class="text-[10px] font-black text-indigo-500 uppercase whitespace-nowrap">Jam: <?= htmlspecialchars($j['jam_ke']) ?></div>
+                            <div class="text-[9px] text-slate-400 font-bold truncate w-24 mx-auto" title="<?= htmlspecialchars($j['nama_mapel']) ?>"><?= htmlspecialchars($j['nama_mapel']) ?></div>
                         </th>
                         <?php endforeach; ?>
                         <?php if (!empty($jurnals)): ?>
-                        <th class="px-3 py-4 text-center border-l border-slate-100 bg-emerald-50 text-emerald-700 font-black text-[10px] uppercase">H</th>
-                        <th class="px-3 py-4 text-center border-l border-slate-100 bg-amber-50 text-amber-700 font-black text-[10px] uppercase">S</th>
-                        <th class="px-3 py-4 text-center border-l border-slate-100 bg-blue-50 text-blue-700 font-black text-[10px] uppercase">I</th>
-                        <th class="px-3 py-4 text-center border-l border-slate-100 bg-rose-50 text-rose-700 font-black text-[10px] uppercase">A</th>
+                        <th class="px-4 py-4 text-center border-l border-slate-100 bg-emerald-50 text-emerald-700 font-black text-[10px] uppercase">H</th>
+                        <th class="px-4 py-4 text-center border-l border-slate-100 bg-amber-50 text-amber-700 font-black text-[10px] uppercase">S</th>
+                        <th class="px-4 py-4 text-center border-l border-slate-100 bg-blue-50 text-blue-700 font-black text-[10px] uppercase">I</th>
+                        <th class="px-4 py-4 text-center border-l border-slate-100 bg-rose-50 text-rose-700 font-black text-[10px] uppercase">A</th>
                         <?php endif; ?>
                         <?php if (empty($jurnals)): ?>
-                            <th class="px-6 py-4 text-center text-slate-400 italic text-sm">Belum ada data jurnal mengajar pada rentang tanggal terpilih.</th>
+                            <th class="px-6 py-4 text-center text-slate-400 italic text-sm">Belum ada data jurnal untuk kelas dan rentang tanggal terpilih.</th>
                         <?php endif; ?>
                     </tr>
                 </thead>
@@ -162,10 +164,10 @@ require_once __DIR__ . '/../includes/header.php';
                     <tr class="hover:bg-slate-50/50 transition-colors">
                         <td class="px-6 py-4 font-bold text-slate-700 text-sm sticky left-0 bg-white group-hover:bg-slate-50/50 z-10 border-r border-slate-50">
                             <?= htmlspecialchars($s['nama_siswa']) ?>
-                            <div class="text-[9px] text-slate-400 font-mono tracking-tighter">NIS: <?= htmlspecialchars($s['nis']) ?></div>
+                            <div class="text-[9px] text-slate-400 font-mono tracking-tighter"><?= $s['nis'] ?></div>
                         </td>
                         <?php foreach ($jurnals as $j): ?>
-                        <td class="px-3 py-4 text-center border-l border-slate-50">
+                        <td class="px-4 py-4 text-center border-l border-slate-50">
                             <?php
                             $status = $j['absensi'][$s['id']] ?? '-';
                             if ($status == 'H') $cnt_h++;
@@ -185,15 +187,15 @@ require_once __DIR__ . '/../includes/header.php';
                         </td>
                         <?php endforeach; ?>
                         <?php if (!empty($jurnals)): ?>
-                        <td class="px-3 py-4 text-center border-l border-slate-50 font-black text-emerald-600 text-xs bg-emerald-50/20"><?= $cnt_h ?></td>
-                        <td class="px-3 py-4 text-center border-l border-slate-50 font-black text-amber-600 text-xs bg-amber-50/20"><?= $cnt_s ?></td>
-                        <td class="px-3 py-4 text-center border-l border-slate-50 font-black text-blue-600 text-xs bg-blue-50/20"><?= $cnt_i ?></td>
-                        <td class="px-3 py-4 text-center border-l border-slate-50 font-black text-rose-600 text-xs bg-rose-50/20"><?= $cnt_a ?></td>
+                        <td class="px-4 py-4 text-center border-l border-slate-50 font-black text-emerald-600 text-xs bg-emerald-50/20"><?= $cnt_h ?></td>
+                        <td class="px-4 py-4 text-center border-l border-slate-50 font-black text-amber-600 text-xs bg-amber-50/20"><?= $cnt_s ?></td>
+                        <td class="px-4 py-4 text-center border-l border-slate-50 font-black text-blue-600 text-xs bg-blue-50/20"><?= $cnt_i ?></td>
+                        <td class="px-4 py-4 text-center border-l border-slate-50 font-black text-rose-600 text-xs bg-rose-50/20"><?= $cnt_a ?></td>
                         <?php endif; ?>
                     </tr>
                     <?php endforeach; ?>
                     <?php if (empty($siswas)): ?>
-                        <tr><td colspan="<?= count($jurnals) + 5 ?>" class="px-6 py-12 text-center text-slate-400 italic">Tidak ada siswa terdaftar di kelas ini.</td></tr>
+                        <tr><td colspan="<?= count($jurnals) + 5 ?>" class="px-6 py-12 text-center text-slate-400 italic">Tidak ada data siswa di kelas ini.</td></tr>
                     <?php endif; ?>
                 </tbody>
             </table>
@@ -205,9 +207,9 @@ require_once __DIR__ . '/../includes/header.php';
     <?php endif; ?>
 
     <?php else: ?>
-    <div class="lux-card p-16 text-center">
-        <div class="w-16 h-16 bg-slate-50 text-slate-300 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl"><i class="fa fa-filter"></i></div>
-        <p class="text-slate-400 font-medium italic text-sm">Silakan pilih kelas, mata pelajaran, dan rentang tanggal untuk menampilkan rekap absensi.</p>
+    <div class="lux-card p-20 text-center">
+        <div class="w-20 h-20 bg-slate-50 text-slate-300 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl"><i class="fa fa-search"></i></div>
+        <p class="text-slate-400 font-medium italic">Silakan pilih kelas dan rentang tanggal untuk melihat rekap absensi.</p>
     </div>
     <?php endif; ?>
 </div>
