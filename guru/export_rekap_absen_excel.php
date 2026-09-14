@@ -18,7 +18,7 @@ $guru_id = $guru_row['id'];
 
 $kelas_id = (int)($_GET['kelas_id'] ?? 0);
 $mapel_id = (int)($_GET['mapel_id'] ?? 0);
-$tgl_mulai = $_GET['tanggal_mulai'] ?? date('Y-m-01');
+$tgl_mulai = $_GET['tanggal_mulai'] ?? date('Y-m-d');
 $tgl_selesai = $_GET['tanggal_selesai'] ?? date('Y-m-d');
 
 if ($kelas_id <= 0) {
