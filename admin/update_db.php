@@ -431,6 +431,33 @@ if ($is_ajax) {
                 $logs[] = ['status' => 'error', 'msg' => "Failed creating <b>nilai_pkl</b>: " . mysqli_error($conn)];
             }
 
+            // Create buku_kejadian table
+            $create_bk = "CREATE TABLE IF NOT EXISTS `buku_kejadian` (
+                `id` int(11) NOT NULL AUTO_INCREMENT,
+                `jurnal_id` int(11) DEFAULT NULL,
+                `guru_id` int(11) NOT NULL,
+                `kelas_id` int(11) NOT NULL,
+                `mapel_id` int(11) DEFAULT NULL,
+                `tahun_pelajaran_id` int(11) DEFAULT NULL,
+                `tanggal` date NOT NULL,
+                `hari` varchar(20) DEFAULT NULL,
+                `siswa_ids` text DEFAULT NULL,
+                `nama_siswa_list` text DEFAULT NULL,
+                `uraian_kejadian` text NOT NULL,
+                `tindak_lanjut` text DEFAULT NULL,
+                `created_at` timestamp NULL DEFAULT current_timestamp(),
+                PRIMARY KEY (`id`),
+                KEY `guru_id` (`guru_id`),
+                KEY `kelas_id` (`kelas_id`),
+                KEY `tanggal` (`tanggal`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
+
+            if (mysqli_query($conn, $create_bk)) {
+                $logs[] = ['status' => 'success', 'msg' => "Table <b>buku_kejadian</b> created successfully"];
+            } else {
+                $logs[] = ['status' => 'error', 'msg' => "Failed creating <b>buku_kejadian</b>: " . mysqli_error($conn)];
+            }
+
             foreach ($logs as $log) {
                 $color = 'text-blue-600 bg-blue-50';
                 if ($log['status'] == 'success') {

@@ -371,3 +371,28 @@ CREATE TABLE `siswa_pkl` (
   CONSTRAINT `siswa_pkl_ibfk_1` FOREIGN KEY (`siswa_id`) REFERENCES `siswa` (`id`) ON DELETE CASCADE,
   CONSTRAINT `siswa_pkl_ibfk_2` FOREIGN KEY (`tempat_pkl_id`) REFERENCES `tempat_pkl` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `buku_kejadian`
+--
+CREATE TABLE `buku_kejadian` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `jurnal_id` int(11) DEFAULT NULL,
+  `guru_id` int(11) NOT NULL,
+  `kelas_id` int(11) NOT NULL,
+  `mapel_id` int(11) DEFAULT NULL,
+  `tahun_pelajaran_id` int(11) DEFAULT NULL,
+  `tanggal` date NOT NULL,
+  `hari` varchar(20) DEFAULT NULL,
+  `siswa_ids` text DEFAULT NULL,
+  `nama_siswa_list` text DEFAULT NULL,
+  `uraian_kejadian` text NOT NULL,
+  `tindak_lanjut` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `guru_id` (`guru_id`),
+  KEY `kelas_id` (`kelas_id`),
+  KEY `tanggal` (`tanggal`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

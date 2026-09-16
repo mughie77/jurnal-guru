@@ -63,6 +63,26 @@ if (!empty($absent_student_ids)) {
     }
 }
 
+// Ambil seluruh siswa di kelas ini untuk modal Buku Kejadian
+$res_all_siswa = mysqli_query($conn, "SELECT s.id, s.nama_siswa, s.nis FROM siswa s JOIN siswa_kelas sk ON s.id = sk.siswa_id WHERE sk.kelas_id = $kid ORDER BY s.nama_siswa ASC");
+$all_siswa = [];
+while ($row_s = mysqli_fetch_assoc($res_all_siswa)) {
+    $all_siswa[] = $row_s;
+}
+
+// Format Hari
+$day_eng = date('l', strtotime($tanggal));
+$day_map = [
+    'Monday' => 'Senin',
+    'Tuesday' => 'Selasa',
+    'Wednesday' => 'Rabu',
+    'Thursday' => 'Kamis',
+    'Friday' => 'Jumat',
+    'Saturday' => 'Sabtu',
+    'Sunday' => 'Minggu'
+];
+$hari_str = $day_map[$day_eng] ?? 'Senin';
+
 // Ambil setting lokasi sekolah dan radius absensi
 $res_set = mysqli_query($conn, "SELECT * FROM pengaturan");
 $sets = [];
@@ -135,6 +155,42 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['simpan_jurnal'])) {
                     FROM absensi_jurnal WHERE jurnal_id = $jurnal_id");
                 $c = mysqli_fetch_assoc($res_counts);
                 mysqli_query($conn, "UPDATE jurnal SET jml_hadir={$c['h']}, jml_sakit={$c['s']}, jml_izin={$c['i']}, jml_alfa={$c['a']} WHERE id = $jurnal_id");
+            }
+
+            // 3. Save Buku Kejadian if submitted
+            if (isset($_POST['is_kejadian']) && $_POST['is_kejadian'] == '1') {
+                $uraian_kejadian = mysqli_real_escape_string($conn, $_POST['uraian_kejadian'] ?? '');
+                $tindak_lanjut = mysqli_real_escape_string($conn, $_POST['tindak_lanjut'] ?? '');
+                $pilih_semua = isset($_POST['pilih_semua_siswa']) ? 1 : 0;
+                $selected_ids = $_POST['kejadian_siswa_ids'] ?? [];
+
+                $siswa_id_arr = [];
+                $siswa_nama_arr = [];
+
+                if ($pilih_semua == 1) {
+                    foreach ($all_siswa as $as) {
+                        $siswa_id_arr[] = $as['id'];
+                        $siswa_nama_arr[] = $as['nama_siswa'];
+                    }
+                } else if (!empty($selected_ids)) {
+                    foreach ($selected_ids as $sid_raw) {
+                        $sid_int = (int)$sid_raw;
+                        $siswa_id_arr[] = $sid_int;
+                        foreach ($all_siswa as $as) {
+                            if ($as['id'] == $sid_int) {
+                                $siswa_nama_arr[] = $as['nama_siswa'];
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                $siswa_ids_str = implode(',', $siswa_id_arr);
+                $siswa_nama_str = implode(', ', $siswa_nama_arr);
+
+                $stmt_bk = mysqli_prepare($conn, "INSERT INTO buku_kejadian (jurnal_id, guru_id, kelas_id, mapel_id, tahun_pelajaran_id, tanggal, hari, siswa_ids, nama_siswa_list, uraian_kejadian, tindak_lanjut) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                mysqli_stmt_bind_param($stmt_bk, "iiiiissssss", $jurnal_id, $guru_id, $kid, $mid, $tahun_pelajaran_id, $tanggal, $hari_str, $siswa_ids_str, $siswa_nama_str, $uraian_kejadian, $tindak_lanjut);
+                mysqli_stmt_execute($stmt_bk);
             }
 
             mysqli_commit($conn);
@@ -227,12 +283,172 @@ require_once __DIR__ . '/../includes/header.php';
                 <input type="text" name="keterangan" placeholder="Media pembelajaran, kendala, dll." class="w-full px-4 sm:px-6 py-3 sm:py-4 rounded-xl sm:rounded-2xl border border-slate-200 outline-none focus:ring-4 focus:ring-slate-100 font-medium text-slate-500 text-sm sm:text-base">
             </div>
 
-            <button type="submit" name="simpan_jurnal" class="w-full py-4 sm:py-5 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-2xl sm:rounded-3xl shadow-2xl shadow-indigo-200 transition-all transform hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-2 sm:gap-3 tracking-[0.1em] sm:tracking-widest text-base sm:text-lg">
-                <i class="fa fa-save text-lg sm:text-xl"></i> SELESAIKAN JURNAL
-            </button>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                <button type="button" onclick="openBukuKejadianModal()" class="w-full py-4 sm:py-5 bg-amber-500 hover:bg-amber-600 text-white font-black rounded-2xl sm:rounded-3xl shadow-xl shadow-amber-100 transition-all transform hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-2 sm:gap-3 tracking-[0.1em] text-sm sm:text-base">
+                    <i class="fa fa-book-bookmark text-lg"></i> BUKU KEJADIAN
+                </button>
+
+                <button type="submit" name="simpan_jurnal" class="w-full py-4 sm:py-5 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-2xl sm:rounded-3xl shadow-2xl shadow-indigo-200 transition-all transform hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-2 sm:gap-3 tracking-[0.1em] text-sm sm:text-base">
+                    <i class="fa fa-save text-lg"></i> SELESAIKAN JURNAL
+                </button>
+            </div>
         </form>
     </div>
 </div>
+
+<!-- Modal Buku Kejadian Overlay -->
+<div id="bkModalOverlay" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] hidden transition-opacity duration-300 opacity-0" onclick="closeBukuKejadianModal()"></div>
+
+<!-- Modal Form Buku Kejadian -->
+<div id="bkModal" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95vw] sm:w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white rounded-3xl shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0">
+    <div class="bg-amber-500 px-6 sm:px-8 py-5 text-white flex justify-between items-center sticky top-0 z-10 rounded-t-3xl">
+        <div>
+            <h3 class="text-lg sm:text-xl font-black italic">Buku Kejadian Kelas</h3>
+            <p class="text-[10px] text-amber-100 font-bold uppercase tracking-widest mt-0.5"><?= $hari_str ?>, <?= date('d F Y', strtotime($tanggal)) ?> | Kelas: <?= htmlspecialchars($j['nama_kelas']) ?></p>
+        </div>
+        <button type="button" onclick="closeBukuKejadianModal()" class="text-white/80 hover:text-white text-lg"><i class="fa fa-times"></i></button>
+    </div>
+
+    <div class="p-6 sm:p-8 space-y-6">
+        <div>
+            <div class="flex items-center justify-between mb-3">
+                <label class="block text-xs font-black text-slate-700 uppercase tracking-wider">Pilih Siswa Terlibat</label>
+                <label class="inline-flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" id="check-all-siswa" onchange="toggleSelectAllSiswa(this)" class="w-4 h-4 rounded text-amber-600 focus:ring-amber-500 border-slate-300">
+                    <span class="text-xs font-bold text-amber-700 uppercase">Pilih Semua Siswa</span>
+                </label>
+            </div>
+
+            <div class="max-h-48 overflow-y-auto p-3 bg-slate-50 border border-slate-200 rounded-2xl grid grid-cols-1 sm:grid-cols-2 gap-2 pr-1">
+                <?php foreach ($all_siswa as $as): ?>
+                <label class="flex items-center gap-2.5 p-2 bg-white rounded-xl border border-slate-100 shadow-sm cursor-pointer hover:border-amber-300 transition-colors">
+                    <input type="checkbox" class="cb-siswa-kejadian w-4 h-4 rounded text-amber-600 focus:ring-amber-500 border-slate-300" value="<?= $as['id'] ?>">
+                    <div class="truncate">
+                        <span class="text-xs font-bold text-slate-800 block truncate"><?= htmlspecialchars($as['nama_siswa']) ?></span>
+                        <span class="text-[9px] text-slate-400 font-mono block">NIS: <?= htmlspecialchars($as['nis']) ?></span>
+                    </div>
+                </label>
+                <?php endforeach; ?>
+            </div>
+        </div>
+
+        <div>
+            <label class="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">Uraian Kejadian</label>
+            <textarea id="modal_uraian_kejadian" rows="4" placeholder="Jelaskan secara lengkap kronologi atau uraian kejadian yang terjadi di kelas..." class="w-full px-4 py-3 rounded-2xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-100 font-medium text-xs text-slate-700"></textarea>
+        </div>
+
+        <div>
+            <label class="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">Tindak Lanjut / Pembinaan</label>
+            <textarea id="modal_tindak_lanjut" rows="3" placeholder="Langkah penanganan, pembinaan, atau tindak lanjut yang diberikan..." class="w-full px-4 py-3 rounded-2xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-100 font-medium text-xs text-slate-700"></textarea>
+        </div>
+
+        <div class="pt-2 flex gap-3">
+            <button type="button" onclick="closeBukuKejadianModal()" class="flex-1 px-5 py-3 rounded-2xl border border-slate-200 font-bold text-slate-600 hover:bg-slate-50 text-xs">Batal</button>
+            <button type="button" onclick="saveBukuKejadianTemp()" class="flex-1 px-5 py-3 rounded-2xl bg-amber-500 text-white font-bold hover:bg-amber-600 shadow-lg shadow-amber-100 text-xs">
+                Simpan Ke Jurnal
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+function openBukuKejadianModal() {
+    const m = document.getElementById('bkModal');
+    const o = document.getElementById('bkModalOverlay');
+    o.classList.remove('hidden');
+    m.classList.remove('hidden');
+    setTimeout(() => {
+        o.classList.add('opacity-100');
+        m.classList.add('opacity-100', 'scale-100');
+    }, 10);
+}
+
+function closeBukuKejadianModal() {
+    const m = document.getElementById('bkModal');
+    const o = document.getElementById('bkModalOverlay');
+    o.classList.remove('opacity-100');
+    m.classList.remove('opacity-100', 'scale-100');
+    setTimeout(() => {
+        o.classList.add('hidden');
+        m.classList.add('hidden');
+    }, 300);
+}
+
+function toggleSelectAllSiswa(master) {
+    const checkboxes = document.querySelectorAll('.cb-siswa-kejadian');
+    checkboxes.forEach(cb => {
+        cb.checked = master.checked;
+    });
+}
+
+function saveBukuKejadianTemp() {
+    const uraian = document.getElementById('modal_uraian_kejadian').value.trim();
+    if (!uraian) {
+        Swal.fire({ icon: 'warning', title: 'Uraian Kejadian Kosong', text: 'Tuliskan uraian kejadian terlebih dahulu.', confirmButtonColor: '#F59E0B' });
+        return;
+    }
+
+    const form = document.getElementById('jurnal-form');
+
+    // Remove old hidden inputs for kejadian if re-saved
+    const oldInputs = form.querySelectorAll('.temp-bk-input');
+    oldInputs.forEach(i => i.remove());
+
+    // Flag kejadian as active
+    const inputFlag = document.createElement('input');
+    inputFlag.type = 'hidden';
+    inputFlag.name = 'is_kejadian';
+    inputFlag.value = '1';
+    inputFlag.className = 'temp-bk-input';
+    form.appendChild(inputFlag);
+
+    // Uraian input
+    const inputUraian = document.createElement('input');
+    inputUraian.type = 'hidden';
+    inputUraian.name = 'uraian_kejadian';
+    inputUraian.value = uraian;
+    inputUraian.className = 'temp-bk-input';
+    form.appendChild(inputUraian);
+
+    // Tindak Lanjut input
+    const inputTL = document.createElement('input');
+    inputTL.type = 'hidden';
+    inputTL.name = 'tindak_lanjut';
+    inputTL.value = document.getElementById('modal_tindak_lanjut').value.trim();
+    inputTL.className = 'temp-bk-input';
+    form.appendChild(inputTL);
+
+    // Master check
+    const isAll = document.getElementById('check-all-siswa').checked;
+    if (isAll) {
+        const inputAll = document.createElement('input');
+        inputAll.type = 'hidden';
+        inputAll.name = 'pilih_semua_siswa';
+        inputAll.value = '1';
+        inputAll.className = 'temp-bk-input';
+        form.appendChild(inputAll);
+    } else {
+        const selectedCbs = document.querySelectorAll('.cb-siswa-kejadian:checked');
+        selectedCbs.forEach(cb => {
+            const inputS = document.createElement('input');
+            inputS.type = 'hidden';
+            inputS.name = 'kejadian_siswa_ids[]';
+            inputS.value = cb.value;
+            inputS.className = 'temp-bk-input';
+            form.appendChild(inputS);
+        });
+    }
+
+    closeBukuKejadianModal();
+
+    Swal.fire({
+        icon: 'success',
+        title: 'Buku Kejadian Disimpan',
+        text: 'Catatan kejadian berhasil dilampirkan. Klik SELESAIKAN JURNAL untuk menyimpan seluruh data.',
+        confirmButtonColor: '#F59E0B'
+    });
+}
+</script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {

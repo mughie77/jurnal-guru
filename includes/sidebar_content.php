@@ -110,8 +110,9 @@ if ($role == 'admin') {
     echo sidebar_section('Monitor', 'fa fa-desktop', $monitor_active, $monitor_links);
 
     // Group 4: Laporan & Rekap
-    $laporan_active = in_array($current_page, ['jurnal.php', 'rekap_absensi.php', 'rekap_persiswa.php', 'rekap_gps.php', 'rekap_izin.php', 'rekap_kritik.php', 'rekap_pengaduan.php', 'rekap_berkas.php', 'perangkat.php', 'rekap_tugas_guru.php']);
+    $laporan_active = in_array($current_page, ['jurnal.php', 'rekap_absensi.php', 'rekap_persiswa.php', 'rekap_gps.php', 'rekap_izin.php', 'rekap_kritik.php', 'rekap_pengaduan.php', 'rekap_berkas.php', 'perangkat.php', 'rekap_tugas_guru.php', 'rekap_buku_kejadian.php']);
     $laporan_links = sub_nav_link('admin/jurnal.php', 'Jurnal Mengajar', $current_page == 'jurnal.php') .
+                     sub_nav_link('admin/rekap_buku_kejadian.php', 'Buku Kejadian', $current_page == 'rekap_buku_kejadian.php') .
                      sub_nav_link('admin/rekap_tugas_guru.php', 'Tugas Guru Tidak Masuk', $current_page == 'rekap_tugas_guru.php') .
                      sub_nav_link('admin/rekap_absensi.php', 'Absensi Jurnal', $current_page == 'rekap_absensi.php') .
                      sub_nav_link('admin/rekap_persiswa.php', 'Kehadiran Siswa', $current_page == 'rekap_persiswa.php') .
@@ -162,8 +163,9 @@ if ($role == 'admin') {
     echo sidebar_section('Monitor', 'fa fa-desktop', $monitor_active, $monitor_links);
 
     // Group 4: Laporan & Rekap (Waka)
-    $laporan_active = in_array($current_page, ['jurnal.php', 'rekap_absensi.php', 'rekap_persiswa.php', 'rekap_gps.php', 'rekap_izin.php', 'rekap_kritik.php', 'rekap_pengaduan.php', 'rekap_berkas.php', 'perangkat.php', 'rekap_tugas_guru.php']);
+    $laporan_active = in_array($current_page, ['jurnal.php', 'rekap_absensi.php', 'rekap_persiswa.php', 'rekap_gps.php', 'rekap_izin.php', 'rekap_kritik.php', 'rekap_pengaduan.php', 'rekap_berkas.php', 'perangkat.php', 'rekap_tugas_guru.php', 'rekap_buku_kejadian.php']);
     $laporan_links = sub_nav_link('waka/jurnal.php', 'Jurnal Mengajar', $current_page == 'jurnal.php') .
+                     sub_nav_link('waka/rekap_buku_kejadian.php', 'Buku Kejadian', $current_page == 'rekap_buku_kejadian.php') .
                      sub_nav_link('waka/rekap_tugas_guru.php', 'Tugas Guru Tidak Masuk', $current_page == 'rekap_tugas_guru.php') .
                      sub_nav_link('admin/rekap_absensi.php', 'Absensi Jurnal', $current_page == 'rekap_absensi.php') .
                      sub_nav_link('admin/rekap_persiswa.php', 'Kehadiran Siswa', $current_page == 'rekap_persiswa.php') .
@@ -178,9 +180,10 @@ if ($role == 'admin') {
     echo nav_link('guru/index.php', 'fa fa-tachometer-alt', 'Beranda', $current_page == 'index.php' && strpos($_SERVER['PHP_SELF'], '/guru/') !== false);
 
     // Guru Group
-    $guru_active = in_array($current_page, ['isi_absensi.php', 'isi_jurnal.php', 'rekap_absen.php', 'riwayat.php', 'perangkat.php', 'tugas_tidak_masuk.php']);
+    $guru_active = in_array($current_page, ['isi_absensi.php', 'isi_jurnal.php', 'rekap_absen.php', 'riwayat.php', 'perangkat.php', 'tugas_tidak_masuk.php', 'rekap_buku_kejadian.php']);
     $guru_links = sub_nav_link('guru/isi_absensi.php', 'Isi Jurnal & Absensi', $current_page == 'isi_absensi.php' || $current_page == 'isi_jurnal.php') .
                   sub_nav_link('guru/rekap_absen.php', 'Laporan Kehadiran', $current_page == 'rekap_absen.php') .
+                  sub_nav_link('guru/rekap_buku_kejadian.php', 'Buku Kejadian', $current_page == 'rekap_buku_kejadian.php') .
                   sub_nav_link('guru/riwayat.php', 'Riwayat Jurnal', $current_page == 'riwayat.php') .
                   sub_nav_link('guru/tugas_tidak_masuk.php', 'Tugas Guru', $current_page == 'tugas_tidak_masuk.php') .
                   sub_nav_link('guru/perangkat.php', 'Perangkat Pembelajaran', $current_page == 'perangkat.php');
