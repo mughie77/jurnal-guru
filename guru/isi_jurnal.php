@@ -300,32 +300,32 @@ require_once __DIR__ . '/../includes/header.php';
 <div id="bkModalOverlay" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] hidden transition-opacity duration-300 opacity-0" onclick="closeBukuKejadianModal()"></div>
 
 <!-- Modal Form Buku Kejadian -->
-<div id="bkModal" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95vw] sm:w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white rounded-3xl shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0">
-    <div class="bg-amber-500 px-6 sm:px-8 py-5 text-white flex justify-between items-center sticky top-0 z-10 rounded-t-3xl">
+<div id="bkModal" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[94vw] sm:w-full max-w-xl max-h-[85vh] overflow-y-auto bg-white rounded-2xl sm:rounded-3xl shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0">
+    <div class="bg-amber-500 px-4 sm:px-6 py-4 text-white flex justify-between items-center sticky top-0 z-10 rounded-t-2xl sm:rounded-t-3xl shadow-md">
         <div>
-            <h3 class="text-lg sm:text-xl font-black italic">Buku Kejadian Kelas</h3>
-            <p class="text-[10px] text-amber-100 font-bold uppercase tracking-widest mt-0.5"><?= $hari_str ?>, <?= date('d F Y', strtotime($tanggal)) ?> | Kelas: <?= htmlspecialchars($j['nama_kelas']) ?></p>
+            <h3 class="text-base sm:text-lg font-black italic">Buku Kejadian Kelas</h3>
+            <p class="text-[9px] sm:text-[10px] text-amber-100 font-bold uppercase tracking-widest mt-0.5"><?= $hari_str ?>, <?= date('d F Y', strtotime($tanggal)) ?> | Kelas: <?= htmlspecialchars($j['nama_kelas']) ?></p>
         </div>
-        <button type="button" onclick="closeBukuKejadianModal()" class="text-white/80 hover:text-white text-lg"><i class="fa fa-times"></i></button>
+        <button type="button" onclick="closeBukuKejadianModal()" class="text-white/80 hover:text-white text-base sm:text-lg p-1"><i class="fa fa-times"></i></button>
     </div>
 
-    <div class="p-6 sm:p-8 space-y-6">
+    <div class="p-4 sm:p-6 space-y-4 sm:space-y-6">
         <div>
-            <div class="flex items-center justify-between mb-3">
-                <label class="block text-xs font-black text-slate-700 uppercase tracking-wider">Pilih Siswa Terlibat</label>
-                <label class="inline-flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" id="check-all-siswa" onchange="toggleSelectAllSiswa(this)" class="w-4 h-4 rounded text-amber-600 focus:ring-amber-500 border-slate-300">
-                    <span class="text-xs font-bold text-amber-700 uppercase">Pilih Semua Siswa</span>
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+                <label class="block text-[11px] sm:text-xs font-black text-slate-700 uppercase tracking-wider">Pilih Siswa Terlibat</label>
+                <label class="inline-flex items-center gap-1.5 cursor-pointer">
+                    <input type="checkbox" id="check-all-siswa" onchange="toggleSelectAllSiswa(this)" class="w-3.5 h-3.5 rounded text-amber-600 focus:ring-amber-500 border-slate-300">
+                    <span class="text-[10px] sm:text-xs font-bold text-amber-700 uppercase">Pilih Semua Siswa</span>
                 </label>
             </div>
 
-            <div class="max-h-48 overflow-y-auto p-3 bg-slate-50 border border-slate-200 rounded-2xl grid grid-cols-1 sm:grid-cols-2 gap-2 pr-1">
+            <div class="max-h-36 sm:max-h-48 overflow-y-auto p-2 sm:p-3 bg-slate-50 border border-slate-200 rounded-xl sm:rounded-2xl grid grid-cols-1 xs:grid-cols-2 gap-1.5 sm:gap-2 pr-1">
                 <?php foreach ($all_siswa as $as): ?>
-                <label class="flex items-center gap-2.5 p-2 bg-white rounded-xl border border-slate-100 shadow-sm cursor-pointer hover:border-amber-300 transition-colors">
-                    <input type="checkbox" class="cb-siswa-kejadian w-4 h-4 rounded text-amber-600 focus:ring-amber-500 border-slate-300" value="<?= $as['id'] ?>">
+                <label class="flex items-center gap-2 p-1.5 sm:p-2 bg-white rounded-lg sm:rounded-xl border border-slate-100 shadow-sm cursor-pointer hover:border-amber-300 transition-colors">
+                    <input type="checkbox" class="cb-siswa-kejadian w-3.5 h-3.5 sm:w-4 sm:h-4 rounded text-amber-600 focus:ring-amber-500 border-slate-300 shrink-0" value="<?= $as['id'] ?>">
                     <div class="truncate">
-                        <span class="text-xs font-bold text-slate-800 block truncate"><?= htmlspecialchars($as['nama_siswa']) ?></span>
-                        <span class="text-[9px] text-slate-400 font-mono block">NIS: <?= htmlspecialchars($as['nis']) ?></span>
+                        <span class="text-[11px] sm:text-xs font-bold text-slate-800 block truncate"><?= htmlspecialchars($as['nama_siswa']) ?></span>
+                        <span class="text-[8px] sm:text-[9px] text-slate-400 font-mono block">NIS: <?= htmlspecialchars($as['nis']) ?></span>
                     </div>
                 </label>
                 <?php endforeach; ?>
@@ -333,18 +333,18 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
 
         <div>
-            <label class="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">Uraian Kejadian</label>
-            <textarea id="modal_uraian_kejadian" rows="4" placeholder="Jelaskan secara lengkap kronologi atau uraian kejadian yang terjadi di kelas..." class="w-full px-4 py-3 rounded-2xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-100 font-medium text-xs text-slate-700"></textarea>
+            <label class="block text-[11px] sm:text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">Uraian Kejadian</label>
+            <textarea id="modal_uraian_kejadian" rows="3" placeholder="Jelaskan secara lengkap kronologi atau uraian kejadian yang terjadi di kelas..." class="w-full px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-xl sm:rounded-2xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-100 font-medium text-xs text-slate-700"></textarea>
         </div>
 
         <div>
-            <label class="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">Tindak Lanjut / Pembinaan</label>
-            <textarea id="modal_tindak_lanjut" rows="3" placeholder="Langkah penanganan, pembinaan, atau tindak lanjut yang diberikan..." class="w-full px-4 py-3 rounded-2xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-100 font-medium text-xs text-slate-700"></textarea>
+            <label class="block text-[11px] sm:text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">Tindak Lanjut / Pembinaan</label>
+            <textarea id="modal_tindak_lanjut" rows="2.5" placeholder="Langkah penanganan, pembinaan, atau tindak lanjut yang diberikan..." class="w-full px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-xl sm:rounded-2xl border border-slate-200 outline-none focus:ring-4 focus:ring-amber-100 font-medium text-xs text-slate-700"></textarea>
         </div>
 
-        <div class="pt-2 flex gap-3">
-            <button type="button" onclick="closeBukuKejadianModal()" class="flex-1 px-5 py-3 rounded-2xl border border-slate-200 font-bold text-slate-600 hover:bg-slate-50 text-xs">Batal</button>
-            <button type="button" onclick="saveBukuKejadianTemp()" class="flex-1 px-5 py-3 rounded-2xl bg-amber-500 text-white font-bold hover:bg-amber-600 shadow-lg shadow-amber-100 text-xs">
+        <div class="pt-1 flex flex-col-reverse sm:flex-row gap-2 sm:gap-3">
+            <button type="button" onclick="closeBukuKejadianModal()" class="w-full sm:flex-1 px-4 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl border border-slate-200 font-bold text-slate-600 hover:bg-slate-50 text-xs">Batal</button>
+            <button type="button" onclick="saveBukuKejadianTemp()" class="w-full sm:flex-1 px-4 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl bg-amber-500 text-white font-bold hover:bg-amber-600 shadow-lg shadow-amber-100 text-xs">
                 Simpan Ke Jurnal
             </button>
         </div>
