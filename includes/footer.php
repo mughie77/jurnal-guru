@@ -3,7 +3,7 @@
         </div>
     </div>
 
-    <?php if (isset($_SESSION['role']) && ($_SESSION['role'] == 'guru' || $_SESSION['role'] == 'siswa')): ?>
+    <?php if (isset($_SESSION['role']) && ($_SESSION['role'] == 'guru' || $_SESSION['role'] == 'siswa' || $_SESSION['role'] == 'dudi')): ?>
         <!-- Persistent Footer Menu -->
         <div class="fixed bottom-0 left-0 right-0 z-[100] lg:px-8 pb-4">
             <div class="max-w-xl mx-auto glass shadow-2xl rounded-2xl border border-slate-200/50 p-2 flex items-center justify-around translate-y-0 transition-transform duration-500">
@@ -26,6 +26,25 @@
                     <a href="<?= BASE_URL ?>guru/perangkat.php" class="flex flex-col items-center p-2 rounded-xl transition-all <?= basename($_SERVER['PHP_SELF']) == 'perangkat.php' ? 'text-indigo-600' : 'text-slate-400' ?>">
                         <i class="fa fa-folder text-lg"></i>
                         <span class="text-[8px] font-black uppercase mt-1">Perangkat</span>
+                    </a>
+                <?php elseif ($_SESSION['role'] == 'dudi'): ?>
+                    <a href="<?= BASE_URL ?>dudi/jurnal.php" class="flex flex-col items-center p-2 rounded-xl transition-all <?= basename($_SERVER['PHP_SELF']) == 'jurnal.php' ? 'text-indigo-600' : 'text-slate-400' ?>">
+                        <i class="fa fa-book-open text-lg"></i>
+                        <span class="text-[8px] font-black uppercase mt-1">Lihat Jurnal</span>
+                    </a>
+                    <a href="<?= BASE_URL ?>dudi/absensi.php" class="flex flex-col items-center p-2 rounded-xl transition-all <?= basename($_SERVER['PHP_SELF']) == 'absensi.php' ? 'text-indigo-600' : 'text-slate-400' ?>">
+                        <i class="fa fa-user-check text-lg"></i>
+                        <span class="text-[8px] font-black uppercase mt-1">Rekap Absensi</span>
+                    </a>
+                    <a href="<?= BASE_URL ?>dudi/nilai.php" class="flex flex-col items-center p-2 rounded-xl transition-all <?= basename($_SERVER['PHP_SELF']) == 'nilai.php' ? 'text-indigo-600' : 'text-slate-400' ?>">
+                        <div class="w-10 h-10 bg-emerald-600 rounded-full flex items-center justify-center text-white shadow-lg shadow-emerald-200 -mt-8 border-4 border-slate-50 transition-transform active:scale-90">
+                            <i class="fa fa-star"></i>
+                        </div>
+                        <span class="text-[8px] font-black uppercase mt-1 text-emerald-600">Input Nilai</span>
+                    </a>
+                    <a href="<?= BASE_URL ?>dudi/siswa.php" class="flex flex-col items-center p-2 rounded-xl transition-all <?= basename($_SERVER['PHP_SELF']) == 'siswa.php' ? 'text-indigo-600' : 'text-slate-400' ?>">
+                        <i class="fa fa-users text-lg"></i>
+                        <span class="text-[8px] font-black uppercase mt-1">Siswa Murid</span>
                     </a>
                 <?php else: ?>
                     <a href="<?= BASE_URL ?>siswa/index.php" class="flex flex-col items-center p-2 rounded-xl transition-all <?= basename($_SERVER['PHP_SELF']) == 'index.php' ? 'text-indigo-600' : 'text-slate-400' ?>">

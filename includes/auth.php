@@ -10,6 +10,14 @@ if (session_status() == PHP_SESSION_NONE) {
     if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
         ini_set('session.cookie_secure', 1);
     }
+    $session_lifetime = 30 * 24 * 60 * 60; // 30 hari
+    ini_set('session.gc_maxlifetime', $session_lifetime);
+    session_set_cookie_params([
+        'lifetime' => $session_lifetime,
+        'path' => '/',
+        'httponly' => true,
+        'samesite' => 'Lax'
+    ]);
     session_start();
 }
 
@@ -106,6 +114,7 @@ function authorize_role(array $allowed_roles) {
             case 'admin': header('Location: ' . BASE_URL . 'admin/'); break;
             case 'waka': header('Location: ' . BASE_URL . 'waka/'); break;
             case 'guru': header('Location: ' . BASE_URL . 'guru/'); break;
+            case 'dudi': header('Location: ' . BASE_URL . 'dudi/'); break;
             case 'siswa': header('Location: ' . BASE_URL . 'siswa/'); break;
             default: header('Location: ' . BASE_URL . 'logout.php'); break;
         }

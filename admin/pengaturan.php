@@ -23,7 +23,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             'school_lat' => $_POST['school_lat'],
             'school_lng' => $_POST['school_lng'],
             'radius_absen' => $_POST['radius_absen'],
-            'siswa_gps_absen' => $_POST['siswa_gps_absen']
+            'siswa_gps_absen' => $_POST['siswa_gps_absen'],
+            'pilih_tanggal_jurnal' => $_POST['pilih_tanggal_jurnal'] ?? 'nonaktif'
         ];
 
         foreach ($settings as $key => $val) {
@@ -114,6 +115,14 @@ require_once __DIR__ . '/../includes/header.php';
                             <option value="nonaktif" <?= (!isset($sets['siswa_gps_absen']) || $sets['siswa_gps_absen'] !== 'aktif') ? 'selected' : '' ?>>Nonaktif (Absensi Manual di Jurnal)</option>
                         </select>
                         <p class="text-[10px] text-slate-400 font-bold italic">Jika dinonaktifkan, siswa tidak bisa melakukan absensi GPS mandiri dan absensi diisi manual oleh guru.</p>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="block text-sm font-bold text-slate-700">Pilih Tanggal saat Isi Jurnal</label>
+                        <select name="pilih_tanggal_jurnal" required class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 bg-white transition-all font-bold">
+                            <option value="aktif" <?= (isset($sets['pilih_tanggal_jurnal']) && $sets['pilih_tanggal_jurnal'] === 'aktif') ? 'selected' : '' ?>>Aktif (Bisa Memilih Tanggal)</option>
+                            <option value="nonaktif" <?= (!isset($sets['pilih_tanggal_jurnal']) || $sets['pilih_tanggal_jurnal'] !== 'aktif') ? 'selected' : '' ?>>Nonaktif (Otomatis Hari Ini / Today)</option>
+                        </select>
+                        <p class="text-[10px] text-slate-400 font-bold italic">Jika dinonaktifkan, tanggal jurnal terkunci otomatis pada hari ini.</p>
                     </div>
                 </div>
 
@@ -220,6 +229,11 @@ require_once __DIR__ . '/../includes/header.php';
                     <span class="text-white/60 text-xs font-bold uppercase tracking-wider">Environment</span>
                     <span class="px-2 py-0.5 bg-emerald-400 text-emerald-900 rounded text-[10px] font-black uppercase tracking-tighter">Production</span>
                 </div>
+            </div>
+            <div class="mt-6 pt-4 border-t border-white/10">
+                <button type="button" onclick="runDatabaseUpdate()" class="w-full py-3 bg-white text-indigo-700 hover:bg-indigo-50 font-black text-xs uppercase tracking-wider rounded-xl shadow-lg transition-all flex items-center justify-center gap-2">
+                    <i class="fa fa-database"></i> Update Database
+                </button>
             </div>
         </div>
 

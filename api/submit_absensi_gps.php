@@ -11,19 +11,31 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'siswa') {
     exit;
 }
 
-// Check if GPS attendance is disabled
-$res_set_check = mysqli_query($conn, "SELECT nilai_setting FROM pengaturan WHERE nama_setting = 'siswa_gps_absen'");
-$gps_enabled = 'nonaktif';
-if ($row_gps = mysqli_fetch_assoc($res_set_check)) {
-    $gps_enabled = $row_gps['nilai_setting'];
-}
-if ($gps_enabled !== 'aktif') {
-    ob_clean();
-    echo json_encode(['success' => false, 'message' => 'Absensi GPS Siswa sedang dinonaktifkan oleh Administrator.']);
-    exit;
-}
-
 $siswa_id = $_SESSION['user_id'];
+
+// Check active PKL status
+$q_pkl_check = "SELECT sp.*, tp.nama_tempat, tp.latitude as pkl_lat, tp.longitude as pkl_lng, tp.radius_absen as pkl_radius
+                FROM siswa_pkl sp
+                JOIN tempat_pkl tp ON sp.tempat_pkl_id = tp.id
+                WHERE sp.siswa_id = $siswa_id AND sp.tahun_pelajaran_id = $active_tahun_id AND sp.status = 'aktif'
+                LIMIT 1";
+$res_pkl = mysqli_query($conn, $q_pkl_check);
+$pkl_info = ($res_pkl && mysqli_num_rows($res_pkl) > 0) ? mysqli_fetch_assoc($res_pkl) : null;
+$is_pkl = ($pkl_info !== null);
+
+// Check if GPS attendance is disabled (Only enforced if student is NOT on PKL)
+if (!$is_pkl) {
+    $res_set_check = mysqli_query($conn, "SELECT nilai_setting FROM pengaturan WHERE nama_setting = 'siswa_gps_absen'");
+    $gps_enabled = 'nonaktif';
+    if ($row_gps = mysqli_fetch_assoc($res_set_check)) {
+        $gps_enabled = $row_gps['nilai_setting'];
+    }
+    if ($gps_enabled !== 'aktif') {
+        ob_clean();
+        echo json_encode(['success' => false, 'message' => 'Absensi GPS Siswa sedang dinonaktifkan oleh Administrator.']);
+        exit;
+    }
+}
 $lat = $_POST['lat'] ?? null;
 $lng = $_POST['lng'] ?? null;
 $accuracy = (float)($_POST['accuracy'] ?? 10);
@@ -47,9 +59,15 @@ $res_set = mysqli_query($conn, "SELECT * FROM pengaturan");
 $sets = [];
 while ($r = mysqli_fetch_assoc($res_set)) $sets[$r['nama_setting']] = $r['nilai_setting'];
 
-$school_lat = $sets['school_lat'] ?? '-7.9135';
-$school_lng = $sets['school_lng'] ?? '113.8217';
-$radius_absen = (int)($sets['radius_absen'] ?? 30);
+if ($is_pkl) {
+    $school_lat = (!empty($pkl_info['pkl_lat'])) ? $pkl_info['pkl_lat'] : '-7.9135';
+    $school_lng = (!empty($pkl_info['pkl_lng'])) ? $pkl_info['pkl_lng'] : '113.8217';
+    $radius_absen = (int)($pkl_info['pkl_radius'] ?? 50);
+} else {
+    $school_lat = $sets['school_lat'] ?? '-7.9135';
+    $school_lng = $sets['school_lng'] ?? '113.8217';
+    $radius_absen = (int)($sets['radius_absen'] ?? 30);
+}
 $jam_masuk = $sets['jam_masuk_sekolah'] ?? '07:00:00';
 
 // Calculate Distance (Server-side validation)
@@ -87,7 +105,8 @@ $now_time = date('H:i:s');
 $status = (strtotime($now_time) > strtotime($jam_masuk)) ? 'Terlambat' : 'Hadir';
 
 $stmt = mysqli_prepare($conn, "INSERT INTO absensi_harian (siswa_id, tanggal, waktu_masuk, status, keterangan) VALUES (?, ?, ?, ?, ?)");
-$keterangan = "Absensi GPS (Lat: $lat, Lng: $lng, Dist: " . round($distance, 2) . "m)";
+$location_label = $is_pkl ? "PKL: " . $pkl_info['nama_tempat'] : "GPS Sekolah";
+$keterangan = "Absensi GPS ($location_label, Lat: $lat, Lng: $lng, Dist: " . round($distance, 2) . "m)";
 mysqli_stmt_bind_param($stmt, "issss", $siswa_id, $today, $now_time, $status, $keterangan);
 
 if (mysqli_stmt_execute($stmt)) {

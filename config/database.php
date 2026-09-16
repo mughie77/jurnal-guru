@@ -7,14 +7,21 @@ header("X-Frame-Options: SAMEORIGIN");
 header("X-Content-Type-Options: nosniff");
 header("X-XSS-Protection: 1; mode=block");
 
-// --- Mulai Session dengan Pengaturan Aman ---
+// --- Mulai Session dengan Pengaturan Aman (Persistent Session Cookie 30 hari) ---
 if (session_status() == PHP_SESSION_NONE) {
     ini_set('session.cookie_httponly', 1);
     ini_set('session.use_only_cookies', 1);
     if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
         ini_set('session.cookie_secure', 1);
     }
-    ini_set('session.gc_maxlifetime', 30 * 24 * 60 * 60);
+    $session_lifetime = 30 * 24 * 60 * 60; // 30 hari
+    ini_set('session.gc_maxlifetime', $session_lifetime);
+    session_set_cookie_params([
+        'lifetime' => $session_lifetime,
+        'path' => '/',
+        'httponly' => true,
+        'samesite' => 'Lax'
+    ]);
     session_start();
 }
 
@@ -82,7 +89,7 @@ if (!empty($base_url_config)) {
     $scriptName = $_SERVER['SCRIPT_NAME'];
 
     // Cari path root aplikasi (naik dari folder core jika perlu)
-    $app_root_path = str_replace(['/admin', '/guru', '/waka', '/api', '/siswa', '/error'], '/', dirname($scriptName));
+    $app_root_path = str_replace(['/admin', '/guru', '/waka', '/api', '/siswa', '/dudi', '/error'], '/', dirname($scriptName));
 
     // Normalisasi path agar selalu diakhiri dengan satu slash
     $app_root_path = str_replace('\\', '/', $app_root_path);

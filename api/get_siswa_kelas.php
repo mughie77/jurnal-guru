@@ -53,20 +53,12 @@ if ($row_gps = mysqli_fetch_assoc($res_gps)) {
     $gps_enabled = $row_gps['nilai_setting'];
 }
 
-if ($gps_enabled === 'aktif') {
-    $query = "SELECT s.id, s.nis, s.nama_siswa, s.jenis_kelamin, ah.status AS gps_status
-              FROM siswa s
-              JOIN siswa_kelas sk ON s.id = sk.siswa_id
-              LEFT JOIN absensi_harian ah ON s.id = ah.siswa_id AND ah.tanggal = '$tanggal'
-              WHERE sk.kelas_id = $kelas_id AND sk.tahun_pelajaran_id = $tahun_id
-              ORDER BY s.nama_siswa ASC";
-} else {
-    $query = "SELECT s.id, s.nis, s.nama_siswa, s.jenis_kelamin, NULL AS gps_status
-              FROM siswa s
-              JOIN siswa_kelas sk ON s.id = sk.siswa_id
-              WHERE sk.kelas_id = $kelas_id AND sk.tahun_pelajaran_id = $tahun_id
-              ORDER BY s.nama_siswa ASC";
-}
+$query = "SELECT s.id, s.nis, s.nama_siswa, s.jenis_kelamin, ah.status AS gps_status, ah.status_verifikasi
+          FROM siswa s
+          JOIN siswa_kelas sk ON s.id = sk.siswa_id
+          LEFT JOIN absensi_harian ah ON s.id = ah.siswa_id AND ah.tanggal = '$tanggal'
+          WHERE sk.kelas_id = $kelas_id AND sk.tahun_pelajaran_id = $tahun_id
+          ORDER BY s.nama_siswa ASC";
 
 $result = mysqli_query($conn, $query);
 if (!$result) {
