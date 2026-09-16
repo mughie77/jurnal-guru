@@ -194,6 +194,16 @@ require_once __DIR__ . '/../includes/header.php';
                     </div>
                 </a>
 
+                <a href="rekap_buku_kejadian.php" class="p-3.5 sm:p-6 rounded-2xl sm:rounded-[32px] bg-amber-600 text-white shadow-xl shadow-amber-200 flex flex-col gap-2.5 sm:gap-4 group transition-all hover:scale-[1.02] active:scale-95">
+                    <div class="w-8 h-8 sm:w-12 sm:h-12 rounded-xl bg-white/20 flex items-center justify-center text-sm sm:text-xl shadow-inner group-hover:bg-white/30 transition-all">
+                        <i class="fa fa-book-bookmark"></i>
+                    </div>
+                    <div>
+                        <div class="text-xs sm:text-lg font-black italic tracking-tighter uppercase leading-none">Buku Kejadian</div>
+                        <div class="text-[7px] sm:text-[9px] font-bold text-amber-100 uppercase tracking-widest mt-1 opacity-70">Catatan Kejadian</div>
+                    </div>
+                </a>
+
                 <a href="perangkat.php" class="p-3.5 sm:p-6 rounded-2xl sm:rounded-[32px] bg-rose-500 text-white shadow-xl shadow-rose-200 flex flex-col gap-2.5 sm:gap-4 group transition-all hover:scale-[1.02] active:scale-95">
                     <div class="w-8 h-8 sm:w-12 sm:h-12 rounded-xl bg-white/20 flex items-center justify-center text-sm sm:text-xl shadow-inner group-hover:bg-white/30 transition-all">
                         <i class="fa fa-folder-open"></i>
