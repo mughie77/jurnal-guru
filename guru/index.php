@@ -139,66 +139,8 @@ require_once __DIR__ . '/../includes/header.php';
         <?php endif; ?>
 
 
-        <!-- Schedule & Journal Filling Status Today -->
-        <div class="mb-12">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="font-black text-slate-800 italic uppercase tracking-wider text-base flex items-center gap-2">
-                    <i class="fa fa-calendar-day text-indigo-600"></i> Jadwal & Status Jurnal Hari Ini (<?= $today_hari ?>, <?= date('d M Y') ?>)
-                </h3>
-                <a href="isi_absensi.php" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
-                    Kelola Jurnal <i class="fa fa-arrow-right text-[10px]"></i>
-                </a>
-            </div>
-
-            <?php if (empty($today_schedules)): ?>
-                <div class="lux-card p-6 bg-white border border-slate-100 shadow-xl rounded-3xl text-center">
-                    <p class="text-slate-400 font-medium italic text-xs">Tidak ada jadwal mengajar terdaftar untuk Anda pada hari ini (<?= $today_hari ?>).</p>
-                </div>
-            <?php else: ?>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <?php foreach ($today_schedules as $ts):
-                        $is_filled = !empty($ts['jurnal_id']);
-                    ?>
-                        <div class="lux-card p-5 bg-white border-2 border-slate-100 shadow-xl rounded-3xl flex flex-col justify-between hover:border-indigo-200 transition-all">
-                            <div>
-                                <div class="flex items-center justify-between gap-2 mb-2">
-                                    <span class="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-100">
-                                        Jam Ke: <?= htmlspecialchars($ts['jam_ke']) ?>
-                                    </span>
-                                    <?php if ($is_filled): ?>
-                                        <span class="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 flex items-center gap-1">
-                                            <i class="fa fa-check-circle"></i> Terisi
-                                        </span>
-                                    <?php else: ?>
-                                        <span class="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-800 flex items-center gap-1">
-                                            <i class="fa fa-clock"></i> Belum Terisi
-                                        </span>
-                                    <?php endif; ?>
-                                </div>
-                                <h4 class="font-black text-slate-800 text-base leading-snug"><?= htmlspecialchars($ts['nama_kelas']) ?></h4>
-                                <p class="text-xs font-semibold text-slate-600 mt-1">
-                                    <?= htmlspecialchars($ts['nama_mapel']) ?> <span class="text-[10px] font-mono text-slate-400">(<?= htmlspecialchars($ts['kode_mapel']) ?>)</span>
-                                </p>
-                            </div>
-                            <div class="pt-4 mt-4 border-t border-slate-50 flex items-center justify-between">
-                                <?php if ($is_filled): ?>
-                                    <span class="text-[11px] font-bold text-emerald-600 flex items-center gap-1">
-                                        <i class="fa fa-check text-[10px]"></i> Selesai diisi
-                                    </span>
-                                <?php else: ?>
-                                    <a href="isi_absensi.php" class="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md shadow-indigo-100 transition-all flex items-center gap-1">
-                                        <i class="fa fa-pen text-[10px]"></i> Isi Jurnal
-                                    </a>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-            <?php endif; ?>
-        </div>
-
         <!-- Stats Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
             <div class="lux-card p-8 bg-indigo-600 text-white shadow-indigo-200 border-none relative overflow-hidden group">
                 <div class="relative z-10">
                     <p class="text-indigo-100 text-xs font-black uppercase tracking-widest mb-4">Total Jurnal</p>
@@ -213,14 +155,6 @@ require_once __DIR__ . '/../includes/header.php';
                 <div class="mt-6 w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
                     <div class="bg-emerald-500 h-full w-[85%] rounded-full"></div>
                 </div>
-            </div>
-            <div class="lux-card p-8 bg-white border-slate-100 flex flex-col justify-center items-center text-center group cursor-pointer hover:border-indigo-500 transition-all">
-                <a href="isi_absensi.php" class="contents">
-                    <div class="w-16 h-16 rounded-2xl bg-slate-50 text-indigo-600 flex items-center justify-center mb-4 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-500 shadow-inner">
-                        <i class="fa fa-user-check text-2xl"></i>
-                    </div>
-                    <p class="font-black text-slate-800 italic uppercase tracking-tighter">Mulai Absensi & Jurnal</p>
-                </a>
             </div>
         </div>
 

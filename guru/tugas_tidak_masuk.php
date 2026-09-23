@@ -33,6 +33,17 @@ if (mysqli_num_rows($q_piket) > 0) {
     $is_piket_today = true;
 }
 
+// Inspect columns in tugas_kelas for backwards compatibility
+$has_mapel = false;
+$has_lat_lng = false;
+$chk_cols = mysqli_query($conn, "SHOW COLUMNS FROM tugas_kelas");
+if ($chk_cols) {
+    while ($c = mysqli_fetch_assoc($chk_cols)) {
+        if ($c['Field'] === 'mapel_id') $has_mapel = true;
+        if ($c['Field'] === 'latitude') $has_lat_lng = true;
+    }
+}
+
 // Handle Task Submission (Pemberian Tugas)
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['tambah_tugas'])) {
     if (!verify_csrf_token($_POST['csrf_token'] ?? '')) die("CSRF Token Invalid");
@@ -71,8 +82,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['tambah_tugas'])) {
     }
 
     if ($message_type !== 'error' && $kelas_id > 0 && !empty($tanggal)) {
-        $stmt = mysqli_prepare($conn, "INSERT INTO tugas_kelas (guru_id, kelas_id, mapel_id, tanggal, keterangan_tugas, file_lampiran, latitude, longitude) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-        mysqli_stmt_bind_param($stmt, "iiisssss", $guru_id, $kelas_id, $mapel_id, $tanggal, $keterangan_tugas, $file_lampiran, $latitude, $longitude);
+        if ($has_mapel && $has_lat_lng) {
+            $stmt = mysqli_prepare($conn, "INSERT INTO tugas_kelas (guru_id, kelas_id, mapel_id, tanggal, keterangan_tugas, file_lampiran, latitude, longitude) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+            mysqli_stmt_bind_param($stmt, "iiisssss", $guru_id, $kelas_id, $mapel_id, $tanggal, $keterangan_tugas, $file_lampiran, $latitude, $longitude);
+        } else if ($has_mapel && !$has_lat_lng) {
+            $stmt = mysqli_prepare($conn, "INSERT INTO tugas_kelas (guru_id, kelas_id, mapel_id, tanggal, keterangan_tugas, file_lampiran) VALUES (?, ?, ?, ?, ?, ?)");
+            mysqli_stmt_bind_param($stmt, "iiisss", $guru_id, $kelas_id, $mapel_id, $tanggal, $keterangan_tugas, $file_lampiran);
+        } else if (!$has_mapel && $has_lat_lng) {
+            $stmt = mysqli_prepare($conn, "INSERT INTO tugas_kelas (guru_id, kelas_id, tanggal, keterangan_tugas, file_lampiran, latitude, longitude) VALUES (?, ?, ?, ?, ?, ?, ?)");
+            mysqli_stmt_bind_param($stmt, "iisssss", $guru_id, $kelas_id, $tanggal, $keterangan_tugas, $file_lampiran, $latitude, $longitude);
+        } else {
+            $stmt = mysqli_prepare($conn, "INSERT INTO tugas_kelas (guru_id, kelas_id, tanggal, keterangan_tugas, file_lampiran) VALUES (?, ?, ?, ?, ?)");
+            mysqli_stmt_bind_param($stmt, "iisss", $guru_id, $kelas_id, $tanggal, $keterangan_tugas, $file_lampiran);
+        }
+
         if (mysqli_stmt_execute($stmt)) {
             $message = "Tugas kelas berhasil dikirim!";
             $message_type = "success";
@@ -120,12 +143,15 @@ if (mysqli_num_rows($mapels_list) == 0) {
     $mapels_list = mysqli_query($conn, "SELECT id, nama_mapel, kode_mapel FROM mata_pelajaran ORDER BY nama_mapel ASC");
 }
 
+$mapel_join = $has_mapel ? "LEFT JOIN mata_pelajaran mp ON tk.mapel_id = mp.id" : "";
+$mapel_select = $has_mapel ? ", mp.nama_mapel" : ", NULL as nama_mapel";
+
 // Fetch tasks submitted BY this teacher (Absent Task History)
 $my_tasks = [];
-$res_my = mysqli_query($conn, "SELECT tk.*, k.nama_kelas, mp.nama_mapel
+$res_my = mysqli_query($conn, "SELECT tk.*, k.nama_kelas $mapel_select
                                FROM tugas_kelas tk
                                JOIN kelas k ON tk.kelas_id = k.id
-                               LEFT JOIN mata_pelajaran mp ON tk.mapel_id = mp.id
+                               $mapel_join
                                WHERE tk.guru_id = $guru_id
                                ORDER BY tk.tanggal DESC, tk.created_at DESC");
 while ($row = mysqli_fetch_assoc($res_my)) {
@@ -136,10 +162,10 @@ while ($row = mysqli_fetch_assoc($res_my)) {
 $piket_tasks = [];
 if ($is_piket_today) {
     $today_date = date('Y-m-d');
-    $res_piket = mysqli_query($conn, "SELECT tk.*, k.nama_kelas, mp.nama_mapel, u.nama_lengkap as nama_guru
+    $res_piket = mysqli_query($conn, "SELECT tk.*, k.nama_kelas $mapel_select, u.nama_lengkap as nama_guru
                                       FROM tugas_kelas tk
                                       JOIN kelas k ON tk.kelas_id = k.id
-                                      LEFT JOIN mata_pelajaran mp ON tk.mapel_id = mp.id
+                                      $mapel_join
                                       JOIN guru g ON tk.guru_id = g.id
                                       JOIN users u ON g.user_id = u.id
                                       WHERE tk.tanggal = '$today_date'

@@ -59,7 +59,11 @@ if ($is_ajax) {
                     'jadwal_pdf' => "VARCHAR(255) DEFAULT NULL AFTER wali_kelas_id"
                 ],
                 'tugas_kelas' => [
-                    'mapel_id' => "INT(11) DEFAULT NULL AFTER kelas_id"
+                    'mapel_id' => "INT(11) DEFAULT NULL AFTER kelas_id",
+                    'file_lampiran' => "VARCHAR(255) DEFAULT NULL AFTER keterangan_tugas",
+                    'latitude' => "VARCHAR(50) DEFAULT NULL AFTER file_lampiran",
+                    'longitude' => "VARCHAR(50) DEFAULT NULL AFTER latitude",
+                    'status_selesai' => "TINYINT(1) DEFAULT 0 AFTER longitude"
                 ]
             ];
 
