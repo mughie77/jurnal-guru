@@ -52,7 +52,8 @@ if ($is_ajax) {
                 ],
                 'jurnal' => [
                     'latitude' => "VARCHAR(50) DEFAULT NULL AFTER keterangan",
-                    'longitude' => "VARCHAR(50) DEFAULT NULL AFTER latitude"
+                    'longitude' => "VARCHAR(50) DEFAULT NULL AFTER latitude",
+                    'jadwal_id' => "INT(11) DEFAULT NULL AFTER longitude"
                 ],
                 'kelas' => [
                     'jadwal_pdf' => "VARCHAR(255) DEFAULT NULL AFTER wali_kelas_id"
@@ -456,6 +457,30 @@ if ($is_ajax) {
                 $logs[] = ['status' => 'success', 'msg' => "Table <b>buku_kejadian</b> created successfully"];
             } else {
                 $logs[] = ['status' => 'error', 'msg' => "Failed creating <b>buku_kejadian</b>: " . mysqli_error($conn)];
+            }
+
+            // Create jadwal_pelajaran table
+            $create_jp = "CREATE TABLE IF NOT EXISTS `jadwal_pelajaran` (
+                `id` int(11) NOT NULL AUTO_INCREMENT,
+                `kelas_id` int(11) NOT NULL,
+                `hari` enum('Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu') NOT NULL,
+                `guru_id` int(11) NOT NULL,
+                `mapel_id` int(11) NOT NULL,
+                `jam_ke` varchar(50) NOT NULL,
+                `created_at` timestamp NULL DEFAULT current_timestamp(),
+                PRIMARY KEY (`id`),
+                KEY `kelas_id` (`kelas_id`),
+                KEY `guru_id` (`guru_id`),
+                KEY `mapel_id` (`mapel_id`),
+                CONSTRAINT `jadwal_pelajaran_ibfk_1` FOREIGN KEY (`kelas_id`) REFERENCES `kelas` (`id`) ON DELETE CASCADE,
+                CONSTRAINT `jadwal_pelajaran_ibfk_2` FOREIGN KEY (`guru_id`) REFERENCES `guru` (`id`) ON DELETE CASCADE,
+                CONSTRAINT `jadwal_pelajaran_ibfk_3` FOREIGN KEY (`mapel_id`) REFERENCES `mata_pelajaran` (`id`) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
+
+            if (mysqli_query($conn, $create_jp)) {
+                $logs[] = ['status' => 'success', 'msg' => "Table <b>jadwal_pelajaran</b> created successfully"];
+            } else {
+                $logs[] = ['status' => 'error', 'msg' => "Failed creating <b>jadwal_pelajaran</b>: " . mysqli_error($conn)];
             }
 
             foreach ($logs as $log) {
