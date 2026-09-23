@@ -86,9 +86,10 @@ if ($role == 'admin') {
     echo sidebar_section('Data Master', 'fa fa-database', $master_active, $master_links);
 
     // Group 2: Data Akademik
-    $akademik_active = in_array($current_page, ['kelas.php', 'siswa.php', 'import_foto_zip.php', 'alumni.php', 'mapping_siswa.php', 'naik_kelas.php', 'piket.php']);
+    $akademik_active = in_array($current_page, ['kelas.php', 'siswa.php', 'jadwal.php', 'import_foto_zip.php', 'alumni.php', 'mapping_siswa.php', 'naik_kelas.php', 'piket.php']);
     $akademik_links = sub_nav_link('admin/kelas.php', 'Manajemen Kelas', $current_page == 'kelas.php') .
                       sub_nav_link('admin/siswa.php', 'Data Siswa', $current_page == 'siswa.php') .
+                      sub_nav_link('admin/jadwal.php', 'Jadwal Pelajaran', $current_page == 'jadwal.php') .
                       sub_nav_link('admin/piket.php', 'Jadwal Piket', $current_page == 'piket.php') .
                       sub_nav_link('admin/import_foto_zip.php', 'Import Foto ZIP', $current_page == 'import_foto_zip.php') .
                       sub_nav_link('admin/alumni.php', 'Data Alumni', $current_page == 'alumni.php') .
@@ -103,9 +104,10 @@ if ($role == 'admin') {
     echo sidebar_section('PKL', 'fa fa-briefcase', $pkl_active, $pkl_links);
 
     // Group 3: Monitor (New!)
-    $monitor_active = in_array($current_page, ['peta_kelas.php', 'peta_sebar_jurnal.php', 'rekap_mood.php']);
+    $monitor_active = in_array($current_page, ['peta_kelas.php', 'peta_sebar_jurnal.php', 'status_jurnal_jadwal.php', 'rekap_mood.php']);
     $monitor_links = sub_nav_link('admin/peta_kelas.php', 'Peta Status Kelas', $current_page == 'peta_kelas.php') .
                      sub_nav_link('admin/peta_sebar_jurnal.php', 'Peta Sebar Jurnal', $current_page == 'peta_sebar_jurnal.php') .
+                     sub_nav_link('admin/status_jurnal_jadwal.php', 'Status Jurnal Jadwal', $current_page == 'status_jurnal_jadwal.php') .
                      sub_nav_link('admin/rekap_mood.php', 'Mood Harian', $current_page == 'rekap_mood.php');
     echo sidebar_section('Monitor', 'fa fa-desktop', $monitor_active, $monitor_links);
 
@@ -142,9 +144,10 @@ if ($role == 'admin') {
     echo sidebar_section('Data Master', 'fa fa-database', $master_active, $master_links);
 
     // Group 2: Data Akademik (Waka)
-    $akademik_active = in_array($current_page, ['kelas.php', 'siswa.php', 'alumni.php', 'piket.php']);
+    $akademik_active = in_array($current_page, ['kelas.php', 'siswa.php', 'jadwal.php', 'alumni.php', 'piket.php']);
     $akademik_links = sub_nav_link('waka/kelas.php', 'Manajemen Kelas', $current_page == 'kelas.php') .
                       sub_nav_link('admin/siswa.php', 'Data Siswa', $current_page == 'siswa.php') .
+                      sub_nav_link('waka/jadwal.php', 'Jadwal Pelajaran', $current_page == 'jadwal.php') .
                       sub_nav_link('admin/piket.php', 'Jadwal Piket', $current_page == 'piket.php') .
                       sub_nav_link('admin/alumni.php', 'Data Alumni', $current_page == 'alumni.php');
     echo sidebar_section('Data Akademik', 'fa fa-graduation-cap', $akademik_active, $akademik_links);
@@ -156,9 +159,10 @@ if ($role == 'admin') {
     echo sidebar_section('PKL', 'fa fa-briefcase', $pkl_active, $pkl_links);
 
     // Group 3: Monitor (Waka - New!)
-    $monitor_active = in_array($current_page, ['peta_kelas.php', 'peta_sebar_jurnal.php', 'rekap_mood.php']);
+    $monitor_active = in_array($current_page, ['peta_kelas.php', 'peta_sebar_jurnal.php', 'status_jurnal_jadwal.php', 'rekap_mood.php']);
     $monitor_links = sub_nav_link('waka/peta_kelas.php', 'Peta Status Kelas', $current_page == 'peta_kelas.php') .
                      sub_nav_link('waka/peta_sebar_jurnal.php', 'Peta Sebar Jurnal', $current_page == 'peta_sebar_jurnal.php') .
+                     sub_nav_link('waka/status_jurnal_jadwal.php', 'Status Jurnal Jadwal', $current_page == 'status_jurnal_jadwal.php') .
                      sub_nav_link('admin/rekap_mood.php', 'Mood Harian', $current_page == 'rekap_mood.php');
     echo sidebar_section('Monitor', 'fa fa-desktop', $monitor_active, $monitor_links);
 
