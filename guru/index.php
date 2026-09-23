@@ -400,31 +400,59 @@ require_once __DIR__ . '/../includes/header.php';
                 <?php endif; ?>
             </div>
 
-            <!-- Activity Table -->
-            <div class="lux-card overflow-hidden border-none shadow-2xl">
+            <!-- Today's Schedule & Journal Status Table -->
+            <div class="lux-card overflow-hidden border-none shadow-2xl bg-white rounded-3xl">
                 <div class="p-6 border-b border-slate-50 flex items-center justify-between">
-                    <h3 class="font-black text-slate-800 italic uppercase tracking-widest text-sm">Aktivitas Terakhir</h3>
-                    <a href="riwayat.php" class="text-xs font-bold text-indigo-600 hover:underline">Lihat Semua</a>
+                    <div>
+                        <h3 class="font-black text-slate-800 italic uppercase tracking-widest text-sm">Jadwal Mengajar Hari Ini</h3>
+                        <p class="text-[10px] font-bold text-slate-400 mt-0.5"><?= $today_hari ?>, <?= date('d M Y') ?></p>
+                    </div>
+                    <a href="isi_absensi.php" class="text-xs font-bold text-indigo-600 hover:underline flex items-center gap-1">
+                        Isi Jurnal <i class="fa fa-arrow-right text-[10px]"></i>
+                    </a>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left">
                         <thead>
                             <tr class="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-50">
-                                <th class="px-6 py-4">Tanggal</th>
-                                <th class="px-6 py-4">Pelajaran</th>
-                                <th class="px-6 py-4 text-center">Kelas</th>
+                                <th class="px-6 py-4">Jam & Mapel</th>
+                                <th class="px-6 py-4">Kelas</th>
+                                <th class="px-6 py-4 text-center">Status Jurnal</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-50">
-                            <?php mysqli_data_seek($recent_jurnals, 0); while($j = mysqli_fetch_assoc($recent_jurnals)): ?>
-                            <tr class="hover:bg-slate-50/50 transition-colors">
-                                <td class="px-6 py-4 text-xs font-bold text-slate-700"><?= date('d M', strtotime($j['tanggal'])) ?></td>
-                                <td class="px-6 py-4 font-bold text-slate-800 text-sm italic"><?= htmlspecialchars($j['nama_mapel']) ?></td>
-                                <td class="px-6 py-4 text-center">
-                                    <span class="px-2 py-1 rounded bg-slate-100 text-slate-500 text-[10px] font-black uppercase border border-slate-200"><?= $j['nama_kelas'] ?></span>
-                                </td>
-                            </tr>
-                            <?php endwhile; ?>
+                            <?php if (empty($today_schedules)): ?>
+                                <tr>
+                                    <td colspan="3" class="px-6 py-8 text-center text-xs text-slate-400 italic">
+                                        Tidak ada jadwal mengajar terdaftar hari ini (<?= $today_hari ?>).
+                                    </td>
+                                </tr>
+                            <?php else: ?>
+                                <?php foreach ($today_schedules as $ts):
+                                    $is_filled = !empty($ts['jurnal_id']);
+                                ?>
+                                <tr class="hover:bg-slate-50/50 transition-colors">
+                                    <td class="px-6 py-4">
+                                        <div class="font-bold text-slate-800 text-sm leading-tight"><?= htmlspecialchars($ts['nama_mapel']) ?></div>
+                                        <div class="text-[10px] font-black text-indigo-600 uppercase tracking-wider mt-0.5">Jam Ke: <?= htmlspecialchars($ts['jam_ke']) ?></div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <span class="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-xs font-bold border border-slate-200"><?= htmlspecialchars($ts['nama_kelas']) ?></span>
+                                    </td>
+                                    <td class="px-6 py-4 text-center">
+                                        <?php if ($is_filled): ?>
+                                            <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 inline-flex items-center gap-1">
+                                                <i class="fa fa-check-circle text-emerald-600"></i> Terisi
+                                            </span>
+                                        <?php else: ?>
+                                            <a href="isi_absensi.php" class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-800 hover:bg-amber-200 transition-colors inline-flex items-center gap-1">
+                                                <i class="fa fa-clock text-amber-600"></i> Belum Terisi
+                                            </a>
+                                        <?php endif; ?>
+                                    </td>
+                                </tr>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
                         </tbody>
                     </table>
                 </div>
