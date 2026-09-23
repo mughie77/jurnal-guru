@@ -411,14 +411,45 @@ document.addEventListener('DOMContentLoaded', function() {
     const taskForm = document.getElementById('add-tugas-form');
     const taskLat = document.getElementById('task-lat');
     const taskLng = document.getElementById('task-lng');
+    let gpsAttempted = false;
+    let isSubmitting = false;
+
+    // Background pre-fetch GPS location on page load
+    if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+            if (position && position.coords) {
+                taskLat.value = position.coords.latitude;
+                taskLng.value = position.coords.longitude;
+            }
+        }, function(err) {
+            console.warn("Background GPS pre-fetch failed:", err);
+        }, { enableHighAccuracy: false, timeout: 5000, maximumAge: 60000 });
+    }
 
     if (taskForm) {
         taskForm.addEventListener('submit', function(e) {
-            if (taskLat.value && taskLng.value) {
+            if (!taskForm.reportValidity()) {
+                e.preventDefault();
+                return false;
+            }
+
+            if (isSubmitting) {
+                return true;
+            }
+
+            if ((taskLat.value && taskLng.value) || gpsAttempted) {
+                isSubmitting = true;
                 return true;
             }
 
             e.preventDefault();
+            gpsAttempted = true;
+
+            if (!("geolocation" in navigator)) {
+                isSubmitting = true;
+                taskForm.submit();
+                return;
+            }
 
             Swal.fire({
                 title: 'Mendeteksi Lokasi GPS...',
@@ -429,28 +460,41 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
 
-            if ("geolocation" in navigator) {
-                navigator.geolocation.getCurrentPosition(function(position) {
+            let gpsResolved = false;
+
+            // Enforce a hard 3.5 second fallback timeout so UI never hangs
+            const gpsTimeout = setTimeout(() => {
+                if (!gpsResolved) {
+                    gpsResolved = true;
                     Swal.close();
+                    isSubmitting = true;
+                    taskForm.submit();
+                }
+            }, 3500);
+
+            navigator.geolocation.getCurrentPosition(function(position) {
+                if (gpsResolved) return;
+                gpsResolved = true;
+                clearTimeout(gpsTimeout);
+                Swal.close();
+                if (position && position.coords) {
                     taskLat.value = position.coords.latitude;
                     taskLng.value = position.coords.longitude;
-                    taskForm.submit();
-                }, function(error) {
-                    Swal.close();
-                    // Fallback proceed even if GPS fails but log warning
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Akses Lokasi Gagal',
-                        text: 'Koordinat GPS tidak terdeteksi. Tugas akan tetap dikirim tanpa pin lokasi.',
-                        confirmButtonColor: '#4F46E5'
-                    }).then(() => {
-                        taskForm.submit();
-                    });
-                }, { enableHighAccuracy: true, timeout: 8000 });
-            } else {
-                Swal.close();
+                }
+                isSubmitting = true;
                 taskForm.submit();
-            }
+            }, function(error) {
+                if (gpsResolved) return;
+                gpsResolved = true;
+                clearTimeout(gpsTimeout);
+                Swal.close();
+                isSubmitting = true;
+                taskForm.submit();
+            }, {
+                enableHighAccuracy: false,
+                timeout: 3000,
+                maximumAge: 60000
+            });
         });
     }
 });
