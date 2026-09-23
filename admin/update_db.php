@@ -57,6 +57,9 @@ if ($is_ajax) {
                 ],
                 'kelas' => [
                     'jadwal_pdf' => "VARCHAR(255) DEFAULT NULL AFTER wali_kelas_id"
+                ],
+                'tugas_kelas' => [
+                    'mapel_id' => "INT(11) DEFAULT NULL AFTER kelas_id"
                 ]
             ];
 
