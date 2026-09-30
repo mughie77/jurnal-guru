@@ -94,7 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['simpan_absensi'])) {
         ];
 
         // Success and Redirect
-        echo "<!DOCTYPE html><html><head><script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script></head><body style='font-family:sans-serif;'>";
+        echo "<!DOCTYPE html><html><head><script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script></head><body style='font-family:\"Plus Jakarta Sans\", sans-serif;'>";
         echo "<script>
             document.addEventListener('DOMContentLoaded', function() {
                 Swal.fire({

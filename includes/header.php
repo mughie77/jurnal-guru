@@ -43,6 +43,9 @@ if (isset($_SESSION['user_id'])) {
         tailwind.config = {
             theme: {
                 extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+                    },
                     colors: {
                         primary: '#4F46E5',
                         secondary: '#10B981',
