@@ -39,6 +39,15 @@ switch ($type) {
             ['Pemrograman Berorientasi Objek XI'],
         ];
         break;
+    case 'jadwal':
+        $filename = 'Template_Import_Jadwal_Pelajaran.xlsx';
+        $data = [
+            ['Nama Kelas', 'Hari', 'NIP / Nama Guru', 'Kode / Nama Mapel', 'Jam Ke'],
+            ['X RPL 1', 'Senin', '198501012010011001', 'Pemrograman Web', '1-2'],
+            ['X RPL 1', 'Senin', 'Ahmad Fauzi, S.Pd', 'Matematika', '3-4'],
+            ['X RPL 2', 'Selasa', '198802022012011002', 'Bahasa Indonesia', '1-2'],
+        ];
+        break;
     default:
         die("Tipe template tidak valid.");
 }

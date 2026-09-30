@@ -152,9 +152,14 @@ require_once __DIR__ . '/../includes/header.php';
         <h1 class="text-3xl font-bold text-slate-800 tracking-tight italic">Manajemen Jadwal Pelajaran</h1>
         <p class="text-slate-500">Kelola jadwal pelajaran mingguan per kelas (Hari, Guru, Mapel, dan Jam Ke-).</p>
     </div>
-    <button onclick="openModal('addJadwalModal')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-indigo-100 transition-all flex items-center shrink-0">
-        <i class="fa fa-plus mr-2"></i> Tambah Jadwal Pelajaran
-    </button>
+    <div class="flex items-center gap-3 shrink-0">
+        <a href="import_jadwal_excel.php" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-emerald-100 transition-all flex items-center text-xs sm:text-sm">
+            <i class="fa fa-file-excel mr-2"></i> Import Excel
+        </a>
+        <button onclick="openModal('addJadwalModal')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-indigo-100 transition-all flex items-center text-xs sm:text-sm">
+            <i class="fa fa-plus mr-2"></i> Tambah Jadwal Pelajaran
+        </button>
+    </div>
 </div>
 
 <?php if ($message): ?>
