@@ -35,6 +35,15 @@ while ($row = mysqli_fetch_assoc($res_m)) {
     $mapels[] = $row;
 }
 
+// Fetch guru_mapel relations for cascading filter
+$guru_mapel_relation = [];
+$res_gm = mysqli_query($conn, "SELECT guru_id, mapel_id FROM guru_mapel");
+if ($res_gm) {
+    while ($r_gm = mysqli_fetch_assoc($res_gm)) {
+        $guru_mapel_relation[(int)$r_gm['guru_id']][] = (int)$r_gm['mapel_id'];
+    }
+}
+
 // Handle Add Schedule
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['tambah_jadwal'])) {
     try {
@@ -147,6 +156,46 @@ if ($filter_kelas_id > 0) {
 require_once __DIR__ . '/../includes/header.php';
 ?>
 
+<!-- Select2 CSS & jQuery -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<style>
+/* Select2 Minimal Styling Customizations */
+.select2-container--default .select2-selection--single {
+    border-radius: 0.75rem !important;
+    border-color: #e2e8f0 !important;
+    height: 46px !important;
+    display: flex !important;
+    align-items: center !important;
+}
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    font-weight: 700 !important;
+    color: #334155 !important;
+    font-size: 0.875rem !important;
+    padding-left: 1rem !important;
+}
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 44px !important;
+    right: 10px !important;
+}
+.select2-dropdown {
+    border-radius: 1rem !important;
+    border-color: #e2e8f0 !important;
+    box-shadow: 0 10px 25px -3px rgba(15, 23, 42, 0.1) !important;
+    overflow: hidden !important;
+    z-index: 9999 !important;
+}
+.select2-search__field {
+    border-radius: 0.5rem !important;
+    border-color: #e2e8f0 !important;
+    padding: 0.5rem 0.75rem !important;
+    font-size: 0.875rem !important;
+    font-weight: 600 !important;
+}
+</style>
+
 <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
     <div>
         <h1 class="text-3xl font-bold text-slate-800 tracking-tight italic">Manajemen Jadwal Pelajaran</h1>
@@ -178,7 +227,7 @@ require_once __DIR__ . '/../includes/header.php';
     <form action="" method="GET" class="flex flex-col sm:flex-row items-end gap-4">
         <div class="flex-1 space-y-1 w-full">
             <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Pilih Kelas</label>
-            <select name="kelas_id" onchange="this.form.submit()" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-100 bg-white font-bold text-slate-700 shadow-sm">
+            <select name="kelas_id" id="filter_kelas_select" onchange="this.form.submit()" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-100 bg-white font-bold text-slate-700 shadow-sm">
                 <?php foreach ($kelases as $k): ?>
                     <option value="<?= $k['id'] ?>" <?= $k['id'] == $filter_kelas_id ? 'selected' : '' ?>><?= htmlspecialchars($k['nama_kelas']) ?></option>
                 <?php endforeach; ?>
@@ -259,7 +308,7 @@ require_once __DIR__ . '/../includes/header.php';
 
         <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">Pilih Kelas</label>
-            <select name="kelas_id" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 bg-white font-bold text-slate-700">
+            <select name="kelas_id" id="add_kelas_id" required class="select2-modal w-full">
                 <?php foreach ($kelases as $k): ?>
                     <option value="<?= $k['id'] ?>" <?= $k['id'] == $filter_kelas_id ? 'selected' : '' ?>><?= htmlspecialchars($k['nama_kelas']) ?></option>
                 <?php endforeach; ?>
@@ -268,7 +317,7 @@ require_once __DIR__ . '/../includes/header.php';
 
         <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">Hari</label>
-            <select name="hari" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 bg-white font-bold text-slate-700">
+            <select name="hari" id="add_hari" required class="select2-modal w-full">
                 <option value="Senin">Senin</option>
                 <option value="Selasa">Selasa</option>
                 <option value="Rabu">Rabu</option>
@@ -279,18 +328,8 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
 
         <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Mata Pelajaran</label>
-            <select name="mapel_id" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 bg-white font-bold text-slate-700">
-                <option value="">-- Pilih Mapel --</option>
-                <?php foreach ($mapels as $m): ?>
-                    <option value="<?= $m['id'] ?>"><?= htmlspecialchars($m['nama_mapel']) ?> (<?= htmlspecialchars($m['kode_mapel']) ?>)</option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-
-        <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">Guru Pengajar</label>
-            <select name="guru_id" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 bg-white font-bold text-slate-700">
+            <select name="guru_id" id="add_guru_id" required class="select2-modal w-full">
                 <option value="">-- Pilih Guru --</option>
                 <?php foreach ($teachers as $t): ?>
                     <option value="<?= $t['id'] ?>"><?= htmlspecialchars($t['nama_lengkap']) ?></option>
@@ -299,8 +338,18 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
 
         <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Mata Pelajaran</label>
+            <select name="mapel_id" id="add_mapel_id" required class="select2-modal w-full">
+                <option value="">-- Pilih Mapel --</option>
+                <?php foreach ($mapels as $m): ?>
+                    <option value="<?= $m['id'] ?>"><?= htmlspecialchars($m['nama_mapel']) ?> (<?= htmlspecialchars($m['kode_mapel']) ?>)</option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+
+        <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">Jam Ke-</label>
-            <input type="text" name="jam_ke" placeholder="Contoh: 1-2 atau 3" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 font-bold text-slate-700">
+            <input type="text" name="jam_ke" placeholder="Contoh: 1-2 atau 3" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 font-bold text-slate-700 text-sm">
         </div>
 
         <div class="pt-4 flex gap-3">
@@ -322,7 +371,7 @@ require_once __DIR__ . '/../includes/header.php';
 
         <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">Pilih Kelas</label>
-            <select name="kelas_id" id="edit_kelas_id" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 bg-white font-bold text-slate-700">
+            <select name="kelas_id" id="edit_kelas_id" required class="select2-modal w-full">
                 <?php foreach ($kelases as $k): ?>
                     <option value="<?= $k['id'] ?>"><?= htmlspecialchars($k['nama_kelas']) ?></option>
                 <?php endforeach; ?>
@@ -331,7 +380,7 @@ require_once __DIR__ . '/../includes/header.php';
 
         <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">Hari</label>
-            <select name="hari" id="edit_hari" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 bg-white font-bold text-slate-700">
+            <select name="hari" id="edit_hari" required class="select2-modal w-full">
                 <option value="Senin">Senin</option>
                 <option value="Selasa">Selasa</option>
                 <option value="Rabu">Rabu</option>
@@ -342,18 +391,8 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
 
         <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Mata Pelajaran</label>
-            <select name="mapel_id" id="edit_mapel_id" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 bg-white font-bold text-slate-700">
-                <option value="">-- Pilih Mapel --</option>
-                <?php foreach ($mapels as $m): ?>
-                    <option value="<?= $m['id'] ?>"><?= htmlspecialchars($m['nama_mapel']) ?> (<?= htmlspecialchars($m['kode_mapel']) ?>)</option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-
-        <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">Guru Pengajar</label>
-            <select name="guru_id" id="edit_guru_id" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 bg-white font-bold text-slate-700">
+            <select name="guru_id" id="edit_guru_id" required class="select2-modal w-full">
                 <option value="">-- Pilih Guru --</option>
                 <?php foreach ($teachers as $t): ?>
                     <option value="<?= $t['id'] ?>"><?= htmlspecialchars($t['nama_lengkap']) ?></option>
@@ -362,8 +401,18 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
 
         <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Mata Pelajaran</label>
+            <select name="mapel_id" id="edit_mapel_id" required class="select2-modal w-full">
+                <option value="">-- Pilih Mapel --</option>
+                <?php foreach ($mapels as $m): ?>
+                    <option value="<?= $m['id'] ?>"><?= htmlspecialchars($m['nama_mapel']) ?> (<?= htmlspecialchars($m['kode_mapel']) ?>)</option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+
+        <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">Jam Ke-</label>
-            <input type="text" name="jam_ke" id="edit_jam_ke" placeholder="Contoh: 1-2 atau 3" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 font-bold text-slate-700">
+            <input type="text" name="jam_ke" id="edit_jam_ke" placeholder="Contoh: 1-2 atau 3" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 font-bold text-slate-700 text-sm">
         </div>
 
         <div class="pt-4 flex gap-3">
@@ -374,6 +423,69 @@ require_once __DIR__ . '/../includes/header.php';
 </div>
 
 <script>
+// JSON relations for dynamic cascading filter
+const guruMapelMap = <?= json_encode($guru_mapel_relation) ?>;
+const allMapels = <?= json_encode($mapels) ?>;
+
+function updateSubjectDropdown(guruSelectId, mapelSelectId, selectedMapelId = null) {
+    const guruId = parseInt($(guruSelectId).val()) || 0;
+    const $mapelSelect = $(mapelSelectId);
+
+    $mapelSelect.empty();
+    $mapelSelect.append('<option value="">-- Pilih Mapel --</option>');
+
+    const assignedMapelIds = guruMapelMap[guruId] || [];
+
+    let filteredMapels = [];
+    if (assignedMapelIds.length > 0) {
+        // Show only subjects set for this teacher
+        filteredMapels = allMapels.filter(m => assignedMapelIds.includes(parseInt(m.id)));
+    } else {
+        // Fallback: If no subject set for this teacher, show ALL subjects
+        filteredMapels = allMapels;
+    }
+
+    filteredMapels.forEach(m => {
+        const option = new Option(`${m.nama_mapel} (${m.kode_mapel})`, m.id, false, false);
+        $mapelSelect.append(option);
+    });
+
+    if (selectedMapelId) {
+        $mapelSelect.val(selectedMapelId).trigger('change');
+    } else {
+        $mapelSelect.val('').trigger('change');
+    }
+}
+
+$(document).ready(function() {
+    // Initialize Select2 on Class Filter Select
+    $('#filter_kelas_select').select2({
+        width: '100%'
+    });
+
+    // Initialize Select2 for Add Modal
+    $('#add_kelas_id, #add_hari, #add_guru_id, #add_mapel_id').select2({
+        dropdownParent: $('#addJadwalModal'),
+        width: '100%'
+    });
+
+    // Initialize Select2 for Edit Modal
+    $('#edit_kelas_id, #edit_hari, #edit_guru_id, #edit_mapel_id').select2({
+        dropdownParent: $('#editJadwalModal'),
+        width: '100%'
+    });
+
+    // Handle Teacher change in Add Modal
+    $('#add_guru_id').on('change', function() {
+        updateSubjectDropdown('#add_guru_id', '#add_mapel_id');
+    });
+
+    // Handle Teacher change in Edit Modal
+    $('#edit_guru_id').on('change', function() {
+        updateSubjectDropdown('#edit_guru_id', '#edit_mapel_id');
+    });
+});
+
 function openModal(id) {
     const modal = document.getElementById(id);
     const overlay = document.getElementById('modalOverlay');
@@ -403,12 +515,15 @@ function closeAllModals() {
 }
 
 function editJadwal(item) {
-    document.getElementById('edit_jadwal_id').value = item.id;
-    document.getElementById('edit_kelas_id').value = item.kelas_id;
-    document.getElementById('edit_hari').value = item.hari;
-    document.getElementById('edit_mapel_id').value = item.mapel_id;
-    document.getElementById('edit_guru_id').value = item.guru_id;
-    document.getElementById('edit_jam_ke').value = item.jam_ke;
+    $('#edit_jadwal_id').val(item.id);
+    $('#edit_kelas_id').val(item.kelas_id).trigger('change');
+    $('#edit_hari').val(item.hari).trigger('change');
+    $('#edit_guru_id').val(item.guru_id).trigger('change');
+
+    // Update subject dropdown for this teacher and select item.mapel_id
+    updateSubjectDropdown('#edit_guru_id', '#edit_mapel_id', item.mapel_id);
+
+    $('#edit_jam_ke').val(item.jam_ke);
     openModal('editJadwalModal');
 }
 
