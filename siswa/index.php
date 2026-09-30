@@ -7,7 +7,7 @@ authorize_role(['siswa']);
 $siswa_id = $_SESSION['user_id'];
 
 // Get Student Profile and Active Class
-$query_profile = "SELECT s.*, k.nama_kelas, k.jadwal_pdf, tp.tahun as tahun_pelajaran
+$query_profile = "SELECT s.*, k.id as kelas_id, k.nama_kelas, tp.tahun as tahun_pelajaran
                   FROM siswa s
                   JOIN siswa_kelas sk ON s.id = sk.siswa_id
                   JOIN kelas k ON sk.kelas_id = k.id
@@ -18,7 +18,38 @@ mysqli_stmt_bind_param($stmt, "i", $siswa_id);
 mysqli_stmt_execute($stmt);
 $siswa = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
 
-// Check active PKL Mapping safely (verify table existence)
+// Fetch active class schedule from jadwal_pelajaran
+$kid = (int)($siswa['kelas_id'] ?? 0);
+$schedules_by_day = [
+    'Senin' => [],
+    'Selasa' => [],
+    'Rabu' => [],
+    'Kamis' => [],
+    'Jumat' => [],
+    'Sabtu' => []
+];
+
+if ($kid > 0) {
+    $q_s = "SELECT jp.*, mp.nama_mapel, mp.kode_mapel, u.nama_lengkap as nama_guru
+            FROM jadwal_pelajaran jp
+            JOIN mata_pelajaran mp ON jp.mapel_id = mp.id
+            JOIN guru g ON jp.guru_id = g.id
+            JOIN users u ON g.user_id = u.id
+            WHERE jp.kelas_id = $kid
+            ORDER BY FIELD(jp.hari, 'Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu'), jp.jam_ke ASC";
+    $res_s = mysqli_query($conn, $q_s);
+    if ($res_s) {
+        while ($r_s = mysqli_fetch_assoc($res_s)) {
+            if (isset($schedules_by_day[$r_s['hari']])) {
+                $schedules_by_day[$r_s['hari']][] = $r_s;
+            } else {
+                $schedules_by_day[$r_s['hari']] = [$r_s];
+            }
+        }
+    }
+}
+
+// Check active PKL Mapping safely
 $pkl_active = null;
 $chk_spkl = mysqli_query($conn, "SHOW TABLES LIKE 'siswa_pkl'");
 if ($chk_spkl && mysqli_num_rows($chk_spkl) > 0) {
@@ -69,31 +100,31 @@ require_once __DIR__ . '/../includes/header.php';
         ?>
         <div class="mb-8">
             <div class="flex items-center justify-between mb-4">
-                <h3 class="font-black text-slate-800 italic uppercase tracking-wider text-base flex items-center gap-2">
+                <h3 class="font-bold text-slate-800 uppercase tracking-wider text-xs flex items-center gap-2">
                     <i class="fa fa-bullhorn text-indigo-600"></i> Pengumuman Terbaru
                 </h3>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <?php while ($ann = mysqli_fetch_assoc($q_announcements)): ?>
-                <div class="lux-card p-5 bg-white border border-slate-100 shadow-xl rounded-3xl flex flex-col justify-between hover:border-indigo-200 transition-all">
+                <div class="lux-card p-5 bg-white border border-slate-200/80 rounded-2xl flex flex-col justify-between hover:border-indigo-300 transition-all">
                     <div>
                         <div class="flex items-center justify-between gap-2 mb-2">
-                            <span class="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-indigo-50 text-indigo-600 border border-indigo-100">
+                            <span class="px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider bg-indigo-50 text-indigo-600 border border-indigo-100">
                                 <?= $ann['target'] == 'siswa' ? 'Khusus Siswa' : 'Semua' ?>
                             </span>
-                            <span class="text-[10px] font-bold text-slate-400">
+                            <span class="text-[10px] text-slate-400 font-medium">
                                 <?= date('d M Y', strtotime($ann['created_at'])) ?>
                             </span>
                         </div>
-                        <h4 class="font-black text-slate-800 text-base mb-1 line-clamp-1"><?= htmlspecialchars($ann['judul']) ?></h4>
-                        <p class="text-xs text-slate-500 line-clamp-3 leading-relaxed mb-4"><?= htmlspecialchars($ann['isi']) ?></p>
+                        <h4 class="font-bold text-slate-800 text-sm mb-1 line-clamp-1"><?= htmlspecialchars($ann['judul']) ?></h4>
+                        <p class="text-xs text-slate-500 line-clamp-2 leading-relaxed mb-3 font-normal"><?= htmlspecialchars($ann['isi']) ?></p>
                     </div>
-                    <div class="pt-3 border-t border-slate-50 flex items-center justify-between">
-                        <button type="button" onclick='showAnnouncementModal(<?= htmlspecialchars(json_encode($ann), ENT_QUOTES, 'UTF-8') ?>)' class="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
-                            Baca Selengkapnya <i class="fa fa-arrow-right text-[10px]"></i>
+                    <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+                        <button type="button" onclick='showAnnouncementModal(<?= htmlspecialchars(json_encode($ann), ENT_QUOTES, 'UTF-8') ?>)' class="font-semibold text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
+                            Baca Selengkapnya <i class="fa fa-arrow-right text-[9px]"></i>
                         </button>
                         <?php if (!empty($ann['file_lampiran'])): ?>
-                        <a href="<?= BASE_URL ?>uploads/pengumuman/<?= $ann['file_lampiran'] ?>" target="_blank" class="text-[10px] font-black text-slate-500 bg-slate-100 hover:bg-slate-200 px-2.5 py-1 rounded-lg flex items-center gap-1 transition-colors">
+                        <a href="<?= BASE_URL ?>uploads/pengumuman/<?= $ann['file_lampiran'] ?>" target="_blank" class="text-[10px] font-bold text-slate-500 bg-slate-100 hover:bg-slate-200 px-2 py-1 rounded-md flex items-center gap-1 transition-colors">
                             <i class="fa fa-paperclip text-indigo-500"></i> Lampiran
                         </a>
                         <?php endif; ?>
@@ -104,194 +135,288 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
         <?php endif; ?>
 
-        <div class="lux-card p-6 mb-8 bg-gradient-to-br from-indigo-600 to-indigo-800 text-white relative overflow-hidden">
+        <div class="lux-card p-6 mb-8 bg-gradient-to-br from-indigo-600 to-indigo-800 text-white relative overflow-hidden rounded-2xl">
             <div class="relative z-10 flex items-center gap-6">
-                <div class="w-24 h-24 rounded-xl bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center text-3xl font-black italic shadow-inner overflow-hidden">
+                <div class="w-20 h-20 rounded-xl bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center text-3xl font-bold shadow-inner overflow-hidden shrink-0">
                     <?php if(!empty($siswa['foto'])): ?>
-                        <img src="<?= BASE_URL ?>uploads/siswa/<?= $siswa['foto'] ?>" class="w-full h-full object-cover rounded-none">
+                        <img src="<?= BASE_URL ?>uploads/siswa/<?= $siswa['foto'] ?>" class="w-full h-full object-cover">
                     <?php else: ?>
                         <?= strtoupper(substr($siswa['nama_siswa'], 0, 1)) ?>
                     <?php endif; ?>
                 </div>
                 <div>
-                    <h1 class="text-2xl font-normal italic tracking-tight leading-tight"><?= htmlspecialchars($siswa['nama_siswa']) ?></h1>
-                    <p class="text-indigo-100 font-bold text-sm tracking-widest mt-1"><?= htmlspecialchars($siswa['nis']) ?> / <?= htmlspecialchars($siswa['nisn'] ?? '-') ?></p>
-                    <div class="flex items-center gap-3 mt-3">
-                        <span class="px-3 py-1 bg-white/10 rounded-full text-[10px] font-black uppercase tracking-widest border border-white/20"><?= htmlspecialchars($siswa['nama_kelas']) ?></span>
-                        <span class="px-3 py-1 bg-emerald-400 text-emerald-950 rounded-full text-[10px] font-black uppercase tracking-widest italic">Aktif</span>
+                    <h1 class="text-2xl font-bold tracking-tight leading-tight"><?= htmlspecialchars($siswa['nama_siswa']) ?></h1>
+                    <p class="text-indigo-100 font-semibold text-xs tracking-widest mt-0.5"><?= htmlspecialchars($siswa['nis']) ?> / <?= htmlspecialchars($siswa['nisn'] ?? '-') ?></p>
+                    <div class="flex items-center gap-2 mt-3">
+                        <span class="px-3 py-1 bg-white/10 rounded-full text-[10px] font-bold uppercase tracking-widest border border-white/20"><?= htmlspecialchars($siswa['nama_kelas']) ?></span>
+                        <span class="px-3 py-1 bg-emerald-400 text-emerald-950 rounded-full text-[10px] font-bold uppercase tracking-widest">Aktif</span>
                     </div>
                 </div>
             </div>
             <i class="fa fa-user-graduate absolute -bottom-6 -right-6 text-9xl opacity-10"></i>
         </div>
 
-        <!-- Quick Actions Grid Design (3x2) -->
-        <div class="grid grid-cols-2 gap-3 sm:gap-4 mb-10 no-print">
+        <!-- Quick Actions Grid Design -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mb-10 no-print">
             <!-- Row 1 -->
-            <?php if(!empty($siswa['jadwal_pdf'])): ?>
-                <a href="<?= BASE_URL ?>uploads/jadwal/<?= $siswa['jadwal_pdf'] ?>" target="_blank" class="p-3.5 sm:p-5 rounded-2xl sm:rounded-[32px] bg-indigo-600 text-white shadow-xl shadow-indigo-100 flex flex-col gap-2.5 sm:gap-3 group transition-all hover:scale-[1.02] active:scale-95">
-            <?php else: ?>
-                <a href="javascript:void(0)" onclick="Swal.fire({icon: 'info', title: 'Belum Ada Jadwal', text: 'Jadwal pelajaran kelas belum diunggah oleh administrator.', confirmButtonColor: '#4F46E5'})" class="p-3.5 sm:p-5 rounded-2xl sm:rounded-[32px] bg-indigo-600 text-white shadow-xl shadow-indigo-100 flex flex-col gap-2.5 sm:gap-3 group transition-all hover:scale-[1.02] active:scale-95">
-            <?php endif; ?>
-                <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-white/20 flex items-center justify-center text-sm sm:text-lg shadow-inner group-hover:bg-white/30 transition-all">
+            <button onclick="openModal('jadwalKelasModal')" class="p-4 sm:p-5 rounded-2xl bg-indigo-600 text-white shadow-md flex flex-col justify-between gap-3 group transition-all hover:bg-indigo-700 hover:shadow-lg text-left">
+                <div class="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center text-sm shadow-inner">
                     <i class="fa fa-calendar-alt"></i>
                 </div>
                 <div>
-                    <div class="text-xs sm:text-base font-black italic tracking-tighter uppercase leading-none">Jadwal Kelas</div>
-                    <div class="text-[7px] sm:text-[9px] font-bold text-indigo-100 uppercase tracking-widest mt-1 opacity-80">Jadwal Pelajaran PDF</div>
+                    <div class="text-xs sm:text-sm font-bold tracking-tight">Jadwal Kelas</div>
+                    <div class="text-[9px] font-normal text-indigo-100 mt-0.5">Jadwal pelajaran mingguan</div>
                 </div>
-            </a>
+            </button>
 
-            <a href="izin.php" class="p-3.5 sm:p-5 rounded-2xl sm:rounded-[32px] bg-violet-500 text-white shadow-xl shadow-violet-100 flex flex-col gap-2.5 sm:gap-3 group transition-all hover:scale-[1.02] active:scale-95">
-                <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-white/20 flex items-center justify-center text-sm sm:text-lg shadow-inner group-hover:bg-white/30 transition-all">
+            <a href="izin.php" class="p-4 sm:p-5 rounded-2xl bg-violet-500 text-white shadow-md flex flex-col justify-between gap-3 group transition-all hover:bg-violet-600 hover:shadow-lg">
+                <div class="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center text-sm shadow-inner">
                     <i class="fa fa-envelope-open-text"></i>
                 </div>
                 <div>
-                    <div class="text-xs sm:text-base font-black italic tracking-tighter uppercase leading-none">Pengajuan Izin</div>
-                    <div class="text-[7px] sm:text-[9px] font-bold text-violet-100 uppercase tracking-widest mt-1 opacity-80">Sakit & Keperluan</div>
+                    <div class="text-xs sm:text-sm font-bold tracking-tight">Pengajuan Izin</div>
+                    <div class="text-[9px] font-normal text-violet-100 mt-0.5">Sakit & Keperluan</div>
                 </div>
             </a>
 
             <!-- Row 2 -->
-            <a href="media.php" class="p-3.5 sm:p-5 rounded-2xl sm:rounded-[32px] bg-amber-500 text-white shadow-xl shadow-amber-100 flex flex-col gap-2.5 sm:gap-3 group transition-all hover:scale-[1.02] active:scale-95">
-                <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-white/20 flex items-center justify-center text-sm sm:text-lg shadow-inner group-hover:bg-white/30 transition-all">
+            <a href="media.php" class="p-4 sm:p-5 rounded-2xl bg-amber-500 text-white shadow-md flex flex-col justify-between gap-3 group transition-all hover:bg-amber-600 hover:shadow-lg">
+                <div class="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center text-sm shadow-inner">
                     <i class="fa fa-book-reader"></i>
                 </div>
                 <div>
-                    <div class="text-xs sm:text-base font-black italic tracking-tighter uppercase leading-none">Media & Buku</div>
-                    <div class="text-[7px] sm:text-[9px] font-bold text-amber-100 uppercase tracking-widest mt-1 opacity-80">Digital Learning</div>
+                    <div class="text-xs sm:text-sm font-bold tracking-tight">Media & Buku</div>
+                    <div class="text-[9px] font-normal text-amber-100 mt-0.5">Digital learning</div>
                 </div>
             </a>
 
-            <a href="berkas.php" class="p-3.5 sm:p-5 rounded-2xl sm:rounded-[32px] bg-cyan-500 text-white shadow-xl shadow-cyan-100 flex flex-col gap-2.5 sm:gap-3 group transition-all hover:scale-[1.02] active:scale-95">
-                <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-white/20 flex items-center justify-center text-sm sm:text-lg shadow-inner group-hover:bg-white/30 transition-all">
+            <a href="berkas.php" class="p-4 sm:p-5 rounded-2xl bg-cyan-500 text-white shadow-md flex flex-col justify-between gap-3 group transition-all hover:bg-cyan-600 hover:shadow-lg">
+                <div class="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center text-sm shadow-inner">
                     <i class="fa fa-folder-open"></i>
                 </div>
                 <div>
-                    <div class="text-xs sm:text-base font-black italic tracking-tighter uppercase leading-none">Berkas Saya</div>
-                    <div class="text-[7px] sm:text-[9px] font-bold text-cyan-100 uppercase tracking-widest mt-1 opacity-80">Upload KK & Ijazah</div>
+                    <div class="text-xs sm:text-sm font-bold tracking-tight">Berkas Saya</div>
+                    <div class="text-[9px] font-normal text-cyan-100 mt-0.5">Upload KK & Ijazah</div>
                 </div>
             </a>
 
             <!-- Row 3 -->
-            <a href="profil.php" class="p-3.5 sm:p-5 rounded-2xl sm:rounded-[32px] bg-emerald-500 text-white shadow-xl shadow-emerald-100 flex flex-col gap-2.5 sm:gap-3 group transition-all hover:scale-[1.02] active:scale-95">
-                <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-white/20 flex items-center justify-center text-sm sm:text-lg shadow-inner group-hover:bg-white/30 transition-all">
+            <a href="profil.php" class="p-4 sm:p-5 rounded-2xl bg-emerald-500 text-white shadow-md flex flex-col justify-between gap-3 group transition-all hover:bg-emerald-600 hover:shadow-lg">
+                <div class="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center text-sm shadow-inner">
                     <i class="fa fa-user-circle"></i>
                 </div>
                 <div>
-                    <div class="text-xs sm:text-base font-black italic tracking-tighter uppercase leading-none">Profil Saya</div>
-                    <div class="text-[7px] sm:text-[9px] font-bold text-emerald-100 uppercase tracking-widest mt-1 opacity-80">Informasi Pribadi</div>
+                    <div class="text-xs sm:text-sm font-bold tracking-tight">Profil Saya</div>
+                    <div class="text-[9px] font-normal text-emerald-100 mt-0.5">Informasi pribadi</div>
                 </div>
             </a>
 
-            <a href="kritik_saran.php" class="p-3.5 sm:p-5 rounded-2xl sm:rounded-[32px] bg-sky-500 text-white shadow-xl shadow-sky-100 flex flex-col gap-2.5 sm:gap-3 group transition-all hover:scale-[1.02] active:scale-95">
-                <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-white/20 flex items-center justify-center text-sm sm:text-lg shadow-inner group-hover:bg-white/30 transition-all">
+            <a href="kritik_saran.php" class="p-4 sm:p-5 rounded-2xl bg-sky-500 text-white shadow-md flex flex-col justify-between gap-3 group transition-all hover:bg-sky-600 hover:shadow-lg">
+                <div class="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center text-sm shadow-inner">
                     <i class="fa fa-comment-dots"></i>
                 </div>
                 <div>
-                    <div class="text-xs sm:text-base font-black italic tracking-tighter uppercase leading-none">Kritik & Saran</div>
-                    <div class="text-[7px] sm:text-[9px] font-bold text-sky-100 uppercase tracking-widest mt-1 opacity-80">Umpan Balik</div>
+                    <div class="text-xs sm:text-sm font-bold tracking-tight">Kritik & Saran</div>
+                    <div class="text-[9px] font-normal text-sky-100 mt-0.5">Umpan balik</div>
                 </div>
             </a>
 
-            <!-- Row 4 (New!) -->
-            <a href="konsultasi.php" class="p-3.5 sm:p-5 rounded-2xl sm:rounded-[32px] bg-indigo-500 text-white shadow-xl shadow-indigo-100 flex flex-col gap-2.5 sm:gap-3 group transition-all hover:scale-[1.02] active:scale-95">
-                <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-white/20 flex items-center justify-center text-sm sm:text-lg shadow-inner group-hover:bg-white/30 transition-all">
+            <!-- Row 4 -->
+            <a href="konsultasi.php" class="p-4 sm:p-5 rounded-2xl bg-indigo-500 text-white shadow-md flex flex-col justify-between gap-3 group transition-all hover:bg-indigo-600 hover:shadow-lg">
+                <div class="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center text-sm shadow-inner">
                     <i class="fa fa-comments"></i>
                 </div>
                 <div>
-                    <div class="text-xs sm:text-base font-black italic tracking-tighter uppercase leading-none">Konsultasi BK</div>
-                    <div class="text-[7px] sm:text-[9px] font-bold text-indigo-100 uppercase tracking-widest mt-1 opacity-80">Bimbingan Online</div>
+                    <div class="text-xs sm:text-sm font-bold tracking-tight">Konsultasi BK</div>
+                    <div class="text-[9px] font-normal text-indigo-100 mt-0.5">Bimbingan online</div>
                 </div>
             </a>
 
-            <a href="kontak.php" class="p-3.5 sm:p-5 rounded-2xl sm:rounded-[32px] bg-teal-500 text-white shadow-xl shadow-teal-100 flex flex-col gap-2.5 sm:gap-3 group transition-all hover:scale-[1.02] active:scale-95">
-                <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-white/20 flex items-center justify-center text-sm sm:text-lg shadow-inner group-hover:bg-white/30 transition-all">
+            <a href="kontak.php" class="p-4 sm:p-5 rounded-2xl bg-teal-500 text-white shadow-md flex flex-col justify-between gap-3 group transition-all hover:bg-teal-600 hover:shadow-lg">
+                <div class="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center text-sm shadow-inner">
                     <i class="fa fa-phone-alt"></i>
                 </div>
                 <div>
-                    <div class="text-xs sm:text-base font-black italic tracking-tighter uppercase leading-none">Kontak BK & Wali</div>
-                    <div class="text-[7px] sm:text-[9px] font-bold text-teal-100 uppercase tracking-widest mt-1 opacity-80">Direktori Kontak</div>
+                    <div class="text-xs sm:text-sm font-bold tracking-tight">Kontak BK & Wali</div>
+                    <div class="text-[9px] font-normal text-teal-100 mt-0.5">Direktori kontak</div>
                 </div>
             </a>
 
-            <a href="tugas_guru.php" class="p-3.5 sm:p-5 rounded-2xl sm:rounded-[32px] bg-amber-600 text-white shadow-xl shadow-amber-100 flex flex-col gap-2.5 sm:gap-3 group transition-all hover:scale-[1.02] active:scale-95">
-                <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-white/20 flex items-center justify-center text-sm sm:text-lg shadow-inner group-hover:bg-white/30 transition-all">
+            <a href="tugas_guru.php" class="p-4 sm:p-5 rounded-2xl bg-amber-600 text-white shadow-md flex flex-col justify-between gap-3 group transition-all hover:bg-amber-700 hover:shadow-lg">
+                <div class="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center text-sm shadow-inner">
                     <i class="fa fa-tasks"></i>
                 </div>
                 <div>
-                    <div class="text-xs sm:text-base font-black italic tracking-tighter uppercase leading-none">Tugas Guru</div>
-                    <div class="text-[7px] sm:text-[9px] font-bold text-amber-100 uppercase tracking-widest mt-1 opacity-80">Tugas Guru Tidak Masuk</div>
+                    <div class="text-xs sm:text-sm font-bold tracking-tight">Tugas Guru</div>
+                    <div class="text-[9px] font-normal text-amber-100 mt-0.5">Guru tidak masuk</div>
                 </div>
             </a>
 
-            <!-- Row 5 (Pengaduan Siswa, formerly Panic Button) -->
-            <a href="pengaduan.php" class="p-3.5 sm:p-5 rounded-2xl sm:rounded-[32px] bg-rose-600 text-white shadow-xl shadow-rose-200 flex flex-col gap-2 sm:gap-3 group transition-all hover:scale-[1.02] active:scale-95 col-span-1 sm:col-span-2 relative overflow-hidden">
-                <div class="absolute inset-0 bg-red-700/10 animate-pulse pointer-events-none"></div>
+            <!-- Row 5 (Pengaduan Siswa) -->
+            <a href="pengaduan.php" class="p-4 sm:p-5 rounded-2xl bg-rose-600 text-white shadow-md flex flex-col justify-between gap-2 group transition-all hover:bg-rose-700 hover:shadow-lg col-span-2 sm:col-span-3 relative overflow-hidden">
                 <div class="relative z-10 flex items-center justify-between w-full">
-                    <div class="flex items-center gap-4">
-                        <div class="w-9 h-9 sm:w-12 sm:h-12 rounded-2xl bg-white text-rose-600 flex items-center justify-center text-sm sm:text-xl shadow-inner animate-bounce">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-xl bg-white text-rose-600 flex items-center justify-center text-base shadow-inner">
                             <i class="fa fa-bullhorn"></i>
                         </div>
                         <div>
-                            <div class="text-xs sm:text-lg font-black italic tracking-tighter uppercase leading-none">Pengaduan Siswa</div>
-                            <div class="text-[7px] sm:text-[9px] font-bold text-rose-100 uppercase tracking-widest mt-1 opacity-90">Laporkan Perundungan / Masalah Keamanan</div>
+                            <div class="text-xs sm:text-sm font-bold tracking-tight">Pengaduan Siswa</div>
+                            <div class="text-[9px] font-normal text-rose-100 mt-0.5">Laporkan perundungan / masalah keamanan</div>
                         </div>
                     </div>
-                    <i class="fa fa-shield-alt text-xl sm:text-4xl opacity-20 mr-2"></i>
+                    <i class="fa fa-shield-alt text-2xl opacity-20 mr-2"></i>
                 </div>
             </a>
 
             <?php if ($pkl_active): ?>
-            <!-- Row PKL (Appears when student is mapped to active PKL) -->
-            <a href="pkl_jurnal.php" class="p-3.5 sm:p-5 rounded-2xl sm:rounded-[32px] bg-slate-900 text-white shadow-xl shadow-slate-300 flex flex-col gap-2 sm:gap-3 group transition-all hover:scale-[1.02] active:scale-95 col-span-1 sm:col-span-2 relative overflow-hidden border-2 border-indigo-400">
+            <!-- Row PKL -->
+            <a href="pkl_jurnal.php" class="p-4 sm:p-5 rounded-2xl bg-slate-900 text-white shadow-md flex flex-col justify-between gap-2 group transition-all hover:bg-slate-800 hover:shadow-lg col-span-2 sm:col-span-3 relative overflow-hidden border border-indigo-400/40">
                 <div class="relative z-10 flex items-center justify-between w-full">
-                    <div class="flex items-center gap-4">
-                        <div class="w-9 h-9 sm:w-12 sm:h-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-sm sm:text-xl shadow-inner">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-base shadow-inner">
                             <i class="fa fa-briefcase"></i>
                         </div>
                         <div>
-                            <div class="text-xs sm:text-lg font-black italic tracking-tighter uppercase leading-none text-indigo-400">Portal Praktik Kerja Lapangan (PKL)</div>
-                            <div class="text-[8px] sm:text-[10px] font-bold text-slate-300 uppercase tracking-widest mt-1"><?= htmlspecialchars($pkl_active['nama_tempat']) ?></div>
+                            <div class="text-xs sm:text-sm font-bold text-indigo-400">Portal Praktik Kerja Lapangan (PKL)</div>
+                            <div class="text-[9px] font-normal text-slate-300 mt-0.5"><?= htmlspecialchars($pkl_active['nama_tempat']) ?></div>
                         </div>
                     </div>
-                    <i class="fa fa-arrow-right text-xl sm:text-2xl text-indigo-400 group-hover:translate-x-1 transition-transform mr-2"></i>
+                    <i class="fa fa-arrow-right text-lg text-indigo-400 group-hover:translate-x-1 transition-transform mr-2"></i>
                 </div>
             </a>
             <?php endif; ?>
         </div>
 
         <!-- Rekap Absensi GPS (Monthly) -->
-        <h3 class="text-lg font-black text-slate-800 italic uppercase tracking-widest mb-4 flex items-center">
+        <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-4 flex items-center">
             <i class="fa fa-chart-pie mr-2 text-indigo-500"></i> Rekap Kehadiran GPS Bulan Ini
         </h3>
 
         <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
             <div class="lux-card p-4 text-center">
-                <div class="text-2xl font-black text-emerald-500 italic"><?= $gps_recap['hadir'] ?? 0 ?></div>
-                <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest">Hadir</p>
+                <div class="text-2xl font-bold text-emerald-500"><?= $gps_recap['hadir'] ?? 0 ?></div>
+                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Hadir</p>
             </div>
             <div class="lux-card p-4 text-center">
-                <div class="text-2xl font-black text-amber-500 italic"><?= $gps_recap['terlambat'] ?? 0 ?></div>
-                <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest">Telat</p>
+                <div class="text-2xl font-bold text-amber-500"><?= $gps_recap['terlambat'] ?? 0 ?></div>
+                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Telat</p>
             </div>
             <div class="lux-card p-4 text-center">
-                <div class="text-2xl font-black text-blue-500 italic"><?= $gps_recap['sakit'] ?? 0 ?></div>
-                <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest">Sakit</p>
+                <div class="text-2xl font-bold text-blue-500"><?= $gps_recap['sakit'] ?? 0 ?></div>
+                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Sakit</p>
             </div>
             <div class="lux-card p-4 text-center">
-                <div class="text-2xl font-black text-indigo-500 italic"><?= $gps_recap['izin'] ?? 0 ?></div>
-                <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest">Izin</p>
+                <div class="text-2xl font-bold text-indigo-500"><?= $gps_recap['izin'] ?? 0 ?></div>
+                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Izin</p>
             </div>
             <div class="lux-card p-4 text-center">
-                <div class="text-2xl font-black text-rose-500 italic"><?= $gps_recap['alfa'] ?? 0 ?></div>
-                <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest">Alfa</p>
+                <div class="text-2xl font-bold text-rose-500"><?= $gps_recap['alfa'] ?? 0 ?></div>
+                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Alfa</p>
             </div>
         </div>
     </div>
 </div>
 
+<!-- Modal Jadwal Pelajaran Kelas -->
+<div id="modalOverlay" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] hidden transition-opacity duration-300 opacity-0" onclick="closeAllModals()"></div>
+
+<div id="jadwalKelasModal" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] sm:w-full max-w-3xl max-h-[85vh] overflow-y-auto bg-white rounded-3xl shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0 overflow-hidden">
+    <div class="bg-indigo-600 px-6 py-5 text-white font-bold italic text-lg sticky top-0 z-10 flex justify-between items-center">
+        <div class="flex items-center gap-2">
+            <i class="fa fa-calendar-alt"></i>
+            <span>Jadwal Pelajaran Kelas <?= htmlspecialchars($siswa['nama_kelas']) ?></span>
+        </div>
+        <button type="button" onclick="closeModal('jadwalKelasModal')" class="text-white/80 hover:text-white text-lg"><i class="fa fa-times"></i></button>
+    </div>
+
+    <div class="p-6 space-y-6">
+        <?php
+        $days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+        $day_badges = [
+            'Senin' => 'bg-blue-600 text-white',
+            'Selasa' => 'bg-indigo-600 text-white',
+            'Rabu' => 'bg-purple-600 text-white',
+            'Kamis' => 'bg-pink-600 text-white',
+            'Jumat' => 'bg-emerald-600 text-white',
+            'Sabtu' => 'bg-amber-600 text-white'
+        ];
+        $total_schedules = 0;
+        foreach ($days as $d) {
+            $total_schedules += count($schedules_by_day[$d] ?? []);
+        }
+        ?>
+
+        <?php if ($total_schedules === 0): ?>
+            <div class="p-8 text-center bg-slate-50 border border-slate-200 rounded-2xl text-slate-400 font-medium italic text-xs">
+                Belum ada jadwal pelajaran terdaftar untuk kelas <?= htmlspecialchars($siswa['nama_kelas']) ?>.
+            </div>
+        <?php else: ?>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <?php foreach ($days as $day):
+                    $day_list = $schedules_by_day[$day] ?? [];
+                ?>
+                    <div class="border border-slate-200 rounded-2xl overflow-hidden bg-slate-50/50">
+                        <div class="px-4 py-2.5 bg-slate-900 text-white font-bold text-xs flex items-center justify-between">
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase <?= $day_badges[$day] ?>"><?= $day ?></span>
+                            <span class="text-[10px] text-slate-400 font-normal"><?= count($day_list) ?> Mapel</span>
+                        </div>
+                        <div class="p-3 space-y-2">
+                            <?php if (empty($day_list)): ?>
+                                <p class="text-[10px] text-slate-400 italic text-center py-2">Tidak ada jadwal.</p>
+                            <?php else: ?>
+                                <?php foreach ($day_list as $item): ?>
+                                    <div class="p-2.5 bg-white border border-slate-200/80 rounded-xl space-y-1">
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-[9px] font-bold uppercase text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">Jam Ke: <?= htmlspecialchars($item['jam_ke']) ?></span>
+                                            <span class="text-[10px] font-mono text-slate-400"><?= htmlspecialchars($item['kode_mapel']) ?></span>
+                                        </div>
+                                        <div class="text-xs font-bold text-slate-800 leading-tight">
+                                            <?= htmlspecialchars($item['nama_mapel']) ?>
+                                        </div>
+                                        <div class="text-[10px] text-slate-500 font-medium flex items-center gap-1">
+                                            <i class="fa fa-user-tie text-indigo-400 text-[9px]"></i>
+                                            <span><?= htmlspecialchars($item['nama_guru']) ?></span>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
+    </div>
+</div>
+
 <script>
+function openModal(id) {
+    const modal = document.getElementById(id);
+    const overlay = document.getElementById('modalOverlay');
+    overlay.classList.remove('hidden');
+    modal.classList.remove('hidden');
+    setTimeout(() => {
+        overlay.classList.add('opacity-100');
+        modal.classList.remove('scale-95', 'opacity-0');
+    }, 10);
+}
+
+function closeModal(id) {
+    const modal = document.getElementById(id);
+    const overlay = document.getElementById('modalOverlay');
+    overlay.classList.remove('opacity-100');
+    modal.classList.add('scale-95', 'opacity-0');
+    setTimeout(() => {
+        overlay.classList.add('hidden');
+        modal.classList.add('hidden');
+    }, 300);
+}
+
+function closeAllModals() {
+    document.querySelectorAll('.modal-content').forEach(m => {
+        if (!m.classList.contains('hidden')) closeModal(m.id);
+    });
+}
+
 function showAnnouncementModal(ann) {
     let lampiranHtml = '';
     if (ann.file_lampiran) {
