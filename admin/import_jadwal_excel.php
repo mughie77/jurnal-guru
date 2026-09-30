@@ -45,6 +45,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['excel_file'])) {
             }
         }
 
+        // Pre-fetch existing schedules to prevent duplicate entries (same class, day, and subject)
+        $existing_schedules = [];
+        $res_ex = mysqli_query($conn, "SELECT kelas_id, hari, mapel_id FROM jadwal_pelajaran");
+        if ($res_ex) {
+            while ($r_ex = mysqli_fetch_assoc($res_ex)) {
+                $k_ex = $r_ex['kelas_id'] . '-' . strtolower(trim($r_ex['hari'])) . '-' . $r_ex['mapel_id'];
+                $existing_schedules[$k_ex] = true;
+            }
+        }
+
         $valid_days = [
             'senin' => 'Senin',
             'selasa' => 'Selasa',
@@ -109,9 +119,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['excel_file'])) {
                     continue;
                 }
 
+                // Check for duplicate schedule (same class, day, and subject)
+                $sched_key = $kelas_id . '-' . strtolower($hari_val) . '-' . $mapel_id;
+                if (isset($existing_schedules[$sched_key])) {
+                    $skipped_logs[] = "Baris #$row_idx: Jadwal kelas '$nama_kelas_raw' pada hari $hari_val untuk mapel '$mapel_raw' sudah terdaftar (dilewati agar tidak duplikat).";
+                    continue;
+                }
+
                 mysqli_stmt_bind_param($stmt, "isiis", $kelas_id, $hari_val, $guru_id, $mapel_id, $jam_ke_raw);
                 if (mysqli_stmt_execute($stmt)) {
                     $count++;
+                    $existing_schedules[$sched_key] = true; // Mark to prevent intra-sheet duplicates
                 }
             }
 
