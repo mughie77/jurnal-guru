@@ -29,6 +29,19 @@ $schedules_by_day = [
     'Sabtu' => []
 ];
 
+$days_map = [
+    'Sunday' => 'Minggu',
+    'Monday' => 'Senin',
+    'Tuesday' => 'Selasa',
+    'Wednesday' => 'Rabu',
+    'Thursday' => 'Kamis',
+    'Friday' => 'Jumat',
+    'Saturday' => 'Sabtu'
+];
+$hari_ini = $days_map[date('l')];
+
+$today_class_schedules = [];
+
 if ($kid > 0) {
     $q_s = "SELECT jp.*, mp.nama_mapel, mp.kode_mapel, u.nama_lengkap as nama_guru
             FROM jadwal_pelajaran jp
@@ -45,6 +58,20 @@ if ($kid > 0) {
             } else {
                 $schedules_by_day[$r_s['hari']] = [$r_s];
             }
+        }
+    }
+
+    $q_today_siswa = "SELECT jp.*, mp.nama_mapel, mp.kode_mapel, u.nama_lengkap as nama_guru
+                      FROM jadwal_pelajaran jp
+                      JOIN mata_pelajaran mp ON jp.mapel_id = mp.id
+                      JOIN guru g ON jp.guru_id = g.id
+                      JOIN users u ON g.user_id = u.id
+                      WHERE jp.kelas_id = $kid AND jp.hari = '$hari_ini'
+                      ORDER BY jp.jam_mulai ASC, jp.jam_ke ASC";
+    $res_today_siswa = mysqli_query($conn, $q_today_siswa);
+    if ($res_today_siswa) {
+        while ($r = mysqli_fetch_assoc($res_today_siswa)) {
+            $today_class_schedules[] = $r;
         }
     }
 }
@@ -154,6 +181,45 @@ require_once __DIR__ . '/../includes/header.php';
                 </div>
             </div>
             <i class="fa fa-user-graduate absolute -bottom-6 -right-6 text-9xl opacity-10"></i>
+        </div>
+
+        <!-- Today's Schedule Card Section for Student -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="font-bold text-slate-800 uppercase tracking-wider text-xs flex items-center gap-2">
+                    <i class="fa fa-calendar-day text-indigo-600"></i> Jadwal Pelajaran Hari Ini (<?= $hari_ini ?>)
+                </h3>
+                <span class="text-xs text-slate-500 font-semibold"><?= count($today_class_schedules) ?> Mapel</span>
+            </div>
+
+            <?php if (count($today_class_schedules) > 0): ?>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <?php foreach ($today_class_schedules as $item): ?>
+                        <div class="lux-card p-4 bg-white border border-indigo-100/80 rounded-2xl flex flex-col justify-between space-y-3 hover:border-indigo-300 transition-all">
+                            <div>
+                                <div class="flex items-center justify-between gap-2 mb-1.5">
+                                    <span class="px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-indigo-50 text-indigo-700 flex items-center gap-1">
+                                        <?php if (!empty($item['jam_mulai'])): ?>
+                                            <i class="fa fa-clock text-[9px] text-indigo-500"></i> Pukul <?= date('H:i', strtotime($item['jam_mulai'])) ?> WIB |
+                                        <?php endif; ?>
+                                        Jam Ke: <?= htmlspecialchars($item['jam_ke']) ?>
+                                    </span>
+                                    <span class="text-[10px] font-mono text-slate-400 font-semibold"><?= htmlspecialchars($item['kode_mapel']) ?></span>
+                                </div>
+                                <h4 class="font-bold text-slate-800 text-sm leading-snug mb-1"><?= htmlspecialchars($item['nama_mapel']) ?></h4>
+                                <p class="text-xs text-slate-500 font-medium flex items-center gap-1.5">
+                                    <i class="fa fa-user-tie text-indigo-500 text-[10px]"></i> <?= htmlspecialchars($item['nama_guru']) ?>
+                                </p>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php else: ?>
+                <div class="p-5 bg-white border border-slate-200/80 rounded-2xl text-center">
+                    <i class="fa fa-calendar-check text-slate-300 text-2xl mb-1.5"></i>
+                    <p class="text-xs text-slate-500 font-semibold">Tidak ada jadwal pelajaran untuk hari <?= $hari_ini ?>.</p>
+                </div>
+            <?php endif; ?>
         </div>
 
         <!-- Quick Actions Grid Design -->

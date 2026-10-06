@@ -15,6 +15,27 @@ $total_jurnal = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as total
 $hadir_avg = mysqli_fetch_assoc(mysqli_query($conn, "SELECT AVG(jml_hadir) as avg FROM jurnal WHERE guru_id = $guru_id"))['avg'];
 $recent_jurnals = mysqli_query($conn, "SELECT j.*, k.nama_kelas, mp.nama_mapel FROM jurnal j JOIN kelas k ON j.kelas_id = k.id JOIN mata_pelajaran mp ON j.mapel_id = mp.id WHERE j.guru_id = $guru_id ORDER BY j.tanggal DESC LIMIT 5");
 
+// Fetch today's schedule for teacher
+$days_map = [
+    'Sunday' => 'Minggu',
+    'Monday' => 'Senin',
+    'Tuesday' => 'Selasa',
+    'Wednesday' => 'Rabu',
+    'Thursday' => 'Kamis',
+    'Friday' => 'Jumat',
+    'Saturday' => 'Sabtu'
+];
+$hari_ini = $days_map[date('l')];
+$today_date = date('Y-m-d');
+
+$q_today_sched = mysqli_query($conn, "SELECT jp.*, k.nama_kelas, m.nama_mapel,
+                    (SELECT COUNT(*) FROM jurnal j WHERE j.guru_id = jp.guru_id AND j.kelas_id = jp.kelas_id AND j.tanggal = '$today_date' AND (j.jadwal_id = jp.id OR (j.jadwal_id IS NULL AND j.mapel_id = jp.mapel_id))) as total_jurnal
+                  FROM jadwal_pelajaran jp
+                  JOIN kelas k ON jp.kelas_id = k.id
+                  JOIN mata_pelajaran m ON jp.mapel_id = m.id
+                  WHERE jp.guru_id = $guru_id AND jp.hari = '$hari_ini'
+                  ORDER BY jp.jam_mulai ASC, jp.jam_ke ASC");
+
 // Check PKL Pembimbing Status safely
 $is_pkl_pembimbing = false;
 $chk_tpkl = mysqli_query($conn, "SHOW TABLES LIKE 'tempat_pkl'");
@@ -107,6 +128,65 @@ require_once __DIR__ . '/../includes/header.php';
             </div>
         </div>
         <?php endif; ?>
+
+        <!-- Today's Schedule Card Section -->
+        <div class="mb-10">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="font-bold text-slate-800 uppercase tracking-wider text-xs flex items-center gap-2">
+                    <i class="fa fa-calendar-alt text-indigo-600"></i> Jadwal Mengajar Hari Ini (<?= $hari_ini ?>)
+                </h3>
+                <span class="text-xs text-slate-500 font-semibold"><?= mysqli_num_rows($q_today_sched) ?> Sesi Jadwal</span>
+            </div>
+
+            <?php if (mysqli_num_rows($q_today_sched) > 0): ?>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <?php while ($sched = mysqli_fetch_assoc($q_today_sched)):
+                        $is_filled = ((int)$sched['total_jurnal']) > 0;
+                    ?>
+                        <div class="lux-card p-5 bg-white border <?= $is_filled ? 'border-emerald-200 bg-emerald-50/20' : 'border-indigo-100' ?> rounded-2xl flex flex-col justify-between space-y-4 hover:shadow-md transition-all">
+                            <div>
+                                <div class="flex items-center justify-between gap-2 mb-2">
+                                    <span class="px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-indigo-50 text-indigo-700">
+                                        <?php if (!empty($sched['jam_mulai'])): ?>
+                                            <i class="fa fa-clock text-[9px] text-indigo-500"></i> <?= date('H:i', strtotime($sched['jam_mulai'])) ?> WIB |
+                                        <?php endif; ?>
+                                        Jam Ke: <?= htmlspecialchars($sched['jam_ke']) ?>
+                                    </span>
+                                    <?php if ($is_filled): ?>
+                                        <span class="px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 flex items-center gap-1">
+                                            <i class="fa fa-check-circle"></i> Sudah Diisi
+                                        </span>
+                                    <?php else: ?>
+                                        <span class="px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider bg-amber-100 text-amber-800 flex items-center gap-1">
+                                            <i class="fa fa-clock"></i> Belum Diisi
+                                        </span>
+                                    <?php endif; ?>
+                                </div>
+                                <h4 class="font-bold text-slate-800 text-base mb-1"><?= htmlspecialchars($sched['nama_kelas']) ?></h4>
+                                <p class="text-xs text-slate-600 font-semibold"><?= htmlspecialchars($sched['nama_mapel']) ?></p>
+                            </div>
+
+                            <div>
+                                <?php if ($is_filled): ?>
+                                    <button disabled class="w-full py-2 bg-slate-100 text-slate-400 font-bold text-xs rounded-xl cursor-not-allowed flex items-center justify-center gap-1.5">
+                                        <i class="fa fa-check"></i> Jurnal Terisi
+                                    </button>
+                                <?php else: ?>
+                                    <a href="isi_absensi.php" class="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md shadow-indigo-100 transition-all flex items-center justify-center gap-1.5">
+                                        <i class="fa fa-edit"></i> Isi Jurnal Hari Ini
+                                    </a>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    <?php endwhile; ?>
+                </div>
+            <?php else: ?>
+                <div class="p-6 bg-white border border-slate-200/80 rounded-2xl text-center">
+                    <i class="fa fa-calendar-check text-slate-300 text-3xl mb-2"></i>
+                    <p class="text-xs text-slate-500 font-semibold">Tidak ada jadwal mengajar terdaftar untuk hari <?= $hari_ini ?>.</p>
+                </div>
+            <?php endif; ?>
+        </div>
 
         <!-- Minimal Stats Cards -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">

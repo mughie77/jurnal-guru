@@ -4,37 +4,89 @@
         return;
     }
 
-    if (!('Notification' in window) || !('serviceWorker' in navigator)) {
+    if (!('Notification' in window)) {
         return;
     }
 
     const baseUrl = window.BASE_URL || '/';
 
-    // Register Service Worker for Guru
+    // Register Service Worker for Guru if supported
     let swReg = null;
-    navigator.serviceWorker.register(baseUrl + 'sw.js')
-        .then((reg) => {
-            swReg = reg;
-        })
-        .catch((err) => {
-            console.log('SW registration skipped or failed:', err);
-        });
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register(baseUrl + 'sw.js')
+            .then((reg) => {
+                swReg = reg;
+            })
+            .catch((err) => {
+                console.log('SW registration error:', err);
+            });
+    }
 
     // Request notification permissions
     function requestPermission() {
         if (Notification.permission === 'default') {
-            Notification.requestPermission();
+            try {
+                Notification.requestPermission().then((perm) => {
+                    if (perm === 'granted') {
+                        checkTeacherSchedules();
+                    }
+                }).catch(() => {
+                    Notification.requestPermission();
+                });
+            } catch (e) {
+                Notification.requestPermission();
+            }
         }
     }
 
-    // Trigger Permission Prompt on user interaction
-    document.addEventListener('click', function askNotifOnce() {
-        requestPermission();
-        document.removeEventListener('click', askNotifOnce);
-    }, { once: true });
+    // Request on load and on first click
+    if (Notification.permission === 'default') {
+        setTimeout(requestPermission, 1500);
+        document.addEventListener('click', function askNotifOnce() {
+            requestPermission();
+            document.removeEventListener('click', askNotifOnce);
+        }, { once: true });
+    }
+
+    // Fire notification helper
+    function sendScheduleNotification(item, todayDate) {
+        const title = `Waktunya Mengajar: ${item.nama_kelas}`;
+        const targetUrl = baseUrl + 'guru/isi_absensi.php';
+        const options = {
+            body: `Mata Pelajaran: ${item.nama_mapel} (Jam Ke: ${item.jam_ke}). Klik untuk mengisi jurnal kelas.`,
+            icon: baseUrl + 'assets/images/logo.png',
+            badge: baseUrl + 'assets/images/logo.png',
+            tag: `jadwal-${item.id}`,
+            data: { url: targetUrl }
+        };
+
+        if (swReg && swReg.showNotification && swReg.active) {
+            swReg.showNotification(title, options).catch(() => {
+                fallbackNotification(title, options, targetUrl);
+            });
+        } else {
+            fallbackNotification(title, options, targetUrl);
+        }
+    }
+
+    function fallbackNotification(title, options, targetUrl) {
+        try {
+            const notif = new Notification(title, options);
+            notif.onclick = function () {
+                window.focus();
+                window.location.href = targetUrl;
+            };
+        } catch (e) {
+            console.log("Browser notification error:", e);
+        }
+    }
 
     // Check teacher schedules
     function checkTeacherSchedules() {
+        if (Notification.permission !== 'granted') {
+            return;
+        }
+
         fetch(baseUrl + 'api/get_jadwal_guru_today.php')
             .then(res => res.json())
             .then(data => {
@@ -43,51 +95,42 @@
                 }
 
                 const now = new Date();
-                const curHours = String(now.getHours()).padStart(2, '0');
-                const curMinutes = String(now.getMinutes()).padStart(2, '0');
-                const curTimeStr = `${curHours}:${curMinutes}`;
+                const curMinTotal = now.getHours() * 60 + now.getMinutes();
                 const todayDate = data.today_date;
 
                 data.schedules.forEach(item => {
-                    if (item.is_filled || !item.jam_mulai) return;
-
-                    const startTimeParts = item.jam_mulai.split(':');
-                    const startTimeStr = `${startTimeParts[0].padStart(2, '0')}:${startTimeParts[1].padStart(2, '0')}`;
-
-                    const [sH, sM] = startTimeStr.split(':').map(Number);
-                    const startMinTotal = sH * 60 + sM;
-                    const curMinTotal = now.getHours() * 60 + now.getMinutes();
-                    const diffMin = curMinTotal - startMinTotal;
+                    if (item.is_filled) return;
 
                     const notifKey = `notif_jadwal_${todayDate}_${item.id}`;
+                    if (localStorage.getItem(notifKey)) return;
 
-                    if (diffMin >= 0 && diffMin <= 5 && !localStorage.getItem(notifKey)) {
-                        if (Notification.permission === 'granted') {
-                            const title = `Waktunya Mengajar: ${item.nama_kelas}`;
-                            const options = {
-                                body: `Mata Pelajaran: ${item.nama_mapel} (Jam Ke: ${item.jam_ke}). Klik untuk mengisi jurnal kelas.`,
-                                icon: baseUrl + 'assets/images/logo.png',
-                                badge: baseUrl + 'assets/images/logo.png',
-                                tag: `jadwal-${item.id}`,
-                                data: {
-                                    url: baseUrl + 'guru/isi_absensi.php'
-                                }
-                            };
+                    let shouldNotify = false;
 
-                            if (swReg && swReg.showNotification) {
-                                swReg.showNotification(title, options);
-                            } else {
-                                new Notification(title, options);
-                            }
+                    if (item.jam_mulai) {
+                        const startTimeParts = item.jam_mulai.split(':');
+                        const sH = parseInt(startTimeParts[0], 10) || 0;
+                        const sM = parseInt(startTimeParts[1], 10) || 0;
+                        const startMinTotal = sH * 60 + sM;
 
-                            localStorage.setItem(notifKey, '1');
+                        // Notify if current time has reached or passed start time
+                        if (curMinTotal >= startMinTotal) {
+                            shouldNotify = true;
                         }
+                    } else {
+                        // If no start time specified, notify once for today's unfilled schedule
+                        shouldNotify = true;
+                    }
+
+                    if (shouldNotify) {
+                        sendScheduleNotification(item, todayDate);
+                        localStorage.setItem(notifKey, '1');
                     }
                 });
             })
             .catch(err => console.log('Schedule check error:', err));
     }
 
+    // Initial check and periodic check every 30 seconds
     setTimeout(checkTeacherSchedules, 2000);
-    setInterval(checkTeacherSchedules, 45000);
+    setInterval(checkTeacherSchedules, 30000);
 })();
