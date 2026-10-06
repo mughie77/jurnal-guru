@@ -51,10 +51,10 @@ switch ($type) {
     case 'jadwal':
         $filename = 'Template_Import_Jadwal_Pelajaran.xlsx';
         $sheet1_data = [
-            ['Nama Kelas', 'Hari', 'NIP / Nama Guru', 'Kode / Nama Mapel', 'Jam Ke'],
-            ['X RPL 1', 'Senin', '198501012010011001', 'Pemrograman Web', '1-2'],
-            ['X RPL 1', 'Senin', 'Ahmad Fauzi, S.Pd', 'Matematika', '3-4'],
-            ['X RPL 2', 'Selasa', '198802022012011002', 'Bahasa Indonesia', '1-2'],
+            ['Nama Kelas', 'Hari', 'NIP / Nama Guru', 'Kode / Nama Mapel', 'Jam Ke', 'Jam Mulai'],
+            ['X RPL 1', 'Senin', '198501012010011001', 'Pemrograman Web', '1-2', '07:00'],
+            ['X RPL 1', 'Senin', 'Ahmad Fauzi, S.Pd', 'Matematika', '3-4', '08:30'],
+            ['X RPL 2', 'Selasa', '198802022012011002', 'Bahasa Indonesia', '1-2', '07:00'],
         ];
 
         // Fetch teachers list from DB

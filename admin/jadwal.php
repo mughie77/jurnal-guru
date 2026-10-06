@@ -54,13 +54,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['tambah_jadwal'])) {
         $guru_id = (int)$_POST['guru_id'];
         $mapel_id = (int)$_POST['mapel_id'];
         $jam_ke = trim($_POST['jam_ke']);
+        $jam_mulai = !empty($_POST['jam_mulai']) ? trim($_POST['jam_mulai']) : null;
 
         if ($kelas_id <= 0 || empty($hari) || $guru_id <= 0 || $mapel_id <= 0 || empty($jam_ke)) {
             throw new Exception("Semua field wajib diisi.");
         }
 
-        $stmt = mysqli_prepare($conn, "INSERT INTO jadwal_pelajaran (kelas_id, hari, guru_id, mapel_id, jam_ke) VALUES (?, ?, ?, ?, ?)");
-        mysqli_stmt_bind_param($stmt, "isiis", $kelas_id, $hari, $guru_id, $mapel_id, $jam_ke);
+        $stmt = mysqli_prepare($conn, "INSERT INTO jadwal_pelajaran (kelas_id, hari, guru_id, mapel_id, jam_ke, jam_mulai) VALUES (?, ?, ?, ?, ?, ?)");
+        mysqli_stmt_bind_param($stmt, "isiiss", $kelas_id, $hari, $guru_id, $mapel_id, $jam_ke, $jam_mulai);
         if (mysqli_stmt_execute($stmt)) {
             $message = "Jadwal pelajaran berhasil ditambahkan!";
             $message_type = "success";
@@ -85,13 +86,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['edit_jadwal'])) {
         $guru_id = (int)$_POST['guru_id'];
         $mapel_id = (int)$_POST['mapel_id'];
         $jam_ke = trim($_POST['jam_ke']);
+        $jam_mulai = !empty($_POST['jam_mulai']) ? trim($_POST['jam_mulai']) : null;
 
         if ($jadwal_id <= 0 || $kelas_id <= 0 || empty($hari) || $guru_id <= 0 || $mapel_id <= 0 || empty($jam_ke)) {
             throw new Exception("Semua field wajib diisi.");
         }
 
-        $stmt = mysqli_prepare($conn, "UPDATE jadwal_pelajaran SET kelas_id = ?, hari = ?, guru_id = ?, mapel_id = ?, jam_ke = ? WHERE id = ?");
-        mysqli_stmt_bind_param($stmt, "isiisi", $kelas_id, $hari, $guru_id, $mapel_id, $jam_ke, $jadwal_id);
+        $stmt = mysqli_prepare($conn, "UPDATE jadwal_pelajaran SET kelas_id = ?, hari = ?, guru_id = ?, mapel_id = ?, jam_ke = ?, jam_mulai = ? WHERE id = ?");
+        mysqli_stmt_bind_param($stmt, "isiissi", $kelas_id, $hari, $guru_id, $mapel_id, $jam_ke, $jam_mulai, $jadwal_id);
         if (mysqli_stmt_execute($stmt)) {
             $message = "Jadwal pelajaran berhasil diperbarui!";
             $message_type = "success";
@@ -269,7 +271,12 @@ require_once __DIR__ . '/../includes/header.php';
                         <?php foreach ($day_list as $item): ?>
                             <div class="p-3.5 bg-slate-50 border border-slate-200/60 rounded-2xl space-y-1.5 hover:border-indigo-200 transition-all group relative">
                                 <div class="flex items-center justify-between">
-                                    <span class="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-indigo-50 text-indigo-700">Jam Ke: <?= htmlspecialchars($item['jam_ke']) ?></span>
+                                    <span class="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 flex items-center gap-1">
+                                        <?php if (!empty($item['jam_mulai'])): ?>
+                                            <i class="fa fa-clock text-[9px] text-indigo-500"></i> Pukul <?= date('H:i', strtotime($item['jam_mulai'])) ?> WIB |
+                                        <?php endif; ?>
+                                        Jam Ke: <?= htmlspecialchars($item['jam_ke']) ?>
+                                    </span>
                                     <div class="flex items-center gap-1">
                                         <button onclick="editJadwal(<?= htmlspecialchars(json_encode($item)) ?>)" class="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all flex items-center justify-center">
                                             <i class="fa fa-edit text-xs"></i>
@@ -347,9 +354,15 @@ require_once __DIR__ . '/../includes/header.php';
             </select>
         </div>
 
-        <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Jam Ke-</label>
-            <input type="text" name="jam_ke" placeholder="Contoh: 1-2 atau 3" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 font-bold text-slate-700 text-sm">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Jam Ke-</label>
+                <input type="text" name="jam_ke" placeholder="Contoh: 1-2 atau 3" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 font-bold text-slate-700 text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Jam/Pukul Mulai</label>
+                <input type="time" name="jam_mulai" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 font-bold text-slate-700 text-sm">
+            </div>
         </div>
 
         <div class="pt-4 flex gap-3">
@@ -410,9 +423,15 @@ require_once __DIR__ . '/../includes/header.php';
             </select>
         </div>
 
-        <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Jam Ke-</label>
-            <input type="text" name="jam_ke" id="edit_jam_ke" placeholder="Contoh: 1-2 atau 3" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 font-bold text-slate-700 text-sm">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Jam Ke-</label>
+                <input type="text" name="jam_ke" id="edit_jam_ke" placeholder="Contoh: 1-2 atau 3" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 font-bold text-slate-700 text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Jam/Pukul Mulai</label>
+                <input type="time" name="jam_mulai" id="edit_jam_mulai" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 font-bold text-slate-700 text-sm">
+            </div>
         </div>
 
         <div class="pt-4 flex gap-3">
@@ -524,6 +543,7 @@ function editJadwal(item) {
     updateSubjectDropdown('#edit_guru_id', '#edit_mapel_id', item.mapel_id);
 
     $('#edit_jam_ke').val(item.jam_ke);
+    $('#edit_jam_mulai').val(item.jam_mulai || '');
     openModal('editJadwalModal');
 }
 

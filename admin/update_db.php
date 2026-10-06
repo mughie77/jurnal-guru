@@ -64,6 +64,9 @@ if ($is_ajax) {
                     'latitude' => "VARCHAR(50) DEFAULT NULL AFTER file_lampiran",
                     'longitude' => "VARCHAR(50) DEFAULT NULL AFTER latitude",
                     'status_selesai' => "TINYINT(1) DEFAULT 0 AFTER longitude"
+                ],
+                'jadwal_pelajaran' => [
+                    'jam_mulai' => "TIME DEFAULT NULL AFTER jam_ke"
                 ]
             ];
 

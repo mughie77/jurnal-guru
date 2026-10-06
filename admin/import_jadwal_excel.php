@@ -70,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['excel_file'])) {
 
         mysqli_begin_transaction($conn);
         try {
-            $stmt = mysqli_prepare($conn, "INSERT INTO jadwal_pelajaran (kelas_id, hari, guru_id, mapel_id, jam_ke) VALUES (?, ?, ?, ?, ?)");
+            $stmt = mysqli_prepare($conn, "INSERT INTO jadwal_pelajaran (kelas_id, hari, guru_id, mapel_id, jam_ke, jam_mulai) VALUES (?, ?, ?, ?, ?, ?)");
 
             foreach ($rows as $row) {
                 $row_idx++;
@@ -79,6 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['excel_file'])) {
                 $guru_raw = trim($row[2] ?? '');
                 $mapel_raw = trim($row[3] ?? '');
                 $jam_ke_raw = trim($row[4] ?? '');
+                $jam_mulai_raw = trim($row[5] ?? '');
 
                 if (empty($nama_kelas_raw) && empty($hari_raw) && empty($guru_raw)) continue;
 
@@ -119,6 +120,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['excel_file'])) {
                     continue;
                 }
 
+                // Process jam_mulai
+                $jam_mulai_val = null;
+                if (!empty($jam_mulai_raw)) {
+                    $parsed_time = strtotime($jam_mulai_raw);
+                    if ($parsed_time !== false) {
+                        $jam_mulai_val = date('H:i:s', $parsed_time);
+                    } elseif (preg_match('/^\d{1,2}:\d{2}$/', $jam_mulai_raw)) {
+                        $jam_mulai_val = $jam_mulai_raw . ':00';
+                    }
+                }
+
                 // Check for duplicate schedule (same class, day, and subject)
                 $sched_key = $kelas_id . '-' . strtolower($hari_val) . '-' . $mapel_id;
                 if (isset($existing_schedules[$sched_key])) {
@@ -126,7 +138,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['excel_file'])) {
                     continue;
                 }
 
-                mysqli_stmt_bind_param($stmt, "isiis", $kelas_id, $hari_val, $guru_id, $mapel_id, $jam_ke_raw);
+                mysqli_stmt_bind_param($stmt, "isiiss", $kelas_id, $hari_val, $guru_id, $mapel_id, $jam_ke_raw, $jam_mulai_val);
                 if (mysqli_stmt_execute($stmt)) {
                     $count++;
                     $existing_schedules[$sched_key] = true; // Mark to prevent intra-sheet duplicates
@@ -179,7 +191,7 @@ require_once __DIR__ . '/../includes/header.php';
     <div class="mb-8 p-6 rounded-2xl bg-indigo-50 border border-indigo-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
             <h3 class="text-indigo-900 font-bold mb-1 italic text-lg">Template Import Jadwal</h3>
-            <p class="text-indigo-700/80 text-xs">Kolom: Nama Kelas, Hari, NIP / Nama Guru, Kode / Nama Mapel, Jam Ke</p>
+            <p class="text-indigo-700/80 text-xs">Kolom: Nama Kelas, Hari, NIP / Nama Guru, Kode / Nama Mapel, Jam Ke, Jam Mulai</p>
         </div>
         <a href="<?= BASE_URL ?>api/download_template.php?type=jadwal" class="inline-flex items-center px-5 py-2.5 bg-white text-indigo-600 font-bold text-xs rounded-xl border border-indigo-100 shadow-sm hover:shadow-md transition-all shrink-0">
             <i class="fa fa-download mr-2"></i> Unduh Template Excel
