@@ -7,7 +7,7 @@ $app_sets = [];
 while ($r = mysqli_fetch_assoc($res_set)) {
     $app_sets[$r['nama_setting']] = $r['nilai_setting'];
 }
-$app_name = $app_sets['nama_sekolah'] ?? 'Aplikasi Jurnal Mengajar';
+$app_name = $app_sets['nama_sekolah'] ?? 'SMK Negeri 1 Bondowoso';
 $favicon = !empty($app_sets['favicon']) ? BASE_URL . 'uploads/' . $app_sets['favicon'] : null;
 
 $error_message = '';
@@ -42,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 header('Location: ' . BASE_URL . 'index.php');
                 exit();
             } else {
-                $error_message = "Username atau Password salah.";
+                $error_message = "Username atau Password yang Anda masukkan salah.";
             }
         } else {
             $sql_siswa = "SELECT id, nisn, nama_siswa FROM siswa WHERE nisn = ?";
@@ -62,10 +62,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     header('Location: ' . BASE_URL . 'siswa/index.php');
                     exit();
                 } else {
-                    $error_message = "Username atau Password salah.";
+                    $error_message = "Username atau Password yang Anda masukkan salah.";
                 }
             } else {
-                $error_message = "Username atau Password salah.";
+                $error_message = "Username atau Password yang Anda masukkan salah.";
             }
             mysqli_stmt_close($stmt_s);
         }
@@ -78,176 +78,213 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CAKRA - Central Academic Knowledge & Record Application</title>
+    <title>Login - CAKRA System</title>
     <?php if ($favicon): ?>
     <link rel="icon" type="image/png" href="<?= $favicon ?>">
     <?php endif; ?>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; }
-        .bg-mesh {
-            background-color: #4f46e5;
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #0f172a;
+        }
+        .bg-mesh-cakra {
+            background-color: #0f172a;
             background-image:
-                radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%),
-                radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%),
-                radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
+                radial-gradient(at 0% 0%, rgba(14, 116, 144, 0.4) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(76, 29, 149, 0.4) 0px, transparent 50%),
+                radial-gradient(at 50% 100%, rgba(15, 23, 42, 0.9) 0px, transparent 50%);
         }
-        .glass-panel {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+        .glass-card {
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
         }
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-20px); }
-            100% { transform: translateY(0px); }
+        @keyframes floatSlow {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-12px) rotate(1deg); }
         }
-        .animate-float { animation: float 6s ease-in-out infinite; }
+        .animate-float-slow { animation: floatSlow 7s ease-in-out infinite; }
+        @keyframes pulseGlow {
+            0%, 100% { opacity: 0.6; transform: scale(1); }
+            50% { opacity: 0.9; transform: scale(1.05); }
+        }
+        .animate-pulse-glow { animation: pulseGlow 4s ease-in-out infinite; }
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-4px); }
-            75% { transform: translateX(4px); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
         }
-        .animate-shake { animation: shake 0.4s ease-in-out 0s 2; }
+        .animate-shake { animation: shake 0.4s ease-in-out; }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen flex items-center justify-center lg:p-6">
-    <div class="flex flex-col lg:flex-row w-full max-w-[1100px] min-h-[600px] lg:min-h-[700px] bg-white lg:rounded-[40px] shadow-2xl overflow-hidden relative">
+<body class="bg-mesh-cakra min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-10 relative overflow-x-hidden selection:bg-cyan-500 selection:text-white">
 
-        <!-- Left Side: Visual/Branding (Hidden on small screens) -->
-        <div class="hidden lg:flex lg:w-1/2 bg-mesh p-16 flex-col justify-between relative overflow-hidden">
-            <!-- Decorative Abstract -->
-            <div class="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl"></div>
-            <div class="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500/20 rounded-full -ml-32 -mb-32 blur-3xl"></div>
+    <!-- Ambient Glowing Orbs -->
+    <div class="fixed top-1/4 -left-32 w-96 h-96 bg-cyan-500/20 rounded-full blur-[120px] pointer-events-none animate-pulse-glow"></div>
+    <div class="fixed bottom-1/4 -right-32 w-96 h-96 bg-purple-600/20 rounded-full blur-[120px] pointer-events-none animate-pulse-glow" style="animation-delay: 2s;"></div>
+
+    <div class="w-full max-w-[1120px] min-h-[680px] bg-slate-900/80 rounded-[32px] sm:rounded-[40px] border border-slate-800/80 shadow-2xl shadow-cyan-950/40 overflow-hidden grid grid-cols-1 lg:grid-cols-12 relative z-10 backdrop-blur-md">
+
+        <!-- Left Visual Side: CAKRA Hero Banner (7 cols) -->
+        <div class="lg:col-span-7 bg-gradient-to-br from-slate-900 via-slate-900/90 to-cyan-950/80 p-8 sm:p-12 lg:p-16 flex flex-col justify-between relative overflow-hidden border-b lg:border-b-0 lg:border-r border-slate-800/60">
+            <!-- Background Accent Lines -->
+            <div class="absolute -top-24 -right-24 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -bottom-24 -left-24 w-80 h-80 bg-teal-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
             <div class="relative z-10">
-                <div class="flex items-center gap-4 mb-12">
-                    <div class="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20 shadow-xl">
-                        <?php if ($favicon): ?>
-                            <img src="<?= $favicon ?>" class="w-7 h-7 object-contain">
-                        <?php else: ?>
-                            <i class="fa fa-book-open text-white text-xl"></i>
-                        <?php endif; ?>
+                <!-- Top Brand Header -->
+                <div class="flex items-center gap-4 mb-10">
+                    <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-cyan-500 to-teal-400 p-0.5 shadow-lg shadow-cyan-500/30 shrink-0">
+                        <div class="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center">
+                            <?php if ($favicon): ?>
+                                <img src="<?= $favicon ?>" class="w-8 h-8 object-contain">
+                            <?php else: ?>
+                                <i class="fa fa-shield-halved text-cyan-400 text-2xl"></i>
+                            <?php endif; ?>
+                        </div>
                     </div>
                     <div>
-                        <h2 class="text-white font-black text-2xl tracking-tighter">CAKRA</h2>
-                        <p class="text-white/50 text-[10px] font-bold uppercase tracking-[0.1em]">Central Academic Knowledge & Record Application</p>
+                        <div class="flex items-center gap-2">
+                            <span class="text-2xl font-black tracking-tight text-white">CAKRA</span>
+                            <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">v2.5</span>
+                        </div>
+                        <p class="text-slate-400 text-[10px] font-bold uppercase tracking-wider mt-0.5"><?= htmlspecialchars($app_name) ?></p>
                     </div>
                 </div>
 
-                <div class="animate-float">
-                    <h1 class="text-5xl font-black text-white leading-[1.1] tracking-tight mb-6 italic">
-                        Transformasi <br>
-                        Digital <br>
-                        <span class="text-indigo-400">Pendidikan.</span>
+                <!-- Main Hero Text -->
+                <div class="animate-float-slow my-6">
+                    <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-800/80 border border-slate-700/80 text-cyan-300 text-xs font-semibold mb-6">
+                        <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+                        <span>Central Academic Knowledge & Record Application</span>
+                    </div>
+
+                    <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-[1.15] mb-6">
+                        Sistem Presensi & <br>
+                        <span class="bg-gradient-to-r from-cyan-400 via-teal-300 to-indigo-400 bg-clip-text text-transparent">Jurnal Digital Terpadu</span>
                     </h1>
-                    <p class="text-indigo-100/70 font-medium leading-relaxed max-w-sm">
-                        Kelola jurnal mengajar, absensi siswa, dan administrasi sekolah dalam satu platform terintegrasi yang modern dan responsif.
+
+                    <p class="text-slate-300 text-sm font-medium leading-relaxed max-w-lg mb-8">
+                        Solusi terintegrasi untuk pengisian jurnal pembelajaran real-time, absensi berbasis GPS & Barcode QR, rekapitulasi data akademik, serta manajemen sekolah secara efisien.
                     </p>
+                </div>
+
+                <!-- Feature Badges -->
+                <div class="grid grid-cols-2 gap-3 max-w-md my-4">
+                    <div class="p-3.5 rounded-2xl bg-slate-800/60 border border-slate-800 flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center shrink-0">
+                            <i class="fa fa-book-open text-xs"></i>
+                        </div>
+                        <span class="text-xs font-bold text-slate-200">Jurnal Mengajar</span>
+                    </div>
+                    <div class="p-3.5 rounded-2xl bg-slate-800/60 border border-slate-800 flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center shrink-0">
+                            <i class="fa fa-location-dot text-xs"></i>
+                        </div>
+                        <span class="text-xs font-bold text-slate-200">Presensi GPS</span>
+                    </div>
                 </div>
             </div>
 
-            <div class="relative z-10 flex items-center gap-4">
-                <div class="flex -space-x-3">
-                    <div class="w-10 h-10 rounded-full border-2 border-slate-900 bg-indigo-500 flex items-center justify-center text-[10px] font-bold text-white">G</div>
-                    <div class="w-10 h-10 rounded-full border-2 border-slate-900 bg-emerald-500 flex items-center justify-center text-[10px] font-bold text-white">S</div>
-                    <div class="w-10 h-10 rounded-full border-2 border-slate-900 bg-rose-500 flex items-center justify-center text-[10px] font-bold text-white">A</div>
+            <!-- Bottom User Role Indicator -->
+            <div class="relative z-10 pt-8 mt-6 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400 font-medium">
+                <span>Multi-Akses Multi-Role:</span>
+                <div class="flex items-center gap-1.5 font-bold text-[10px]">
+                    <span class="px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">Guru</span>
+                    <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Siswa</span>
+                    <span class="px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">Waka</span>
+                    <span class="px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">Admin</span>
                 </div>
-                <p class="text-indigo-200/50 text-xs font-bold uppercase tracking-widest italic">Terpercaya untuk Semua Peran</p>
             </div>
         </div>
 
-        <!-- Right Side: Login Form -->
-        <div class="w-full lg:w-1/2 p-8 sm:p-12 lg:p-20 flex flex-col justify-center bg-white relative">
-            <!-- Mobile Header (Visible only on small screens) -->
-            <div class="lg:hidden flex flex-col items-center mb-10 text-center">
-                <div class="w-16 h-16 rounded-2xl bg-indigo-600 flex items-center justify-center shadow-2xl shadow-indigo-200 mb-6">
-                    <?php if ($favicon): ?>
-                        <img src="<?= $favicon ?>" class="w-9 h-9 object-contain">
-                    <?php else: ?>
-                        <i class="fa fa-book-open text-white text-3xl"></i>
-                    <?php endif; ?>
-                </div>
-                <h2 class="text-3xl font-black text-slate-900 tracking-tighter italic">CAKRA</h2>
-                <p class="text-slate-400 text-[8px] font-bold uppercase tracking-[0.1em] mb-1">Central Academic Knowledge & Record Application</p>
-                <p class="text-indigo-600 text-[9px] font-black uppercase tracking-[0.3em]"><?= htmlspecialchars($app_name) ?></p>
-            </div>
+        <!-- Right Side: Clean Modern Form (5 cols) -->
+        <div class="lg:col-span-5 p-8 sm:p-12 flex flex-col justify-center glass-card relative">
+            <div class="w-full max-w-sm mx-auto">
 
-            <div class="max-w-md mx-auto w-full">
-                <div class="mb-10 lg:block hidden">
-                    <h3 class="text-4xl font-black text-slate-800 tracking-tighter mb-2 italic">Selamat Datang.</h3>
-                    <p class="text-slate-500 font-medium italic">Masukkan kredensial Anda untuk melanjutkan.</p>
+                <div class="mb-8 text-left">
+                    <div class="inline-block px-3 py-1 rounded-full bg-cyan-50 text-cyan-700 font-bold text-[10px] uppercase tracking-wider mb-2">
+                        Portal Otentikasi
+                    </div>
+                    <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Login Akun</h2>
+                    <p class="text-slate-500 text-xs font-medium mt-1">Masukkan kredensial akun Anda untuk masuk.</p>
                 </div>
 
                 <?php if ($error_message): ?>
-                <div class="mb-8 p-4 rounded-2xl bg-rose-50 border border-rose-100 text-rose-600 text-sm font-bold flex items-center animate-shake">
-                    <i class="fa fa-circle-exclamation mr-3 text-lg"></i>
-                    <?= htmlspecialchars($error_message) ?>
+                <div class="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold flex items-start gap-3 animate-shake shadow-sm">
+                    <i class="fa fa-circle-exclamation text-rose-500 text-base shrink-0 mt-0.5"></i>
+                    <div><?= htmlspecialchars($error_message) ?></div>
                 </div>
                 <?php endif; ?>
 
-                <form action="" method="POST" class="space-y-6">
+                <form action="" method="POST" class="space-y-5">
                     <div>
-                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 ml-1 italic">Username / NIP / NISN</label>
-                        <div class="group relative">
-                            <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none transition-colors group-focus-within:text-indigo-600 text-slate-300">
-                                <i class="fa fa-user-circle"></i>
+                        <label class="block text-xs font-bold text-slate-700 mb-2">
+                            Username / NIP / NISN
+                        </label>
+                        <div class="relative group">
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-cyan-600 transition-colors">
+                                <i class="fa fa-user text-sm"></i>
                             </div>
                             <input type="text" name="username" required autocomplete="username"
-                                class="w-full pl-12 pr-5 py-4 rounded-2xl bg-slate-50 border-2 border-transparent focus:border-indigo-100 focus:bg-white focus:ring-4 focus:ring-indigo-50/50 outline-none transition-all font-bold text-slate-700 placeholder:text-slate-300 placeholder:italic"
-                                placeholder="Masukkan username anda...">
+                                class="w-full pl-11 pr-4 py-3.5 rounded-2xl bg-slate-50 border border-slate-200 focus:border-cyan-500 focus:bg-white focus:ring-4 focus:ring-cyan-500/10 outline-none transition-all font-bold text-slate-800 text-sm placeholder:text-slate-400 placeholder:font-normal"
+                                placeholder="NIP / NISN / Username">
                         </div>
                     </div>
 
                     <div>
-                        <div class="flex justify-between items-center mb-2 ml-1">
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] italic">Password</label>
+                        <div class="flex items-center justify-between mb-2">
+                            <label class="block text-xs font-bold text-slate-700">
+                                Password
+                            </label>
                         </div>
-                        <div class="group relative">
-                            <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none transition-colors group-focus-within:text-indigo-600 text-slate-300">
-                                <i class="fa fa-fingerprint"></i>
+                        <div class="relative group">
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-cyan-600 transition-colors">
+                                <i class="fa fa-lock text-sm"></i>
                             </div>
                             <input type="password" name="password" id="passwordInput" required autocomplete="current-password"
-                                class="w-full pl-12 pr-12 py-4 rounded-2xl bg-slate-50 border-2 border-transparent focus:border-indigo-100 focus:bg-white focus:ring-4 focus:ring-indigo-50/50 outline-none transition-all font-bold text-slate-700 placeholder:text-slate-300 placeholder:italic"
+                                class="w-full pl-11 pr-11 py-3.5 rounded-2xl bg-slate-50 border border-slate-200 focus:border-cyan-500 focus:bg-white focus:ring-4 focus:ring-cyan-500/10 outline-none transition-all font-bold text-slate-800 text-sm placeholder:text-slate-400 placeholder:font-normal"
                                 placeholder="••••••••••••">
-                            <button type="button" onclick="togglePassword()" class="absolute inset-y-0 right-0 pr-5 flex items-center text-slate-300 hover:text-indigo-600 transition-colors">
-                                <i class="fa fa-eye" id="eyeIcon"></i>
+                            <button type="button" onclick="togglePassword()" class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-cyan-600 transition-colors">
+                                <i class="fa fa-eye text-sm" id="eyeIcon"></i>
                             </button>
                         </div>
                     </div>
 
-                    <div class="flex items-center justify-between px-1">
-                        <label class="flex items-center cursor-pointer group">
-                            <div class="relative">
-                                <input type="checkbox" name="remember_me" class="sr-only">
-                                <div class="w-10 h-6 bg-slate-200 rounded-full transition-colors group-hover:bg-slate-300 peer-checked:bg-indigo-600"></div>
-                                <div class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform"></div>
-                            </div>
-                            <span class="ml-3 text-xs font-bold text-slate-500 italic">Ingat Saya</span>
+                    <div class="flex items-center justify-between text-xs pt-1">
+                        <label class="flex items-center gap-2 cursor-pointer select-none">
+                            <input type="checkbox" name="remember_me" class="w-4 h-4 rounded text-cyan-600 focus:ring-cyan-500 border-slate-300">
+                            <span class="font-bold text-slate-600">Ingat Saya</span>
                         </label>
-                        <a href="#" class="text-xs font-bold text-indigo-500 hover:text-indigo-700 italic transition-colors">Lupa Password?</a>
+                        <a href="#" onclick="alert('Silakan hubungi Administrator Sekolah untuk meriset password Anda.'); return false;" class="font-bold text-cyan-600 hover:text-cyan-800 transition-colors">
+                            Lupa Password?
+                        </a>
                     </div>
 
-                    <div class="pt-4">
+                    <div class="pt-2">
                         <button type="submit"
-                            class="w-full bg-slate-900 hover:bg-indigo-600 text-white font-black py-4 rounded-2xl shadow-xl shadow-slate-200 hover:shadow-indigo-200 transition-all active:scale-[0.98] flex items-center justify-center gap-3 group tracking-widest italic">
+                            class="w-full py-4 rounded-2xl bg-gradient-to-r from-cyan-600 via-teal-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white font-bold text-sm shadow-xl shadow-cyan-600/25 hover:shadow-cyan-600/40 transition-all transform active:scale-[0.99] flex items-center justify-center gap-2">
                             <span>MASUK KE SISTEM</span>
-                            <i class="fa fa-bolt transition-transform group-hover:scale-125"></i>
+                            <i class="fa fa-arrow-right text-xs"></i>
                         </button>
                     </div>
                 </form>
 
-                <div class="mt-12 text-center">
-                    <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-4">Butuh bantuan akses?</p>
-                    <div class="flex justify-center gap-4">
-                        <a href="absen.php" class="px-6 py-2 rounded-full border border-slate-100 text-[10px] font-black text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-100 transition-all italic uppercase">Halaman Absen</a>
-                        <a href="index.php" class="px-6 py-2 rounded-full border border-slate-100 text-[10px] font-black text-slate-600 hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-all italic uppercase">Beranda</a>
+                <div class="mt-8 pt-6 border-t border-slate-200/80 text-center">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Akses Pintas Cepat</p>
+                    <div class="flex items-center justify-center gap-3">
+                        <a href="absen.php" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 hover:bg-cyan-50 hover:text-cyan-700 font-bold text-xs transition-all border border-slate-200 flex items-center gap-1.5">
+                            <i class="fa fa-qrcode text-cyan-600"></i> Absen GPS / QR
+                        </a>
                     </div>
                 </div>
+
             </div>
         </div>
+
     </div>
 
     <script>
@@ -264,21 +301,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 icon.classList.add('fa-eye');
             }
         }
-
-        // Custom Toggle Style logic
-        const toggleInput = document.querySelector('input[name="remember_me"]');
-        const toggleDot = document.querySelector('.dot');
-        const toggleBg = document.querySelector('.w-10');
-
-        toggleInput.addEventListener('change', function() {
-            if (this.checked) {
-                toggleDot.style.transform = 'translateX(16px)';
-                toggleBg.classList.replace('bg-slate-200', 'bg-indigo-600');
-            } else {
-                toggleDot.style.transform = 'translateX(0px)';
-                toggleBg.classList.replace('bg-indigo-600', 'bg-slate-200');
-            }
-        });
     </script>
 </body>
 </html>
