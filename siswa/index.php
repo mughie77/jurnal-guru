@@ -222,9 +222,8 @@ require_once __DIR__ . '/../includes/header.php';
             <?php endif; ?>
         </div>
 
-        <!-- Quick Actions Grid Design -->
-        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mb-10 no-print">
-            <!-- Row 1 -->
+        <!-- Top 4 Primary Quick Actions Grid -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-10 no-print">
             <button onclick="openModal('jadwalKelasModal')" class="p-4 sm:p-5 rounded-2xl bg-indigo-600 text-white shadow-md flex flex-col justify-between gap-3 group transition-all hover:bg-indigo-700 hover:shadow-lg text-left">
                 <div class="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center text-sm shadow-inner">
                     <i class="fa fa-calendar-alt"></i>
@@ -245,7 +244,6 @@ require_once __DIR__ . '/../includes/header.php';
                 </div>
             </a>
 
-            <!-- Row 2 -->
             <a href="media.php" class="p-4 sm:p-5 rounded-2xl bg-amber-500 text-white shadow-md flex flex-col justify-between gap-3 group transition-all hover:bg-amber-600 hover:shadow-lg">
                 <div class="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center text-sm shadow-inner">
                     <i class="fa fa-book-reader"></i>
@@ -256,101 +254,18 @@ require_once __DIR__ . '/../includes/header.php';
                 </div>
             </a>
 
-            <a href="berkas.php" class="p-4 sm:p-5 rounded-2xl bg-cyan-500 text-white shadow-md flex flex-col justify-between gap-3 group transition-all hover:bg-cyan-600 hover:shadow-lg">
-                <div class="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center text-sm shadow-inner">
-                    <i class="fa fa-folder-open"></i>
+            <a href="semua_menu.php" class="p-4 sm:p-5 rounded-2xl bg-slate-900 text-white shadow-md flex flex-col justify-between gap-3 group transition-all hover:bg-slate-800 hover:shadow-lg border border-slate-700">
+                <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-sm shadow-inner">
+                    <i class="fa fa-th-large"></i>
                 </div>
                 <div>
-                    <div class="text-xs sm:text-sm font-bold tracking-tight">Berkas Saya</div>
-                    <div class="text-[9px] font-normal text-cyan-100 mt-0.5">Upload KK & Ijazah</div>
-                </div>
-            </a>
-
-            <!-- Row 3 -->
-            <a href="profil.php" class="p-4 sm:p-5 rounded-2xl bg-emerald-500 text-white shadow-md flex flex-col justify-between gap-3 group transition-all hover:bg-emerald-600 hover:shadow-lg">
-                <div class="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center text-sm shadow-inner">
-                    <i class="fa fa-user-circle"></i>
-                </div>
-                <div>
-                    <div class="text-xs sm:text-sm font-bold tracking-tight">Profil Saya</div>
-                    <div class="text-[9px] font-normal text-emerald-100 mt-0.5">Informasi pribadi</div>
-                </div>
-            </a>
-
-            <a href="kritik_saran.php" class="p-4 sm:p-5 rounded-2xl bg-sky-500 text-white shadow-md flex flex-col justify-between gap-3 group transition-all hover:bg-sky-600 hover:shadow-lg">
-                <div class="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center text-sm shadow-inner">
-                    <i class="fa fa-comment-dots"></i>
-                </div>
-                <div>
-                    <div class="text-xs sm:text-sm font-bold tracking-tight">Kritik & Saran</div>
-                    <div class="text-[9px] font-normal text-sky-100 mt-0.5">Umpan balik</div>
-                </div>
-            </a>
-
-            <!-- Row 4 -->
-            <a href="konsultasi.php" class="p-4 sm:p-5 rounded-2xl bg-indigo-500 text-white shadow-md flex flex-col justify-between gap-3 group transition-all hover:bg-indigo-600 hover:shadow-lg">
-                <div class="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center text-sm shadow-inner">
-                    <i class="fa fa-comments"></i>
-                </div>
-                <div>
-                    <div class="text-xs sm:text-sm font-bold tracking-tight">Konsultasi BK</div>
-                    <div class="text-[9px] font-normal text-indigo-100 mt-0.5">Bimbingan online</div>
-                </div>
-            </a>
-
-            <a href="kontak.php" class="p-4 sm:p-5 rounded-2xl bg-teal-500 text-white shadow-md flex flex-col justify-between gap-3 group transition-all hover:bg-teal-600 hover:shadow-lg">
-                <div class="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center text-sm shadow-inner">
-                    <i class="fa fa-phone-alt"></i>
-                </div>
-                <div>
-                    <div class="text-xs sm:text-sm font-bold tracking-tight">Kontak BK & Wali</div>
-                    <div class="text-[9px] font-normal text-teal-100 mt-0.5">Direktori kontak</div>
-                </div>
-            </a>
-
-            <a href="tugas_guru.php" class="p-4 sm:p-5 rounded-2xl bg-amber-600 text-white shadow-md flex flex-col justify-between gap-3 group transition-all hover:bg-amber-700 hover:shadow-lg">
-                <div class="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center text-sm shadow-inner">
-                    <i class="fa fa-tasks"></i>
-                </div>
-                <div>
-                    <div class="text-xs sm:text-sm font-bold tracking-tight">Tugas Guru</div>
-                    <div class="text-[9px] font-normal text-amber-100 mt-0.5">Guru tidak masuk</div>
-                </div>
-            </a>
-
-            <!-- Row 5 (Pengaduan Siswa) -->
-            <a href="pengaduan.php" class="p-4 sm:p-5 rounded-2xl bg-rose-600 text-white shadow-md flex flex-col justify-between gap-2 group transition-all hover:bg-rose-700 hover:shadow-lg col-span-2 sm:col-span-3 relative overflow-hidden">
-                <div class="relative z-10 flex items-center justify-between w-full">
-                    <div class="flex items-center gap-3">
-                        <div class="w-9 h-9 rounded-xl bg-white text-rose-600 flex items-center justify-center text-base shadow-inner">
-                            <i class="fa fa-bullhorn"></i>
-                        </div>
-                        <div>
-                            <div class="text-xs sm:text-sm font-bold tracking-tight">Pengaduan Siswa</div>
-                            <div class="text-[9px] font-normal text-rose-100 mt-0.5">Laporkan perundungan / masalah keamanan</div>
-                        </div>
+                    <div class="text-xs sm:text-sm font-bold tracking-tight flex items-center justify-between">
+                        <span>Semua Menu</span>
+                        <i class="fa fa-arrow-right text-xs group-hover:translate-x-1 transition-transform"></i>
                     </div>
-                    <i class="fa fa-shield-alt text-2xl opacity-20 mr-2"></i>
+                    <div class="text-[9px] font-normal text-slate-300 mt-0.5">Kumpulan seluruh fitur</div>
                 </div>
             </a>
-
-            <?php if ($pkl_active): ?>
-            <!-- Row PKL -->
-            <a href="pkl_jurnal.php" class="p-4 sm:p-5 rounded-2xl bg-slate-900 text-white shadow-md flex flex-col justify-between gap-2 group transition-all hover:bg-slate-800 hover:shadow-lg col-span-2 sm:col-span-3 relative overflow-hidden border border-indigo-400/40">
-                <div class="relative z-10 flex items-center justify-between w-full">
-                    <div class="flex items-center gap-3">
-                        <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-base shadow-inner">
-                            <i class="fa fa-briefcase"></i>
-                        </div>
-                        <div>
-                            <div class="text-xs sm:text-sm font-bold text-indigo-400">Portal Praktik Kerja Lapangan (PKL)</div>
-                            <div class="text-[9px] font-normal text-slate-300 mt-0.5"><?= htmlspecialchars($pkl_active['nama_tempat']) ?></div>
-                        </div>
-                    </div>
-                    <i class="fa fa-arrow-right text-lg text-indigo-400 group-hover:translate-x-1 transition-transform mr-2"></i>
-                </div>
-            </a>
-            <?php endif; ?>
         </div>
 
         <!-- Rekap Absensi GPS (Monthly) -->

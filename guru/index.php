@@ -230,33 +230,8 @@ require_once __DIR__ . '/../includes/header.php';
             </div>
         </div>
 
-        <!-- Quick Actions Grid Design -->
-        <?php
-        $wali_info = get_wali_kelas_info();
-        $pending_permits_count = 0;
-        if ($wali_info) {
-            $w_kelas_id = $wali_info['kelas_id'];
-            $q_perm = mysqli_query($conn, "SELECT COUNT(*) as pending_count FROM absensi_harian ah
-                                            JOIN siswa_kelas sk ON ah.siswa_id = sk.siswa_id
-                                            WHERE sk.kelas_id = $w_kelas_id AND ah.status_verifikasi = 'pending' AND ah.status IN ('Izin', 'Sakit')");
-            if ($p_data = mysqli_fetch_assoc($q_perm)) {
-                $pending_permits_count = (int)$p_data['pending_count'];
-            }
-        }
-
-        $bk_info = get_bk_info();
-        $open_chats_count = 0;
-        if ($bk_info) {
-            $bk_guru_id = $bk_info['guru_id'];
-            $q_chats = mysqli_query($conn, "SELECT COUNT(*) as open_count FROM konsultasi WHERE guru_id = $bk_guru_id AND status = 'open'");
-            if ($c_data = mysqli_fetch_assoc($q_chats)) {
-                $open_chats_count = (int)$c_data['open_count'];
-            }
-        }
-
-        $grid_cols_class = ($wali_info || $bk_info || $is_pkl_pembimbing) ? "grid-cols-2 lg:grid-cols-4" : "grid-cols-2 sm:grid-cols-3";
-        ?>
-        <div class="grid <?= $grid_cols_class ?> gap-4 mb-10">
+        <!-- Top 4 Primary Quick Actions Grid -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">
             <a href="isi_absensi.php" class="p-5 rounded-2xl bg-indigo-600 text-white shadow-md flex flex-col justify-between gap-4 group transition-all hover:bg-indigo-700 hover:shadow-lg">
                 <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-base">
                     <i class="fa fa-user-check"></i>
@@ -287,121 +262,18 @@ require_once __DIR__ . '/../includes/header.php';
                 </div>
             </a>
 
-            <a href="rekap_buku_kejadian.php" class="p-5 rounded-2xl bg-amber-600 text-white shadow-md flex flex-col justify-between gap-4 group transition-all hover:bg-amber-700 hover:shadow-lg">
-                <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-base">
-                    <i class="fa fa-book-bookmark"></i>
+            <a href="semua_menu.php" class="p-5 rounded-2xl bg-slate-900 text-white shadow-md flex flex-col justify-between gap-4 group transition-all hover:bg-slate-800 hover:shadow-lg border border-slate-700">
+                <div class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-base shadow-inner">
+                    <i class="fa fa-th-large"></i>
                 </div>
                 <div>
-                    <div class="text-sm font-bold tracking-tight">Buku Kejadian</div>
-                    <div class="text-[10px] text-amber-100 font-normal mt-0.5">Catatan kejadian siswa</div>
+                    <div class="text-sm font-bold tracking-tight flex items-center justify-between">
+                        <span>Semua Menu</span>
+                        <i class="fa fa-arrow-right text-xs group-hover:translate-x-1 transition-transform"></i>
+                    </div>
+                    <div class="text-[10px] text-slate-300 font-normal mt-0.5">Kumpulan seluruh fitur</div>
                 </div>
             </a>
-
-            <a href="perangkat.php" class="p-5 rounded-2xl bg-rose-500 text-white shadow-md flex flex-col justify-between gap-4 group transition-all hover:bg-rose-600 hover:shadow-lg">
-                <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-base">
-                    <i class="fa fa-folder-open"></i>
-                </div>
-                <div>
-                    <div class="text-sm font-bold tracking-tight">Perangkat Ajar</div>
-                    <div class="text-[10px] text-rose-100 font-normal mt-0.5">Upload media & modul</div>
-                </div>
-            </a>
-
-            <a href="rekan.php" class="p-5 rounded-2xl bg-sky-500 text-white shadow-md flex flex-col justify-between gap-4 group transition-all hover:bg-sky-600 hover:shadow-lg">
-                <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-base">
-                    <i class="fa fa-users"></i>
-                </div>
-                <div>
-                    <div class="text-sm font-bold tracking-tight">Rekan Guru</div>
-                    <div class="text-[10px] text-sky-100 font-normal mt-0.5">Kontak sejawat</div>
-                </div>
-            </a>
-
-            <a href="kritik_saran.php" class="p-5 rounded-2xl bg-indigo-500 text-white shadow-md flex flex-col justify-between gap-4 group transition-all hover:bg-indigo-600 hover:shadow-lg">
-                <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-base">
-                    <i class="fa fa-comment-dots"></i>
-                </div>
-                <div>
-                    <div class="text-sm font-bold tracking-tight">Kritik & Saran</div>
-                    <div class="text-[10px] text-indigo-100 font-normal mt-0.5">Umpan balik</div>
-                </div>
-            </a>
-
-            <a href="tugas_tidak_masuk.php" class="p-5 rounded-2xl bg-rose-600 text-white shadow-md flex flex-col justify-between gap-4 group transition-all hover:bg-rose-700 hover:shadow-lg">
-                <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-base">
-                    <i class="fa fa-clipboard-list"></i>
-                </div>
-                <div>
-                    <div class="text-sm font-bold tracking-tight">Tugas Guru</div>
-                    <div class="text-[10px] text-rose-100 font-normal mt-0.5">Guru tidak masuk</div>
-                </div>
-            </a>
-
-            <?php if ($is_pkl_pembimbing): ?>
-            <a href="pkl_index.php" class="p-5 rounded-2xl bg-slate-900 text-white shadow-md flex flex-col justify-between gap-4 group transition-all hover:bg-slate-800 hover:shadow-lg border border-indigo-400/40">
-                <div class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-base">
-                    <i class="fa fa-briefcase"></i>
-                </div>
-                <div>
-                    <div class="text-sm font-bold tracking-tight text-indigo-400">Pembimbing PKL</div>
-                    <div class="text-[10px] text-slate-300 font-normal mt-0.5">Portal menu PKL</div>
-                </div>
-            </a>
-            <?php endif; ?>
-
-            <?php if ($wali_info): ?>
-            <a href="<?= BASE_URL ?>admin/rekap_persiswa.php" class="p-5 rounded-2xl bg-violet-600 text-white shadow-md flex flex-col justify-between gap-4 group transition-all hover:bg-violet-700 hover:shadow-lg">
-                <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-base">
-                    <i class="fa fa-user-check"></i>
-                </div>
-                <div>
-                    <div class="text-sm font-bold tracking-tight">Rekap Kelas</div>
-                    <div class="text-[10px] text-violet-100 font-normal mt-0.5">Wali: <?= htmlspecialchars($wali_info['nama_kelas']) ?></div>
-                </div>
-            </a>
-
-            <a href="rekap_izin.php" class="p-5 rounded-2xl bg-rose-600 text-white shadow-md flex flex-col justify-between gap-4 group transition-all hover:bg-rose-700 hover:shadow-lg relative">
-                <?php if ($pending_permits_count > 0): ?>
-                    <span class="absolute top-3 right-3 bg-amber-400 text-slate-950 font-extrabold text-[8px] uppercase px-2 py-0.5 rounded-full shadow-sm">
-                        <?= $pending_permits_count ?> PENDING
-                    </span>
-                <?php endif; ?>
-                <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-base">
-                    <i class="fa fa-envelope-open-text"></i>
-                </div>
-                <div>
-                    <div class="text-sm font-bold tracking-tight">Siswa Izin</div>
-                    <div class="text-[10px] text-rose-100 font-normal mt-0.5">Verifikasi Izin/Sakit</div>
-                </div>
-            </a>
-            <?php endif; ?>
-
-            <?php if ($bk_info): ?>
-            <a href="rekap_pengaduan.php" class="p-5 rounded-2xl bg-rose-600 text-white shadow-md flex flex-col justify-between gap-4 group transition-all hover:bg-rose-700 hover:shadow-lg">
-                <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-base">
-                    <i class="fa fa-bullhorn"></i>
-                </div>
-                <div>
-                    <div class="text-sm font-bold tracking-tight">Daftar Pengaduan</div>
-                    <div class="text-[10px] text-rose-100 font-normal mt-0.5">Laporan pengaduan siswa</div>
-                </div>
-            </a>
-
-            <a href="konsultasi.php" class="p-5 rounded-2xl bg-indigo-500 text-white shadow-md flex flex-col justify-between gap-4 group transition-all hover:bg-indigo-600 hover:shadow-lg relative">
-                <?php if ($open_chats_count > 0): ?>
-                    <span class="absolute top-3 right-3 bg-amber-400 text-slate-950 font-extrabold text-[8px] uppercase px-2 py-0.5 rounded-full shadow-sm">
-                        <?= $open_chats_count ?> CHAT
-                    </span>
-                <?php endif; ?>
-                <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-base">
-                    <i class="fa fa-comments"></i>
-                </div>
-                <div>
-                    <div class="text-sm font-bold tracking-tight">Chat Konsultasi</div>
-                    <div class="text-[10px] text-indigo-100 font-normal mt-0.5">Konsultasi BK online</div>
-                </div>
-            </a>
-            <?php endif; ?>
         </div>
 
         <!-- Upcoming / Distant Schedule Cards (Mendatang) -->
