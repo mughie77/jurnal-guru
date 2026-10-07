@@ -52,15 +52,16 @@ if ($q_siswa_kelas) {
     }
 }
 
-// 3. Rekap kehadiran siswa per kelas (Grafik Kehadiran Bulan Ini)
+// 3. Rekap kehadiran siswa per kelas (Grafik Kehadiran Bulan Ini dari absensi_jurnal)
 $q_absen_chart = mysqli_query($conn, "
     SELECT
-        SUM(CASE WHEN status IN ('Hadir', 'H') THEN 1 ELSE 0 END) as total_hadir,
-        SUM(CASE WHEN status IN ('Sakit', 'S') THEN 1 ELSE 0 END) as total_sakit,
-        SUM(CASE WHEN status IN ('Izin', 'I') THEN 1 ELSE 0 END) as total_izin,
-        SUM(CASE WHEN status IN ('Alfa', 'A', 'Terlambat') THEN 1 ELSE 0 END) as total_alfa
-    FROM absensi_harian
-    WHERE MONTH(tanggal) = MONTH(CURRENT_DATE()) AND YEAR(tanggal) = YEAR(CURRENT_DATE())
+        SUM(CASE WHEN aj.status = 'H' THEN 1 ELSE 0 END) as total_hadir,
+        SUM(CASE WHEN aj.status = 'S' THEN 1 ELSE 0 END) as total_sakit,
+        SUM(CASE WHEN aj.status = 'I' THEN 1 ELSE 0 END) as total_izin,
+        SUM(CASE WHEN aj.status = 'A' THEN 1 ELSE 0 END) as total_alfa
+    FROM absensi_jurnal aj
+    JOIN jurnal j ON aj.jurnal_id = j.id
+    WHERE MONTH(j.tanggal) = MONTH(CURRENT_DATE()) AND YEAR(j.tanggal) = YEAR(CURRENT_DATE())
 ");
 $rekap_absen = ['hadir' => 0, 'sakit' => 0, 'izin' => 0, 'alfa' => 0];
 if ($q_absen_chart && $r = mysqli_fetch_assoc($q_absen_chart)) {
