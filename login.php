@@ -127,11 +127,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 }
 ?>
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - CAKRA Analytics Portal</title>
+    <title>CAKRA - Central Academic Knowledge & Record Application</title>
     <?php if ($favicon): ?>
     <link rel="icon" type="image/png" href="<?= $favicon ?>">
     <?php endif; ?>
@@ -178,7 +178,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <div class="w-full max-w-[1280px] min-h-[720px] bg-slate-900/80 rounded-[32px] sm:rounded-[40px] border border-slate-800/80 shadow-2xl shadow-cyan-950/40 overflow-hidden grid grid-cols-1 lg:grid-cols-12 relative z-10 backdrop-blur-md">
 
         <!-- 1. LOGIN FORM CONTAINER (ORDER-1 on Mobile / TOP, ORDER-2 on Desktop lg:col-span-5 / RIGHT) -->
-        <div class="order-1 lg:order-2 lg:col-span-5 p-6 sm:p-10 lg:p-12 flex flex-col justify-center glass-card relative">
+        <div id="loginForm" class="order-1 lg:order-2 lg:col-span-5 p-6 sm:p-10 lg:p-12 flex flex-col justify-center glass-card relative">
             <div class="w-full max-w-sm mx-auto">
 
                 <div class="mb-8 text-left">
@@ -261,41 +261,56 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             </div>
         </div>
 
-        <!-- 2. CAKRA ANALYTICS SHOWCASE CONTAINER (ORDER-2 on Mobile / BOTTOM, ORDER-1 on Desktop lg:col-span-7 / LEFT) -->
-        <div class="order-2 lg:order-1 lg:col-span-7 bg-gradient-to-br from-slate-900 via-slate-900/95 to-cyan-950/80 p-6 sm:p-8 lg:p-12 flex flex-col justify-between relative overflow-hidden border-t lg:border-t-0 lg:border-r border-slate-800/60">
+        <!-- 2. CAKRA WEBSITE LANDING & ANALYTICS SHOWCASE CONTAINER (ORDER-2 on Mobile / BOTTOM, ORDER-1 on Desktop lg:col-span-7 / LEFT) -->
+        <div class="order-2 lg:order-1 lg:col-span-7 bg-gradient-to-br from-slate-900 via-slate-900/95 to-cyan-950/80 p-6 sm:p-8 lg:p-12 flex flex-col justify-between relative overflow-y-auto max-h-[850px] custom-scrollbar border-t lg:border-t-0 lg:border-r border-slate-800/60">
             <!-- Background Accent Blurs -->
             <div class="absolute -top-24 -right-24 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
             <div class="absolute -bottom-24 -left-24 w-80 h-80 bg-teal-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
-            <div class="relative z-10 space-y-6">
-                <!-- Top Brand Header -->
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-3.5">
-                        <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyan-500 to-teal-400 p-0.5 shadow-lg shadow-cyan-500/30 shrink-0">
+            <div class="relative z-10 space-y-8">
+                <!-- Navigation Bar -->
+                <div class="flex items-center justify-between border-b border-slate-800/80 pb-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-cyan-500 to-teal-400 p-0.5 shadow-lg shadow-cyan-500/30 shrink-0">
                             <div class="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center">
                                 <?php if ($favicon): ?>
-                                    <img src="<?= $favicon ?>" class="w-7 h-7 object-contain">
+                                    <img src="<?= $favicon ?>" class="w-6 h-6 object-contain">
                                 <?php else: ?>
-                                    <i class="fa fa-shield-halved text-cyan-400 text-xl"></i>
+                                    <i class="fa fa-shield-halved text-cyan-400 text-lg"></i>
                                 <?php endif; ?>
                             </div>
                         </div>
                         <div>
                             <div class="flex items-center gap-2">
-                                <span class="text-xl font-black tracking-tight text-white">CAKRA</span>
-                                <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">v2.5</span>
+                                <span class="text-lg font-black tracking-tight text-white">CAKRA</span>
+                                <span class="px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">v2.5</span>
                             </div>
-                            <p class="text-slate-400 text-[10px] font-bold uppercase tracking-wider mt-0.5"><?= htmlspecialchars($app_name) ?></p>
+                            <p class="text-slate-400 text-[9px] font-bold uppercase tracking-wider"><?= htmlspecialchars($app_name) ?></p>
                         </div>
                     </div>
 
-                    <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800/80 border border-slate-700/80 text-cyan-300 text-xs font-semibold">
-                        <i class="fa fa-circle text-[8px] text-cyan-400 animate-ping"></i>
-                        <span><?= date('d M Y') ?></span>
+                    <div class="hidden sm:flex items-center gap-4 text-xs font-semibold text-slate-300">
+                        <a href="#penjelasan" class="hover:text-cyan-400 transition-colors">Penjelasan</a>
+                        <a href="#kelebihan" class="hover:text-cyan-400 transition-colors">Kelebihan</a>
+                        <a href="#fasilitas" class="hover:text-cyan-400 transition-colors">Fasilitas</a>
+                        <a href="#loginForm" class="px-3 py-1.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500 hover:text-white transition-all font-bold">Login</a>
                     </div>
                 </div>
 
-                <!-- Highlight Stat Cards Row (Jurnal Hari Ini & Total Siswa) -->
+                <!-- Section 1: Hero & Penjelasan CAKRA -->
+                <div id="penjelasan" class="space-y-4">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 text-xs font-bold">
+                        <i class="fa fa-sparkles text-cyan-400"></i> Platform Akademik Terpadu
+                    </div>
+                    <h1 class="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight leading-tight">
+                        Transformasi Digital Pendidikan Bersama <span class="bg-gradient-to-r from-cyan-400 via-teal-300 to-indigo-400 bg-clip-text text-transparent">CAKRA</span>
+                    </h1>
+                    <p class="text-slate-300 text-xs sm:text-sm font-medium leading-relaxed">
+                        <strong>CAKRA</strong> (Central Academic Knowledge & Record Application) adalah ekosistem digital terpadu sekolah untuk manajemen pembelajaran, pengisian jurnal mengajar real-time, presensi siswa berbasis GPS & Barcode QR, serta rekapitulasi data akademik yang presisi, transparan, dan efisien.
+                    </p>
+                </div>
+
+                <!-- Highlight Stat Cards Row -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div class="p-4 rounded-2xl bg-gradient-to-br from-indigo-900/40 to-slate-900/90 border border-indigo-500/20 backdrop-blur-md flex items-center justify-between shadow-lg">
                         <div>
@@ -318,8 +333,112 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     </div>
                 </div>
 
+                <!-- Section 2: Kelebihan CAKRA -->
+                <div id="kelebihan" class="space-y-3">
+                    <h3 class="text-xs font-bold uppercase tracking-widest text-cyan-400 flex items-center gap-2">
+                        <i class="fa fa-star"></i> Kelebihan Utama Sistem CAKRA
+                    </h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div class="p-3.5 rounded-2xl bg-slate-800/40 border border-slate-700/50 flex items-start gap-3">
+                            <div class="w-8 h-8 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center shrink-0 mt-0.5">
+                                <i class="fa fa-bolt text-xs"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-bold text-white mb-0.5">Integrasi Real-Time</h4>
+                                <p class="text-[10px] text-slate-400 leading-relaxed font-medium">Jurnal mengajar & absensi tersinkronisasi otomatis saat itu juga.</p>
+                            </div>
+                        </div>
+
+                        <div class="p-3.5 rounded-2xl bg-slate-800/40 border border-slate-700/50 flex items-start gap-3">
+                            <div class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 mt-0.5">
+                                <i class="fa fa-location-dot text-xs"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-bold text-white mb-0.5">Presensi Akurat GPS & QR</h4>
+                                <p class="text-[10px] text-slate-400 leading-relaxed font-medium">Validasi geofence sekolah untuk memastikan lokasi kehadiran valid.</p>
+                            </div>
+                        </div>
+
+                        <div class="p-3.5 rounded-2xl bg-slate-800/40 border border-slate-700/50 flex items-start gap-3">
+                            <div class="w-8 h-8 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center shrink-0 mt-0.5">
+                                <i class="fa fa-file-excel text-xs"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-bold text-white mb-0.5">Rekapitulasi Otomatis</h4>
+                                <p class="text-[10px] text-slate-400 leading-relaxed font-medium">Laporan & matriks kehadiran siap diunduh ke Excel kapan saja.</p>
+                            </div>
+                        </div>
+
+                        <div class="p-3.5 rounded-2xl bg-slate-800/40 border border-slate-700/50 flex items-start gap-3">
+                            <div class="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0 mt-0.5">
+                                <i class="fa fa-users-gear text-xs"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-bold text-white mb-0.5">Multi-Role Terintegrasi</h4>
+                                <p class="text-[10px] text-slate-400 leading-relaxed font-medium">Akses khusus untuk Guru, Siswa, Waka, Admin, dan Mitra DU/DI.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 3: Fasilitas di CAKRA -->
+                <div id="fasilitas" class="space-y-3">
+                    <h3 class="text-xs font-bold uppercase tracking-widest text-teal-400 flex items-center gap-2">
+                        <i class="fa fa-layer-group"></i> Fasilitas & Modul Unggulan
+                    </h3>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
+                        <div class="p-3 rounded-2xl bg-slate-800/60 border border-slate-700/50 text-slate-200 font-bold flex flex-col justify-between gap-2">
+                            <i class="fa fa-book-open text-cyan-400 text-lg"></i>
+                            <div>
+                                <div class="text-xs">Jurnal Mengajar</div>
+                                <div class="text-[9px] text-slate-400 font-normal">Roll call & materi</div>
+                            </div>
+                        </div>
+
+                        <div class="p-3 rounded-2xl bg-slate-800/60 border border-slate-700/50 text-slate-200 font-bold flex flex-col justify-between gap-2">
+                            <i class="fa fa-qrcode text-emerald-400 text-lg"></i>
+                            <div>
+                                <div class="text-xs">Presensi GPS / QR</div>
+                                <div class="text-[9px] text-slate-400 font-normal">Siswa & Guru</div>
+                            </div>
+                        </div>
+
+                        <div class="p-3 rounded-2xl bg-slate-800/60 border border-slate-700/50 text-slate-200 font-bold flex flex-col justify-between gap-2">
+                            <i class="fa fa-comments text-indigo-400 text-lg"></i>
+                            <div>
+                                <div class="text-xs">Konsultasi BK</div>
+                                <div class="text-[9px] text-slate-400 font-normal">Bimbingan online</div>
+                            </div>
+                        </div>
+
+                        <div class="p-3 rounded-2xl bg-slate-800/60 border border-slate-700/50 text-slate-200 font-bold flex flex-col justify-between gap-2">
+                            <i class="fa fa-folder-open text-amber-400 text-lg"></i>
+                            <div>
+                                <div class="text-xs">Berkas Digital</div>
+                                <div class="text-[9px] text-slate-400 font-normal">KK, Ijazah, RPP</div>
+                            </div>
+                        </div>
+
+                        <div class="p-3 rounded-2xl bg-slate-800/60 border border-slate-700/50 text-slate-200 font-bold flex flex-col justify-between gap-2">
+                            <i class="fa fa-briefcase text-rose-400 text-lg"></i>
+                            <div>
+                                <div class="text-xs">Portal PKL</div>
+                                <div class="text-[9px] text-slate-400 font-normal">Siswa Magang & DU/DI</div>
+                            </div>
+                        </div>
+
+                        <div class="p-3 rounded-2xl bg-slate-800/60 border border-slate-700/50 text-slate-200 font-bold flex flex-col justify-between gap-2">
+                            <i class="fa fa-chart-line text-purple-400 text-lg"></i>
+                            <div>
+                                <div class="text-xs">Peta Kelas & Jurnal</div>
+                                <div class="text-[9px] text-slate-400 font-normal">Monitor visual</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Desktop Visual Charts & Breakdown Showcase -->
-                <div class="hidden lg:grid grid-cols-1 md:grid-cols-12 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-4 pt-2">
                     <!-- Attendance Chart Card (5 cols) -->
                     <div class="md:col-span-5 p-4 rounded-2xl bg-slate-800/50 border border-slate-700/60 backdrop-blur-md flex flex-col justify-between">
                         <div class="flex items-center justify-between mb-3">
