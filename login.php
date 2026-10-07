@@ -22,11 +22,15 @@ $today = date('Y-m-d');
 $q_jurnal_today = mysqli_query($conn, "SELECT COUNT(*) as total FROM jurnal WHERE tanggal = '$today'");
 $jurnal_today_count = ($q_jurnal_today && $r = mysqli_fetch_assoc($q_jurnal_today)) ? (int)$r['total'] : 0;
 
+// Dynamic check column name for gender (jenis_kelamin vs jk)
+$chk_jk_col = mysqli_query($conn, "SHOW COLUMNS FROM siswa LIKE 'jenis_kelamin'");
+$jk_col_name = ($chk_jk_col && mysqli_num_rows($chk_jk_col) > 0) ? 's.jenis_kelamin' : 's.jk';
+
 // 2. Jumlah siswa per kelas (Laki-Laki & Perempuan)
 $q_siswa_kelas = mysqli_query($conn, "
     SELECT k.nama_kelas,
-           SUM(CASE WHEN LOWER(s.jk) = 'l' THEN 1 ELSE 0 END) as total_l,
-           SUM(CASE WHEN LOWER(s.jk) = 'p' THEN 1 ELSE 0 END) as total_p,
+           SUM(CASE WHEN LOWER($jk_col_name) = 'l' THEN 1 ELSE 0 END) as total_l,
+           SUM(CASE WHEN LOWER($jk_col_name) = 'p' THEN 1 ELSE 0 END) as total_p,
            COUNT(s.id) as total_siswa
     FROM kelas k
     LEFT JOIN siswa_kelas sk ON k.id = sk.kelas_id
