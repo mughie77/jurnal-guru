@@ -45,9 +45,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['excel_file'])) {
             }
         }
 
-        // Pre-fetch existing schedules to prevent duplicate entries (same class, day, and subject)
+        // Pre-fetch existing schedules to prevent duplicate entries (same class, day, and subject for active academic year)
+        $tahun_id = $active_tahun_id;
         $existing_schedules = [];
-        $res_ex = mysqli_query($conn, "SELECT kelas_id, hari, mapel_id FROM jadwal_pelajaran");
+        $res_ex = mysqli_query($conn, "SELECT kelas_id, hari, mapel_id FROM jadwal_pelajaran WHERE tahun_pelajaran_id = $tahun_id OR tahun_pelajaran_id IS NULL");
         if ($res_ex) {
             while ($r_ex = mysqli_fetch_assoc($res_ex)) {
                 $k_ex = $r_ex['kelas_id'] . '-' . strtolower(trim($r_ex['hari'])) . '-' . $r_ex['mapel_id'];
@@ -70,7 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['excel_file'])) {
 
         mysqli_begin_transaction($conn);
         try {
-            $stmt = mysqli_prepare($conn, "INSERT INTO jadwal_pelajaran (kelas_id, hari, guru_id, mapel_id, jam_ke, jam_mulai) VALUES (?, ?, ?, ?, ?, ?)");
+            $stmt = mysqli_prepare($conn, "INSERT INTO jadwal_pelajaran (kelas_id, hari, guru_id, mapel_id, tahun_pelajaran_id, jam_ke, jam_mulai) VALUES (?, ?, ?, ?, ?, ?, ?)");
 
             foreach ($rows as $row) {
                 $row_idx++;
@@ -138,7 +139,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['excel_file'])) {
                     continue;
                 }
 
-                mysqli_stmt_bind_param($stmt, "isiiss", $kelas_id, $hari_val, $guru_id, $mapel_id, $jam_ke_raw, $jam_mulai_val);
+                mysqli_stmt_bind_param($stmt, "isiiiss", $kelas_id, $hari_val, $guru_id, $mapel_id, $tahun_id, $jam_ke_raw, $jam_mulai_val);
                 if (mysqli_stmt_execute($stmt)) {
                     $count++;
                     $existing_schedules[$sched_key] = true; // Mark to prevent intra-sheet duplicates

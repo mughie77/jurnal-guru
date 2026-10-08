@@ -48,7 +48,7 @@ if ($kid > 0) {
             JOIN mata_pelajaran mp ON jp.mapel_id = mp.id
             JOIN guru g ON jp.guru_id = g.id
             JOIN users u ON g.user_id = u.id
-            WHERE jp.kelas_id = $kid
+            WHERE jp.kelas_id = $kid AND (jp.tahun_pelajaran_id = $active_tahun_id OR jp.tahun_pelajaran_id IS NULL)
             ORDER BY FIELD(jp.hari, 'Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu'), jp.jam_ke ASC";
     $res_s = mysqli_query($conn, $q_s);
     if ($res_s) {
@@ -66,7 +66,7 @@ if ($kid > 0) {
                       JOIN mata_pelajaran mp ON jp.mapel_id = mp.id
                       JOIN guru g ON jp.guru_id = g.id
                       JOIN users u ON g.user_id = u.id
-                      WHERE jp.kelas_id = $kid AND jp.hari = '$hari_ini'
+                      WHERE jp.kelas_id = $kid AND jp.hari = '$hari_ini' AND (jp.tahun_pelajaran_id = $active_tahun_id OR jp.tahun_pelajaran_id IS NULL)
                       ORDER BY jp.jam_mulai ASC, jp.jam_ke ASC";
     $res_today_siswa = mysqli_query($conn, $q_today_siswa);
     if ($res_today_siswa) {

@@ -42,7 +42,7 @@ $query = "SELECT jp.*, k.nama_kelas, mp.nama_mapel, mp.kode_mapel, u.nama_lengka
           JOIN guru g ON jp.guru_id = g.id
           JOIN users u ON g.user_id = u.id
           LEFT JOIN jurnal j ON ((j.jadwal_id = jp.id AND j.tanggal = '$tgl') OR (j.guru_id = jp.guru_id AND j.kelas_id = jp.kelas_id AND j.mapel_id = jp.mapel_id AND j.jam_ke = jp.jam_ke AND j.tanggal = '$tgl'))
-          WHERE jp.hari = '$hari_ini' $where_kelas
+          WHERE jp.hari = '$hari_ini' AND (jp.tahun_pelajaran_id = $active_tahun_id OR jp.tahun_pelajaran_id IS NULL) $where_kelas
           ORDER BY k.nama_kelas ASC, jp.jam_ke ASC";
 
 $res = mysqli_query($conn, $query);

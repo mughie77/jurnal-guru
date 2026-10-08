@@ -32,7 +32,7 @@ $q_today_sched = mysqli_query($conn, "SELECT jp.*, k.nama_kelas, m.nama_mapel,
                   FROM jadwal_pelajaran jp
                   JOIN kelas k ON jp.kelas_id = k.id
                   JOIN mata_pelajaran m ON jp.mapel_id = m.id
-                  WHERE jp.guru_id = $guru_id AND jp.hari = '$hari_ini'
+                  WHERE jp.guru_id = $guru_id AND jp.hari = '$hari_ini' AND (jp.tahun_pelajaran_id = $active_tahun_id OR jp.tahun_pelajaran_id IS NULL)
                   ORDER BY jp.jam_mulai ASC, jp.jam_ke ASC");
 
 $today_schedules = [];

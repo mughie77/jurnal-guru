@@ -42,7 +42,7 @@ $q_jadwal = "SELECT jp.*, k.nama_kelas, mp.nama_mapel, mp.kode_mapel
              FROM jadwal_pelajaran jp
              JOIN kelas k ON jp.kelas_id = k.id
              JOIN mata_pelajaran mp ON jp.mapel_id = mp.id
-             WHERE jp.guru_id = $guru_id AND jp.hari = '$hari_ini'
+             WHERE jp.guru_id = $guru_id AND jp.hari = '$hari_ini' AND (jp.tahun_pelajaran_id = $active_tahun_id OR jp.tahun_pelajaran_id IS NULL)
              ORDER BY jp.jam_ke ASC";
 $res_jadwal = mysqli_query($conn, $q_jadwal);
 while ($row = mysqli_fetch_assoc($res_jadwal)) {

@@ -10,6 +10,9 @@ $message = ''; $message_type = '';
 // Selected class filter
 $filter_kelas_id = (int)($_GET['kelas_id'] ?? 0);
 
+// Active Academic Year
+$tahun_id = $active_tahun_id;
+
 // Fetch all classes for filter & modals
 $kelases = [];
 $res_k = mysqli_query($conn, "SELECT id, nama_kelas FROM kelas ORDER BY nama_kelas ASC");
@@ -60,8 +63,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['tambah_jadwal'])) {
             throw new Exception("Semua field wajib diisi.");
         }
 
-        $stmt = mysqli_prepare($conn, "INSERT INTO jadwal_pelajaran (kelas_id, hari, guru_id, mapel_id, jam_ke, jam_mulai) VALUES (?, ?, ?, ?, ?, ?)");
-        mysqli_stmt_bind_param($stmt, "isiiss", $kelas_id, $hari, $guru_id, $mapel_id, $jam_ke, $jam_mulai);
+        $stmt = mysqli_prepare($conn, "INSERT INTO jadwal_pelajaran (kelas_id, hari, guru_id, mapel_id, tahun_pelajaran_id, jam_ke, jam_mulai) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        mysqli_stmt_bind_param($stmt, "isiiiss", $kelas_id, $hari, $guru_id, $mapel_id, $tahun_id, $jam_ke, $jam_mulai);
         if (mysqli_stmt_execute($stmt)) {
             $message = "Jadwal pelajaran berhasil ditambahkan!";
             $message_type = "success";
@@ -92,8 +95,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['edit_jadwal'])) {
             throw new Exception("Semua field wajib diisi.");
         }
 
-        $stmt = mysqli_prepare($conn, "UPDATE jadwal_pelajaran SET kelas_id = ?, hari = ?, guru_id = ?, mapel_id = ?, jam_ke = ?, jam_mulai = ? WHERE id = ?");
-        mysqli_stmt_bind_param($stmt, "isiissi", $kelas_id, $hari, $guru_id, $mapel_id, $jam_ke, $jam_mulai, $jadwal_id);
+        $stmt = mysqli_prepare($conn, "UPDATE jadwal_pelajaran SET kelas_id = ?, hari = ?, guru_id = ?, mapel_id = ?, tahun_pelajaran_id = ?, jam_ke = ?, jam_mulai = ? WHERE id = ?");
+        mysqli_stmt_bind_param($stmt, "isiiissi", $kelas_id, $hari, $guru_id, $mapel_id, $tahun_id, $jam_ke, $jam_mulai, $jadwal_id);
         if (mysqli_stmt_execute($stmt)) {
             $message = "Jadwal pelajaran berhasil diperbarui!";
             $message_type = "success";
@@ -107,7 +110,25 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['edit_jadwal'])) {
     }
 }
 
-// Handle Delete Schedule
+// Handle Reset All Schedules
+if (isset($_POST['reset_jadwal'])) {
+    try {
+        if (!verify_csrf_token($_POST['csrf_token'] ?? '')) throw new Exception("Token Keamanan Tidak Valid.");
+
+        $res_del = mysqli_query($conn, "DELETE FROM jadwal_pelajaran WHERE tahun_pelajaran_id = $tahun_id OR tahun_pelajaran_id IS NULL");
+        if ($res_del) {
+            $message = "Seluruh jadwal pelajaran berhasil direset/dihapus!";
+            $message_type = "success";
+        } else {
+            throw new Exception("Gagal mereset jadwal pelajaran: " . mysqli_error($conn));
+        }
+    } catch (Exception $e) {
+        $message = "Gagal: " . $e->getMessage();
+        $message_type = "error";
+    }
+}
+
+// Handle Single Delete Schedule
 if (isset($_GET['action']) && $_GET['action'] == 'delete') {
     $del_id = (int)($_GET['id'] ?? 0);
     if (!verify_csrf_token($_GET['csrf_token'] ?? '')) {
@@ -127,7 +148,7 @@ if (isset($_GET['success_delete'])) {
     $message_type = "success";
 }
 
-// Fetch schedules for selected class
+// Fetch schedules for selected class & active academic year
 $schedules_by_day = [
     'Senin' => [],
     'Selasa' => [],
@@ -143,7 +164,7 @@ if ($filter_kelas_id > 0) {
              JOIN guru g ON jp.guru_id = g.id
              JOIN users u ON g.user_id = u.id
              JOIN mata_pelajaran mp ON jp.mapel_id = mp.id
-             WHERE jp.kelas_id = $filter_kelas_id
+             WHERE jp.kelas_id = $filter_kelas_id AND (jp.tahun_pelajaran_id = $tahun_id OR jp.tahun_pelajaran_id IS NULL)
              ORDER BY FIELD(jp.hari, 'Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu'), jp.jam_ke ASC";
     $res_jp = mysqli_query($conn, $q_jp);
     while ($row = mysqli_fetch_assoc($res_jp)) {
@@ -203,11 +224,19 @@ require_once __DIR__ . '/../includes/header.php';
         <h1 class="text-3xl font-bold text-slate-800 tracking-tight italic">Manajemen Jadwal Pelajaran</h1>
         <p class="text-slate-500">Kelola jadwal pelajaran mingguan per kelas (Hari, Guru, Mapel, dan Jam Ke-).</p>
     </div>
-    <div class="flex items-center gap-3 shrink-0">
-        <a href="import_jadwal_excel.php" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-emerald-100 transition-all flex items-center text-xs sm:text-sm">
+    <div class="flex flex-wrap items-center gap-3 shrink-0">
+        <form id="resetJadwalForm" action="" method="POST" class="inline">
+            <input type="hidden" name="csrf_token" value="<?= get_csrf_token() ?>">
+            <input type="hidden" name="reset_jadwal" value="1">
+            <button type="button" onclick="confirmResetJadwal()" class="bg-rose-600 hover:bg-rose-700 text-white px-4 py-2.5 rounded-xl font-bold shadow-lg shadow-rose-100 transition-all flex items-center text-xs sm:text-sm">
+                <i class="fa fa-rotate-left mr-2"></i> Reset Jadwal
+            </button>
+        </form>
+
+        <a href="import_jadwal_excel.php" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl font-bold shadow-lg shadow-emerald-100 transition-all flex items-center text-xs sm:text-sm">
             <i class="fa fa-file-excel mr-2"></i> Import Excel
         </a>
-        <button onclick="openModal('addJadwalModal')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-indigo-100 transition-all flex items-center text-xs sm:text-sm">
+        <button onclick="openModal('addJadwalModal')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl font-bold shadow-lg shadow-indigo-100 transition-all flex items-center text-xs sm:text-sm">
             <i class="fa fa-plus mr-2"></i> Tambah Jadwal Pelajaran
         </button>
     </div>
@@ -457,10 +486,8 @@ function updateSubjectDropdown(guruSelectId, mapelSelectId, selectedMapelId = nu
 
     let filteredMapels = [];
     if (assignedMapelIds.length > 0) {
-        // Show only subjects set for this teacher
         filteredMapels = allMapels.filter(m => assignedMapelIds.includes(parseInt(m.id)));
     } else {
-        // Fallback: If no subject set for this teacher, show ALL subjects
         filteredMapels = allMapels;
     }
 
@@ -477,29 +504,22 @@ function updateSubjectDropdown(guruSelectId, mapelSelectId, selectedMapelId = nu
 }
 
 $(document).ready(function() {
-    // Initialize Select2 on Class Filter Select
-    $('#filter_kelas_select').select2({
-        width: '100%'
-    });
+    $('#filter_kelas_select').select2({ width: '100%' });
 
-    // Initialize Select2 for Add Modal
     $('#add_kelas_id, #add_hari, #add_guru_id, #add_mapel_id').select2({
         dropdownParent: $('#addJadwalModal'),
         width: '100%'
     });
 
-    // Initialize Select2 for Edit Modal
     $('#edit_kelas_id, #edit_hari, #edit_guru_id, #edit_mapel_id').select2({
         dropdownParent: $('#editJadwalModal'),
         width: '100%'
     });
 
-    // Handle Teacher change in Add Modal
     $('#add_guru_id').on('change', function() {
         updateSubjectDropdown('#add_guru_id', '#add_mapel_id');
     });
 
-    // Handle Teacher change in Edit Modal
     $('#edit_guru_id').on('change', function() {
         updateSubjectDropdown('#edit_guru_id', '#edit_mapel_id');
     });
@@ -539,7 +559,6 @@ function editJadwal(item) {
     $('#edit_hari').val(item.hari).trigger('change');
     $('#edit_guru_id').val(item.guru_id).trigger('change');
 
-    // Update subject dropdown for this teacher and select item.mapel_id
     updateSubjectDropdown('#edit_guru_id', '#edit_mapel_id', item.mapel_id);
 
     $('#edit_jam_ke').val(item.jam_ke);
@@ -560,6 +579,23 @@ function confirmDelete(id, csrfToken) {
     }).then((result) => {
         if (result.isConfirmed) {
             window.location.href = 'jadwal.php?kelas_id=<?= $filter_kelas_id ?>&action=delete&id=' + id + '&csrf_token=' + csrfToken;
+        }
+    });
+}
+
+function confirmResetJadwal() {
+    Swal.fire({
+        title: 'Reset Semua Jadwal?',
+        text: 'Tindakan ini akan MENGHAPUS SELURUH data jadwal pelajaran untuk tahun pelajaran aktif! Apakah Anda benar-benar yakin?',
+        icon: 'error',
+        showCancelButton: true,
+        confirmButtonColor: '#DC2626',
+        cancelButtonColor: '#6B7280',
+        confirmButtonText: 'Ya, Reset Sekarang!',
+        cancelButtonText: 'Batal'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('resetJadwalForm').submit();
         }
     });
 }

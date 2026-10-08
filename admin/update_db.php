@@ -66,6 +66,7 @@ if ($is_ajax) {
                     'status_selesai' => "TINYINT(1) DEFAULT 0 AFTER longitude"
                 ],
                 'jadwal_pelajaran' => [
+                    'tahun_pelajaran_id' => "INT(11) DEFAULT NULL AFTER mapel_id",
                     'jam_mulai' => "TIME DEFAULT NULL AFTER jam_ke"
                 ]
             ];
@@ -476,12 +477,15 @@ if ($is_ajax) {
                 `hari` enum('Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu') NOT NULL,
                 `guru_id` int(11) NOT NULL,
                 `mapel_id` int(11) NOT NULL,
+                `tahun_pelajaran_id` int(11) DEFAULT NULL,
                 `jam_ke` varchar(50) NOT NULL,
+                `jam_mulai` time DEFAULT NULL,
                 `created_at` timestamp NULL DEFAULT current_timestamp(),
                 PRIMARY KEY (`id`),
                 KEY `kelas_id` (`kelas_id`),
                 KEY `guru_id` (`guru_id`),
                 KEY `mapel_id` (`mapel_id`),
+                KEY `tahun_pelajaran_id` (`tahun_pelajaran_id`),
                 CONSTRAINT `jadwal_pelajaran_ibfk_1` FOREIGN KEY (`kelas_id`) REFERENCES `kelas` (`id`) ON DELETE CASCADE,
                 CONSTRAINT `jadwal_pelajaran_ibfk_2` FOREIGN KEY (`guru_id`) REFERENCES `guru` (`id`) ON DELETE CASCADE,
                 CONSTRAINT `jadwal_pelajaran_ibfk_3` FOREIGN KEY (`mapel_id`) REFERENCES `mata_pelajaran` (`id`) ON DELETE CASCADE
