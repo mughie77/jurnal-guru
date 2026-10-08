@@ -49,8 +49,16 @@ if (isset($_GET['success_delete'])) {
     $message_type = "success";
 }
 
-// Fetch assigned piket
+// Fetch assigned piket & map assigned teacher IDs per day
 $piket = [
+    'Senin' => [],
+    'Selasa' => [],
+    'Rabu' => [],
+    'Kamis' => [],
+    'Jumat' => []
+];
+
+$assigned_teachers_by_day = [
     'Senin' => [],
     'Selasa' => [],
     'Rabu' => [],
@@ -66,6 +74,7 @@ $query = "SELECT pg.*, u.nama_lengkap, g.nip
 $res = mysqli_query($conn, $query);
 while ($row = mysqli_fetch_assoc($res)) {
     $piket[$row['hari']][] = $row;
+    $assigned_teachers_by_day[$row['hari']][] = (int)$row['guru_id'];
 }
 
 // Get all teachers for selector
@@ -155,7 +164,7 @@ require_once __DIR__ . '/../includes/header.php';
 
         <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">Pilih Hari</label>
-            <select name="hari" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 bg-white font-bold text-slate-700">
+            <select name="hari" id="piket_hari_select" onchange="filterPiketGuruOptions()" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 bg-white font-bold text-slate-700">
                 <option value="Senin">Senin</option>
                 <option value="Selasa">Selasa</option>
                 <option value="Rabu">Rabu</option>
@@ -166,7 +175,7 @@ require_once __DIR__ . '/../includes/header.php';
 
         <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">Pilih Guru</label>
-            <select name="guru_id" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 bg-white font-bold text-slate-700">
+            <select name="guru_id" id="piket_guru_select" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 bg-white font-bold text-slate-700">
                 <option value="">-- Pilih Guru --</option>
                 <?php foreach ($teachers as $t): ?>
                     <option value="<?= $t['id'] ?>"><?= htmlspecialchars($t['nama_lengkap']) ?></option>
@@ -182,9 +191,35 @@ require_once __DIR__ . '/../includes/header.php';
 </div>
 
 <script>
+const assignedPiketByDay = <?= json_encode($assigned_teachers_by_day) ?>;
+
+function filterPiketGuruOptions() {
+    const selectedHari = document.getElementById('piket_hari_select').value;
+    const guruSelect = document.getElementById('piket_guru_select');
+    const assignedIds = assignedPiketByDay[selectedHari] || [];
+
+    Array.from(guruSelect.options).forEach(opt => {
+        if (!opt.value) return; // Skip placeholder option
+        const gId = parseInt(opt.value);
+        if (assignedIds.includes(gId)) {
+            opt.hidden = true;
+            opt.disabled = true;
+        } else {
+            opt.hidden = false;
+            opt.disabled = false;
+        }
+    });
+
+    // Reset selection if currently selected option is now hidden
+    if (guruSelect.selectedOptions[0] && guruSelect.selectedOptions[0].disabled) {
+        guruSelect.value = '';
+    }
+}
+
 function openModal(id) {
     const modal = document.getElementById(id);
     const overlay = document.getElementById('modalOverlay');
+    filterPiketGuruOptions();
     overlay.classList.remove('hidden');
     modal.classList.remove('hidden');
     setTimeout(() => {
