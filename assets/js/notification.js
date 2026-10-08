@@ -50,13 +50,13 @@
 
     // Fire notification helper
     function sendScheduleNotification(item, todayDate) {
-        const title = `Waktunya Mengajar: ${item.nama_kelas}`;
+        const title = `Pengingat Mengajar: ${item.nama_kelas} (30 Menit Lagi)`;
         const targetUrl = baseUrl + 'guru/isi_absensi.php';
         const options = {
-            body: `Mata Pelajaran: ${item.nama_mapel} (Jam Ke: ${item.jam_ke}). Klik untuk mengisi jurnal kelas.`,
+            body: `Mata Pelajaran: ${item.nama_mapel} (Jam Ke: ${item.jam_ke}). Pembelajaran dimulai pukul ${item.jam_mulai ? item.jam_mulai.substring(0, 5) : '-'}. Klik untuk bersiap & mengisi jurnal.`,
             icon: baseUrl + 'assets/images/logo.png',
             badge: baseUrl + 'assets/images/logo.png',
-            tag: `jadwal-${item.id}`,
+            tag: `jadwal-30m-${item.id}`,
             data: { url: targetUrl }
         };
 
@@ -112,8 +112,8 @@
                         const sM = parseInt(startTimeParts[1], 10) || 0;
                         const startMinTotal = sH * 60 + sM;
 
-                        // Notify if current time has reached or passed start time
-                        if (curMinTotal >= startMinTotal) {
+                        // Notify 30 minutes before start time (when current time reaches startMinTotal - 30)
+                        if (curMinTotal >= (startMinTotal - 30)) {
                             shouldNotify = true;
                         }
                     } else {
