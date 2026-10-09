@@ -6,7 +6,7 @@ authorize_role(['guru', 'admin']);
 
 $user_id = $_SESSION['user_id'];
 $guru_res = mysqli_query($conn, "SELECT id, NIP FROM guru WHERE user_id = $user_id");
-if(mysqli_num_rows($guru_res) == 0) die("Error: Data guru tidak ditemukan.");
+if (mysqli_num_rows($guru_res) == 0) die("Error: Data guru tidak ditemukan.");
 $g_data = mysqli_fetch_assoc($guru_res);
 $guru_id = $g_data['id'];
 
@@ -33,11 +33,23 @@ if (mysqli_num_rows($q_piket) > 0) {
     $is_piket_today = true;
 }
 
+// Inspect columns in tugas_kelas for backwards compatibility
+$has_mapel = false;
+$has_lat_lng = false;
+$chk_cols = mysqli_query($conn, "SHOW COLUMNS FROM tugas_kelas");
+if ($chk_cols) {
+    while ($c = mysqli_fetch_assoc($chk_cols)) {
+        if ($c['Field'] === 'mapel_id') $has_mapel = true;
+        if ($c['Field'] === 'latitude') $has_lat_lng = true;
+    }
+}
+
 // Handle Task Submission (Pemberian Tugas)
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['tambah_tugas'])) {
     if (!verify_csrf_token($_POST['csrf_token'] ?? '')) die("CSRF Token Invalid");
 
     $kelas_id = (int)$_POST['kelas_id'];
+    $mapel_id = (int)($_POST['mapel_id'] ?? 0);
     $tanggal = $_POST['tanggal'];
     $keterangan_tugas = mysqli_real_escape_string($conn, $_POST['keterangan_tugas']);
     $latitude = $_POST['latitude'] ?: null;
@@ -70,13 +82,25 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['tambah_tugas'])) {
     }
 
     if ($message_type !== 'error' && $kelas_id > 0 && !empty($tanggal)) {
-        $stmt = mysqli_prepare($conn, "INSERT INTO tugas_kelas (guru_id, kelas_id, tanggal, keterangan_tugas, file_lampiran, latitude, longitude) VALUES (?, ?, ?, ?, ?, ?, ?)");
-        mysqli_stmt_bind_param($stmt, "iisssss", $guru_id, $kelas_id, $tanggal, $keterangan_tugas, $file_lampiran, $latitude, $longitude);
+        if ($has_mapel && $has_lat_lng) {
+            $stmt = mysqli_prepare($conn, "INSERT INTO tugas_kelas (guru_id, kelas_id, mapel_id, tanggal, keterangan_tugas, file_lampiran, latitude, longitude) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+            mysqli_stmt_bind_param($stmt, "iiisssss", $guru_id, $kelas_id, $mapel_id, $tanggal, $keterangan_tugas, $file_lampiran, $latitude, $longitude);
+        } else if ($has_mapel && !$has_lat_lng) {
+            $stmt = mysqli_prepare($conn, "INSERT INTO tugas_kelas (guru_id, kelas_id, mapel_id, tanggal, keterangan_tugas, file_lampiran) VALUES (?, ?, ?, ?, ?, ?)");
+            mysqli_stmt_bind_param($stmt, "iiisss", $guru_id, $kelas_id, $mapel_id, $tanggal, $keterangan_tugas, $file_lampiran);
+        } else if (!$has_mapel && $has_lat_lng) {
+            $stmt = mysqli_prepare($conn, "INSERT INTO tugas_kelas (guru_id, kelas_id, tanggal, keterangan_tugas, file_lampiran, latitude, longitude) VALUES (?, ?, ?, ?, ?, ?, ?)");
+            mysqli_stmt_bind_param($stmt, "iisssss", $guru_id, $kelas_id, $tanggal, $keterangan_tugas, $file_lampiran, $latitude, $longitude);
+        } else {
+            $stmt = mysqli_prepare($conn, "INSERT INTO tugas_kelas (guru_id, kelas_id, tanggal, keterangan_tugas, file_lampiran) VALUES (?, ?, ?, ?, ?)");
+            mysqli_stmt_bind_param($stmt, "iisss", $guru_id, $kelas_id, $tanggal, $keterangan_tugas, $file_lampiran);
+        }
+
         if (mysqli_stmt_execute($stmt)) {
             $message = "Tugas kelas berhasil dikirim!";
             $message_type = "success";
         } else {
-            $message = "Gagal mengirim tugas.";
+            $message = "Gagal mengirim tugas: " . mysqli_error($conn);
             $message_type = "error";
         }
         mysqli_stmt_close($stmt);
@@ -110,17 +134,24 @@ if (isset($_GET['success_toggle'])) {
     $message_type = "success";
 }
 
-// Fetch classes taught by this teacher for dropdown selection
-$classes_list = mysqli_query($conn, "SELECT DISTINCT k.id, k.nama_kelas
-                                     FROM kelas k
-                                     JOIN guru_mapel gm ON k.id = gm.mapel_id OR 1=1
-                                     ORDER BY k.nama_kelas ASC");
+// Fetch all classes for dropdown selection
+$classes_list = mysqli_query($conn, "SELECT id, nama_kelas FROM kelas ORDER BY nama_kelas ASC");
+
+// Fetch teacher's assigned subjects for dropdown selection
+$mapels_list = mysqli_query($conn, "SELECT mp.id, mp.nama_mapel, mp.kode_mapel FROM mata_pelajaran mp JOIN guru_mapel gm ON mp.id = gm.mapel_id WHERE gm.guru_id = $guru_id ORDER BY mp.nama_mapel ASC");
+if (mysqli_num_rows($mapels_list) == 0) {
+    $mapels_list = mysqli_query($conn, "SELECT id, nama_mapel, kode_mapel FROM mata_pelajaran ORDER BY nama_mapel ASC");
+}
+
+$mapel_join = $has_mapel ? "LEFT JOIN mata_pelajaran mp ON tk.mapel_id = mp.id" : "";
+$mapel_select = $has_mapel ? ", mp.nama_mapel" : ", NULL as nama_mapel";
 
 // Fetch tasks submitted BY this teacher (Absent Task History)
 $my_tasks = [];
-$res_my = mysqli_query($conn, "SELECT tk.*, k.nama_kelas
+$res_my = mysqli_query($conn, "SELECT tk.*, k.nama_kelas $mapel_select
                                FROM tugas_kelas tk
                                JOIN kelas k ON tk.kelas_id = k.id
+                               $mapel_join
                                WHERE tk.guru_id = $guru_id
                                ORDER BY tk.tanggal DESC, tk.created_at DESC");
 while ($row = mysqli_fetch_assoc($res_my)) {
@@ -131,9 +162,10 @@ while ($row = mysqli_fetch_assoc($res_my)) {
 $piket_tasks = [];
 if ($is_piket_today) {
     $today_date = date('Y-m-d');
-    $res_piket = mysqli_query($conn, "SELECT tk.*, k.nama_kelas, u.nama_lengkap as nama_guru
+    $res_piket = mysqli_query($conn, "SELECT tk.*, k.nama_kelas $mapel_select, u.nama_lengkap as nama_guru
                                       FROM tugas_kelas tk
                                       JOIN kelas k ON tk.kelas_id = k.id
+                                      $mapel_join
                                       JOIN guru g ON tk.guru_id = g.id
                                       JOIN users u ON g.user_id = u.id
                                       WHERE tk.tanggal = '$today_date'
@@ -143,7 +175,6 @@ if ($is_piket_today) {
     }
 }
 
-require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/header.php';
 ?>
 
@@ -198,7 +229,7 @@ require_once __DIR__ . '/../includes/header.php';
         <table class="w-full text-left border-collapse">
             <thead>
                 <tr class="bg-emerald-500/10 border-b border-emerald-100">
-                    <th class="px-4 py-3 text-[10px] font-black text-emerald-800 uppercase tracking-widest">Kelas</th>
+                    <th class="px-4 py-3 text-[10px] font-black text-emerald-800 uppercase tracking-widest">Kelas & Mapel</th>
                     <th class="px-4 py-3 text-[10px] font-black text-emerald-800 uppercase tracking-widest">Guru Pemberi</th>
                     <th class="px-4 py-3 text-[10px] font-black text-emerald-800 uppercase tracking-widest">Deskripsi / Lampiran</th>
                     <th class="px-4 py-3 text-[10px] font-black text-emerald-800 uppercase tracking-widest text-center">Status Selesai</th>
@@ -213,7 +244,10 @@ require_once __DIR__ . '/../includes/header.php';
                 <?php else: ?>
                     <?php foreach ($piket_tasks as $pt): ?>
                         <tr class="hover:bg-emerald-50/20 transition-colors">
-                            <td class="px-4 py-3 font-black text-slate-800 text-sm"><?= htmlspecialchars($pt['nama_kelas']) ?></td>
+                            <td class="px-4 py-3">
+                                <div class="font-black text-slate-800 text-sm"><?= htmlspecialchars($pt['nama_kelas']) ?></div>
+                                <div class="text-xs text-indigo-600 font-semibold italic"><?= htmlspecialchars($pt['nama_mapel'] ?? '-') ?></div>
+                            </td>
                             <td class="px-4 py-3 font-semibold text-slate-700 text-xs"><?= htmlspecialchars($pt['nama_guru']) ?></td>
                             <td class="px-4 py-3 text-xs text-slate-600 max-w-sm">
                                 <div class="italic mb-1 leading-relaxed font-semibold">"<?= htmlspecialchars($pt['keterangan_tugas']) ?>"</div>
@@ -265,7 +299,7 @@ require_once __DIR__ . '/../includes/header.php';
             <thead>
                 <tr class="bg-slate-50 border-b border-slate-100">
                     <th class="px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-widest">Tanggal</th>
-                    <th class="px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-widest">Kelas</th>
+                    <th class="px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-widest">Kelas & Mapel</th>
                     <th class="px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-widest">Tugas & Lampiran</th>
                     <th class="px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Status</th>
                 </tr>
@@ -279,7 +313,10 @@ require_once __DIR__ . '/../includes/header.php';
                     <?php foreach ($my_tasks as $mt): ?>
                         <tr class="hover:bg-slate-50/50 transition-colors">
                             <td class="px-4 py-3 font-semibold text-slate-700 text-xs"><?= date('d M Y', strtotime($mt['tanggal'])) ?></td>
-                            <td class="px-4 py-3 font-black text-slate-800 text-sm"><?= htmlspecialchars($mt['nama_kelas']) ?></td>
+                            <td class="px-4 py-3">
+                                <div class="font-black text-slate-800 text-sm"><?= htmlspecialchars($mt['nama_kelas']) ?></div>
+                                <div class="text-xs text-indigo-600 font-semibold italic"><?= htmlspecialchars($mt['nama_mapel'] ?? '-') ?></div>
+                            </td>
                             <td class="px-4 py-3 text-xs text-slate-600 max-w-md">
                                 <div class="italic leading-relaxed font-semibold">"<?= htmlspecialchars($mt['keterangan_tugas']) ?>"</div>
                                 <div class="flex items-center gap-2.5 mt-2 flex-wrap">
@@ -327,16 +364,26 @@ require_once __DIR__ . '/../includes/header.php';
             <div>
                 <label class="block text-xs font-bold text-slate-700 mb-1">Pilih Kelas</label>
                 <select name="kelas_id" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 bg-white font-bold text-slate-700 text-sm">
-                    <option value="">-- Kelas --</option>
+                    <option value="">-- Pilih Kelas --</option>
                     <?php mysqli_data_seek($classes_list, 0); while ($row = mysqli_fetch_assoc($classes_list)): ?>
                         <option value="<?= $row['id'] ?>"><?= htmlspecialchars($row['nama_kelas']) ?></option>
                     <?php endwhile; ?>
                 </select>
             </div>
             <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1">Tanggal</label>
-                <input type="date" name="tanggal" value="<?= date('Y-m-d') ?>" required class="w-full px-4 py-2 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 font-semibold text-slate-700 text-sm">
+                <label class="block text-xs font-bold text-slate-700 mb-1">Mata Pelajaran</label>
+                <select name="mapel_id" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 bg-white font-bold text-slate-700 text-sm">
+                    <option value="">-- Pilih Mapel --</option>
+                    <?php mysqli_data_seek($mapels_list, 0); while ($row_m = mysqli_fetch_assoc($mapels_list)): ?>
+                        <option value="<?= $row_m['id'] ?>"><?= htmlspecialchars($row_m['nama_mapel']) ?> (<?= htmlspecialchars($row_m['kode_mapel']) ?>)</option>
+                    <?php endwhile; ?>
+                </select>
             </div>
+        </div>
+
+        <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Tanggal Tugas</label>
+            <input type="date" name="tanggal" value="<?= date('Y-m-d') ?>" required class="w-full px-4 py-2 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 font-semibold text-slate-700 text-sm">
         </div>
 
         <div>
@@ -390,14 +437,45 @@ document.addEventListener('DOMContentLoaded', function() {
     const taskForm = document.getElementById('add-tugas-form');
     const taskLat = document.getElementById('task-lat');
     const taskLng = document.getElementById('task-lng');
+    let gpsAttempted = false;
+    let isSubmitting = false;
+
+    // Background pre-fetch GPS location on page load
+    if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+            if (position && position.coords) {
+                taskLat.value = position.coords.latitude;
+                taskLng.value = position.coords.longitude;
+            }
+        }, function(err) {
+            console.warn("Background GPS pre-fetch failed:", err);
+        }, { enableHighAccuracy: false, timeout: 5000, maximumAge: 60000 });
+    }
 
     if (taskForm) {
         taskForm.addEventListener('submit', function(e) {
-            if (taskLat.value && taskLng.value) {
+            if (!taskForm.reportValidity()) {
+                e.preventDefault();
+                return false;
+            }
+
+            if (isSubmitting) {
+                return true;
+            }
+
+            if ((taskLat.value && taskLng.value) || gpsAttempted) {
+                isSubmitting = true;
                 return true;
             }
 
             e.preventDefault();
+            gpsAttempted = true;
+
+            if (!("geolocation" in navigator)) {
+                isSubmitting = true;
+                taskForm.submit();
+                return;
+            }
 
             Swal.fire({
                 title: 'Mendeteksi Lokasi GPS...',
@@ -408,28 +486,41 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
 
-            if ("geolocation" in navigator) {
-                navigator.geolocation.getCurrentPosition(function(position) {
+            let gpsResolved = false;
+
+            // Enforce a hard 3.5 second fallback timeout so UI never hangs
+            const gpsTimeout = setTimeout(() => {
+                if (!gpsResolved) {
+                    gpsResolved = true;
                     Swal.close();
+                    isSubmitting = true;
+                    taskForm.submit();
+                }
+            }, 3500);
+
+            navigator.geolocation.getCurrentPosition(function(position) {
+                if (gpsResolved) return;
+                gpsResolved = true;
+                clearTimeout(gpsTimeout);
+                Swal.close();
+                if (position && position.coords) {
                     taskLat.value = position.coords.latitude;
                     taskLng.value = position.coords.longitude;
-                    taskForm.submit();
-                }, function(error) {
-                    Swal.close();
-                    // Fallback proceed even if GPS fails but log warning
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Akses Lokasi Gagal',
-                        text: 'Koordinat GPS tidak terdeteksi. Tugas akan tetap dikirim tanpa pin lokasi.',
-                        confirmButtonColor: '#4F46E5'
-                    }).then(() => {
-                        taskForm.submit();
-                    });
-                }, { enableHighAccuracy: true, timeout: 8000 });
-            } else {
-                Swal.close();
+                }
+                isSubmitting = true;
                 taskForm.submit();
-            }
+            }, function(error) {
+                if (gpsResolved) return;
+                gpsResolved = true;
+                clearTimeout(gpsTimeout);
+                Swal.close();
+                isSubmitting = true;
+                taskForm.submit();
+            }, {
+                enableHighAccuracy: false,
+                timeout: 3000,
+                maximumAge: 60000
+            });
         });
     }
 });

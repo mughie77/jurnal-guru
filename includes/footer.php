@@ -76,7 +76,14 @@
     <?php endif; ?>
 
     <!-- App Scripts -->
+    <script>
+        window.USER_ROLE = '<?= $_SESSION['role'] ?? '' ?>';
+        window.BASE_URL = '<?= BASE_URL ?>';
+    </script>
     <script src="<?= BASE_URL ?>assets/js/app.js"></script>
+    <?php if (isset($_SESSION['role']) && $_SESSION['role'] == 'guru'): ?>
+        <script src="<?= BASE_URL ?>assets/js/notification.js"></script>
+    <?php endif; ?>
     <script>
         function updateClock() {
             const now = new Date();

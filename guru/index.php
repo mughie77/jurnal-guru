@@ -13,9 +13,36 @@ $guru_foto = $g_data['foto'];
 // Stats for Dashboard
 $total_jurnal = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as total FROM jurnal WHERE guru_id = $guru_id"))['total'];
 $hadir_avg = mysqli_fetch_assoc(mysqli_query($conn, "SELECT AVG(jml_hadir) as avg FROM jurnal WHERE guru_id = $guru_id"))['avg'];
-$recent_jurnals = mysqli_query($conn, "SELECT j.*, k.nama_kelas, mp.nama_mapel FROM jurnal j JOIN kelas k ON j.kelas_id = k.id JOIN mata_pelajaran mp ON j.mapel_id = mp.id WHERE j.guru_id = $guru_id ORDER BY j.tanggal DESC LIMIT 5");
 
-// Check PKL Pembimbing Status safely (verify table existence)
+// Fetch today's schedule for teacher
+$days_map = [
+    'Sunday' => 'Minggu',
+    'Monday' => 'Senin',
+    'Tuesday' => 'Selasa',
+    'Wednesday' => 'Rabu',
+    'Thursday' => 'Kamis',
+    'Friday' => 'Jumat',
+    'Saturday' => 'Sabtu'
+];
+$hari_ini = $days_map[date('l')];
+$today_date = date('Y-m-d');
+
+$q_today_sched = mysqli_query($conn, "SELECT jp.*, k.nama_kelas, m.nama_mapel,
+                    (SELECT COUNT(*) FROM jurnal j WHERE j.guru_id = jp.guru_id AND j.kelas_id = jp.kelas_id AND j.tanggal = '$today_date' AND (j.jadwal_id = jp.id OR (j.jadwal_id IS NULL AND j.mapel_id = jp.mapel_id))) as total_jurnal
+                  FROM jadwal_pelajaran jp
+                  JOIN kelas k ON jp.kelas_id = k.id
+                  JOIN mata_pelajaran m ON jp.mapel_id = m.id
+                  WHERE jp.guru_id = $guru_id AND jp.hari = '$hari_ini' AND (jp.tahun_pelajaran_id = $active_tahun_id OR jp.tahun_pelajaran_id IS NULL)
+                  ORDER BY jp.jam_mulai ASC, jp.jam_ke ASC");
+
+$today_schedules = [];
+if ($q_today_sched) {
+    while ($sched = mysqli_fetch_assoc($q_today_sched)) {
+        $today_schedules[] = $sched;
+    }
+}
+
+// Check PKL Pembimbing Status safely
 $is_pkl_pembimbing = false;
 $chk_tpkl = mysqli_query($conn, "SHOW TABLES LIKE 'tempat_pkl'");
 if ($chk_tpkl && mysqli_num_rows($chk_tpkl) > 0) {
@@ -25,7 +52,7 @@ if ($chk_tpkl && mysqli_num_rows($chk_tpkl) > 0) {
     }
 }
 
-$page_title = "Beranda Guru";
+$page_title = "Dashboard Guru";
 
 // Compute time greeting
 $hour = (int)date('H');
@@ -44,313 +71,262 @@ require_once __DIR__ . '/../includes/header.php';
 <style>
     #sidebar, header { display: none; }
     .lg\:ml-64 { margin-left: 0; }
-    body { background-color: #F8FAFC; }
+    body { background-color: #F8FAFC; font-family: 'Plus Jakarta Sans', sans-serif; }
 </style>
 
 <div class="bg-slate-50 min-h-screen pb-24">
-    <!-- Main Content (Full-width max-w-full) -->
-    <div class="p-4 sm:p-6 lg:p-8 max-w-full w-full mx-auto">
-        <div class="flex items-center justify-between mb-12">
-            <div class="flex items-center gap-6">
-                <a href="profil.php" class="w-20 h-20 rounded-full bg-indigo-600 border border-slate-200 overflow-hidden flex items-center justify-center block hover:scale-105 transition-transform">
-                    <?php if(!empty($guru_foto)): ?>
-                        <img src="<?= BASE_URL ?>uploads/guru/<?= $guru_foto ?>" class="w-full h-full object-cover rounded-none">
-                    <?php else: ?>
-                        <i class="fa fa-user-tie text-white text-3xl"></i>
-                    <?php endif; ?>
+    <div class="p-4 sm:p-6 lg:p-8 max-w-xl sm:max-w-4xl lg:max-w-6xl mx-auto space-y-6">
+
+        <!-- Top Greeting & Profile Header -->
+        <div class="flex items-center justify-between pt-2">
+            <div>
+                <p class="text-slate-400 text-sm font-medium tracking-wide"><?= $greeting ?>,</p>
+                <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-800 tracking-tight leading-tight">
+                    <?= htmlspecialchars($_SESSION['nama_lengkap']) ?>
+                </h1>
+            </div>
+            <a href="profil.php" class="w-14 h-14 rounded-full bg-indigo-600 border-2 border-white shadow-md overflow-hidden flex items-center justify-center shrink-0 hover:scale-105 transition-transform">
+                <?php if(!empty($guru_foto)): ?>
+                    <img src="<?= BASE_URL ?>uploads/guru/<?= $guru_foto ?>" class="w-full h-full object-cover">
+                <?php else: ?>
+                    <i class="fa fa-user-tie text-white text-xl"></i>
+                <?php endif; ?>
+            </a>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="relative">
+            <input type="text" id="menuSearchInput" onkeyup="filterMenus()" placeholder="Search menu, jadwal, rekap..."
+                   class="w-full pl-5 pr-14 py-3.5 bg-white rounded-2xl border border-slate-200 shadow-sm focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 text-sm font-medium text-slate-700 placeholder-slate-400 transition-all">
+            <button type="button" class="absolute right-2 top-2 bottom-2 w-10 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl flex items-center justify-center transition-colors shadow-sm">
+                <i class="fa fa-search text-xs"></i>
+            </button>
+        </div>
+
+        <!-- Menu Categories (Tile Menu) -->
+        <div>
+            <div class="flex items-center justify-between mb-3.5">
+                <h3 class="font-bold text-slate-800 text-base tracking-tight">Kategori Menu</h3>
+                <a href="semua_menu.php" class="text-xs font-bold text-indigo-600 hover:text-indigo-800">Lihat Semua</a>
+            </div>
+
+            <div class="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-8 gap-3 sm:gap-4" id="menuGrid">
+                <!-- Tile 1 -->
+                <a href="isi_absensi.php" class="menu-item flex flex-col items-center group text-center" data-title="isi jurnal absensi agenda mengajar">
+                    <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-indigo-500 text-white flex items-center justify-center text-xl shadow-md group-hover:scale-105 transition-transform">
+                        <i class="fa fa-edit"></i>
+                    </div>
+                    <span class="text-xs font-semibold text-slate-700 mt-2 line-clamp-1">Isi Jurnal</span>
                 </a>
-                <div>
-                    <h1 class="text-3xl font-normal text-slate-800 tracking-tight italic leading-tight"><?= $greeting ?><br /><span class="text-indigo-600 text-xl font-normal leading-normal"><?= htmlspecialchars($_SESSION['nama_lengkap']) ?></span></h1>
-                    <p class="text-slate-400 font-medium tracking-wide mt-1"><?= date('l, d F Y') ?></p>
-                </div>
+
+                <!-- Tile 2 -->
+                <a href="rekap_absen.php" class="menu-item flex flex-col items-center group text-center" data-title="rekap absensi kehadiran siswa">
+                    <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-amber-500 text-white flex items-center justify-center text-xl shadow-md group-hover:scale-105 transition-transform">
+                        <i class="fa fa-chart-line"></i>
+                    </div>
+                    <span class="text-xs font-semibold text-slate-700 mt-2 line-clamp-1">Rekap Absen</span>
+                </a>
+
+                <!-- Tile 3 -->
+                <a href="riwayat.php" class="menu-item flex flex-col items-center group text-center" data-title="riwayat jurnal arsip agenda">
+                    <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-teal-500 text-white flex items-center justify-center text-xl shadow-md group-hover:scale-105 transition-transform">
+                        <i class="fa fa-history"></i>
+                    </div>
+                    <span class="text-xs font-semibold text-slate-700 mt-2 line-clamp-1">Riwayat</span>
+                </a>
+
+                <!-- Tile 4 -->
+                <a href="perangkat.php" class="menu-item flex flex-col items-center group text-center" data-title="perangkat ajar modul buku rpp">
+                    <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-rose-500 text-white flex items-center justify-center text-xl shadow-md group-hover:scale-105 transition-transform">
+                        <i class="fa fa-folder-open"></i>
+                    </div>
+                    <span class="text-xs font-semibold text-slate-700 mt-2 line-clamp-1">Perangkat</span>
+                </a>
+
+                <!-- Tile 5 -->
+                <a href="tugas_tidak_masuk.php" class="menu-item flex flex-col items-center group text-center" data-title="piket tugas kelas tidak masuk">
+                    <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-sky-500 text-white flex items-center justify-center text-xl shadow-md group-hover:scale-105 transition-transform">
+                        <i class="fa fa-clipboard-list"></i>
+                    </div>
+                    <span class="text-xs font-semibold text-slate-700 mt-2 line-clamp-1">Tugas Piket</span>
+                </a>
+
+                <!-- Tile 6 -->
+                <a href="rekap_buku_kejadian.php" class="menu-item flex flex-col items-center group text-center" data-title="buku kejadian insiden siswa">
+                    <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-emerald-500 text-white flex items-center justify-center text-xl shadow-md group-hover:scale-105 transition-transform">
+                        <i class="fa fa-book-medical"></i>
+                    </div>
+                    <span class="text-xs font-semibold text-slate-700 mt-2 line-clamp-1">Kejadian</span>
+                </a>
+
+                <!-- Tile 7 -->
+                <a href="rekap_pengaduan.php" class="menu-item flex flex-col items-center group text-center" data-title="pengaduan siswa konseling">
+                    <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-purple-500 text-white flex items-center justify-center text-xl shadow-md group-hover:scale-105 transition-transform">
+                        <i class="fa fa-comments"></i>
+                    </div>
+                    <span class="text-xs font-semibold text-slate-700 mt-2 line-clamp-1">Pengaduan</span>
+                </a>
+
+                <!-- Tile 8 -->
+                <a href="semua_menu.php" class="menu-item flex flex-col items-center group text-center" data-title="semua menu fitur lengkap">
+                    <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-slate-800 text-white flex items-center justify-center text-xl shadow-md group-hover:scale-105 transition-transform">
+                        <i class="fa fa-th-large"></i>
+                    </div>
+                    <span class="text-xs font-semibold text-slate-700 mt-2 line-clamp-1">Lainnya</span>
+                </a>
             </div>
         </div>
 
-        <!-- Pengumuman Terbaru Widget -->
+        <!-- Jadwal Pelajaran Hari Ini (Dibawah Tile Menu) -->
+        <div id="jadwalSection">
+            <div class="flex items-center justify-between mb-3.5">
+                <h3 class="font-bold text-slate-800 text-base tracking-tight flex items-center gap-2">
+                    Jadwal Pelajaran Hari Ini <span class="text-xs px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-700 font-bold"><?= $hari_ini ?></span>
+                </h3>
+                <span class="text-xs font-bold text-slate-400"><?= count($today_schedules) ?> Sesi</span>
+            </div>
+
+            <?php if (!empty($today_schedules)): ?>
+                <div class="space-y-3.5" id="scheduleList">
+                    <?php foreach ($today_schedules as $sched):
+                        $is_filled = ((int)$sched['total_jurnal']) > 0;
+                    ?>
+                        <div class="schedule-item bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-5 shadow-sm space-y-3 hover:border-indigo-300 transition-all" data-title="<?= strtolower($sched['nama_kelas'] . ' ' . $sched['nama_mapel']) ?>">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center text-base shrink-0 font-bold">
+                                        <i class="fa fa-chalkboard-teacher"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-extrabold text-slate-800 text-base leading-tight"><?= htmlspecialchars($sched['nama_kelas']) ?></h4>
+                                        <p class="text-xs text-slate-500 font-medium mt-0.5"><?= htmlspecialchars($sched['nama_mapel']) ?></p>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <?php if ($is_filled): ?>
+                                        <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 flex items-center gap-1">
+                                            <i class="fa fa-check-circle"></i> Selesai
+                                        </span>
+                                    <?php else: ?>
+                                        <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-800 flex items-center gap-1">
+                                            <i class="fa fa-clock"></i> Belum Diisi
+                                        </span>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3 pt-2">
+                                <div class="p-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 text-white flex flex-col justify-between">
+                                    <span class="text-[10px] font-bold uppercase tracking-wider text-white/80">Waktu / Jam</span>
+                                    <span class="text-sm font-extrabold mt-0.5">
+                                        <?php if (!empty($sched['jam_mulai'])): ?>
+                                            <?= date('H:i', strtotime($sched['jam_mulai'])) ?> WIB
+                                        <?php else: ?>
+                                            Jam Ke-<?= htmlspecialchars($sched['jam_ke']) ?>
+                                        <?php endif; ?>
+                                    </span>
+                                </div>
+
+                                <div class="p-3 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white flex flex-col justify-between">
+                                    <span class="text-[10px] font-bold uppercase tracking-wider text-white/80">Aksi Jurnal</span>
+                                    <?php if ($is_filled): ?>
+                                        <span class="text-xs font-bold mt-0.5 text-white/90">Terisi</span>
+                                    <?php else: ?>
+                                        <a href="isi_absensi.php" class="text-xs font-extrabold mt-0.5 underline hover:text-white flex items-center gap-1">
+                                            Isi Sekarang <i class="fa fa-arrow-right text-[10px]"></i>
+                                        </a>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php else: ?>
+                <div class="p-6 bg-white border border-slate-200/80 rounded-2xl text-center shadow-sm">
+                    <i class="fa fa-calendar-check text-slate-300 text-3xl mb-2"></i>
+                    <p class="text-xs text-slate-500 font-medium">Tidak ada jadwal mengajar terdaftar untuk hari <?= $hari_ini ?>.</p>
+                </div>
+            <?php endif; ?>
+        </div>
+
+        <!-- Pengumuman Terbaru -->
         <?php
         $q_announcements = mysqli_query($conn, "SELECT * FROM pengumuman WHERE target IN ('semua', 'guru') ORDER BY created_at DESC LIMIT 3");
         if (mysqli_num_rows($q_announcements) > 0):
         ?>
-        <div class="mb-12">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="font-black text-slate-800 italic uppercase tracking-wider text-base flex items-center gap-2">
-                    <i class="fa fa-bullhorn text-indigo-600"></i> Pengumuman Terbaru
-                </h3>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div id="pengumumanSection">
+            <h3 class="font-bold text-slate-800 text-base tracking-tight mb-3 flex items-center gap-2">
+                <i class="fa fa-bullhorn text-indigo-600"></i> Pengumuman Terbaru
+            </h3>
+            <div class="space-y-3">
                 <?php while ($ann = mysqli_fetch_assoc($q_announcements)): ?>
-                <div class="lux-card p-6 bg-white border border-slate-100 shadow-xl rounded-3xl flex flex-col justify-between hover:border-indigo-200 transition-all">
-                    <div>
-                        <div class="flex items-center justify-between gap-2 mb-2">
-                            <span class="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-indigo-50 text-indigo-600 border border-indigo-100">
-                                <?= $ann['target'] == 'guru' ? 'Khusus Guru' : 'Semua' ?>
-                            </span>
-                            <span class="text-[10px] font-bold text-slate-400">
-                                <?= date('d M Y', strtotime($ann['created_at'])) ?>
-                            </span>
-                        </div>
-                        <h4 class="font-black text-slate-800 text-base mb-2 line-clamp-1"><?= htmlspecialchars($ann['judul']) ?></h4>
-                        <p class="text-xs text-slate-500 line-clamp-3 leading-relaxed mb-4"><?= htmlspecialchars($ann['isi']) ?></p>
+                <div class="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-sm hover:border-indigo-300 transition-all">
+                    <div class="flex items-center justify-between gap-2 mb-1.5">
+                        <span class="px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider bg-indigo-50 text-indigo-600 border border-indigo-100">
+                            <?= $ann['target'] == 'guru' ? 'Khusus Guru' : 'Semua' ?>
+                        </span>
+                        <span class="text-[10px] text-slate-400 font-medium">
+                            <?= date('d M Y', strtotime($ann['created_at'])) ?>
+                        </span>
                     </div>
-                    <div class="pt-3 border-t border-slate-50 flex items-center justify-between">
-                        <button type="button" onclick='showAnnouncementModal(<?= htmlspecialchars(json_encode($ann), ENT_QUOTES, 'UTF-8') ?>)' class="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
-                            Baca Selengkapnya <i class="fa fa-arrow-right text-[10px]"></i>
-                        </button>
-                        <?php if (!empty($ann['file_lampiran'])): ?>
-                        <a href="<?= BASE_URL ?>uploads/pengumuman/<?= $ann['file_lampiran'] ?>" target="_blank" class="text-[10px] font-black text-slate-500 bg-slate-100 hover:bg-slate-200 px-2.5 py-1 rounded-lg flex items-center gap-1 transition-colors">
-                            <i class="fa fa-paperclip text-indigo-500"></i> Lampiran
-                        </a>
-                        <?php endif; ?>
-                    </div>
+                    <h4 class="font-bold text-slate-800 text-sm mb-1"><?= htmlspecialchars($ann['judul']) ?></h4>
+                    <p class="text-xs text-slate-500 line-clamp-2 leading-relaxed mb-2"><?= htmlspecialchars($ann['isi']) ?></p>
+                    <button type="button" onclick='showAnnouncementModal(<?= htmlspecialchars(json_encode($ann), ENT_QUOTES, 'UTF-8') ?>)' class="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
+                        Baca Selengkapnya <i class="fa fa-arrow-right text-[9px]"></i>
+                    </button>
                 </div>
                 <?php endwhile; ?>
             </div>
         </div>
         <?php endif; ?>
 
+        <!-- Quick Summary Stats -->
+        <div class="grid grid-cols-2 gap-3 pt-2">
+            <div class="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-sm text-center">
+                <p class="text-[10px] font-bold uppercase text-slate-400 tracking-wider">Total Jurnal</p>
+                <h3 class="text-2xl font-extrabold text-slate-800 mt-1"><?= number_format($total_jurnal) ?></h3>
+            </div>
 
-        <!-- Stats Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-            <div class="lux-card p-8 bg-indigo-600 text-white shadow-indigo-200 border-none relative overflow-hidden group">
-                <div class="relative z-10">
-                    <p class="text-indigo-100 text-xs font-black uppercase tracking-widest mb-4">Total Jurnal</p>
-                    <h2 class="text-5xl font-black italic"><?= $total_jurnal ?></h2>
-                    <p class="mt-4 text-xs font-bold bg-white/20 inline-block px-3 py-1 rounded-full">+12% dari bulan lalu</p>
-                </div>
-                <i class="fa fa-book-open absolute -bottom-4 -right-4 text-8xl opacity-10 group-hover:scale-110 transition-transform"></i>
-            </div>
-            <div class="lux-card p-8 bg-white border-slate-100">
-                <p class="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-4">Rata-rata Kehadiran</p>
-                <h2 class="text-5xl font-black italic text-slate-800"><?= round((float)($hadir_avg ?? 0), 1) ?></h2>
-                <div class="mt-6 w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-                    <div class="bg-emerald-500 h-full w-[85%] rounded-full"></div>
-                </div>
-            </div>
-            <div class="lux-card p-8 bg-white border-slate-100 flex flex-col justify-center items-center text-center group cursor-pointer hover:border-indigo-500 transition-all">
-                <a href="isi_absensi.php" class="contents">
-                    <div class="w-16 h-16 rounded-2xl bg-slate-50 text-indigo-600 flex items-center justify-center mb-4 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-500 shadow-inner">
-                        <i class="fa fa-user-check text-2xl"></i>
-                    </div>
-                    <p class="font-black text-slate-800 italic uppercase tracking-tighter">Mulai Absensi & Jurnal</p>
-                </a>
+            <div class="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-sm text-center">
+                <p class="text-[10px] font-bold uppercase text-slate-400 tracking-wider">Rata Kehadiran</p>
+                <h3 class="text-2xl font-extrabold text-slate-800 mt-1"><?= round((float)($hadir_avg ?? 0), 1) ?></h3>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-            <!-- Quick Actions Grid Design -->
-            <?php
-            $wali_info = get_wali_kelas_info();
-            $pending_permits_count = 0;
-            if ($wali_info) {
-                $w_kelas_id = $wali_info['kelas_id'];
-                $q_perm = mysqli_query($conn, "SELECT COUNT(*) as pending_count FROM absensi_harian ah
-                                                JOIN siswa_kelas sk ON ah.siswa_id = sk.siswa_id
-                                                WHERE sk.kelas_id = $w_kelas_id AND ah.status_verifikasi = 'pending' AND ah.status IN ('Izin', 'Sakit')");
-                if ($p_data = mysqli_fetch_assoc($q_perm)) {
-                    $pending_permits_count = (int)$p_data['pending_count'];
-                }
-            }
-
-            $bk_info = get_bk_info();
-            $open_chats_count = 0;
-            if ($bk_info) {
-                $bk_guru_id = $bk_info['guru_id'];
-                $q_chats = mysqli_query($conn, "SELECT COUNT(*) as open_count FROM konsultasi WHERE guru_id = $bk_guru_id AND status = 'open'");
-                if ($c_data = mysqli_fetch_assoc($q_chats)) {
-                    $open_chats_count = (int)$c_data['open_count'];
-                }
-            }
-
-            $grid_cols_class = ($wali_info || $bk_info || $is_pkl_pembimbing) ? "grid-cols-2 lg:grid-cols-3" : "grid-cols-2";
-            ?>
-            <div class="grid <?= $grid_cols_class ?> gap-3 sm:gap-4 col-span-1 lg:col-span-2">
-                <a href="isi_absensi.php" class="p-3.5 sm:p-6 rounded-2xl sm:rounded-[32px] bg-indigo-600 text-white shadow-xl shadow-indigo-200 flex flex-col gap-2.5 sm:gap-4 group transition-all hover:scale-[1.02] active:scale-95">
-                    <div class="w-8 h-8 sm:w-12 sm:h-12 rounded-xl bg-white/20 flex items-center justify-center text-sm sm:text-xl shadow-inner group-hover:bg-white/30 transition-all">
-                        <i class="fa fa-user-check"></i>
-                    </div>
-                    <div>
-                        <div class="text-xs sm:text-lg font-black italic tracking-tighter uppercase leading-none">Isi Jurnal</div>
-                        <div class="text-[7px] sm:text-[9px] font-bold text-indigo-100 uppercase tracking-widest mt-1 opacity-70">Input Aktivitas</div>
-                    </div>
-                </a>
-
-                <a href="rekap_absen.php" class="p-3.5 sm:p-6 rounded-2xl sm:rounded-[32px] bg-emerald-600 text-white shadow-xl shadow-emerald-200 flex flex-col gap-2.5 sm:gap-4 group transition-all hover:scale-[1.02] active:scale-95">
-                    <div class="w-8 h-8 sm:w-12 sm:h-12 rounded-xl bg-white/20 flex items-center justify-center text-sm sm:text-xl shadow-inner group-hover:bg-white/30 transition-all">
-                        <i class="fa fa-chart-line"></i>
-                    </div>
-                    <div>
-                        <div class="text-xs sm:text-lg font-black italic tracking-tighter uppercase leading-none">Rekap Absensi</div>
-                        <div class="text-[7px] sm:text-[9px] font-bold text-emerald-100 uppercase tracking-widest mt-1 opacity-70">Laporan Kehadiran</div>
-                    </div>
-                </a>
-
-                <a href="riwayat.php" class="p-3.5 sm:p-6 rounded-2xl sm:rounded-[32px] bg-amber-500 text-white shadow-xl shadow-amber-200 flex flex-col gap-2.5 sm:gap-4 group transition-all hover:scale-[1.02] active:scale-95">
-                    <div class="w-8 h-8 sm:w-12 sm:h-12 rounded-xl bg-white/20 flex items-center justify-center text-sm sm:text-xl shadow-inner group-hover:bg-white/30 transition-all">
-                        <i class="fa fa-history"></i>
-                    </div>
-                    <div>
-                        <div class="text-xs sm:text-lg font-black italic tracking-tighter uppercase leading-none">Riwayat Jurnal</div>
-                        <div class="text-[7px] sm:text-[9px] font-bold text-amber-100 uppercase tracking-widest mt-1 opacity-70">Arsip Mengajar</div>
-                    </div>
-                </a>
-
-                <a href="rekap_buku_kejadian.php" class="p-3.5 sm:p-6 rounded-2xl sm:rounded-[32px] bg-amber-600 text-white shadow-xl shadow-amber-200 flex flex-col gap-2.5 sm:gap-4 group transition-all hover:scale-[1.02] active:scale-95">
-                    <div class="w-8 h-8 sm:w-12 sm:h-12 rounded-xl bg-white/20 flex items-center justify-center text-sm sm:text-xl shadow-inner group-hover:bg-white/30 transition-all">
-                        <i class="fa fa-book-bookmark"></i>
-                    </div>
-                    <div>
-                        <div class="text-xs sm:text-lg font-black italic tracking-tighter uppercase leading-none">Buku Kejadian</div>
-                        <div class="text-[7px] sm:text-[9px] font-bold text-amber-100 uppercase tracking-widest mt-1 opacity-70">Catatan Kejadian</div>
-                    </div>
-                </a>
-
-                <a href="perangkat.php" class="p-3.5 sm:p-6 rounded-2xl sm:rounded-[32px] bg-rose-500 text-white shadow-xl shadow-rose-200 flex flex-col gap-2.5 sm:gap-4 group transition-all hover:scale-[1.02] active:scale-95">
-                    <div class="w-8 h-8 sm:w-12 sm:h-12 rounded-xl bg-white/20 flex items-center justify-center text-sm sm:text-xl shadow-inner group-hover:bg-white/30 transition-all">
-                        <i class="fa fa-folder-open"></i>
-                    </div>
-                    <div>
-                        <div class="text-xs sm:text-lg font-black italic tracking-tighter uppercase leading-none">Perangkat</div>
-                        <div class="text-[7px] sm:text-[9px] font-bold text-rose-100 uppercase tracking-widest mt-1 opacity-70">Upload Media</div>
-                    </div>
-                </a>
-
-                <a href="rekan.php" class="p-3.5 sm:p-6 rounded-2xl sm:rounded-[32px] bg-sky-500 text-white shadow-xl shadow-sky-200 flex flex-col gap-2.5 sm:gap-4 group transition-all hover:scale-[1.02] active:scale-95">
-                    <div class="w-8 h-8 sm:w-12 sm:h-12 rounded-xl bg-white/20 flex items-center justify-center text-sm sm:text-xl shadow-inner group-hover:bg-white/30 transition-all">
-                        <i class="fa fa-users"></i>
-                    </div>
-                    <div>
-                        <div class="text-xs sm:text-lg font-black italic tracking-tighter uppercase leading-none">Rekan Guru</div>
-                        <div class="text-[7px] sm:text-[9px] font-bold text-sky-100 uppercase tracking-widest mt-1 opacity-70">Kontak Sejawat</div>
-                    </div>
-                </a>
-
-                <a href="kritik_saran.php" class="p-3.5 sm:p-6 rounded-2xl sm:rounded-[32px] bg-indigo-500 text-white shadow-xl shadow-indigo-200 flex flex-col gap-2.5 sm:gap-4 group transition-all hover:scale-[1.02] active:scale-95">
-                    <div class="w-8 h-8 sm:w-12 sm:h-12 rounded-xl bg-white/20 flex items-center justify-center text-sm sm:text-xl shadow-inner group-hover:bg-white/30 transition-all">
-                        <i class="fa fa-comment-dots"></i>
-                    </div>
-                    <div>
-                        <div class="text-xs sm:text-lg font-black italic tracking-tighter uppercase leading-none">Kritik & Saran</div>
-                        <div class="text-[7px] sm:text-[9px] font-bold text-indigo-100 uppercase tracking-widest mt-1 opacity-70">Umpan Balik</div>
-                    </div>
-                </a>
-
-                <a href="tugas_tidak_masuk.php" class="p-3.5 sm:p-6 rounded-2xl sm:rounded-[32px] bg-rose-600 text-white shadow-xl shadow-rose-200 flex flex-col gap-2.5 sm:gap-4 group transition-all hover:scale-[1.02] active:scale-95">
-                    <div class="w-8 h-8 sm:w-12 sm:h-12 rounded-xl bg-white/20 flex items-center justify-center text-sm sm:text-xl shadow-inner group-hover:bg-white/30 transition-all">
-                        <i class="fa fa-clipboard-list"></i>
-                    </div>
-                    <div>
-                        <div class="text-xs sm:text-lg font-black italic tracking-tighter uppercase leading-none">Tugas Guru</div>
-                        <div class="text-[7px] sm:text-[9px] font-bold text-rose-100 uppercase tracking-widest mt-1 opacity-70">Guru Tidak Masuk</div>
-                    </div>
-                </a>
-
-                <?php if ($is_pkl_pembimbing): ?>
-                <a href="pkl_index.php" class="p-3.5 sm:p-6 rounded-2xl sm:rounded-[32px] bg-slate-900 text-white shadow-xl shadow-slate-300 flex flex-col gap-2.5 sm:gap-4 group transition-all hover:scale-[1.02] active:scale-95 border-2 border-indigo-400">
-                    <div class="w-8 h-8 sm:w-12 sm:h-12 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-sm sm:text-xl shadow-inner">
-                        <i class="fa fa-briefcase"></i>
-                    </div>
-                    <div>
-                        <div class="text-xs sm:text-lg font-black italic tracking-tighter uppercase leading-none text-indigo-400">Pembimbing PKL</div>
-                        <div class="text-[7px] sm:text-[9px] font-bold text-slate-300 uppercase tracking-widest mt-1">Portal Menu PKL</div>
-                    </div>
-                </a>
-                <?php endif; ?>
-
-
-                <?php if ($wali_info): ?>
-                <a href="<?= BASE_URL ?>admin/rekap_persiswa.php" class="p-3.5 sm:p-6 rounded-2xl sm:rounded-[32px] bg-violet-600 text-white shadow-xl shadow-violet-200 flex flex-col gap-2.5 sm:gap-4 group transition-all hover:scale-[1.02] active:scale-95 col-span-1">
-                    <div class="w-8 h-8 sm:w-12 sm:h-12 rounded-xl bg-white/20 flex items-center justify-center text-sm sm:text-xl shadow-inner group-hover:bg-white/30 transition-all">
-                        <i class="fa fa-user-check"></i>
-                    </div>
-                    <div>
-                        <div class="text-xs sm:text-lg font-black italic tracking-tighter uppercase leading-none">Rekap Kelas</div>
-                        <div class="text-[7px] sm:text-[9px] font-bold text-violet-100 uppercase tracking-widest mt-1 opacity-70">Wali: <?= htmlspecialchars($wali_info['nama_kelas']) ?></div>
-                    </div>
-                </a>
-
-                <a href="rekap_izin.php" class="p-3.5 sm:p-6 rounded-2xl sm:rounded-[32px] bg-rose-600 text-white shadow-xl shadow-rose-200 flex flex-col gap-2.5 sm:gap-4 group transition-all hover:scale-[1.02] active:scale-95 col-span-1 relative">
-                    <?php if ($pending_permits_count > 0): ?>
-                        <span class="absolute top-2 right-2 sm:top-4 sm:right-4 bg-yellow-400 text-slate-950 font-black text-[7px] sm:text-[10px] uppercase px-1.5 py-0.5 sm:px-2 sm:py-0.5 rounded-full animate-bounce shadow-md">
-                            <?= $pending_permits_count ?> PENDING
-                        </span>
-                    <?php endif; ?>
-                    <div class="w-8 h-8 sm:w-12 sm:h-12 rounded-xl bg-white/20 flex items-center justify-center text-sm sm:text-xl shadow-inner group-hover:bg-white/30 transition-all">
-                        <i class="fa fa-envelope-open-text"></i>
-                    </div>
-                    <div>
-                        <div class="text-xs sm:text-lg font-black italic tracking-tighter uppercase leading-none">Siswa Izin</div>
-                        <div class="text-[7px] sm:text-[9px] font-bold text-rose-100 uppercase tracking-widest mt-1 opacity-70">Verifikasi Izin/Sakit</div>
-                    </div>
-                </a>
-                <?php endif; ?>
-
-                <?php if ($bk_info): ?>
-                <a href="rekap_pengaduan.php" class="p-3.5 sm:p-6 rounded-2xl sm:rounded-[32px] bg-rose-600 text-white shadow-xl shadow-rose-200 flex flex-col gap-2.5 sm:gap-4 group transition-all hover:scale-[1.02] active:scale-95 col-span-1">
-                    <div class="w-8 h-8 sm:w-12 sm:h-12 rounded-xl bg-white/20 flex items-center justify-center text-sm sm:text-xl shadow-inner group-hover:bg-white/30 transition-all">
-                        <i class="fa fa-bullhorn"></i>
-                    </div>
-                    <div>
-                        <div class="text-xs sm:text-lg font-black italic tracking-tighter uppercase leading-none">Daftar Pengaduan</div>
-                        <div class="text-[7px] sm:text-[9px] font-bold text-rose-100 uppercase tracking-widest mt-1 opacity-70">Laporan Pengaduan Siswa</div>
-                    </div>
-                </a>
-
-                <a href="konsultasi.php" class="p-3.5 sm:p-6 rounded-2xl sm:rounded-[32px] bg-indigo-500 text-white shadow-xl shadow-indigo-200 flex flex-col gap-2.5 sm:gap-4 group transition-all hover:scale-[1.02] active:scale-95 col-span-1 relative">
-                    <?php if ($open_chats_count > 0): ?>
-                        <span class="absolute top-2 right-2 sm:top-4 sm:right-4 bg-yellow-400 text-slate-950 font-black text-[7px] sm:text-[10px] uppercase px-1.5 py-0.5 sm:px-2 sm:py-0.5 rounded-full animate-bounce shadow-md">
-                            <?= $open_chats_count ?> CHAT
-                        </span>
-                    <?php endif; ?>
-                    <div class="w-8 h-8 sm:w-12 sm:h-12 rounded-xl bg-white/20 flex items-center justify-center text-sm sm:text-xl shadow-inner group-hover:bg-white/30 transition-all">
-                        <i class="fa fa-comments"></i>
-                    </div>
-                    <div>
-                        <div class="text-xs sm:text-lg font-black italic tracking-tighter uppercase leading-none">Chat Konsultasi</div>
-                        <div class="text-[7px] sm:text-[9px] font-bold text-indigo-100 uppercase tracking-widest mt-1 opacity-70">Konsultasi BK Online</div>
-                    </div>
-                </a>
-                <?php endif; ?>
-            </div>
-
-            <!-- Activity Table -->
-            <div class="lux-card overflow-hidden border-none shadow-2xl">
-                <div class="p-6 border-b border-slate-50 flex items-center justify-between">
-                    <h3 class="font-black text-slate-800 italic uppercase tracking-widest text-sm">Aktivitas Terakhir</h3>
-                    <a href="riwayat.php" class="text-xs font-bold text-indigo-600 hover:underline">Lihat Semua</a>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left">
-                        <thead>
-                            <tr class="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-50">
-                                <th class="px-6 py-4">Tanggal</th>
-                                <th class="px-6 py-4">Pelajaran</th>
-                                <th class="px-6 py-4 text-center">Kelas</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-50">
-                            <?php mysqli_data_seek($recent_jurnals, 0); while($j = mysqli_fetch_assoc($recent_jurnals)): ?>
-                            <tr class="hover:bg-slate-50/50 transition-colors">
-                                <td class="px-6 py-4 text-xs font-bold text-slate-700"><?= date('d M', strtotime($j['tanggal'])) ?></td>
-                                <td class="px-6 py-4 font-bold text-slate-800 text-sm italic"><?= htmlspecialchars($j['nama_mapel']) ?></td>
-                                <td class="px-6 py-4 text-center">
-                                    <span class="px-2 py-1 rounded bg-slate-100 text-slate-500 text-[10px] font-black uppercase border border-slate-200"><?= $j['nama_kelas'] ?></span>
-                                </td>
-                            </tr>
-                            <?php endwhile; ?>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
     </div>
 </div>
 
 <script>
+function filterMenus() {
+    const query = document.getElementById('menuSearchInput').value.toLowerCase().trim();
+    const menuItems = document.querySelectorAll('.menu-item');
+    const scheduleItems = document.querySelectorAll('.schedule-item');
+
+    menuItems.forEach(item => {
+        const title = item.getAttribute('data-title') || '';
+        if (title.includes(query)) {
+            item.classList.remove('hidden');
+        } else {
+            item.classList.add('hidden');
+        }
+    });
+
+    scheduleItems.forEach(item => {
+        const title = item.getAttribute('data-title') || '';
+        if (title.includes(query)) {
+            item.classList.remove('hidden');
+        } else {
+            item.classList.add('hidden');
+        }
+    });
+}
+
 function showAnnouncementModal(ann) {
     let lampiranHtml = '';
     if (ann.file_lampiran) {
         lampiranHtml = `<div class="mt-4 pt-4 border-t border-slate-100 text-left">
-            <a href="<?= BASE_URL ?>uploads/pengumuman/${ann.file_lampiran}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 font-bold rounded-xl text-xs hover:bg-indigo-100 transition-colors">
+            <a href="<?= BASE_URL ?>uploads/pengumuman/${ann.file_lampiran}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 font-semibold rounded-xl text-xs hover:bg-indigo-100 transition-colors">
                 <i class="fa fa-paperclip"></i> Unduh Lampiran Berkas
             </a>
         </div>`;
@@ -358,12 +334,12 @@ function showAnnouncementModal(ann) {
 
     Swal.fire({
         title: ann.judul,
-        html: `<div class="text-left text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">${new Date(ann.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+        html: `<div class="text-left text-xs font-semibold text-slate-400 uppercase tracking-widest mb-3">${new Date(ann.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
                <div class="text-left text-sm text-slate-700 leading-relaxed whitespace-pre-line max-h-[60vh] overflow-y-auto pr-1">${ann.isi}</div>
                ${lampiranHtml}`,
         confirmButtonColor: '#4f46e5',
         confirmButtonText: 'Tutup',
-        customClass: { popup: 'rounded-3xl max-w-[95vw] sm:max-w-xl w-full p-4 sm:p-6', title: 'font-black italic text-left text-slate-800 text-xl' }
+        customClass: { popup: 'rounded-3xl max-w-[95vw] sm:max-w-xl w-full p-4 sm:p-6', title: 'font-bold text-left text-slate-800 text-lg' }
     });
 }
 </script>

@@ -10,6 +10,7 @@ if (!isset($_SESSION['draft_jurnal'])) {
 }
 
 $draft = $_SESSION['draft_jurnal'];
+$jadwal_id = isset($draft['jadwal_id']) ? (int)$draft['jadwal_id'] : NULL;
 $guru_id = $draft['guru_id'];
 $mid = (int)$draft['mapel_id'];
 $kid = (int)$draft['kelas_id'];
@@ -131,8 +132,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['simpan_jurnal'])) {
             mysqli_begin_transaction($conn);
         try {
             // 1. Insert into jurnal
-            $stmt = mysqli_prepare($conn, "INSERT INTO jurnal (guru_id, mapel_id, kelas_id, tahun_pelajaran_id, tanggal, jam_ke, materi, keterangan, latitude, longitude, jml_hadir, jml_sakit, jml_izin, jml_alfa) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, 0, 0)");
-            mysqli_stmt_bind_param($stmt, "iiiissssss", $guru_id, $mid, $kid, $tahun_pelajaran_id, $tanggal, $jam_ke, $materi, $keterangan, $latitude, $longitude);
+            $stmt = mysqli_prepare($conn, "INSERT INTO jurnal (guru_id, mapel_id, kelas_id, tahun_pelajaran_id, tanggal, jam_ke, materi, keterangan, latitude, longitude, jml_hadir, jml_sakit, jml_izin, jml_alfa, jadwal_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, 0, 0, ?)");
+            mysqli_stmt_bind_param($stmt, "iiiissssssi", $guru_id, $mid, $kid, $tahun_pelajaran_id, $tanggal, $jam_ke, $materi, $keterangan, $latitude, $longitude, $jadwal_id);
             mysqli_stmt_execute($stmt);
             $jurnal_id = mysqli_insert_id($conn);
 
