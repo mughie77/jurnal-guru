@@ -80,7 +80,7 @@ require_once __DIR__ . '/../includes/header.php';
         <!-- Top Greeting & Profile Header -->
         <div class="flex items-center justify-between pt-2">
             <div>
-                <p class="text-slate-400 text-sm font-medium tracking-wide">Howdy,</p>
+                <p class="text-slate-400 text-sm font-medium tracking-wide"><?= $greeting ?>,</p>
                 <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-800 tracking-tight leading-tight">
                     <?= htmlspecialchars($_SESSION['nama_lengkap']) ?>
                 </h1>

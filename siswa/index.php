@@ -108,6 +108,18 @@ mysqli_stmt_execute($stmt_gps);
 $gps_recap = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt_gps));
 
 $page_title = "Dashboard Siswa";
+
+// Compute time greeting
+$hour = (int)date('H');
+$greeting = "Selamat Malam";
+if ($hour >= 5 && $hour < 11) {
+    $greeting = "Selamat Pagi";
+} elseif ($hour >= 11 && $hour < 15) {
+    $greeting = "Selamat Siang";
+} elseif ($hour >= 15 && $hour < 18) {
+    $greeting = "Selamat Sore";
+}
+
 require_once __DIR__ . '/../includes/header.php';
 ?>
 
@@ -123,7 +135,7 @@ require_once __DIR__ . '/../includes/header.php';
         <!-- Top Greeting & Profile Header -->
         <div class="flex items-center justify-between pt-2">
             <div>
-                <p class="text-slate-400 text-sm font-medium tracking-wide">Howdy,</p>
+                <p class="text-slate-400 text-sm font-medium tracking-wide"><?= $greeting ?>,</p>
                 <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-800 tracking-tight leading-tight">
                     <?= htmlspecialchars($siswa['nama_siswa']) ?>
                 </h1>
