@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/pagination.php';
 
 authorize_role(['admin', 'waka']);
 
@@ -14,6 +15,7 @@ if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $tgl_raw)) {
 $tgl = mysqli_real_escape_string($conn, $tgl_raw);
 $kelas_id = (int)($_GET['kelas_id'] ?? 0);
 $status_filter = $_GET['status'] ?? '';
+$search_query = trim($_GET['q'] ?? '');
 
 // Indonesian Day Name
 $day_eng = date('l', strtotime($tgl));
@@ -32,7 +34,14 @@ $hari_ini = $day_map[$day_eng] ?? 'Senin';
 $kelases = mysqli_query($conn, "SELECT id, nama_kelas FROM kelas ORDER BY nama_kelas ASC");
 
 // Build query
-$where_kelas = ($kelas_id > 0) ? " AND jp.kelas_id = $kelas_id " : "";
+$where_cond = " WHERE jp.hari = '$hari_ini' AND (jp.tahun_pelajaran_id = $active_tahun_id OR jp.tahun_pelajaran_id IS NULL) ";
+if ($kelas_id > 0) {
+    $where_cond .= " AND jp.kelas_id = $kelas_id ";
+}
+if (!empty($search_query)) {
+    $sq_esc = mysqli_real_escape_string($conn, $search_query);
+    $where_cond .= " AND (u.nama_lengkap LIKE '%$sq_esc%' OR mp.nama_mapel LIKE '%$sq_esc%' OR mp.kode_mapel LIKE '%$sq_esc%' OR k.nama_kelas LIKE '%$sq_esc%') ";
+}
 
 $query = "SELECT jp.*, k.nama_kelas, mp.nama_mapel, mp.kode_mapel, u.nama_lengkap as nama_guru,
                  j.id as jurnal_id, j.created_at as waktu_isi, j.materi
@@ -42,12 +51,12 @@ $query = "SELECT jp.*, k.nama_kelas, mp.nama_mapel, mp.kode_mapel, u.nama_lengka
           JOIN guru g ON jp.guru_id = g.id
           JOIN users u ON g.user_id = u.id
           LEFT JOIN jurnal j ON ((j.jadwal_id = jp.id AND j.tanggal = '$tgl') OR (j.guru_id = jp.guru_id AND j.kelas_id = jp.kelas_id AND j.mapel_id = jp.mapel_id AND j.jam_ke = jp.jam_ke AND j.tanggal = '$tgl'))
-          WHERE jp.hari = '$hari_ini' AND (jp.tahun_pelajaran_id = $active_tahun_id OR jp.tahun_pelajaran_id IS NULL) $where_kelas
+          $where_cond
           ORDER BY k.nama_kelas ASC, jp.jam_ke ASC";
 
 $res = mysqli_query($conn, $query);
 
-$raw_schedules = [];
+$all_schedules = [];
 $total_jadwal = 0;
 $total_sudah = 0;
 $total_belum = 0;
@@ -65,10 +74,20 @@ while ($row = mysqli_fetch_assoc($res)) {
     if ($status_filter === 'sudah' && !$row['is_filled']) continue;
     if ($status_filter === 'belum' && $row['is_filled']) continue;
 
-    $raw_schedules[] = $row;
+    $all_schedules[] = $row;
 }
 
 $persen_sudah = $total_jadwal > 0 ? round(($total_sudah / $total_jadwal) * 100) : 0;
+
+// Pagination
+$limit = 15;
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+if ($page < 1) $page = 1;
+$total_filtered = count($all_schedules);
+$total_pages = ceil($total_filtered / $limit);
+$offset = ($page - 1) * $limit;
+
+$paged_schedules = array_slice($all_schedules, $offset, $limit);
 
 require_once __DIR__ . '/../includes/header.php';
 ?>
@@ -85,12 +104,17 @@ require_once __DIR__ . '/../includes/header.php';
     </div>
 </div>
 
-<!-- Filter Form -->
+<!-- Filter & Search Form -->
 <div class="lux-card p-6 mb-8 bg-gradient-to-br from-indigo-50/40 to-white border border-indigo-100/50">
-    <form action="" method="GET" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+    <form action="" method="GET" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
         <div>
             <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2">Tanggal</label>
             <input type="date" name="tanggal" value="<?= htmlspecialchars($tgl) ?>" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-100 bg-white font-bold text-xs text-slate-700">
+        </div>
+
+        <div>
+            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2">Cari Guru / Mapel / Kelas</label>
+            <input type="text" name="q" value="<?= htmlspecialchars($search_query) ?>" placeholder="Kata kunci..." class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-100 bg-white font-bold text-xs text-slate-700">
         </div>
 
         <div>
@@ -167,14 +191,14 @@ require_once __DIR__ . '/../includes/header.php';
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-50">
-                <?php if (empty($raw_schedules)): ?>
+                <?php if (empty($paged_schedules)): ?>
                 <tr>
                     <td colspan="6" class="px-6 py-12 text-center text-slate-400 font-bold italic">
                         Tidak ada jadwal terdaftar untuk kriteria ini pada hari <?= $hari_ini ?>.
                     </td>
                 </tr>
                 <?php else: ?>
-                    <?php foreach ($raw_schedules as $item): ?>
+                    <?php foreach ($paged_schedules as $item): ?>
                     <tr class="hover:bg-slate-50/50 transition-colors">
                         <td class="px-6 py-4 font-bold text-slate-800 text-sm">
                             <span class="px-3 py-1 rounded-lg bg-slate-100 border border-slate-200 text-slate-700">
@@ -217,6 +241,12 @@ require_once __DIR__ . '/../includes/header.php';
             </tbody>
         </table>
     </div>
+
+    <!-- Render Pagination -->
+    <?php
+    $queryParams = $_GET;
+    echo render_pagination($page, $total_pages, $queryParams);
+    ?>
 </div>
 
 <script>
