@@ -112,7 +112,8 @@ if ($is_ajax) {
                 'school_lng' => '113.8217',
                 'radius_absen' => '30',
                 'siswa_gps_absen' => 'nonaktif',
-                'pilih_tanggal_jurnal' => 'nonaktif'
+                'pilih_tanggal_jurnal' => 'nonaktif',
+                'external_api_key' => 'CAKRA_SECURE_API_KEY_2026'
             ];
 
             foreach ($new_settings as $key => $val) {
