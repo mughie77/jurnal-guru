@@ -151,6 +151,46 @@ $gurus = mysqli_query($conn, "SELECT g.id, u.nama_lengkap FROM guru g JOIN users
 require_once __DIR__ . '/../includes/header.php';
 ?>
 
+<!-- Select2 CSS & jQuery -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<style>
+/* Select2 Custom Styling for Modals */
+.select2-container--default .select2-selection--single {
+    border-radius: 0.75rem !important;
+    border-color: #e2e8f0 !important;
+    height: 42px !important;
+    display: flex !important;
+    align-items: center !important;
+}
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    font-weight: 700 !important;
+    color: #334155 !important;
+    font-size: 0.75rem !important;
+    padding-left: 0.75rem !important;
+}
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 40px !important;
+    right: 8px !important;
+}
+.select2-dropdown {
+    border-radius: 1rem !important;
+    border-color: #e2e8f0 !important;
+    box-shadow: 0 10px 25px -3px rgba(15, 23, 42, 0.1) !important;
+    overflow: hidden !important;
+    z-index: 9999 !important;
+}
+.select2-search__field {
+    border-radius: 0.5rem !important;
+    border-color: #e2e8f0 !important;
+    padding: 0.4rem 0.6rem !important;
+    font-size: 0.75rem !important;
+    font-weight: 600 !important;
+}
+</style>
+
 <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
     <div>
         <h1 class="text-3xl font-black text-slate-800 tracking-tight italic">Poin Pelanggaran & Apresiasi Siswa</h1>
@@ -309,8 +349,8 @@ require_once __DIR__ . '/../includes/header.php';
 
         <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">Pilih Siswa</label>
-            <select name="siswa_id" id="siswa_id" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 font-bold text-slate-700 text-xs">
-                <option value="">-- Pilih Siswa --</option>
+            <select name="siswa_id" id="siswa_id" required class="select2-modal w-full">
+                <option value="">-- Cari / Pilih Siswa --</option>
                 <?php foreach ($student_list as $sl): ?>
                     <option value="<?= $sl['id'] ?>"><?= htmlspecialchars($sl['nama_siswa']) ?> (<?= htmlspecialchars($sl['nama_kelas']) ?> - NIS: <?= htmlspecialchars($sl['nis']) ?>)</option>
                 <?php endforeach; ?>
@@ -319,7 +359,7 @@ require_once __DIR__ . '/../includes/header.php';
 
         <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">Pilih Aturan Dari Master</label>
-            <select name="master_id" id="master_id" onchange="toggleCustomFields(this.value)" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 font-bold text-slate-700 text-xs">
+            <select name="master_id" id="master_id" class="select2-modal w-full">
                 <option value="0">-- Input Aturan Custom (Lainnya) --</option>
                 <?php foreach ($master_rules as $mr): ?>
                     <option value="<?= $mr['id'] ?>">
@@ -382,6 +422,17 @@ require_once __DIR__ . '/../includes/header.php';
 </div>
 
 <script>
+$(document).ready(function() {
+    $('#siswa_id, #master_id').select2({
+        dropdownParent: $('#addPoinModal'),
+        width: '100%'
+    });
+
+    $('#master_id').on('change', function() {
+        toggleCustomFields(this.value);
+    });
+});
+
 function toggleCustomFields(masterVal) {
     const customBox = document.getElementById('custom_fields_box');
     if (parseInt(masterVal) > 0) {
@@ -422,8 +473,8 @@ function closeAllModals() {
 function editPoin(item) {
     document.getElementById('modal_title').textContent = 'Edit Record Poin Kedisiplinan';
     document.getElementById('poin_id').value = item.id;
-    document.getElementById('siswa_id').value = item.siswa_id;
-    document.getElementById('master_id').value = item.master_id || 0;
+    $('#siswa_id').val(item.siswa_id).trigger('change');
+    $('#master_id').val(item.master_id || 0).trigger('change');
     document.getElementById('tanggal').value = item.tanggal;
     document.getElementById('catatan').value = item.catatan || '';
 
