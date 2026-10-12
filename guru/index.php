@@ -42,7 +42,7 @@ if ($q_today_sched) {
     }
 }
 
-// Check PKL Pembimbing Status safely
+// Check PKL Pembimbing & Guru BK Status safely
 $is_pkl_pembimbing = false;
 $chk_tpkl = mysqli_query($conn, "SHOW TABLES LIKE 'tempat_pkl'");
 if ($chk_tpkl && mysqli_num_rows($chk_tpkl) > 0) {
@@ -51,6 +51,8 @@ if ($chk_tpkl && mysqli_num_rows($chk_tpkl) > 0) {
         $is_pkl_pembimbing = (mysqli_fetch_assoc($q_pkl_guru)['count'] ?? 0) > 0;
     }
 }
+
+$is_guru_bk = (get_bk_info() !== null);
 
 $page_title = "Dashboard Guru";
 
@@ -160,12 +162,21 @@ require_once __DIR__ . '/../includes/header.php';
                 </a>
 
                 <!-- Tile 7 -->
+                <?php if ($is_guru_bk || $_SESSION['role'] === 'admin' || $_SESSION['role'] === 'waka'): ?>
                 <a href="bk_index.php" class="menu-item flex flex-col items-center group text-center" data-title="layanan bk bimbingan konseling sosiogram poin pelanggaran">
                     <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-purple-600 text-white flex items-center justify-center text-xl shadow-md group-hover:scale-105 transition-transform">
                         <i class="fa fa-hands-holding-child"></i>
                     </div>
                     <span class="text-xs font-semibold text-slate-700 mt-2 line-clamp-1">Layanan BK</span>
                 </a>
+                <?php else: ?>
+                <a href="rekap_buku_kejadian.php" class="menu-item flex flex-col items-center group text-center" data-title="buku kejadian insiden siswa">
+                    <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-emerald-500 text-white flex items-center justify-center text-xl shadow-md group-hover:scale-105 transition-transform">
+                        <i class="fa fa-book-medical"></i>
+                    </div>
+                    <span class="text-xs font-semibold text-slate-700 mt-2 line-clamp-1">Kejadian</span>
+                </a>
+                <?php endif; ?>
 
                 <!-- Tile 8 -->
                 <a href="semua_menu.php" class="menu-item flex flex-col items-center group text-center" data-title="semua menu fitur lengkap">

@@ -2,7 +2,7 @@
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../config/database.php';
 
-authorize_role(['guru', 'admin', 'waka']);
+authorize_role(['admin', 'waka', 'guru_bk']);
 
 $page_title = "Portal Layanan Bimbingan Konseling";
 require_once __DIR__ . '/../includes/header.php';

@@ -3,7 +3,7 @@ require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/pagination.php';
 
-authorize_role(['admin', 'waka', 'guru', 'guru_bk']);
+authorize_role(['admin', 'waka', 'guru_bk']);
 
 $role = $_SESSION['role'];
 $user_id = $_SESSION['user_id'];
@@ -197,8 +197,11 @@ require_once __DIR__ . '/../includes/header.php';
         <p class="text-slate-500 font-medium">Pencatatan akumulasi poin kedisiplinan dan apresiasi prestasi siswa.</p>
     </div>
     <div class="flex flex-wrap items-center gap-3">
+        <a href="<?= BASE_URL ?>guru/bk_index.php" class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2.5 rounded-xl font-bold text-xs flex items-center shadow-md">
+            <i class="fa fa-arrow-left mr-2"></i> Kembali ke Layanan BK
+        </a>
         <?php if ($role === 'admin' || $role === 'waka'): ?>
-        <a href="bk_master_pelanggaran.php" class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2.5 rounded-xl font-bold text-xs flex items-center shadow-md">
+        <a href="bk_master_pelanggaran.php" class="bg-slate-700 hover:bg-slate-800 text-white px-4 py-2.5 rounded-xl font-bold text-xs flex items-center shadow-md">
             <i class="fa fa-cogs mr-2"></i> Master Aturan Poin
         </a>
         <?php endif; ?>

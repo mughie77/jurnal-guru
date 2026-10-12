@@ -32,6 +32,7 @@ if ($wali_info) {
 }
 
 $bk_info = get_bk_info();
+$is_guru_bk = ($bk_info !== null);
 $open_chats_count = 0;
 if ($bk_info) {
     $bk_guru_id = $bk_info['guru_id'];
@@ -120,6 +121,7 @@ require_once __DIR__ . '/../includes/header.php';
                 </div>
             </a>
 
+            <?php if ($is_guru_bk || $_SESSION['role'] === 'admin' || $_SESSION['role'] === 'waka'): ?>
             <a href="bk_index.php" class="p-5 rounded-2xl bg-purple-600 text-white shadow-md flex flex-col justify-between gap-4 group transition-all hover:bg-purple-700 hover:shadow-lg">
                 <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-base">
                     <i class="fa fa-hands-holding-child"></i>
@@ -129,6 +131,7 @@ require_once __DIR__ . '/../includes/header.php';
                     <div class="text-[10px] text-purple-100 font-normal mt-0.5">Konseling, Sosiogram, Poin</div>
                 </div>
             </a>
+            <?php endif; ?>
 
             <a href="rekan.php" class="p-5 rounded-2xl bg-sky-500 text-white shadow-md flex flex-col justify-between gap-4 group transition-all hover:bg-sky-600 hover:shadow-lg">
                 <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-base">
