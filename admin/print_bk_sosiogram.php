@@ -16,7 +16,7 @@ $class_students = [];
 $incoming_votes = [];
 $choices_matrix = [];
 
-$res_st = mysqli_query($conn, "SELECT s.id, s.nama_siswa, s.nis
+$res_st = mysqli_query($conn, "SELECT s.id, s.nama_siswa, s.nis, s.jenis_kelamin
                                FROM siswa s
                                JOIN siswa_kelas sk ON s.id = sk.siswa_id
                                WHERE sk.kelas_id = $kid AND sk.tahun_pelajaran_id = $active_tahun_id
@@ -85,6 +85,14 @@ $nama_sekolah = $sets['nama_sekolah'] ?? 'SMK NEGERI 2 BONDOWOSO';
         </div>
     </div>
 
+    <!-- Visual Sosiogram Render -->
+    <div class="mb-8">
+        <h3 class="font-bold text-slate-800 text-sm mb-2 uppercase tracking-wider">Visualisasi Target Sosiogram</h3>
+        <div class="flex flex-col items-center justify-center p-4 border border-slate-300 rounded-xl bg-slate-50">
+            <canvas id="printSosiogramCanvas" width="800" height="600" class="bg-white rounded-xl border border-slate-200 max-w-full h-auto"></canvas>
+        </div>
+    </div>
+
     <!-- Matriks Pilihan -->
     <div class="mb-8">
         <h3 class="font-bold text-slate-800 text-sm mb-2 uppercase tracking-wider">Matriks Hubungan Sosiometri</h3>
@@ -115,6 +123,149 @@ $nama_sekolah = $sets['nama_sekolah'] ?? 'SMK NEGERI 2 BONDOWOSO';
             </tbody>
         </table>
     </div>
+
+    <script>
+    const sessionChoicesMap = <?= json_encode($choices_matrix) ?>;
+    const rawStudentsData = <?= json_encode(array_values($class_students)) ?>;
+    const rawIncomingVotes = <?= json_encode($incoming_votes) ?>;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const canvas = document.getElementById('printSosiogramCanvas');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const width = canvas.width;
+        const height = canvas.height;
+        const centerX = width / 2;
+        const centerY = height / 2;
+
+        if (!rawStudentsData || rawStudentsData.length === 0) return;
+
+        let maxVote = 0;
+        rawStudentsData.forEach(st => {
+            const votes = rawIncomingVotes[st.id] || 0;
+            if (votes > maxVote) maxVote = votes;
+        });
+
+        const ringRadii = [80, 160, 230, 280];
+        const ringColors = ['#f8fafc', '#f1f5f9', '#e2e8f0', '#ffffff'];
+
+        for (let r = ringRadii.length - 1; r >= 0; r--) {
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, ringRadii[r], 0, Math.PI * 2);
+            ctx.fillStyle = ringColors[r];
+            ctx.fill();
+            ctx.strokeStyle = '#cbd5e1';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([4, 4]);
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+
+        let ringGroups = [[], [], [], []];
+        rawStudentsData.forEach(st => {
+            const votes = rawIncomingVotes[st.id] || 0;
+            if (votes === 0) ringGroups[3].push(st);
+            else if (maxVote > 0 && votes === maxVote) ringGroups[0].push(st);
+            else if (maxVote > 1 && votes >= Math.ceil(maxVote * 0.5)) ringGroups[1].push(st);
+            else ringGroups[2].push(st);
+        });
+
+        const nodePositions = {};
+        ringGroups.forEach((group, ringIdx) => {
+            const radius = ringRadii[ringIdx] - (ringIdx === 0 ? 0 : 25);
+            const count = group.length;
+            group.forEach((st, idx) => {
+                const angle = (idx / count) * Math.PI * 2 - (Math.PI / 2);
+                const x = centerX + radius * Math.cos(angle);
+                const y = centerY + radius * Math.sin(angle);
+                nodePositions[st.id] = { x, y, student: st };
+            });
+        });
+
+        // Edges
+        for (const [pemilihId, choices] of Object.entries(sessionChoicesMap)) {
+            const fromNode = nodePositions[pemilihId];
+            if (!fromNode) continue;
+
+            for (const [dipilihId, urutan] of Object.entries(choices)) {
+                const toNode = nodePositions[dipilihId];
+                if (!toNode) continue;
+
+                let strokeColor = '#4f46e5';
+                if (urutan == 2) strokeColor = '#059669';
+                if (urutan == 3) strokeColor = '#d97706';
+
+                ctx.save();
+                ctx.beginPath();
+                ctx.moveTo(fromNode.x, fromNode.y);
+                ctx.lineTo(toNode.x, toNode.y);
+                ctx.strokeStyle = strokeColor;
+                ctx.lineWidth = 1.2;
+                ctx.globalAlpha = 0.5;
+                ctx.stroke();
+
+                const nodeRadius = 20;
+                const dx = toNode.x - fromNode.x;
+                const dy = toNode.y - fromNode.y;
+                const arrowAngle = Math.atan2(dy, dx);
+                const arrowX = toNode.x - nodeRadius * Math.cos(arrowAngle);
+                const arrowY = toNode.y - nodeRadius * Math.sin(arrowAngle);
+
+                ctx.beginPath();
+                ctx.fillStyle = strokeColor;
+                ctx.moveTo(arrowX, arrowY);
+                ctx.lineTo(arrowX - 8 * Math.cos(arrowAngle - Math.PI / 7), arrowY - 8 * Math.sin(arrowAngle - Math.PI / 7));
+                ctx.lineTo(arrowX - 8 * Math.cos(arrowAngle + Math.PI / 7), arrowY - 8 * Math.sin(arrowAngle + Math.PI / 7));
+                ctx.closePath();
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        // Nodes
+        for (const [stId, node] of Object.entries(nodePositions)) {
+            const st = node.student;
+            const voteCount = rawIncomingVotes[st.id] || 0;
+            const isMale = (st.jenis_kelamin === 'L' || st.jenis_kelamin === 'Laki-laki');
+            const isStar = (maxVote > 0 && voteCount === maxVote);
+            const isIsolated = (voteCount === 0);
+
+            ctx.save();
+            const r = 20;
+
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, r, 0, Math.PI * 2);
+            ctx.fillStyle = isMale ? '#3b82f6' : '#ec4899';
+            ctx.fill();
+
+            if (isIsolated) {
+                ctx.strokeStyle = '#ef4444';
+                ctx.lineWidth = 2.5;
+                ctx.setLineDash([3, 3]);
+            } else if (isStar) {
+                ctx.strokeStyle = '#f59e0b';
+                ctx.lineWidth = 3;
+            } else {
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 2;
+            }
+            ctx.stroke();
+
+            const initials = st.nama_siswa.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 10px "Plus Jakarta Sans", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(initials, node.x, node.y);
+
+            const shortName = st.nama_siswa.length > 12 ? st.nama_siswa.substring(0, 10) + '..' : st.nama_siswa;
+            ctx.font = 'bold 10px "Plus Jakarta Sans", sans-serif';
+            ctx.fillStyle = '#1e293b';
+            ctx.fillText(shortName, node.x, node.y + r + 11);
+            ctx.restore();
+        }
+    });
+    </script>
 
 </body>
 </html>

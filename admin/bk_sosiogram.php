@@ -366,6 +366,81 @@ require_once __DIR__ . '/../includes/header.php';
     </div>
 </div>
 
+<!-- Diagram Visual Sosiogram -->
+<div class="lux-card overflow-hidden bg-white shadow-2xl rounded-3xl mb-8 border border-slate-200">
+    <div class="p-6 bg-slate-900 text-white flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h3 class="text-base font-black italic flex items-center gap-2">
+                <i class="fa fa-diagram-project text-indigo-400"></i> Diagram Visual Sosiogram Sosiometri
+            </h3>
+            <p class="text-xs text-slate-400 font-medium mt-0.5">Visualisasi hubungan sosial, popularitas, dan jaringan pilihan antar siswa.</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-3">
+            <div>
+                <select id="sosiogramLayoutMode" onchange="renderSosiogramCanvas()" class="px-3 py-2 rounded-xl bg-slate-800 text-white border border-slate-700 font-bold text-xs outline-none focus:ring-2 focus:ring-indigo-500">
+                    <option value="target">Model Ring Konsentris (Target Sosiogram)</option>
+                    <option value="circle">Model Lingkaran Jaring (Circle Network)</option>
+                </select>
+            </div>
+            <div>
+                <select id="sosiogramPriorityFilter" onchange="renderSosiogramCanvas()" class="px-3 py-2 rounded-xl bg-slate-800 text-white border border-slate-700 font-bold text-xs outline-none focus:ring-2 focus:ring-indigo-500">
+                    <option value="0">Semua Prioritas (Pilihan 1, 2 & 3)</option>
+                    <option value="1">Pilihan 1 Saja</option>
+                    <option value="2">Pilihan 2 Saja</option>
+                    <option value="3">Pilihan 3 Saja</option>
+                </select>
+            </div>
+            <button onclick="downloadSosiogramImage()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs flex items-center gap-2 shadow-lg shadow-indigo-900/50 transition-all">
+                <i class="fa fa-download"></i> Ekspor Gambar (PNG)
+            </button>
+        </div>
+    </div>
+
+    <!-- Canvas Container -->
+    <div class="p-6 bg-slate-950/5 relative overflow-x-auto flex flex-col items-center justify-center min-h-[500px]">
+        <!-- Legend Bar -->
+        <div class="w-full max-w-4xl flex flex-wrap items-center justify-between gap-4 mb-4 p-3 bg-white/80 backdrop-blur-md rounded-2xl border border-slate-200 text-xs font-bold text-slate-700 shadow-sm">
+            <div class="flex items-center gap-4 flex-wrap">
+                <div class="flex items-center gap-1.5">
+                    <span class="w-3.5 h-3.5 rounded-full bg-blue-500 border-2 border-blue-600 inline-block"></span>
+                    <span>Laki-Laki (L)</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <span class="w-3.5 h-3.5 rounded-full bg-pink-500 border-2 border-pink-600 inline-block"></span>
+                    <span>Perempuan (P)</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <span class="w-3.5 h-3.5 rounded-full bg-amber-400 border-2 border-amber-500 inline-block"></span>
+                    <span>Siswa Populer (Star)</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <span class="w-3.5 h-3.5 rounded-full bg-rose-100 border-2 border-dashed border-rose-500 inline-block"></span>
+                    <span>Siswa Terisolasi</span>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3 text-[11px]">
+                <span class="text-indigo-600">■ Priority 1</span>
+                <span class="text-emerald-600">■ Priority 2</span>
+                <span class="text-amber-600">■ Priority 3</span>
+            </div>
+        </div>
+
+        <div class="relative w-full max-w-[900px] flex justify-center">
+            <canvas id="sosiogramCanvas" width="900" height="700" class="bg-white rounded-3xl shadow-xl border border-slate-200 cursor-pointer w-full h-auto max-w-full"></canvas>
+
+            <!-- Hover/Click Tooltip -->
+            <div id="canvasTooltip" class="absolute hidden bg-slate-900/95 text-white p-3.5 rounded-2xl shadow-2xl border border-slate-700 text-xs pointer-events-none z-20 max-w-xs backdrop-blur-md">
+                <div id="tooltipContent"></div>
+            </div>
+        </div>
+
+        <p class="text-[11px] font-medium text-slate-400 mt-3 flex items-center gap-1">
+            <i class="fa fa-info-circle text-indigo-500"></i> Klik atau sentuh pada nama/lingkaran siswa untuk menyorot jalur panah pilihan yang masuk & keluar.
+        </p>
+    </div>
+</div>
+
 <!-- Matriks Tabel Sosiometri -->
 <div class="lux-card overflow-hidden bg-white shadow-2xl rounded-3xl mb-8">
     <div class="p-6 bg-slate-900 text-white flex items-center justify-between">
@@ -415,6 +490,380 @@ require_once __DIR__ . '/../includes/header.php';
 
 <script>
 const sessionChoicesMap = <?= json_encode($choices_matrix) ?>;
+const rawStudentsData = <?= json_encode(array_values($class_students)) ?>;
+const rawIncomingVotes = <?= json_encode($incoming_votes) ?>;
+
+let selectedNodeId = null;
+let nodePositions = {};
+
+function renderSosiogramCanvas() {
+    const canvas = document.getElementById('sosiogramCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const width = canvas.width;
+    const height = canvas.height;
+    const centerX = width / 2;
+    const centerY = height / 2;
+
+    ctx.clearRect(0, 0, width, height);
+
+    if (!rawStudentsData || rawStudentsData.length === 0) {
+        ctx.fillStyle = '#64748b';
+        ctx.font = 'bold 16px "Plus Jakarta Sans", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Tidak ada data siswa dalam kelas ini.', centerX, centerY);
+        return;
+    }
+
+    const layoutMode = document.getElementById('sosiogramLayoutMode')?.value || 'target';
+    const filterPriority = parseInt(document.getElementById('sosiogramPriorityFilter')?.value || '0');
+
+    // Calculate max votes
+    let maxVote = 0;
+    rawStudentsData.forEach(st => {
+        const votes = rawIncomingVotes[st.id] || 0;
+        if (votes > maxVote) maxVote = votes;
+    });
+
+    nodePositions = {};
+
+    if (layoutMode === 'target') {
+        // Draw Concentric Rings
+        const ringRadii = [100, 200, 280, 350];
+        const ringColors = ['#f8fafc', '#f1f5f9', '#e2e8f0', '#f8fafc'];
+
+        for (let r = ringRadii.length - 1; r >= 0; r--) {
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, ringRadii[r], 0, Math.PI * 2);
+            ctx.fillStyle = ringColors[r];
+            ctx.fill();
+            ctx.strokeStyle = '#cbd5e1';
+            ctx.lineWidth = 1.5;
+            ctx.setLineDash([6, 6]);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Label ring
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = '900 11px "Plus Jakarta Sans", sans-serif';
+            ctx.textAlign = 'center';
+            if (r === 0) ctx.fillText('PUSAT (STAR)', centerX, centerY - ringRadii[r] + 18);
+        }
+
+        // Group students into rings based on vote counts
+        let ringGroups = [[], [], [], []];
+        rawStudentsData.forEach(st => {
+            const votes = rawIncomingVotes[st.id] || 0;
+            if (votes === 0) {
+                ringGroups[3].push(st); // Outer
+            } else if (maxVote > 0 && votes === maxVote) {
+                ringGroups[0].push(st); // Center Star
+            } else if (maxVote > 1 && votes >= Math.ceil(maxVote * 0.5)) {
+                ringGroups[1].push(st);
+            } else {
+                ringGroups[2].push(st);
+            }
+        });
+
+        // Place students evenly in each ring
+        ringGroups.forEach((group, ringIdx) => {
+            const radius = ringRadii[ringIdx] - (ringIdx === 0 ? 0 : 30);
+            const count = group.length;
+            group.forEach((st, idx) => {
+                const angle = (idx / count) * Math.PI * 2 - (Math.PI / 2);
+                const x = centerX + radius * Math.cos(angle);
+                const y = centerY + radius * Math.sin(angle);
+                nodePositions[st.id] = { x, y, student: st, angle };
+            });
+        });
+
+    } else {
+        // Circle Network Layout
+        const radius = Math.min(centerX, centerY) - 80;
+        const count = rawStudentsData.length;
+        rawStudentsData.forEach((st, idx) => {
+            const angle = (idx / count) * Math.PI * 2 - (Math.PI / 2);
+            const x = centerX + radius * Math.cos(angle);
+            const y = centerY + radius * Math.sin(angle);
+            nodePositions[st.id] = { x, y, student: st, angle };
+        });
+    }
+
+    // Draw Arrow Lines (Edges)
+    for (const [pemilihId, choices] of Object.entries(sessionChoicesMap)) {
+        const fromNode = nodePositions[pemilihId];
+        if (!fromNode) continue;
+
+        for (const [dipilihId, urutan] of Object.entries(choices)) {
+            if (filterPriority > 0 && parseInt(urutan) !== filterPriority) continue;
+
+            const toNode = nodePositions[dipilihId];
+            if (!toNode) continue;
+
+            // Highlight status if selectedNodeId is set
+            let isHighlighted = false;
+            let isDimmed = false;
+
+            if (selectedNodeId !== null) {
+                if (parseInt(pemilihId) === selectedNodeId || parseInt(dipilihId) === selectedNodeId) {
+                    isHighlighted = true;
+                } else {
+                    isDimmed = true;
+                }
+            }
+
+            // Line colors by priority
+            let strokeColor = '#4f46e5'; // Priority 1: Indigo
+            if (urutan == 2) strokeColor = '#059669'; // Priority 2: Emerald
+            if (urutan == 3) strokeColor = '#d97706'; // Priority 3: Amber
+
+            ctx.save();
+            ctx.beginPath();
+            ctx.moveTo(fromNode.x, fromNode.y);
+
+            // Curve slightly if mutual choice or offset
+            const dx = toNode.x - fromNode.x;
+            const dy = toNode.y - fromNode.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            ctx.lineTo(toNode.x, toNode.y);
+
+            if (isHighlighted) {
+                ctx.strokeStyle = strokeColor;
+                ctx.lineWidth = 3.5;
+                ctx.globalAlpha = 1.0;
+            } else if (isDimmed) {
+                ctx.strokeStyle = '#cbd5e1';
+                ctx.lineWidth = 1;
+                ctx.globalAlpha = 0.15;
+            } else {
+                ctx.strokeStyle = strokeColor;
+                ctx.lineWidth = 1.8;
+                ctx.globalAlpha = 0.45;
+            }
+
+            ctx.stroke();
+
+            // Draw arrowhead near toNode
+            const nodeRadius = 24;
+            const arrowAngle = Math.atan2(dy, dx);
+            const arrowX = toNode.x - nodeRadius * Math.cos(arrowAngle);
+            const arrowY = toNode.y - nodeRadius * Math.sin(arrowAngle);
+
+            ctx.beginPath();
+            ctx.fillStyle = ctx.strokeStyle;
+            ctx.moveTo(arrowX, arrowY);
+            ctx.lineTo(
+                arrowX - 10 * Math.cos(arrowAngle - Math.PI / 7),
+                arrowY - 10 * Math.sin(arrowAngle - Math.PI / 7)
+            );
+            ctx.lineTo(
+                arrowX - 10 * Math.cos(arrowAngle + Math.PI / 7),
+                arrowY - 10 * Math.sin(arrowAngle + Math.PI / 7)
+            );
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+        }
+    }
+
+    // Draw Student Nodes
+    for (const [stId, node] of Object.entries(nodePositions)) {
+        const st = node.student;
+        const voteCount = rawIncomingVotes[st.id] || 0;
+        const isMale = (st.jenis_kelamin === 'L' || st.jenis_kelamin === 'Laki-laki');
+        const isStar = (maxVote > 0 && voteCount === maxVote);
+        const isIsolated = (voteCount === 0);
+        const isSelected = (selectedNodeId !== null && parseInt(stId) === selectedNodeId);
+
+        ctx.save();
+
+        // Node Circle Radius
+        const r = 24;
+
+        // Shadow / Outer Highlight Ring for Star
+        if (isStar) {
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, r + 6, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(251, 191, 36, 0.35)';
+            ctx.fill();
+        }
+
+        // Selected node ring
+        if (isSelected) {
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, r + 8, 0, Math.PI * 2);
+            ctx.strokeStyle = '#4f46e5';
+            ctx.lineWidth = 4;
+            ctx.stroke();
+        }
+
+        // Circle fill
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, r, 0, Math.PI * 2);
+        if (isMale) {
+            ctx.fillStyle = '#3b82f6'; // Blue
+        } else {
+            ctx.fillStyle = '#ec4899'; // Pink
+        }
+        ctx.fill();
+
+        // Border styling
+        if (isIsolated) {
+            ctx.strokeStyle = '#ef4444'; // Red for isolated
+            ctx.lineWidth = 3;
+            ctx.setLineDash([4, 4]);
+        } else if (isStar) {
+            ctx.strokeStyle = '#f59e0b'; // Amber Star
+            ctx.lineWidth = 3.5;
+        } else {
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 2.5;
+        }
+        ctx.stroke();
+
+        // Student Initials
+        const initials = st.nama_siswa.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 12px "Plus Jakarta Sans", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(initials, node.x, node.y);
+
+        // Vote Badge
+        ctx.beginPath();
+        ctx.arc(node.x + r - 4, node.y - r + 4, 10, 0, Math.PI * 2);
+        ctx.fillStyle = isStar ? '#f59e0b' : '#1e293b';
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '900 10px "Plus Jakarta Sans", sans-serif';
+        ctx.fillText(voteCount.toString(), node.x + r - 4, node.y - r + 4);
+
+        // Student Name Label below node
+        const shortName = st.nama_siswa.length > 14 ? st.nama_siswa.substring(0, 12) + '..' : st.nama_siswa;
+        ctx.font = 'bold 11px "Plus Jakarta Sans", sans-serif';
+
+        // Draw background pill for text for high readability
+        const textWidth = ctx.measureText(shortName).width;
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+        ctx.beginPath();
+        ctx.roundRect(node.x - (textWidth / 2) - 6, node.y + r + 4, textWidth + 12, 18, 6);
+        ctx.fill();
+        ctx.strokeStyle = '#e2e8f0';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        ctx.fillStyle = '#0f172a';
+        ctx.fillText(shortName, node.x, node.y + r + 13);
+
+        ctx.restore();
+    }
+}
+
+function downloadSosiogramImage() {
+    const canvas = document.getElementById('sosiogramCanvas');
+    if (!canvas) return;
+    const link = document.createElement('a');
+    link.download = 'Sosiogram_Kelas_<?= htmlspecialchars($active_sesi['nama_kelas'] ?? 'Sosiometri') ?>.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    renderSosiogramCanvas();
+
+    const canvas = document.getElementById('sosiogramCanvas');
+    const tooltip = document.getElementById('canvasTooltip');
+    const tooltipContent = document.getElementById('tooltipContent');
+
+    if (!canvas) return;
+
+    canvas.addEventListener('mousemove', function(e) {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const mouseX = (e.clientX - rect.left) * scaleX;
+        const mouseY = (e.clientY - rect.top) * scaleY;
+
+        let hoveredNode = null;
+        for (const [stId, node] of Object.entries(nodePositions)) {
+            const dx = mouseX - node.x;
+            const dy = mouseY - node.y;
+            if (Math.sqrt(dx * dx + dy * dy) <= 28) {
+                hoveredNode = node;
+                break;
+            }
+        }
+
+        if (hoveredNode) {
+            canvas.style.cursor = 'pointer';
+            const st = hoveredNode.student;
+            const votes = rawIncomingVotes[st.id] || 0;
+            const chosenByList = [];
+            const userChoicesList = [];
+
+            // Find who chose this student
+            for (const [pemId, choices] of Object.entries(sessionChoicesMap)) {
+                if (choices[st.id]) {
+                    const pemNode = nodePositions[pemId];
+                    if (pemNode) chosenByList.push(`${pemNode.student.nama_siswa} (Pilihan ${choices[st.id]})`);
+                }
+            }
+
+            // Find who this student chose
+            if (sessionChoicesMap[st.id]) {
+                for (const [dipId, urutan] of Object.entries(sessionChoicesMap[st.id])) {
+                    const dipNode = nodePositions[dipId];
+                    if (dipNode) userChoicesList.push(`${dipNode.student.nama_siswa} (Pilihan ${urutan})`);
+                }
+            }
+
+            tooltipContent.innerHTML = `
+                <div class="font-black text-indigo-300 text-sm mb-1">${st.nama_siswa} (${st.jenis_kelamin})</div>
+                <div class="text-[11px] text-slate-300 mb-2">Total Dipilih: <span class="font-bold text-amber-400">${votes} Teman</span></div>
+                ${userChoicesList.length > 0 ? `<div class="text-[10px] text-emerald-300 font-bold">Memilih: ${userChoicesList.join(', ')}</div>` : '<div class="text-[10px] text-slate-400 italic">Belum mengisi pilihan</div>'}
+                ${chosenByList.length > 0 ? `<div class="text-[10px] text-indigo-300 font-bold mt-1">Dipilih oleh: ${chosenByList.join(', ')}</div>` : ''}
+            `;
+
+            tooltip.style.left = (e.clientX - rect.left + 15) + 'px';
+            tooltip.style.top = (e.clientY - rect.top + 15) + 'px';
+            tooltip.classList.remove('hidden');
+        } else {
+            canvas.style.cursor = 'default';
+            tooltip.classList.add('hidden');
+        }
+    });
+
+    canvas.addEventListener('click', function(e) {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const mouseX = (e.clientX - rect.left) * scaleX;
+        const mouseY = (e.clientY - rect.top) * scaleY;
+
+        let clickedNodeId = null;
+        for (const [stId, node] of Object.entries(nodePositions)) {
+            const dx = mouseX - node.x;
+            const dy = mouseY - node.y;
+            if (Math.sqrt(dx * dx + dy * dy) <= 28) {
+                clickedNodeId = parseInt(stId);
+                break;
+            }
+        }
+
+        if (clickedNodeId === selectedNodeId) {
+            selectedNodeId = null; // Toggle off
+        } else {
+            selectedNodeId = clickedNodeId;
+        }
+
+        renderSosiogramCanvas();
+    });
+});
 
 function loadStudentChoiceForm(pemilihId) {
     const p1 = document.getElementById('dipilih_1');
