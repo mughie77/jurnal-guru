@@ -127,7 +127,7 @@ if ($selected_sesi_id > 0) {
         }
 
         // Fetch all choices for this session
-        $res_ch = mysqli_query($conn, "SELECT * FROM bk_sosiogram_pilihan WHERE sesi_id = $selected_sesi_id ORDER BY urutan ASC");
+        $res_ch = mysqli_query($conn, "SELECT id, sesi_id, pemilih_siswa_id, dipilih_siswa_id, urutan FROM bk_sosiogram_pilihan WHERE sesi_id = $selected_sesi_id ORDER BY urutan ASC");
         $raw_pilihan = [];
         while ($ch = mysqli_fetch_assoc($res_ch)) {
             $pem = (int)$ch['pemilih_siswa_id'];

@@ -624,6 +624,45 @@ if ($is_ajax) {
                 $logs[] = ['status' => 'error', 'msg' => "Failed creating <b>bk_sosiogram_pilihan</b>: " . mysqli_error($conn)];
             }
 
+            // --- Database Query Performance Indexes Migration ---
+            $index_definitions = [
+                'jurnal' => ['tanggal', 'kelas_id', 'guru_id', 'mapel_id', 'tahun_pelajaran_id'],
+                'absensi_jurnal' => ['jurnal_id', 'siswa_id', 'status'],
+                'absensi_harian' => ['siswa_id', 'tanggal', 'status_verifikasi'],
+                'siswa_kelas' => ['siswa_id', 'kelas_id', 'tahun_pelajaran_id'],
+                'tugas_kelas' => ['guru_id', 'kelas_id', 'tanggal'],
+                'buku_kejadian' => ['tanggal', 'guru_id', 'kelas_id', 'mapel_id'],
+                'bk_laporan' => ['tanggal', 'siswa_id', 'guru_id', 'kelas_id'],
+                'bk_pelanggaran_siswa' => ['tanggal', 'siswa_id', 'guru_id', 'tipe'],
+                'jadwal_pelajaran' => ['kelas_id', 'guru_id', 'hari', 'tahun_pelajaran_id'],
+                'pengaduan' => ['siswa_id', 'tanggal'],
+                'kritik_saran' => ['user_id', 'role', 'tanggal']
+            ];
+
+            foreach ($index_definitions as $idx_table => $idx_columns) {
+                try {
+                    $chk_t = mysqli_query($conn, "SHOW TABLES LIKE '$idx_table'");
+                    if ($chk_t && mysqli_num_rows($chk_t) > 0) {
+                        foreach ($idx_columns as $col) {
+                            $idx_name = "idx_{$idx_table}_{$col}";
+                            $chk_i = mysqli_query($conn, "SHOW INDEX FROM `$idx_table` WHERE Key_name = '$idx_name'");
+                            if ($chk_i && mysqli_num_rows($chk_i) == 0) {
+                                // Check if column exists
+                                $chk_col = mysqli_query($conn, "SHOW COLUMNS FROM `$idx_table` LIKE '$col'");
+                                if ($chk_col && mysqli_num_rows($chk_col) > 0) {
+                                    $add_idx = mysqli_query($conn, "ALTER TABLE `$idx_table` ADD INDEX `$idx_name` (`$col`)");
+                                    if ($add_idx) {
+                                        $logs[] = ['status' => 'success', 'msg' => "Added index <b>$idx_name</b> on <b>$idx_table</b>"];
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } catch (Throwable $e) {
+                    $logs[] = ['status' => 'error', 'msg' => "Error creating index on <b>$idx_table</b>: " . htmlspecialchars($e->getMessage())];
+                }
+            }
+
             foreach ($logs as $log) {
                 $color = 'text-blue-600 bg-blue-50';
                 if ($log['status'] == 'success') {

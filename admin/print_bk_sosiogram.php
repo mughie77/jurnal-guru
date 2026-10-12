@@ -26,7 +26,7 @@ while ($st = mysqli_fetch_assoc($res_st)) {
     $incoming_votes[$st['id']] = 0;
 }
 
-$res_ch = mysqli_query($conn, "SELECT * FROM bk_sosiogram_pilihan WHERE sesi_id = $sesi_id ORDER BY urutan ASC");
+$res_ch = mysqli_query($conn, "SELECT id, sesi_id, pemilih_siswa_id, dipilih_siswa_id, urutan FROM bk_sosiogram_pilihan WHERE sesi_id = $sesi_id ORDER BY urutan ASC");
 while ($ch = mysqli_fetch_assoc($res_ch)) {
     $pem = (int)$ch['pemilih_siswa_id'];
     $dip = (int)$ch['dipilih_siswa_id'];
