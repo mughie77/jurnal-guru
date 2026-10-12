@@ -160,11 +160,11 @@ require_once __DIR__ . '/../includes/header.php';
                 </a>
 
                 <!-- Tile 7 -->
-                <a href="rekap_pengaduan.php" class="menu-item flex flex-col items-center group text-center" data-title="pengaduan siswa konseling">
-                    <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-purple-500 text-white flex items-center justify-center text-xl shadow-md group-hover:scale-105 transition-transform">
-                        <i class="fa fa-comments"></i>
+                <a href="bk_index.php" class="menu-item flex flex-col items-center group text-center" data-title="layanan bk bimbingan konseling sosiogram poin pelanggaran">
+                    <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-purple-600 text-white flex items-center justify-center text-xl shadow-md group-hover:scale-105 transition-transform">
+                        <i class="fa fa-hands-holding-child"></i>
                     </div>
-                    <span class="text-xs font-semibold text-slate-700 mt-2 line-clamp-1">Pengaduan</span>
+                    <span class="text-xs font-semibold text-slate-700 mt-2 line-clamp-1">Layanan BK</span>
                 </a>
 
                 <!-- Tile 8 -->

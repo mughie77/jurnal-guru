@@ -120,6 +120,16 @@ require_once __DIR__ . '/../includes/header.php';
                 </div>
             </a>
 
+            <a href="bk_index.php" class="p-5 rounded-2xl bg-purple-600 text-white shadow-md flex flex-col justify-between gap-4 group transition-all hover:bg-purple-700 hover:shadow-lg">
+                <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-base">
+                    <i class="fa fa-hands-holding-child"></i>
+                </div>
+                <div>
+                    <div class="text-sm font-bold tracking-tight">Layanan BK</div>
+                    <div class="text-[10px] text-purple-100 font-normal mt-0.5">Konseling, Sosiogram, Poin</div>
+                </div>
+            </a>
+
             <a href="rekan.php" class="p-5 rounded-2xl bg-sky-500 text-white shadow-md flex flex-col justify-between gap-4 group transition-all hover:bg-sky-600 hover:shadow-lg">
                 <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-base">
                     <i class="fa fa-users"></i>

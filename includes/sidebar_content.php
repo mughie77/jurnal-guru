@@ -111,6 +111,14 @@ if ($role == 'admin') {
                      sub_nav_link('admin/rekap_mood.php', 'Mood Harian', $current_page == 'rekap_mood.php');
     echo sidebar_section('Monitor', 'fa fa-desktop', $monitor_active, $monitor_links);
 
+    // Group 3.5: Bimbingan Konseling (BK)
+    $bk_active = in_array($current_page, ['bk_laporan.php', 'bk_sosiogram.php', 'bk_pelanggaran.php', 'bk_master_pelanggaran.php']);
+    $bk_links = sub_nav_link('admin/bk_laporan.php', 'Laporan BK', $current_page == 'bk_laporan.php') .
+                sub_nav_link('admin/bk_sosiogram.php', 'Aplikasi Sosiogram', $current_page == 'bk_sosiogram.php') .
+                sub_nav_link('admin/bk_pelanggaran.php', 'Poin Pelanggaran', $current_page == 'bk_pelanggaran.php') .
+                sub_nav_link('admin/bk_master_pelanggaran.php', 'Master Aturan Poin', $current_page == 'bk_master_pelanggaran.php');
+    echo sidebar_section('Bimbingan Konseling', 'fa fa-hands-holding-child', $bk_active, $bk_links);
+
     // Group 4: Laporan & Rekap
     $laporan_active = in_array($current_page, ['jurnal.php', 'rekap_absensi.php', 'rekap_persiswa.php', 'rekap_gps.php', 'rekap_izin.php', 'rekap_kritik.php', 'rekap_pengaduan.php', 'rekap_berkas.php', 'perangkat.php', 'rekap_tugas_guru.php', 'rekap_buku_kejadian.php']);
     $laporan_links = sub_nav_link('admin/jurnal.php', 'Jurnal Mengajar', $current_page == 'jurnal.php') .
@@ -165,6 +173,14 @@ if ($role == 'admin') {
                      sub_nav_link('waka/status_jurnal_jadwal.php', 'Status Jurnal Jadwal', $current_page == 'status_jurnal_jadwal.php') .
                      sub_nav_link('admin/rekap_mood.php', 'Mood Harian', $current_page == 'rekap_mood.php');
     echo sidebar_section('Monitor', 'fa fa-desktop', $monitor_active, $monitor_links);
+
+    // Group 3.5: Bimbingan Konseling (Waka)
+    $bk_active = in_array($current_page, ['bk_laporan.php', 'bk_sosiogram.php', 'bk_pelanggaran.php', 'bk_master_pelanggaran.php']);
+    $bk_links = sub_nav_link('waka/bk_laporan.php', 'Laporan BK', $current_page == 'bk_laporan.php') .
+                sub_nav_link('waka/bk_sosiogram.php', 'Aplikasi Sosiogram', $current_page == 'bk_sosiogram.php') .
+                sub_nav_link('waka/bk_pelanggaran.php', 'Poin Pelanggaran', $current_page == 'bk_pelanggaran.php') .
+                sub_nav_link('admin/bk_master_pelanggaran.php', 'Master Aturan Poin', $current_page == 'bk_master_pelanggaran.php');
+    echo sidebar_section('Bimbingan Konseling', 'fa fa-hands-holding-child', $bk_active, $bk_links);
 
     // Group 4: Laporan & Rekap (Waka)
     $laporan_active = in_array($current_page, ['jurnal.php', 'rekap_absensi.php', 'rekap_persiswa.php', 'rekap_gps.php', 'rekap_izin.php', 'rekap_kritik.php', 'rekap_pengaduan.php', 'rekap_berkas.php', 'perangkat.php', 'rekap_tugas_guru.php', 'rekap_buku_kejadian.php']);
