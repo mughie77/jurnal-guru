@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/pagination.php';
 
 authorize_role(['guru', 'admin']);
 $page_title = "Riwayat Jurnal Saya";
@@ -43,12 +44,15 @@ if (!empty($tgl_selesai)) {
     $where_clause .= " AND jurnal.tanggal <= '$tgl_selesai_escaped'";
 }
 
-$sql = "SELECT jurnal.*, mp.nama_mapel, k.nama_kelas
+$pagin = get_pagination_data($conn, "jurnal JOIN mata_pelajaran mp ON jurnal.mapel_id = mp.id JOIN kelas k ON jurnal.kelas_id = k.id", 15, "WHERE " . $where_clause);
+
+$sql = "SELECT jurnal.id, jurnal.tanggal, jurnal.jam_ke, jurnal.materi, jurnal.keterangan, jurnal.jml_hadir, jurnal.jml_alfa, mp.nama_mapel, k.nama_kelas
         FROM jurnal
         JOIN mata_pelajaran mp ON jurnal.mapel_id = mp.id
         JOIN kelas k ON jurnal.kelas_id = k.id
         WHERE $where_clause
-        ORDER BY jurnal.tanggal DESC, jurnal.created_at DESC";
+        ORDER BY jurnal.tanggal DESC, jurnal.created_at DESC
+        LIMIT {$pagin['limit']} OFFSET {$pagin['offset']}";
 $result = mysqli_query($conn, $sql);
 
 require_once __DIR__ . '/../includes/header.php';
@@ -188,6 +192,8 @@ require_once __DIR__ . '/../includes/header.php';
             </table>
         </div>
     </div>
+
+    <?= render_pagination($pagin['page'], $pagin['total_pages'], $_GET) ?>
 </div>
 
 <script>
