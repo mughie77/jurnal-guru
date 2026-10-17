@@ -22,9 +22,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $foto = null;
         if (!empty($_FILES['foto']['name'])) {
             $ext = strtolower(pathinfo($_FILES['foto']['name'], PATHINFO_EXTENSION));
-            if (in_array($ext, ['jpg', 'jpeg', 'png'])) {
-                $foto = $nip . "_" . time() . "." . $ext;
-                move_uploaded_file($_FILES['foto']['tmp_name'], __DIR__ . "/../uploads/guru/" . $foto);
+            if (in_array($ext, ['jpg', 'jpeg', 'png', 'webp'])) {
+                $target_dir = __DIR__ . "/../uploads/guru/";
+                if (!file_exists($target_dir)) {
+                    mkdir($target_dir, 0775, true);
+                }
+                $safe_nip = preg_replace('/[^a-zA-Z0-9_-]/', '_', $nip);
+                $foto = $safe_nip . "_" . time() . "." . $ext;
+                move_uploaded_file($_FILES['foto']['tmp_name'], $target_dir . $foto);
             }
         }
 
@@ -65,9 +70,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         if (!empty($_FILES['foto']['name'])) {
             $ext = strtolower(pathinfo($_FILES['foto']['name'], PATHINFO_EXTENSION));
-            if (in_array($ext, ['jpg', 'jpeg', 'png'])) {
-                $foto = $nip . "_" . time() . "." . $ext;
-                move_uploaded_file($_FILES['foto']['tmp_name'], __DIR__ . "/../uploads/guru/" . $foto);
+            if (in_array($ext, ['jpg', 'jpeg', 'png', 'webp'])) {
+                $target_dir = __DIR__ . "/../uploads/guru/";
+                if (!file_exists($target_dir)) {
+                    mkdir($target_dir, 0775, true);
+                }
+                $safe_nip = preg_replace('/[^a-zA-Z0-9_-]/', '_', $nip);
+                $foto = $safe_nip . "_" . time() . "." . $ext;
+                move_uploaded_file($_FILES['foto']['tmp_name'], $target_dir . $foto);
                 $q_foto = ", foto = ?";
                 $params[] = $foto;
                 $types .= "s";
