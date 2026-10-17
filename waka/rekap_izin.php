@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/pagination.php';
 
 authorize_role(['waka', 'admin']);
 
@@ -36,18 +37,26 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action_verifikasi'])) 
     }
 }
 
+// Search Logic
+$search = mysqli_real_escape_string($conn, $_GET['search'] ?? '');
+$where_clauses = ["sk.tahun_pelajaran_id = $active_tahun_id", "ah.status IN ('Izin', 'Sakit')"];
+if (!empty($search)) {
+    $where_clauses[] = "(s.nama_siswa LIKE '%$search%' OR s.nis LIKE '%$search%' OR k.nama_kelas LIKE '%$search%' OR ah.keterangan LIKE '%$search%')";
+}
+$where_sql = " WHERE " . implode(" AND ", $where_clauses);
+
+$pagin = get_pagination_data($conn, "absensi_harian ah JOIN siswa s ON ah.siswa_id = s.id JOIN siswa_kelas sk ON s.id = sk.siswa_id JOIN kelas k ON sk.kelas_id = k.id", 15, $where_sql);
+
 // Retrieve Permits for ALL classes in the active school year
 $query = "SELECT ah.*, s.nama_siswa, s.nis, s.nisn, k.nama_kelas
           FROM absensi_harian ah
           JOIN siswa s ON ah.siswa_id = s.id
           JOIN siswa_kelas sk ON s.id = sk.siswa_id
           JOIN kelas k ON sk.kelas_id = k.id
-          WHERE sk.tahun_pelajaran_id = ? AND ah.status IN ('Izin', 'Sakit')
-          ORDER BY ah.tanggal DESC, ah.waktu_masuk DESC";
-$stmt = mysqli_prepare($conn, $query);
-mysqli_stmt_bind_param($stmt, "i", $active_tahun_id);
-mysqli_stmt_execute($stmt);
-$permits = mysqli_stmt_get_result($stmt);
+          $where_sql
+          ORDER BY ah.tanggal DESC, ah.waktu_masuk DESC
+          LIMIT {$pagin['limit']} OFFSET {$pagin['offset']}";
+$permits = mysqli_query($conn, $query);
 
 $page_title = "Rekap Pengajuan Izin";
 require_once __DIR__ . '/../includes/header.php';
@@ -63,16 +72,30 @@ require_once __DIR__ . '/../includes/header.php';
     </div>
 
     <!-- Search Bar -->
-    <div class="mb-8 relative max-w-md">
-        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
-            <i class="fa fa-search"></i>
-        </div>
-        <input type="text" id="searchPermit" onkeyup="filterPermits()" placeholder="Cari berdasarkan nama, NIS, atau kelas..."
-               class="w-full pl-12 pr-4 py-3 rounded-2xl border border-slate-200 bg-white focus:outline-none focus:ring-4 focus:ring-indigo-50 focus:border-indigo-500 font-bold text-slate-700 placeholder:text-slate-300 transition-all shadow-sm">
+    <div class="mb-8 lux-card p-4 bg-white border border-slate-100">
+        <form action="" method="GET" class="flex flex-col sm:flex-row items-center gap-3">
+            <div class="relative flex-1 w-full">
+                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
+                    <i class="fa fa-search"></i>
+                </div>
+                <input type="text" name="search" value="<?= htmlspecialchars($search) ?>" placeholder="Cari berdasarkan nama, NIS, kelas, atau keterangan..."
+                       class="w-full pl-11 pr-4 py-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-4 focus:ring-indigo-50 font-bold text-slate-700 text-xs shadow-sm">
+            </div>
+            <div class="flex items-center gap-2 w-full sm:w-auto">
+                <button type="submit" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow-md shadow-indigo-100 transition-all flex-1 sm:flex-none">
+                    Cari
+                </button>
+                <?php if (!empty($search)): ?>
+                    <a href="rekap_izin.php" class="px-4 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-600 font-bold rounded-xl text-xs transition-all flex-1 sm:flex-none text-center">
+                        Reset
+                    </a>
+                <?php endif; ?>
+            </div>
+        </form>
     </div>
 
     <!-- List Table -->
-    <div class="lux-card overflow-hidden border-none shadow-2xl bg-white">
+    <div class="lux-card overflow-hidden border-none shadow-2xl bg-white mb-6">
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
@@ -85,17 +108,14 @@ require_once __DIR__ . '/../includes/header.php';
                         <th class="px-6 py-4 text-center text-[10px] font-black text-slate-500 uppercase tracking-widest">Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-50" id="permitTableBody">
+                <tbody class="divide-y divide-slate-50">
                     <?php if (mysqli_num_rows($permits) == 0): ?>
                         <tr>
                             <td colspan="6" class="px-6 py-12 text-center text-slate-400 font-bold italic">Belum ada pengajuan izin/sakit dari siswa.</td>
                         </tr>
                     <?php else: ?>
                         <?php while ($p = mysqli_fetch_assoc($permits)): ?>
-                            <tr class="permit-row hover:bg-slate-50/50 transition-colors"
-                                data-nama="<?= strtolower(htmlspecialchars($p['nama_siswa'])) ?>"
-                                data-nis="<?= strtolower(htmlspecialchars($p['nis'])) ?>"
-                                data-kelas="<?= strtolower(htmlspecialchars($p['nama_kelas'])) ?>">
+                            <tr class="hover:bg-slate-50/50 transition-colors">
                                 <td class="px-6 py-4">
                                     <div class="font-bold text-slate-800 text-sm"><?= htmlspecialchars($p['nama_siswa']) ?></div>
                                     <div class="text-[10px] text-slate-400 font-bold">NIS: <?= htmlspecialchars($p['nis']) ?></div>
@@ -180,27 +200,9 @@ require_once __DIR__ . '/../includes/header.php';
             </table>
         </div>
     </div>
+
+    <?= render_pagination($pagin['page'], $pagin['total_pages'], $_GET) ?>
 </div>
-
-<script>
-function filterPermits() {
-    const query = document.getElementById('searchPermit').value.toLowerCase();
-    const rows = document.getElementsByClassName('permit-row');
-
-    for (let i = 0; i < rows.length; i++) {
-        const row = rows[i];
-        const nama = row.getAttribute('data-nama');
-        const nis = row.getAttribute('data-nis');
-        const kelas = row.getAttribute('data-kelas');
-
-        if (nama.includes(query) || nis.includes(query) || kelas.includes(query)) {
-            row.style.display = '';
-        } else {
-            row.style.display = 'none';
-        }
-    }
-}
-</script>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>

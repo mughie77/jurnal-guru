@@ -134,6 +134,13 @@ function generateApiKey() {
     }
     document.getElementById('api_key_input').value = key;
     document.getElementById('api_key_url_part').textContent = key;
+
+    Swal.fire({
+        icon: 'info',
+        title: 'Kunci Dihasilkan!',
+        text: 'Klik tombol "SIMPAN PERUBAHAN" di bawah untuk mengaktifkan API Key baru ini ke database!',
+        confirmButtonColor: '#4F46E5'
+    });
 }
 
 function copyToClipboard(text) {

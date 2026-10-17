@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/pagination.php';
 
 authorize_role(['admin', 'waka']);
 
@@ -34,8 +35,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_reply'])) {
     }
 }
 
-// Fetch all Kritik & Saran entries
-$query = "SELECT * FROM kritik_saran ORDER BY tanggal DESC";
+// Server-side search & pagination
+$search = mysqli_real_escape_string($conn, $_GET['search'] ?? '');
+$where_sql = "";
+if (!empty($search)) {
+    $where_sql = " WHERE (nama_pengirim LIKE '%$search%' OR subjek LIKE '%$search%' OR isi LIKE '%$search%')";
+}
+
+$pagin = get_pagination_data($conn, "kritik_saran", 15, $where_sql);
+
+$query = "SELECT id, user_id, nama_pengirim, role, subjek, isi, umpan_balik, tanggal FROM kritik_saran $where_sql ORDER BY tanggal DESC LIMIT {$pagin['limit']} OFFSET {$pagin['offset']}";
 $result = mysqli_query($conn, $query);
 
 $feedbacks = [];
@@ -62,13 +71,19 @@ require_once __DIR__ . '/../includes/header.php';
     </div>
 
     <!-- Search Bar -->
-    <div class="mb-8 relative max-w-md">
-        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
-            <i class="fa fa-search"></i>
+    <form action="" method="GET" class="mb-8 relative max-w-md flex items-center gap-2">
+        <div class="relative flex-1">
+            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
+                <i class="fa fa-search"></i>
+            </div>
+            <input type="text" name="search" value="<?= htmlspecialchars($search) ?>" placeholder="Cari berdasarkan nama, subjek, atau isi..."
+                   class="w-full pl-12 pr-4 py-3 rounded-2xl border border-slate-200 bg-white focus:outline-none focus:ring-4 focus:ring-indigo-50 focus:border-indigo-500 font-bold text-slate-700 placeholder:text-slate-300 transition-all shadow-sm">
         </div>
-        <input type="text" id="searchKritik" onkeyup="filterKritik()" placeholder="Cari berdasarkan nama, subjek, atau isi..."
-               class="w-full pl-12 pr-4 py-3 rounded-2xl border border-slate-200 bg-white focus:outline-none focus:ring-4 focus:ring-indigo-50 focus:border-indigo-500 font-bold text-slate-700 placeholder:text-slate-300 transition-all shadow-sm">
-    </div>
+        <button type="submit" class="px-5 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl shadow-md text-xs">Cari</button>
+        <?php if (!empty($search)): ?>
+            <a href="rekap_kritik.php" class="px-4 py-3 bg-slate-200 text-slate-600 font-bold rounded-2xl text-xs hover:bg-slate-300 transition-all">Reset</a>
+        <?php endif; ?>
+    </form>
 
     <!-- Table -->
     <div class="lux-card overflow-hidden border-none shadow-2xl bg-white">
@@ -138,6 +153,10 @@ require_once __DIR__ . '/../includes/header.php';
                 </tbody>
             </table>
         </div>
+    </div>
+
+    <div class="mt-6">
+        <?= render_pagination($pagin['page'], $pagin['total_pages'], $_GET) ?>
     </div>
 </div>
 
