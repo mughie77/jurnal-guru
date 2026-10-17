@@ -25,10 +25,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['zip_file'])) {
             $filename = $zip->getNameIndex($i);
             $fileinfo = pathinfo($filename);
 
-            // Only process jpeg/jpg files
-            if (isset($fileinfo['extension']) && in_array(strtolower($fileinfo['extension']), ['jpg', 'jpeg'])) {
-                $nis_nip = $fileinfo['filename']; // Filename without extension is the NIS or NIP
-                $new_filename = $nis_nip . "_" . time() . ".jpg";
+            // Only process jpeg/jpg/png files
+            if (isset($fileinfo['extension']) && in_array(strtolower($fileinfo['extension']), ['jpg', 'jpeg', 'png', 'webp'])) {
+                $nis_nip = trim($fileinfo['filename']); // Filename without extension (NISN for siswa / NIP for guru)
+                $safe_identifier = preg_replace('/[^a-zA-Z0-9_-]/', '_', $nis_nip);
+                $ext = strtolower($fileinfo['extension']);
+                $new_filename = $safe_identifier . "_" . time() . "." . $ext;
 
                 // Extract file content
                 $content = $zip->getFromIndex($i);
@@ -36,12 +38,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['zip_file'])) {
 
                 // Update database
                 if ($type == 'siswa') {
-                    $stmt = mysqli_prepare($conn, "UPDATE siswa SET foto = ? WHERE nis = ?");
+                    // Match primary by NISN or NIS
+                    $stmt = mysqli_prepare($conn, "UPDATE siswa SET foto = ? WHERE nisn = ? OR nis = ?");
+                    mysqli_stmt_bind_param($stmt, "sss", $new_filename, $nis_nip, $nis_nip);
                 } else {
                     $stmt = mysqli_prepare($conn, "UPDATE guru SET foto = ? WHERE nip = ?");
+                    mysqli_stmt_bind_param($stmt, "ss", $new_filename, $nis_nip);
                 }
 
-                mysqli_stmt_bind_param($stmt, "ss", $new_filename, $nis_nip);
                 if (mysqli_stmt_execute($stmt) && mysqli_stmt_affected_rows($stmt) > 0) {
                     $success_count++;
                 } else {
@@ -64,7 +68,7 @@ require_once __DIR__ . '/../includes/header.php';
 
 <div class="mb-8">
     <h1 class="text-3xl font-bold text-slate-800 tracking-tight italic">Import Foto Massal</h1>
-    <p class="text-slate-500">Unggah file ZIP berisi foto siswa atau guru (format .jpg, nama file = NIS/NIP).</p>
+    <p class="text-slate-500">Unggah file ZIP berisi foto siswa atau guru (nama file = NISN untuk Siswa, NIP untuk Guru).</p>
 </div>
 
 <?php if ($message): ?>
@@ -95,9 +99,9 @@ require_once __DIR__ . '/../includes/header.php';
             </h3>
             <ul class="text-xs text-indigo-700/80 space-y-1 leading-relaxed">
                 <li>• File harus dalam format <strong>.zip</strong></li>
-                <li>• Isi ZIP adalah file gambar <strong>.jpg</strong> atau <strong>.jpeg</strong></li>
-                <li>• Nama file harus <strong>NIS</strong> (untuk siswa) atau <strong>NIP</strong> (untuk guru)</li>
-                <li>• Contoh: <code>12345.jpg</code> atau <code>19800101...jpg</code></li>
+                <li>• Isi ZIP adalah file gambar (<strong>.jpg</strong>, <strong>.jpeg</strong>, atau <strong>.png</strong>)</li>
+                <li>• Nama file foto siswa harus menggunakan <strong>NISN</strong> (contoh: <code>0012345678.jpg</code>)</li>
+                <li>• Nama file foto guru menggunakan <strong>NIP</strong> (contoh: <code>198001012005011001.jpg</code>)</li>
             </ul>
         </div>
 
