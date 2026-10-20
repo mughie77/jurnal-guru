@@ -91,17 +91,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['simpan_kunjungan_ruma
         $q_k = mysqli_query($conn, "SELECT sk.kelas_id FROM siswa_kelas sk JOIN tahun_pelajaran tp ON sk.tahun_pelajaran_id = tp.id WHERE sk.siswa_id = $siswa_id AND tp.status = 'aktif' LIMIT 1");
         $kelas_id = ($r_k = mysqli_fetch_assoc($q_k)) ? (int)$r_k['kelas_id'] : 0;
 
-        // Auto generate kode_konseli if empty
-        $q_s = mysqli_query($conn, "SELECT s.nama_siswa, s.alamat, k.nama_kelas FROM siswa s LEFT JOIN siswa_kelas sk ON s.id = sk.siswa_id LEFT JOIN kelas k ON sk.kelas_id = k.id WHERE s.id = $siswa_id LIMIT 1");
+        // Auto generate unique kode_konseli if empty (without class code)
+        $q_s = mysqli_query($conn, "SELECT s.nama_siswa, s.alamat FROM siswa s WHERE s.id = $siswa_id LIMIT 1");
         $r_s = mysqli_fetch_assoc($q_s);
         if (empty($alamat_kunjungan) && !empty($r_s['alamat'])) {
             $alamat_kunjungan = $r_s['alamat'];
         }
 
-        $thn = date('Y');
-        $k_kls = preg_replace('/[^A-Z]/', '', strtoupper($r_s['nama_kelas'] ?? 'BK'));
-        if (empty($k_kls)) $k_kls = 'BK';
-        $kode_konseli = "{$thn}. {$k_kls}. {$siswa_id}";
+        $kode_konseli = generate_unique_kode_konseli($conn, $siswa_id);
 
         if ($guru_id <= 0) {
             $q_first_g = mysqli_query($conn, "SELECT id FROM guru LIMIT 1");

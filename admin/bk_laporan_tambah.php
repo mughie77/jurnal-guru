@@ -151,17 +151,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['simpan_rpl'])) {
         if (empty($topik)) $topik = !empty($rumusan_masalah) ? $rumusan_masalah : "Konseling Individual";
         if (empty($ringkasan)) $ringkasan = !empty($masalah_analisis) ? $masalah_analisis : "Sesi konseling telah dilaksanakan.";
 
-        // Auto-generate kode_konseli if empty
+        // Auto-generate unique kode_konseli if empty (without class code)
         if (empty($kode_konseli)) {
-            $q_s = mysqli_query($conn, "SELECT s.id, s.nama_siswa, k.nama_kelas FROM siswa s JOIN siswa_kelas sk ON s.id = sk.siswa_id JOIN kelas k ON sk.kelas_id = k.id JOIN tahun_pelajaran tp ON sk.tahun_pelajaran_id = tp.id WHERE s.id = $siswa_id AND tp.status = 'aktif' LIMIT 1");
-            if ($row_s = mysqli_fetch_assoc($q_s)) {
-                $thn = date('Y');
-                $k_kls = preg_replace('/[^A-Z]/', '', strtoupper($row_s['nama_kelas']));
-                if (empty($k_kls)) $k_kls = 'BK';
-                $kode_konseli = "{$thn}. {$k_kls}. {$siswa_id}";
-            } else {
-                $kode_konseli = date('Y') . ". BK. " . $siswa_id;
-            }
+            $kode_konseli = generate_unique_kode_konseli($conn, $siswa_id);
         }
 
         // Get class ID
@@ -553,13 +545,12 @@ function generateKodeKonseli() {
     if (!opt || !opt.value) return;
 
     const siswaId = opt.value;
-    const kelas = opt.getAttribute('data-kelas') || 'BK';
-    const cleanKelas = kelas.replace(/[^a-zA-Z0-9]/g, '').toUpperCase() || 'BK';
     const year = new Date().getFullYear();
+    const paddedId = String(siswaId).padStart(4, '0');
 
-    // Auto-fill if empty or matches standard pattern
+    // Auto-fill without class code
     if (!inputKode.value || inputKode.value.includes('.')) {
-        inputKode.value = `${year}. ${cleanKelas}. ${siswaId}`;
+        inputKode.value = `KS.${year}.${paddedId}`;
     }
 }
 </script>
