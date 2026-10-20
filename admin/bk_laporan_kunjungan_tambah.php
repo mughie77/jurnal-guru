@@ -103,14 +103,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['simpan_kunjungan_ruma
         if (empty($k_kls)) $k_kls = 'BK';
         $kode_konseli = "{$thn}. {$k_kls}. {$siswa_id}";
 
+        if ($guru_id <= 0) {
+            $q_first_g = mysqli_query($conn, "SELECT id FROM guru LIMIT 1");
+            if ($r_fg = mysqli_fetch_assoc($q_first_g)) {
+                $guru_id = (int)$r_fg['id'];
+            }
+        }
+
+        $jenis_bimbingan = 'Kunjungan Rumah';
+
         if ($is_edit) {
             $stmt = mysqli_prepare($conn, "UPDATE bk_laporan SET
-                tanggal=?, siswa_id=?, guru_id=?, kelas_id=?, kode_konseli=?, bidang_layanan=?,
+                tanggal=?, jenis_bimbingan=?, siswa_id=?, guru_id=?, kelas_id=?, kode_konseli=?, bidang_layanan=?,
                 topik_permasalahan=?, fungsi_layanan=?, pihak_dilibatkan=?, tujuan_umum=?,
                 ringkasan_pembahasan=?, alamat_kunjungan=?, waktu=?, anggota_keluarga=?,
                 evaluasi_proses=?, tindak_lanjut=?, catatan_khusus=?, status=? WHERE id=?");
-            mysqli_stmt_bind_param($stmt, "siiissssssssssssssi",
-                $tanggal, $siswa_id, $guru_id, $kelas_id, $kode_konseli, $bidang_layanan,
+            mysqli_stmt_bind_param($stmt, "ssiiissssssssssssssi",
+                $tanggal, $jenis_bimbingan, $siswa_id, $guru_id, $kelas_id, $kode_konseli, $bidang_layanan,
                 $topik_permasalahan, $fungsi_layanan, $pihak_dilibatkan, $tujuan_umum,
                 $ringkasan_pembahasan, $alamat_kunjungan, $waktu, $anggota_keluarga,
                 $evaluasi_proses, $tindak_lanjut, $catatan_khusus, $status, $edit_id);
@@ -118,10 +127,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['simpan_kunjungan_ruma
                 header("Location: " . BASE_URL . "admin/bk_laporan.php?jenis=Kunjungan+Rumah&success_save=1");
                 exit;
             } else {
-                throw new Exception("Gagal memperbarui laporan Kunjungan Rumah.");
+                throw new Exception("Gagal memperbarui laporan Kunjungan Rumah: " . mysqli_error($conn));
             }
         } else {
-            $jenis_bimbingan = 'Kunjungan Rumah';
             $stmt = mysqli_prepare($conn, "INSERT INTO bk_laporan (
                 tanggal, jenis_bimbingan, siswa_id, guru_id, kelas_id, kode_konseli, bidang_layanan,
                 topik_permasalahan, fungsi_layanan, pihak_dilibatkan, tujuan_umum,
@@ -137,7 +145,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['simpan_kunjungan_ruma
                 header("Location: " . BASE_URL . "admin/bk_laporan.php?jenis=Kunjungan+Rumah&success_save=1");
                 exit;
             } else {
-                throw new Exception("Gagal menyimpan laporan Kunjungan Rumah baru.");
+                throw new Exception("Gagal menyimpan laporan Kunjungan Rumah baru: " . mysqli_error($conn));
             }
         }
     } catch (Exception $e) {

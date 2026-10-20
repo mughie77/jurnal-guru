@@ -569,6 +569,14 @@ if ($is_ajax) {
                 $logs[] = ['status' => 'error', 'msg' => "Failed creating <b>bk_laporan</b>: " . mysqli_error($conn)];
             }
 
+            // Ensure jenis_bimbingan in bk_laporan supports Kunjungan Rumah & Konferensi Kasus (modify ENUM/VARCHAR)
+            try {
+                mysqli_query($conn, "ALTER TABLE `bk_laporan` MODIFY COLUMN `jenis_bimbingan` VARCHAR(100) NOT NULL DEFAULT 'Individu'");
+                $logs[] = ['status' => 'success', 'msg' => "Updated <b>jenis_bimbingan</b> column in <b>bk_laporan</b> to VARCHAR(100)"];
+            } catch (Throwable $e) {
+                $logs[] = ['status' => 'error', 'msg' => "Failed modifying jenis_bimbingan: " . htmlspecialchars($e->getMessage())];
+            }
+
             // Create BK Master Pelanggaran table
             $create_bk_mp = "CREATE TABLE IF NOT EXISTS `bk_master_pelanggaran` (
                 `id` int(11) NOT NULL AUTO_INCREMENT,
