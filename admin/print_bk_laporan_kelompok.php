@@ -29,15 +29,17 @@ $r = mysqli_fetch_assoc($res);
 $student_ids = json_decode($r['siswa_ids_json'] ?? '[]', true) ?: [];
 $pelaksanaan = json_decode($r['pelaksanaan_json'] ?? '[]', true) ?: [];
 
-// Fetch students details
+// Fetch students details (avoiding duplicates if student is mapped in multiple historical classes)
 $students = [];
 if (!empty($student_ids)) {
     $ids_str = implode(',', array_map('intval', $student_ids));
     $q_st = mysqli_query($conn, "SELECT s.id, s.nama_siswa, s.nis, k.nama_kelas
                                  FROM siswa s
                                  LEFT JOIN siswa_kelas sk ON s.id = sk.siswa_id
+                                 LEFT JOIN tahun_pelajaran tp ON sk.tahun_pelajaran_id = tp.id AND tp.status = 'aktif'
                                  LEFT JOIN kelas k ON sk.kelas_id = k.id
                                  WHERE s.id IN ($ids_str)
+                                 GROUP BY s.id
                                  ORDER BY s.nama_siswa ASC");
     while ($st = mysqli_fetch_assoc($q_st)) {
         $students[] = $st;
@@ -48,7 +50,9 @@ if (!empty($student_ids)) {
 $q_settings = mysqli_query($conn, "SELECT * FROM pengaturan");
 $settings = [];
 while ($row = mysqli_fetch_assoc($q_settings)) {
-    $settings[$row['kunci']] = $row['nilai'];
+    $key = $row['nama_setting'] ?? ($row['kunci'] ?? '');
+    $val = $row['nilai_setting'] ?? ($row['nilai'] ?? '');
+    if ($key) $settings[$key] = $val;
 }
 
 $nama_ks = $settings['nama_kepsek'] ?? 'Deni Setyo Purnomo, S.Pd., M.M.';

@@ -26,10 +26,12 @@ $pelaksanaan = json_decode($data['pelaksanaan_json'] ?? '[]', true) ?: [];
 $siswa_ids = json_decode($data['siswa_ids_json'] ?? '[]', true) ?: [];
 
 // Get Headmaster & Counselor info from settings
-$res_set = mysqli_query($conn, "SELECT nama_setting, nilai_setting FROM pengaturan");
+$res_set = mysqli_query($conn, "SELECT * FROM pengaturan");
 $sets = [];
 while ($r = mysqli_fetch_assoc($res_set)) {
-    $sets[$r['nama_setting']] = $r['nilai_setting'];
+    $key = $r['nama_setting'] ?? ($r['kunci'] ?? '');
+    $val = $r['nilai_setting'] ?? ($r['nilai'] ?? '');
+    if ($key) $sets[$key] = $val;
 }
 $nama_sekolah = $sets['nama_sekolah'] ?? 'SEKOLAH MENENGAH KEJURUAN NEGERI 2 BONDOWOSO';
 $alamat_sekolah = $sets['alamat_sekolah'] ?? 'Jalan Jend. Ahmad Yani No. 48 Telp/Fax. (0332) 421286';
