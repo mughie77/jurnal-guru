@@ -104,7 +104,10 @@ if ($is_ajax) {
                     'media_alat' => "VARCHAR(255) DEFAULT 'HP / Komputer / Laptop /LCD' AFTER metode_teknik",
                     'pelaksanaan_json' => "LONGTEXT DEFAULT NULL AFTER media_alat",
                     'evaluasi_proses' => "TEXT DEFAULT NULL AFTER pelaksanaan_json",
-                    'evaluasi_hasil' => "TEXT DEFAULT NULL AFTER evaluasi_proses"
+                    'evaluasi_hasil' => "TEXT DEFAULT NULL AFTER evaluasi_proses",
+                    'alamat_kunjungan' => "TEXT DEFAULT NULL AFTER evaluasi_hasil",
+                    'anggota_keluarga' => "VARCHAR(255) DEFAULT 'Orang Tua' AFTER alamat_kunjungan",
+                    'catatan_khusus' => "TEXT DEFAULT NULL AFTER anggota_keluarga"
                 ]
             ];
 

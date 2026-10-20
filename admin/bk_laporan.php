@@ -31,6 +31,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['tambah_laporan']) ||
         $topik = trim($_POST['topik_permasalahan'] ?? '');
         $ringkasan = trim($_POST['ringkasan_pembahasan'] ?? '');
         $tindak_lanjut = trim($_POST['tindak_lanjut'] ?? '');
+        $alamat_kunjungan = trim($_POST['alamat_kunjungan'] ?? '');
+        $anggota_keluarga = trim($_POST['anggota_keluarga'] ?? 'Orang Tua');
+        $catatan_khusus = trim($_POST['catatan_khusus'] ?? '');
         $status = $_POST['status'] ?? 'Proses';
 
         if ($siswa_id <= 0 || empty($topik) || empty($ringkasan)) {
@@ -47,8 +50,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['tambah_laporan']) ||
         }
 
         if (isset($_POST['tambah_laporan'])) {
-            $stmt = mysqli_prepare($conn, "INSERT INTO bk_laporan (tanggal, jenis_bimbingan, siswa_id, guru_id, kelas_id, topik_permasalahan, ringkasan_pembahasan, tindak_lanjut, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            mysqli_stmt_bind_param($stmt, "ssiiissss", $tanggal, $jenis_bimbingan, $siswa_id, $guru_id, $kelas_id, $topik, $ringkasan, $tindak_lanjut, $status);
+            $stmt = mysqli_prepare($conn, "INSERT INTO bk_laporan (tanggal, jenis_bimbingan, siswa_id, guru_id, kelas_id, topik_permasalahan, ringkasan_pembahasan, tindak_lanjut, alamat_kunjungan, anggota_keluarga, catatan_khusus, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            mysqli_stmt_bind_param($stmt, "ssiiisssssss", $tanggal, $jenis_bimbingan, $siswa_id, $guru_id, $kelas_id, $topik, $ringkasan, $tindak_lanjut, $alamat_kunjungan, $anggota_keluarga, $catatan_khusus, $status);
             if (mysqli_stmt_execute($stmt)) {
                 $message = "Laporan Bimbingan Konseling berhasil disimpan!";
                 $message_type = 'success';
@@ -56,8 +59,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['tambah_laporan']) ||
                 throw new Exception("Gagal menyimpan laporan.");
             }
         } else {
-            $stmt = mysqli_prepare($conn, "UPDATE bk_laporan SET tanggal=?, jenis_bimbingan=?, siswa_id=?, kelas_id=?, topik_permasalahan=?, ringkasan_pembahasan=?, tindak_lanjut=?, status=? WHERE id=?");
-            mysqli_stmt_bind_param($stmt, "ssiissssi", $tanggal, $jenis_bimbingan, $siswa_id, $kelas_id, $topik, $ringkasan, $tindak_lanjut, $status, $lap_id);
+            $stmt = mysqli_prepare($conn, "UPDATE bk_laporan SET tanggal=?, jenis_bimbingan=?, siswa_id=?, kelas_id=?, topik_permasalahan=?, ringkasan_pembahasan=?, tindak_lanjut=?, alamat_kunjungan=?, anggota_keluarga=?, catatan_khusus=?, status=? WHERE id=?");
+            mysqli_stmt_bind_param($stmt, "ssiisssssssi", $tanggal, $jenis_bimbingan, $siswa_id, $kelas_id, $topik, $ringkasan, $tindak_lanjut, $alamat_kunjungan, $anggota_keluarga, $catatan_khusus, $status, $lap_id);
             if (mysqli_stmt_execute($stmt)) {
                 $message = "Laporan Bimbingan Konseling berhasil diperbarui!";
                 $message_type = 'success';
@@ -159,6 +162,10 @@ require_once __DIR__ . '/../includes/header.php';
             <a href="<?= BASE_URL ?>admin/bk_laporan_kelompok_tambah.php" class="bg-teal-600 hover:bg-teal-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-teal-100 transition-all flex items-center text-xs sm:text-sm">
                 <i class="fa fa-users mr-2"></i> Input RPL Kelompok BK
             </a>
+        <?php elseif ($jenis_filter === 'Kunjungan Rumah'): ?>
+            <button onclick="openAddModalKunjunganRumah()" class="bg-amber-600 hover:bg-amber-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-amber-100 transition-all flex items-center text-xs sm:text-sm">
+                <i class="fa fa-plus mr-2"></i> Tambah Laporan Kunjungan Rumah
+            </button>
         <?php else: ?>
             <a href="<?= BASE_URL ?>admin/bk_laporan_tambah.php" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-indigo-100 transition-all flex items-center text-xs sm:text-sm">
                 <i class="fa fa-plus mr-2"></i> Input RPL Individual BK
@@ -326,6 +333,13 @@ require_once __DIR__ . '/../includes/header.php';
                                     <a href="<?= BASE_URL ?>admin/bk_laporan_kelompok_tambah.php?id=<?= $r['id'] ?>" class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all flex items-center justify-center shadow-sm" title="Edit RPL BK Kelompok">
                                         <i class="fa fa-edit text-xs"></i>
                                     </a>
+                                <?php elseif ($r['jenis_bimbingan'] === 'Kunjungan Rumah'): ?>
+                                    <button onclick="printLaporanKunjunganRumahModal(<?= $r['id'] ?>, '<?= htmlspecialchars(addslashes($r['nama_siswa'] ?? '')) ?>', '<?= htmlspecialchars(addslashes($r['kode_konseli'] ?? '')) ?>')" class="px-3 py-1.5 rounded-xl bg-amber-50 text-amber-700 hover:bg-amber-600 hover:text-white transition-all font-bold text-xs flex items-center gap-1.5 shadow-sm" title="Cetak Laporan Kunjungan Rumah">
+                                        <i class="fa fa-print text-xs"></i> Cetak Laporan
+                                    </button>
+                                    <button onclick='editLaporan(<?= json_encode($r) ?>)' class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all flex items-center justify-center shadow-sm" title="Edit Laporan Kunjungan Rumah">
+                                        <i class="fa fa-edit text-xs"></i>
+                                    </button>
                                 <?php else: ?>
                                     <?php if ($jenis_filter === 'Individu' && $sub_tab === 'laporan'): ?>
                                         <button onclick="printLaporanKonselingModal(<?= $r['id'] ?>, '<?= htmlspecialchars(addslashes($r['nama_siswa'] ?? '')) ?>', '<?= htmlspecialchars(addslashes($r['kode_konseli'] ?? '')) ?>')" class="px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white transition-all font-bold text-xs flex items-center gap-1.5 shadow-sm" title="Cetak Laporan Konseling Individu">
@@ -413,6 +427,23 @@ require_once __DIR__ . '/../includes/header.php';
             <input type="text" name="topik_permasalahan" id="topik_permasalahan" required placeholder="Contoh: Kesulitan belajar, sering terlambat, motivasi diri..." class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 font-bold text-slate-700 text-xs">
         </div>
 
+        <div id="field_kunjungan_rumah" class="space-y-4">
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Alamat Kunjungan</label>
+                <input type="text" name="alamat_kunjungan" id="alamat_kunjungan" placeholder="Alamat lengkap lokasi kunjungan rumah..." class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 font-bold text-slate-700 text-xs">
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Anggota Keluarga Dikunjungi</label>
+                    <input type="text" name="anggota_keluarga" id="anggota_keluarga" placeholder="e.g. Orang Tua / Wali" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 font-bold text-slate-700 text-xs">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Catatan Khusus</label>
+                    <input type="text" name="catatan_khusus" id="catatan_khusus" placeholder="e.g. - " class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 font-bold text-slate-700 text-xs">
+                </div>
+            </div>
+        </div>
+
         <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">Ringkasan Pembahasan & Hasil Konseling</label>
             <textarea name="ringkasan_pembahasan" id="ringkasan_pembahasan" rows="4" required placeholder="Uraikan jalannya konseling dan poin kesepakatan bersama siswa..." class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 font-medium text-slate-700 text-xs leading-relaxed"></textarea>
@@ -468,6 +499,27 @@ function closeAllModals() {
     });
 }
 
+function openAddModalKunjunganRumah() {
+    document.getElementById('modal_title').textContent = 'Tambah Laporan Kunjungan Rumah';
+    document.getElementById('laporan_id').value = 0;
+    document.getElementById('tanggal').value = '<?= date('Y-m-d') ?>';
+    document.getElementById('jenis_bimbingan').value = 'Kunjungan Rumah';
+    document.getElementById('siswa_id').value = '';
+    document.getElementById('topik_permasalahan').value = '';
+    document.getElementById('alamat_kunjungan').value = '';
+    document.getElementById('anggota_keluarga').value = 'Orang Tua';
+    document.getElementById('catatan_khusus').value = '-';
+    document.getElementById('ringkasan_pembahasan').value = '';
+    document.getElementById('tindak_lanjut').value = '';
+    document.getElementById('status').value = 'Proses';
+
+    const btn = document.getElementById('submit_btn');
+    btn.name = 'tambah_laporan';
+    btn.textContent = 'Simpan Laporan Kunjungan Rumah';
+
+    openModal('addModal');
+}
+
 function editLaporan(item) {
     document.getElementById('modal_title').textContent = 'Edit Laporan Bimbingan Konseling';
     document.getElementById('laporan_id').value = item.id;
@@ -476,6 +528,9 @@ function editLaporan(item) {
     document.getElementById('siswa_id').value = item.siswa_id;
     if (document.getElementById('guru_id')) document.getElementById('guru_id').value = item.guru_id;
     document.getElementById('topik_permasalahan').value = item.topik_permasalahan;
+    if (document.getElementById('alamat_kunjungan')) document.getElementById('alamat_kunjungan').value = item.alamat_kunjungan || '';
+    if (document.getElementById('anggota_keluarga')) document.getElementById('anggota_keluarga').value = item.anggota_keluarga || 'Orang Tua';
+    if (document.getElementById('catatan_khusus')) document.getElementById('catatan_khusus').value = item.catatan_khusus || '-';
     document.getElementById('ringkasan_pembahasan').value = item.ringkasan_pembahasan;
     document.getElementById('tindak_lanjut').value = item.tindak_lanjut || '';
     document.getElementById('status').value = item.status;
@@ -485,6 +540,62 @@ function editLaporan(item) {
     btn.textContent = 'Update Laporan';
 
     openModal('addModal');
+}
+
+function printLaporanKunjunganRumahModal(id, namaSiswa, kodeKonseli) {
+    Swal.fire({
+        title: 'Cetak Laporan Kunjungan Rumah',
+        html: `<div class="text-left space-y-3 font-sans">
+            <p class="text-xs text-slate-600 font-medium">Pilih opsi penyamaran nama siswa dan format identitas Guru BK:</p>
+            <div class="p-3 bg-slate-50 rounded-2xl border border-slate-100 space-y-1">
+                <div class="text-xs font-bold text-slate-800">Siswa: ${namaSiswa}</div>
+                <div class="text-[11px] font-mono text-amber-600 font-bold">Kode: ${kodeKonseli || '-'}</div>
+            </div>
+            <div class="space-y-2 pt-1">
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Penyamaran Nama</label>
+                <label class="flex items-center gap-2 cursor-pointer p-2 rounded-xl border border-slate-200 hover:bg-slate-50">
+                    <input type="radio" name="swal_samarkan_kr" value="1" class="accent-amber-600">
+                    <span class="text-xs font-bold text-slate-700">Samarkan Nama Siswa (Gunakan Kode Konseli)</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer p-2 rounded-xl border border-slate-200 hover:bg-slate-50">
+                    <input type="radio" name="swal_samarkan_kr" value="0" checked class="accent-amber-600">
+                    <span class="text-xs font-bold text-slate-700">Tampilkan Nama Asli Siswa</span>
+                </label>
+            </div>
+            <div class="space-y-2 pt-1">
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tipe Identitas Guru BK</label>
+                <div class="grid grid-cols-2 gap-2">
+                    <label class="flex items-center gap-2 cursor-pointer p-2 rounded-xl border border-slate-200 hover:bg-slate-50">
+                        <input type="radio" name="swal_nip_type_kr" value="NIPPPK" checked class="accent-amber-600">
+                        <span class="text-xs font-bold text-slate-700">NIPPPK</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer p-2 rounded-xl border border-slate-200 hover:bg-slate-50">
+                        <input type="radio" name="swal_nip_type_kr" value="NIP" class="accent-amber-600">
+                        <span class="text-xs font-bold text-slate-700">NIP</span>
+                    </label>
+                </div>
+            </div>
+        </div>`,
+        showCancelButton: true,
+        confirmButtonText: '<i class="fa fa-print mr-1"></i> Cetak Laporan',
+        cancelButtonText: 'Batal',
+        confirmButtonColor: '#D97706',
+        cancelButtonColor: '#6B7280',
+        preConfirm: () => {
+            const radSam = document.querySelector('input[name="swal_samarkan_kr"]:checked');
+            const radNip = document.querySelector('input[name="swal_nip_type_kr"]:checked');
+            return {
+                samarkan: radSam ? radSam.value : '0',
+                nip_type: radNip ? radNip.value : 'NIPPPK'
+            };
+        }
+    }).then((res) => {
+        if (res.isConfirmed) {
+            const samarkan = res.value.samarkan;
+            const nip_type = res.value.nip_type;
+            window.open(`<?= BASE_URL ?>admin/print_laporan_kunjungan_rumah.php?id=${id}&samarkan=${samarkan}&nip_type=${nip_type}`, '_blank');
+        }
+    });
 }
 
 function printOptionKelompokModal(id) {
