@@ -69,6 +69,9 @@ if ($is_ajax) {
                     'tahun_pelajaran_id' => "INT(11) DEFAULT NULL AFTER mapel_id",
                     'jam_mulai' => "TIME DEFAULT NULL AFTER jam_ke"
                 ],
+                'konsultasi_pesan' => [
+                    'dibaca' => "TINYINT(1) DEFAULT 0 AFTER lampiran_foto"
+                ],
                 'bk_laporan' => [
                     'jenis_bimbingan' => "VARCHAR(100) NOT NULL DEFAULT 'Individu' AFTER tanggal",
                     'kode_konseli' => "VARCHAR(50) DEFAULT NULL AFTER siswa_id",
@@ -255,6 +258,7 @@ if ($is_ajax) {
                 `pengirim_role` varchar(50) NOT NULL,
                 `pesan` text NOT NULL,
                 `lampiran_foto` varchar(255) DEFAULT NULL,
+                `dibaca` tinyint(1) DEFAULT 0,
                 `created_at` timestamp NULL DEFAULT current_timestamp(),
                 PRIMARY KEY (`id`),
                 KEY `konsultasi_id` (`konsultasi_id`)

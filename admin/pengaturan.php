@@ -228,10 +228,21 @@ require_once __DIR__ . '/../includes/header.php';
                 </div>
 
                 <!-- HTML Editor Box for Kop Surat Content -->
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Teks Isi KOP Surat (HTML Formatting)</label>
-                    <textarea name="kop_sekolah_html" id="kop_sekolah_html" rows="5" oninput="updateKopPreview()" class="w-full px-4 py-3 rounded-2xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-100 font-mono text-xs text-slate-800 leading-relaxed"><?= htmlspecialchars($sets['kop_sekolah_html'] ?? '<div style="text-align: center;"><h3 style="font-size: 14px; font-weight: bold; text-transform: uppercase; margin: 0;">PEMERINTAH PROVINSI JAWA TIMUR</h3><h3 style="font-size: 14px; font-weight: bold; text-transform: uppercase; margin: 0;">DINAS PENDIDIKAN</h3><h2 style="font-size: 16px; font-weight: bold; text-transform: uppercase; margin: 2px 0;">SEKOLAH MENENGAH KEJURUAN NEGERI 2 BONDOWOSO</h2><p style="font-size: 11px; margin: 0;">Jalan Jend. Ahmad Yani No. 48 Telp/Fax. (0332) 421286</p><p style="font-size: 10px; font-style: italic; margin: 0;">Email: smknbws2@yahoo.com Website: www.smkn2bondowoso.sch.id</p><h2 style="font-size: 14px; font-weight: bold; text-transform: uppercase; margin-top: 2px;">BONDOWOSO</h2></div>') ?></textarea>
-                    <p class="text-[10px] text-slate-400 font-bold italic mt-1">Anda dapat menyesuaikan tag header h2, h3, p, style font-size, font-weight, dan margin sesuai kebutuhan dokumen.</p>
+                <div class="space-y-2">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <label class="block text-xs font-bold text-slate-700">Teks Isi KOP Surat (HTML Formatting)</label>
+                        <div class="flex flex-wrap items-center gap-1.5 no-print">
+                            <button type="button" onclick="insertKopTag('b')" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold border border-slate-200 transition-all" title="Bold"><b>B</b></button>
+                            <button type="button" onclick="insertKopTag('i')" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold border border-slate-200 transition-all" title="Italic"><i>I</i></button>
+                            <button type="button" onclick="insertKopTag('u')" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold border border-slate-200 transition-all" title="Underline"><u>U</u></button>
+                            <button type="button" onclick="insertKopTemplate('h2')" class="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold border border-indigo-100 transition-all" title="Judul Utama (H2)">H2</button>
+                            <button type="button" onclick="insertKopTemplate('h3')" class="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold border border-indigo-100 transition-all" title="Sub Judul (H3)">H3</button>
+                            <button type="button" onclick="insertKopTemplate('p')" class="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold border border-indigo-100 transition-all" title="Paragraf Alamat (P)">Paragraf</button>
+                            <button type="button" onclick="resetDefaultKopTemplate()" class="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold border border-rose-100 transition-all" title="Reset ke Template Standar"><i class="fa fa-undo mr-1"></i> Reset</button>
+                        </div>
+                    </div>
+                    <textarea name="kop_sekolah_html" id="kop_sekolah_html" rows="7" oninput="updateKopPreview()" class="w-full px-4 py-3 rounded-2xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-100 font-mono text-xs text-slate-800 leading-relaxed shadow-inner"><?= htmlspecialchars($sets['kop_sekolah_html'] ?? '<div style="text-align: center;"><h3 style="font-size: 14px; font-weight: bold; text-transform: uppercase; margin: 0;">PEMERINTAH PROVINSI JAWA TIMUR</h3><h3 style="font-size: 14px; font-weight: bold; text-transform: uppercase; margin: 0;">DINAS PENDIDIKAN</h3><h2 style="font-size: 16px; font-weight: bold; text-transform: uppercase; margin: 2px 0;">SEKOLAH MENENGAH KEJURUAN NEGERI 2 BONDOWOSO</h2><p style="font-size: 11px; margin: 0;">Jalan Jend. Ahmad Yani No. 48 Telp/Fax. (0332) 421286</p><p style="font-size: 10px; font-style: italic; margin: 0;">Email: smknbws2@yahoo.com Website: www.smkn2bondowoso.sch.id</p><h2 style="font-size: 14px; font-weight: bold; text-transform: uppercase; margin-top: 2px;">BONDOWOSO</h2></div>') ?></textarea>
+                    <p class="text-[10px] text-slate-400 font-bold italic mt-1">Anda dapat mengetik langsung kode HTML atau menggunakan tombol format cepat di atas untuk menyusun teks Kop Surat.</p>
                 </div>
 
                 <!-- Live KOP Preview Box -->
@@ -445,13 +456,7 @@ require_once __DIR__ . '/../includes/header.php';
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script>
 function updateKopPreview() {
-    let htmlVal = '';
-    if (typeof tinymce !== 'undefined' && tinymce.get('kop_sekolah_html')) {
-        htmlVal = tinymce.get('kop_sekolah_html').getContent();
-    } else {
-        htmlVal = document.getElementById('kop_sekolah_html').value;
-    }
-
+    const htmlVal = document.getElementById('kop_sekolah_html').value;
     const fontFamily = document.getElementById('kop_font_family').value;
     const fontSize = document.getElementById('kop_font_size').value;
 
@@ -465,26 +470,42 @@ function updateKopPreview() {
     }
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-    if (typeof tinymce !== 'undefined') {
-        tinymce.init({
-            selector: '#kop_sekolah_html',
-            height: 260,
-            menubar: false,
-            plugins: 'code link lists textcolor colorpicker table align',
-            toolbar: 'undo redo | fontselect fontsizeselect | bold italic underline forecolor | alignleft aligncenter alignright alignjustify | code',
-            content_style: 'body { font-family: "Times New Roman", Times, serif; font-size: 12pt; text-align: center; }',
-            font_formats: 'Times New Roman=times new roman,times; Arial=arial,helvetica,sans-serif; Calibri=calibri,sans-serif; Georgia=georgia,palatino;',
-            fontsize_formats: '8pt 9pt 10pt 11pt 12pt 14pt 16pt 18pt 20pt 24pt',
-            setup: function(editor) {
-                editor.on('keyup change init', function() {
-                    editor.save();
-                    updateKopPreview();
-                });
-            }
-        });
-    }
+function insertKopTag(tag) {
+    const txt = document.getElementById('kop_sekolah_html');
+    const start = txt.selectionStart;
+    const end = txt.selectionEnd;
+    const selected = txt.value.substring(start, end) || 'Teks Baru';
+    const replacement = `<${tag}>${selected}</${tag}>`;
+    txt.value = txt.value.substring(0, start) + replacement + txt.value.substring(end);
+    txt.focus();
+    updateKopPreview();
+}
 
+function insertKopTemplate(type) {
+    const txt = document.getElementById('kop_sekolah_html');
+    let template = '';
+    if (type === 'h2') {
+        template = '\n<h2 style="font-size: 16px; font-weight: bold; text-transform: uppercase; margin: 2px 0;">NAMA INSTANSI ATAU SEKOLAH</h2>';
+    } else if (type === 'h3') {
+        template = '\n<h3 style="font-size: 14px; font-weight: bold; text-transform: uppercase; margin: 0;">PEMERINTAH PROVINSI / DINAS</h3>';
+    } else if (type === 'p') {
+        template = '\n<p style="font-size: 11px; margin: 0;">Jalan Raya Utama No. 123 Telp. (0332) 123456</p>';
+    }
+    const start = txt.selectionStart;
+    txt.value = txt.value.substring(0, start) + template + txt.value.substring(start);
+    txt.focus();
+    updateKopPreview();
+}
+
+function resetDefaultKopTemplate() {
+    if (confirm('Apakah Anda yakin ingin mengembalikan isi Kop Surat ke template standar sekolah?')) {
+        const defaultTpl = '<div style="text-align: center;"><h3 style="font-size: 14px; font-weight: bold; text-transform: uppercase; margin: 0;">PEMERINTAH PROVINSI JAWA TIMUR</h3><h3 style="font-size: 14px; font-weight: bold; text-transform: uppercase; margin: 0;">DINAS PENDIDIKAN</h3><h2 style="font-size: 16px; font-weight: bold; text-transform: uppercase; margin: 2px 0;">SEKOLAH MENENGAH KEJURUAN NEGERI 2 BONDOWOSO</h2><p style="font-size: 11px; margin: 0;">Jalan Jend. Ahmad Yani No. 48 Telp/Fax. (0332) 421286</p><p style="font-size: 10px; font-style: italic; margin: 0;">Email: smknbws2@yahoo.com Website: www.smkn2bondowoso.sch.id</p><h2 style="font-size: 14px; font-weight: bold; text-transform: uppercase; margin-top: 2px;">BONDOWOSO</h2></div>';
+        document.getElementById('kop_sekolah_html').value = defaultTpl;
+        updateKopPreview();
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
     updateKopPreview();
 
     var lat = <?= (isset($sets['school_lat']) && $sets['school_lat'] !== '') ? $sets['school_lat'] : '-7.9135' ?>;
@@ -534,9 +555,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
-
-<!-- TinyMCE Rich Text Editor CDN -->
-<script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
 
 <!-- Page Specific Scripts -->
 <script src="<?= BASE_URL ?>assets/js/pengaturan.js"></script>

@@ -15,8 +15,16 @@ $total_sosiogram = 0;
 $q_lap = mysqli_query($conn, "SELECT COUNT(*) as total FROM bk_laporan");
 if ($q_lap && $r = mysqli_fetch_assoc($q_lap)) $total_laporan = (int)$r['total'];
 
-$q_chat = mysqli_query($conn, "SELECT COUNT(*) as total FROM konsultasi_pesan kp JOIN konsultasi k ON kp.konsultasi_id = k.id WHERE kp.dibaca = 0 AND kp.pengirim_role = 'siswa'");
-if ($q_chat && $r = mysqli_fetch_assoc($q_chat)) $total_konsultasi_unread = (int)$r['total'];
+// Check if dibaca column exists in konsultasi_pesan safely
+$chk_dibaca = mysqli_query($conn, "SHOW COLUMNS FROM konsultasi_pesan LIKE 'dibaca'");
+if ($chk_dibaca && mysqli_num_rows($chk_dibaca) > 0) {
+    $q_chat = mysqli_query($conn, "SELECT COUNT(*) as total FROM konsultasi_pesan kp JOIN konsultasi k ON kp.konsultasi_id = k.id WHERE kp.dibaca = 0 AND kp.pengirim_role = 'siswa'");
+    if ($q_chat && $r = mysqli_fetch_assoc($q_chat)) $total_konsultasi_unread = (int)$r['total'];
+} else {
+    // Fallback count of open consultations
+    $q_chat = mysqli_query($conn, "SELECT COUNT(*) as total FROM konsultasi WHERE status = 'open'");
+    if ($q_chat && $r = mysqli_fetch_assoc($q_chat)) $total_konsultasi_unread = (int)$r['total'];
+}
 
 $q_sos = mysqli_query($conn, "SELECT COUNT(*) as total FROM bk_sosiogram_sesi");
 if ($q_sos && $r = mysqli_fetch_assoc($q_sos)) $total_sosiogram = (int)$r['total'];
