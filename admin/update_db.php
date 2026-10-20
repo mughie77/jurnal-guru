@@ -68,6 +68,24 @@ if ($is_ajax) {
                 'jadwal_pelajaran' => [
                     'tahun_pelajaran_id' => "INT(11) DEFAULT NULL AFTER mapel_id",
                     'jam_mulai' => "TIME DEFAULT NULL AFTER jam_ke"
+                ],
+                'bk_laporan' => [
+                    'kode_konseli' => "VARCHAR(50) DEFAULT NULL AFTER siswa_id",
+                    'pertemuan_ke' => "INT(11) DEFAULT 1 AFTER status",
+                    'waktu' => "VARCHAR(100) DEFAULT '45 menit' AFTER pertemuan_ke",
+                    'tempat' => "VARCHAR(100) DEFAULT 'Ruang BK' AFTER waktu",
+                    'deskripsi_kasus' => "TEXT DEFAULT NULL AFTER tempat",
+                    'tujuan_konseling' => "TEXT DEFAULT NULL AFTER deskripsi_kasus",
+                    'tahapan_konseling' => "TEXT DEFAULT NULL AFTER tujuan_konseling",
+                    'jumlah_pertemuan' => "VARCHAR(50) DEFAULT '1 kali pertemuan' AFTER tahapan_konseling",
+                    'durasi_pertemuan' => "VARCHAR(50) DEFAULT '45 menit' AFTER jumlah_pertemuan",
+                    'media_sumber' => "VARCHAR(255) DEFAULT '-' AFTER durasi_pertemuan",
+                    'pihak_dilibatkan' => "VARCHAR(255) DEFAULT 'Wali Kelas' AFTER media_sumber",
+                    'rumusan_masalah' => "TEXT DEFAULT NULL AFTER pihak_dilibatkan",
+                    'masalah_analisis' => "TEXT DEFAULT NULL AFTER rumusan_masalah",
+                    'pendekatan_teknik' => "TEXT DEFAULT NULL AFTER masalah_analisis",
+                    'langkah_kegiatan_json' => "LONGTEXT DEFAULT NULL AFTER pendekatan_teknik",
+                    'rencana_evaluasi_json' => "LONGTEXT DEFAULT NULL AFTER langkah_kegiatan_json"
                 ]
             ];
 

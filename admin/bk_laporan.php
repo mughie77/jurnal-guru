@@ -3,7 +3,7 @@ require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/pagination.php';
 
-authorize_role(['admin', 'waka', 'guru_bk']);
+authorize_role(['admin', 'waka', 'guru', 'guru_bk']);
 
 $role = $_SESSION['role'];
 $user_id = $_SESSION['user_id'];
@@ -99,7 +99,7 @@ if ($kelas_id_filter > 0) $where_clauses[] = "bl.kelas_id = $kelas_id_filter";
 if (!empty($status_filter)) $where_clauses[] = "bl.status = '" . mysqli_real_escape_string($conn, $status_filter) . "'";
 if (!empty($search_query)) {
     $sq = mysqli_real_escape_string($conn, $search_query);
-    $where_clauses[] = "(s.nama_siswa LIKE '%$sq%' OR s.nis LIKE '%$sq%' OR bl.topik_permasalahan LIKE '%$sq%' OR u.nama_lengkap LIKE '%$sq%')";
+    $where_clauses[] = "(s.nama_siswa LIKE '%$sq%' OR bl.kode_konseli LIKE '%$sq%' OR s.nis LIKE '%$sq%' OR bl.topik_permasalahan LIKE '%$sq%' OR u.nama_lengkap LIKE '%$sq%')";
 }
 if ($role === 'guru') {
     $where_clauses[] = "(bl.guru_id = $guru_id OR 1=1)"; // Teachers can view counseling records
@@ -148,9 +148,9 @@ require_once __DIR__ . '/../includes/header.php';
         <a href="<?= BASE_URL ?>guru/bk_index.php" class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2.5 rounded-xl font-bold text-xs flex items-center shadow-md">
             <i class="fa fa-arrow-left mr-2"></i> Kembali ke Layanan BK
         </a>
-        <button onclick="openModal('addModal')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-indigo-100 transition-all flex items-center text-xs sm:text-sm">
-            <i class="fa fa-plus mr-2"></i> Tambah Laporan BK
-        </button>
+        <a href="<?= BASE_URL ?>admin/bk_laporan_tambah.php" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-indigo-100 transition-all flex items-center text-xs sm:text-sm">
+            <i class="fa fa-plus mr-2"></i> Input RPL Individual BK
+        </a>
     </div>
 </div>
 
@@ -232,8 +232,13 @@ require_once __DIR__ . '/../includes/header.php';
                             <?= date('d M Y', strtotime($r['tanggal'])) ?>
                         </td>
                         <td class="px-6 py-4">
-                            <div class="font-extrabold text-slate-800 text-sm"><?= htmlspecialchars($r['nama_siswa']) ?></div>
-                            <div class="text-[10px] text-slate-400 font-mono">NIS: <?= htmlspecialchars($r['nis']) ?> | Kelas <?= htmlspecialchars($r['nama_kelas'] ?? '-') ?></div>
+                            <div class="font-extrabold text-slate-800 text-sm flex items-center gap-1.5 flex-wrap">
+                                <?php if (!empty($r['kode_konseli'])): ?>
+                                    <span class="px-2 py-0.5 rounded bg-slate-800 text-amber-300 font-mono text-[10px] tracking-wider"><?= htmlspecialchars($r['kode_konseli']) ?></span>
+                                <?php endif; ?>
+                                <span><?= htmlspecialchars($r['nama_siswa']) ?></span>
+                            </div>
+                            <div class="text-[10px] text-slate-400 font-mono mt-0.5">NIS: <?= htmlspecialchars($r['nis']) ?> | Kelas <?= htmlspecialchars($r['nama_kelas'] ?? '-') ?></div>
                         </td>
                         <td class="px-6 py-4">
                             <span class="px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-100 block w-fit mb-1">
@@ -251,12 +256,12 @@ require_once __DIR__ . '/../includes/header.php';
                         </td>
                         <td class="px-6 py-4 text-center">
                             <div class="flex items-center justify-center gap-1.5">
-                                <a href="<?= BASE_URL ?>admin/print_bk_laporan.php?id=<?= $r['id'] ?>" target="_blank" class="w-8 h-8 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-800 hover:text-white transition-all flex items-center justify-center shadow-sm" title="Cetak Laporan">
+                                <button onclick="printOptionModal(<?= $r['id'] ?>, '<?= htmlspecialchars(addslashes($r['nama_siswa'])) ?>', '<?= htmlspecialchars(addslashes($r['kode_konseli'] ?? '')) ?>')" class="w-8 h-8 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-800 hover:text-white transition-all flex items-center justify-center shadow-sm" title="Cetak Dokumen RPL BK">
                                     <i class="fa fa-print text-xs"></i>
-                                </a>
-                                <button onclick='editLaporan(<?= htmlspecialchars(json_encode($r), ENT_QUOTES, 'UTF-8') ?>)' class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all flex items-center justify-center shadow-sm" title="Edit Laporan">
-                                    <i class="fa fa-edit text-xs"></i>
                                 </button>
+                                <a href="<?= BASE_URL ?>admin/bk_laporan_tambah.php?id=<?= $r['id'] ?>" class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all flex items-center justify-center shadow-sm" title="Edit RPL BK">
+                                    <i class="fa fa-edit text-xs"></i>
+                                </a>
                                 <button onclick="confirmDelete(<?= $r['id'] ?>, '<?= get_csrf_token() ?>')" class="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white transition-all flex items-center justify-center shadow-sm" title="Hapus Laporan">
                                     <i class="fa fa-trash text-xs"></i>
                                 </button>
@@ -400,6 +405,43 @@ function editLaporan(item) {
     btn.textContent = 'Update Laporan';
 
     openModal('addModal');
+}
+
+function printOptionModal(id, namaSiswa, kodeKonseli) {
+    Swal.fire({
+        title: 'Option Cetak RPL BK',
+        html: `<div class="text-left space-y-3 font-sans">
+            <p class="text-xs text-slate-600 font-medium">Pilih opsi penyamaran nama siswa pada dokumen cetakan RPL BK:</p>
+            <div class="p-3 bg-slate-50 rounded-2xl border border-slate-100 space-y-1">
+                <div class="text-xs font-bold text-slate-800">Siswa: ${namaSiswa}</div>
+                <div class="text-[11px] font-mono text-amber-600 font-bold">Kode: ${kodeKonseli || '-'}</div>
+            </div>
+            <div class="space-y-2 pt-1">
+                <label class="flex items-center gap-2 cursor-pointer p-2 rounded-xl border border-slate-200 hover:bg-slate-50">
+                    <input type="radio" name="swal_samarkan" value="1" checked class="accent-indigo-600">
+                    <span class="text-xs font-bold text-slate-700">Samarkan Nama Siswa (Gunakan Kode Konseli)</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer p-2 rounded-xl border border-slate-200 hover:bg-slate-50">
+                    <input type="radio" name="swal_samarkan" value="0" class="accent-indigo-600">
+                    <span class="text-xs font-bold text-slate-700">Tampilkan Nama Asli Siswa</span>
+                </label>
+            </div>
+        </div>`,
+        showCancelButton: true,
+        confirmButtonText: '<i class="fa fa-print mr-1"></i> Cetak Dokumen',
+        cancelButtonText: 'Batal',
+        confirmButtonColor: '#4F46E5',
+        cancelButtonColor: '#6B7280',
+        preConfirm: () => {
+            const rad = document.querySelector('input[name="swal_samarkan"]:checked');
+            return rad ? rad.value : '1';
+        }
+    }).then((res) => {
+        if (res.isConfirmed) {
+            const samarkan = res.value;
+            window.open(`<?= BASE_URL ?>admin/print_bk_laporan.php?id=${id}&samarkan=${samarkan}`, '_blank');
+        }
+    });
 }
 
 function confirmDelete(id, csrfToken) {
