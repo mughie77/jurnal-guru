@@ -89,12 +89,19 @@ if (isset($_GET['success_delete'])) {
     $message_type = 'success';
 }
 
-// Filters & Pagination
+// Filter sub-type & jenis
+$jenis_filter = $_GET['jenis'] ?? '';
+$sub_tab = $_GET['tab'] ?? 'rpl'; // 'rpl' or 'laporan'
+
 $kelas_id_filter = (int)($_GET['kelas_id'] ?? 0);
 $status_filter = $_GET['status'] ?? '';
 $search_query = trim($_GET['q'] ?? '');
 
 $where_clauses = ["1=1"];
+if (!empty($jenis_filter)) {
+    $jf = mysqli_real_escape_string($conn, $jenis_filter);
+    $where_clauses[] = "bl.jenis_bimbingan = '$jf'";
+}
 if ($kelas_id_filter > 0) $where_clauses[] = "bl.kelas_id = $kelas_id_filter";
 if (!empty($status_filter)) $where_clauses[] = "bl.status = '" . mysqli_real_escape_string($conn, $status_filter) . "'";
 if (!empty($search_query)) {
@@ -139,7 +146,7 @@ $gurus = mysqli_query($conn, "SELECT g.id, u.nama_lengkap FROM guru g JOIN users
 require_once __DIR__ . '/../includes/header.php';
 ?>
 
-<div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+<div class="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
     <div>
         <h1 class="text-3xl font-black text-slate-800 tracking-tight italic">Laporan Bimbingan Konseling</h1>
         <p class="text-slate-500 font-medium">Pencatatan rekapitulasi sesi konseling individu dan kelompok siswa.</p>
@@ -153,6 +160,18 @@ require_once __DIR__ . '/../includes/header.php';
         </a>
     </div>
 </div>
+
+<?php if ($jenis_filter === 'Individu'): ?>
+<!-- Sub Tabs Navigation for Individu -->
+<div class="flex items-center gap-2 mb-6 border-b border-slate-200 pb-2">
+    <a href="bk_laporan.php?jenis=Individu&tab=rpl" class="px-5 py-2.5 rounded-2xl font-black text-xs transition-all flex items-center gap-2 <?= $sub_tab === 'rpl' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200' ?>">
+        <i class="fa fa-file-invoice"></i> 1. RPL Individual BK
+    </a>
+    <a href="bk_laporan.php?jenis=Individu&tab=laporan" class="px-5 py-2.5 rounded-2xl font-black text-xs transition-all flex items-center gap-2 <?= $sub_tab === 'laporan' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200' ?>">
+        <i class="fa fa-file-signature"></i> 2. Laporan Konseling Individu
+    </a>
+</div>
+<?php endif; ?>
 
 <?php if ($message): ?>
 <script>
@@ -168,6 +187,12 @@ require_once __DIR__ . '/../includes/header.php';
 <!-- Filter Form -->
 <div class="lux-card p-6 mb-8 bg-gradient-to-br from-indigo-50/40 to-white border border-indigo-100/50">
     <form action="" method="GET" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+        <?php if (!empty($jenis_filter)): ?>
+            <input type="hidden" name="jenis" value="<?= htmlspecialchars($jenis_filter) ?>">
+        <?php endif; ?>
+        <?php if (!empty($sub_tab)): ?>
+            <input type="hidden" name="tab" value="<?= htmlspecialchars($sub_tab) ?>">
+        <?php endif; ?>
         <div>
             <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2">Cari Siswa / Topik / Guru</label>
             <input type="text" name="q" value="<?= htmlspecialchars($search_query) ?>" placeholder="Kata kunci..." class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-100 bg-white font-bold text-xs text-slate-700">
@@ -256,9 +281,16 @@ require_once __DIR__ . '/../includes/header.php';
                         </td>
                         <td class="px-6 py-4 text-center">
                             <div class="flex items-center justify-center gap-1.5">
-                                <button onclick="printOptionModal(<?= $r['id'] ?>, '<?= htmlspecialchars(addslashes($r['nama_siswa'])) ?>', '<?= htmlspecialchars(addslashes($r['kode_konseli'] ?? '')) ?>')" class="w-8 h-8 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-800 hover:text-white transition-all flex items-center justify-center shadow-sm" title="Cetak Dokumen RPL BK">
-                                    <i class="fa fa-print text-xs"></i>
-                                </button>
+                                <?php if ($jenis_filter === 'Individu' && $sub_tab === 'laporan'): ?>
+                                    <button onclick="printLaporanKonselingModal(<?= $r['id'] ?>, '<?= htmlspecialchars(addslashes($r['nama_siswa'])) ?>', '<?= htmlspecialchars(addslashes($r['kode_konseli'] ?? '')) ?>')" class="px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white transition-all font-bold text-xs flex items-center gap-1.5 shadow-sm" title="Cetak Laporan Konseling Individu">
+                                        <i class="fa fa-print text-xs"></i> Cetak Laporan
+                                    </button>
+                                <?php else: ?>
+                                    <button onclick="printOptionModal(<?= $r['id'] ?>, '<?= htmlspecialchars(addslashes($r['nama_siswa'])) ?>', '<?= htmlspecialchars(addslashes($r['kode_konseli'] ?? '')) ?>')" class="w-8 h-8 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-800 hover:text-white transition-all flex items-center justify-center shadow-sm" title="Cetak Dokumen RPL BK">
+                                        <i class="fa fa-print text-xs"></i>
+                                    </button>
+                                <?php endif; ?>
+
                                 <a href="<?= BASE_URL ?>admin/bk_laporan_tambah.php?id=<?= $r['id'] ?>" class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all flex items-center justify-center shadow-sm" title="Edit RPL BK">
                                     <i class="fa fa-edit text-xs"></i>
                                 </a>
@@ -440,6 +472,43 @@ function printOptionModal(id, namaSiswa, kodeKonseli) {
         if (res.isConfirmed) {
             const samarkan = res.value;
             window.open(`<?= BASE_URL ?>admin/print_bk_laporan.php?id=${id}&samarkan=${samarkan}`, '_blank');
+        }
+    });
+}
+
+function printLaporanKonselingModal(id, namaSiswa, kodeKonseli) {
+    Swal.fire({
+        title: 'Cetak Laporan Konseling Individu',
+        html: `<div class="text-left space-y-3 font-sans">
+            <p class="text-xs text-slate-600 font-medium">Pilih opsi penyamaran nama siswa pada Laporan Pelaksanaan Layanan Konseling Individual:</p>
+            <div class="p-3 bg-slate-50 rounded-2xl border border-slate-100 space-y-1">
+                <div class="text-xs font-bold text-slate-800">Siswa: ${namaSiswa}</div>
+                <div class="text-[11px] font-mono text-amber-600 font-bold">Kode: ${kodeKonseli || '-'}</div>
+            </div>
+            <div class="space-y-2 pt-1">
+                <label class="flex items-center gap-2 cursor-pointer p-2 rounded-xl border border-slate-200 hover:bg-slate-50">
+                    <input type="radio" name="swal_samarkan_lap" value="1" checked class="accent-indigo-600">
+                    <span class="text-xs font-bold text-slate-700">Samarkan Nama Siswa (Gunakan Kode Konseli)</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer p-2 rounded-xl border border-slate-200 hover:bg-slate-50">
+                    <input type="radio" name="swal_samarkan_lap" value="0" class="accent-indigo-600">
+                    <span class="text-xs font-bold text-slate-700">Tampilkan Nama Asli Siswa</span>
+                </label>
+            </div>
+        </div>`,
+        showCancelButton: true,
+        confirmButtonText: '<i class="fa fa-print mr-1"></i> Cetak Laporan',
+        cancelButtonText: 'Batal',
+        confirmButtonColor: '#059669',
+        cancelButtonColor: '#6B7280',
+        preConfirm: () => {
+            const rad = document.querySelector('input[name="swal_samarkan_lap"]:checked');
+            return rad ? rad.value : '1';
+        }
+    }).then((res) => {
+        if (res.isConfirmed) {
+            const samarkan = res.value;
+            window.open(`<?= BASE_URL ?>admin/print_laporan_konseling_individu.php?id=${id}&samarkan=${samarkan}`, '_blank');
         }
     });
 }

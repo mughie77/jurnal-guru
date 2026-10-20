@@ -89,7 +89,8 @@ if ($is_ajax) {
                     'masalah_analisis' => "TEXT DEFAULT NULL AFTER rumusan_masalah",
                     'pendekatan_teknik' => "TEXT DEFAULT NULL AFTER masalah_analisis",
                     'langkah_kegiatan_json' => "LONGTEXT DEFAULT NULL AFTER pendekatan_teknik",
-                    'rencana_evaluasi_json' => "LONGTEXT DEFAULT NULL AFTER langkah_kegiatan_json"
+                    'rencana_evaluasi_json' => "LONGTEXT DEFAULT NULL AFTER langkah_kegiatan_json",
+                    'hasil_dicapai' => "TEXT DEFAULT NULL AFTER rencana_evaluasi_json"
                 ]
             ];
 

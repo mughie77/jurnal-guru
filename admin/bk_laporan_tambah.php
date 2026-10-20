@@ -45,6 +45,7 @@ $data = [
     'rumusan_masalah' => '',
     'masalah_analisis' => '',
     'pendekatan_teknik' => 'Teori Behavioral dengan teknik konseling Eksplorasi',
+    'hasil_dicapai' => '',
     'langkah_kegiatan' => [
         ['langkah' => 'Langkah 1 : Rasional strategi', 'isi' => "• Konselor memberikan rasional/menjelaskan maksud penggunaan strategi\n• Konselor memberikan overview tahapan-tahapan implementasi strategi"],
         ['langkah' => 'Langkah 2 : Identifikasi keadaan yang menimbulkan persoalan', 'isi' => "• Konselor meminta konseli menceritakan secara terbuka permasalahan yang dihadapi dan sesuatu yang dilakukan atau dipikirkan pada saat permasalahan timbul"],
@@ -117,6 +118,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['simpan_rpl'])) {
         $rumusan_masalah = trim($_POST['rumusan_masalah'] ?? '');
         $masalah_analisis = trim($_POST['masalah_analisis'] ?? '');
         $pendekatan_teknik = trim($_POST['pendekatan_teknik'] ?? '');
+        $hasil_dicapai = trim($_POST['hasil_dicapai'] ?? '');
 
         // Parse langkah kegiatan 1-8
         $langkah_input = $_POST['langkah_kegiatan'] ?? [];
@@ -172,13 +174,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['simpan_rpl'])) {
                 topik_permasalahan=?, ringkasan_pembahasan=?, tindak_lanjut=?, status=?, deskripsi_kasus=?,
                 tujuan_konseling=?, tahapan_konseling=?, jumlah_pertemuan=?, durasi_pertemuan=?, media_sumber=?,
                 pihak_dilibatkan=?, rumusan_masalah=?, masalah_analisis=?, pendekatan_teknik=?,
-                langkah_kegiatan_json=?, rencana_evaluasi_json=? WHERE id=?");
-            mysqli_stmt_bind_param($stmt, "siiisissssssssssssssssssi",
+                langkah_kegiatan_json=?, rencana_evaluasi_json=?, hasil_dicapai=? WHERE id=?");
+            mysqli_stmt_bind_param($stmt, "siiisisssssssssssssssssssi",
                 $tanggal, $siswa_id, $guru_id, $kelas_id, $kode_konseli, $pertemuan_ke, $waktu, $tempat,
                 $topik, $ringkasan, $tindak_lanjut, $status, $deskripsi_kasus,
                 $tujuan_konseling, $tahapan_konseling, $jumlah_pertemuan, $durasi_pertemuan, $media_sumber,
                 $pihak_dilibatkan, $rumusan_masalah, $masalah_analisis, $pendekatan_teknik,
-                $langkah_json, $eval_json, $edit_id);
+                $langkah_json, $eval_json, $hasil_dicapai, $edit_id);
             if (mysqli_stmt_execute($stmt)) {
                 header("Location: " . BASE_URL . "admin/bk_laporan.php?success_save=1");
                 exit;
@@ -192,14 +194,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['simpan_rpl'])) {
                 topik_permasalahan, ringkasan_pembahasan, tindak_lanjut, status, deskripsi_kasus,
                 tujuan_konseling, tahapan_konseling, jumlah_pertemuan, durasi_pertemuan, media_sumber,
                 pihak_dilibatkan, rumusan_masalah, masalah_analisis, pendekatan_teknik,
-                langkah_kegiatan_json, rencana_evaluasi_json
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            mysqli_stmt_bind_param($stmt, "ssiiisissssssssssssssssss",
+                langkah_kegiatan_json, rencana_evaluasi_json, hasil_dicapai
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            mysqli_stmt_bind_param($stmt, "ssiiisisssssssssssssssssss",
                 $tanggal, $jenis_bimbingan, $siswa_id, $guru_id, $kelas_id, $kode_konseli, $pertemuan_ke, $waktu, $tempat,
                 $topik, $ringkasan, $tindak_lanjut, $status, $deskripsi_kasus,
                 $tujuan_konseling, $tahapan_konseling, $jumlah_pertemuan, $durasi_pertemuan, $media_sumber,
                 $pihak_dilibatkan, $rumusan_masalah, $masalah_analisis, $pendekatan_teknik,
-                $langkah_json, $eval_json);
+                $langkah_json, $eval_json, $hasil_dicapai);
             if (mysqli_stmt_execute($stmt)) {
                 header("Location: " . BASE_URL . "admin/bk_laporan.php?success_save=1");
                 exit;
@@ -486,6 +488,11 @@ require_once __DIR__ . '/../includes/header.php';
             <div>
                 <label class="block text-xs font-bold text-slate-700 mb-2">Teknik dan Instrumen Evaluasi</label>
                 <input type="text" name="rencana_evaluasi[teknik_instrumen]" value="<?= htmlspecialchars($data['rencana_evaluasi']['teknik_instrumen'] ?? '') ?>" placeholder="e.g. Instrumen yang digunakan adalah Data hasil wawancara" class="w-full px-4 py-3 rounded-2xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-100 font-bold text-xs text-slate-700">
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-2">Hasil yang Dicapai (Untuk Laporan Konseling Individu)</label>
+                <textarea name="hasil_dicapai" rows="2" placeholder="e.g. Siswa merefleksi kesalahan yang dilakukan dan berkomitmen untuk memperbaiki kehadiran di sekolah." class="w-full px-4 py-3 rounded-2xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-100 font-medium text-xs text-slate-700 leading-relaxed"><?= htmlspecialchars($data['hasil_dicapai'] ?? '') ?></textarea>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 pt-2">
