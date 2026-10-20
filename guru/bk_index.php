@@ -15,7 +15,7 @@ $total_sosiogram = 0;
 $q_lap = mysqli_query($conn, "SELECT COUNT(*) as total FROM bk_laporan");
 if ($q_lap && $r = mysqli_fetch_assoc($q_lap)) $total_laporan = (int)$r['total'];
 
-$q_chat = mysqli_query($conn, "SELECT COUNT(*) as total FROM pesan_konsultasi WHERE dibaca = 0 AND pengirim = 'siswa'");
+$q_chat = mysqli_query($conn, "SELECT COUNT(*) as total FROM konsultasi_pesan kp JOIN konsultasi k ON kp.konsultasi_id = k.id WHERE kp.dibaca = 0 AND kp.pengirim_role = 'siswa'");
 if ($q_chat && $r = mysqli_fetch_assoc($q_chat)) $total_konsultasi_unread = (int)$r['total'];
 
 $q_sos = mysqli_query($conn, "SELECT COUNT(*) as total FROM bk_sosiogram_sesi");

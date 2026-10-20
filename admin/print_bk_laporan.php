@@ -68,6 +68,12 @@ $alamat_sekolah = $sets['alamat_sekolah'] ?? 'Jalan Jend. Ahmad Yani No. 48 Telp
 $email_sekolah = $sets['email_sekolah'] ?? 'smknbws2@yahoo.com';
 $web_sekolah = $sets['web_sekolah'] ?? 'www.smkn2bondowoso.sch.id';
 
+$kop_html = $sets['kop_sekolah_html'] ?? '';
+$kop_font_family = $sets['kop_font_family'] ?? 'Times New Roman';
+$kop_font_size = $sets['kop_font_size'] ?? '12';
+$logo_kiri = $sets['logo_kiri'] ?? '';
+$logo_kanan = $sets['logo_kanan'] ?? '';
+
 // Date formatting
 $days = ['Sunday' => 'Minggu', 'Monday' => 'Senin', 'Tuesday' => 'Selasa', 'Wednesday' => 'Rabu', 'Thursday' => 'Kamis', 'Friday' => 'Jumat', 'Saturday' => 'Sabtu'];
 $months = [1 => 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
@@ -87,9 +93,8 @@ $tahun_pelajaran = ($m_num >= 7) ? date('Y', $time_stamp) . ' – ' . (date('Y',
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RPL Konseling Individual - <?= htmlspecialchars($display_nama_siswa) ?></title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Times+New+Roman&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Times New Roman', Times, serif; background-color: #ffffff; color: #000000; line-height: 1.4; }
+        body { font-family: '<?= htmlspecialchars($kop_font_family) ?>', 'Times New Roman', Times, serif; font-size: <?= (int)$kop_font_size ?>pt; background-color: #ffffff; color: #000000; line-height: 1.4; }
         .page-break { page-break-before: always; }
         @media print {
             .no-print { display: none !important; }
@@ -101,7 +106,7 @@ $tahun_pelajaran = ($m_num >= 7) ? date('Y', $time_stamp) . ' – ' . (date('Y',
 <body class="p-6 sm:p-10 max-w-4xl mx-auto text-black">
 
     <!-- Action Bar -->
-    <div class="no-print flex items-center justify-between mb-8 p-4 bg-slate-100 rounded-2xl font-sans">
+    <div class="no-print flex items-center justify-between mb-8 p-4 bg-slate-100 rounded-2xl font-sans text-xs">
         <div>
             <span class="text-xs font-bold text-slate-700 block">Dokumen RPL Konseling Individual</span>
             <span class="text-[11px] text-slate-500 font-mono">Status Penyamaran Nama: <strong><?= $samarkan ? 'AKTIF (Gunakan Kode)' : 'NONAKTIF (Nama Asli)' ?></strong></span>
@@ -118,14 +123,32 @@ $tahun_pelajaran = ($m_num >= 7) ? date('Y', $time_stamp) . ' – ' . (date('Y',
 
     <!-- HALAMAN 1: RENCANA PELAKSANAAN LAYANAN -->
     <div class="space-y-4">
-        <!-- Kop Surat -->
-        <div class="text-center border-b-4 border-black pb-2 mb-4 relative">
-            <h3 class="text-sm font-bold uppercase tracking-wide">PEMERINTAH PROVINSI JAWA TIMUR</h3>
-            <h3 class="text-sm font-bold uppercase tracking-wide">DINAS PENDIDIKAN</h3>
-            <h2 class="text-base font-bold uppercase tracking-wide"><?= htmlspecialchars($nama_sekolah) ?></h2>
-            <p class="text-xs font-normal"><?= htmlspecialchars($alamat_sekolah) ?></p>
-            <p class="text-[11px] italic">Email: <?= htmlspecialchars($email_sekolah) ?> Website: <?= htmlspecialchars($web_sekolah) ?></p>
-            <h2 class="text-sm font-bold uppercase mt-1">BONDOWOSO</h2>
+        <!-- Dynamic Kop Surat -->
+        <div class="border-b-4 border-black pb-3 mb-4 flex items-center justify-between gap-4">
+            <?php if (!empty($logo_kiri)): ?>
+                <div class="w-20 flex-shrink-0 text-center">
+                    <img src="<?= BASE_URL ?>uploads/<?= htmlspecialchars($logo_kiri) ?>" class="max-h-20 max-w-full inline-block">
+                </div>
+            <?php endif; ?>
+
+            <div class="flex-1 text-center">
+                <?php if (!empty($kop_html)): ?>
+                    <?= $kop_html ?>
+                <?php else: ?>
+                    <h3 class="text-sm font-bold uppercase tracking-wide">PEMERINTAH PROVINSI JAWA TIMUR</h3>
+                    <h3 class="text-sm font-bold uppercase tracking-wide">DINAS PENDIDIKAN</h3>
+                    <h2 class="text-base font-bold uppercase tracking-wide"><?= htmlspecialchars($nama_sekolah) ?></h2>
+                    <p class="text-xs font-normal"><?= htmlspecialchars($alamat_sekolah) ?></p>
+                    <p class="text-[11px] italic">Email: <?= htmlspecialchars($email_sekolah) ?> Website: <?= htmlspecialchars($web_sekolah) ?></p>
+                    <h2 class="text-sm font-bold uppercase mt-1">BONDOWOSO</h2>
+                <?php endif; ?>
+            </div>
+
+            <?php if (!empty($logo_kanan)): ?>
+                <div class="w-20 flex-shrink-0 text-center">
+                    <img src="<?= BASE_URL ?>uploads/<?= htmlspecialchars($logo_kanan) ?>" class="max-h-20 max-w-full inline-block">
+                </div>
+            <?php endif; ?>
         </div>
 
         <!-- Judul Document -->

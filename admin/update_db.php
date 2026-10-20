@@ -132,7 +132,12 @@ if ($is_ajax) {
                 'radius_absen' => '30',
                 'siswa_gps_absen' => 'nonaktif',
                 'pilih_tanggal_jurnal' => 'nonaktif',
-                'external_api_key' => 'CAKRA_SECURE_API_KEY_2026'
+                'external_api_key' => 'CAKRA_SECURE_API_KEY_2026',
+                'nama_kepsek' => 'Drs. H. M. Yasin, M.Pd.',
+                'nip_kepsek' => '19680512 199403 1 008',
+                'kop_sekolah_html' => '<div style="text-align: center;"><h3 style="font-size: 14px; font-weight: bold; text-transform: uppercase; margin: 0;">PEMERINTAH PROVINSI JAWA TIMUR</h3><h3 style="font-size: 14px; font-weight: bold; text-transform: uppercase; margin: 0;">DINAS PENDIDIKAN</h3><h2 style="font-size: 16px; font-weight: bold; text-transform: uppercase; margin: 2px 0;">SEKOLAH MENENGAH KEJURUAN NEGERI 2 BONDOWOSO</h2><p style="font-size: 11px; margin: 0;">Jalan Jend. Ahmad Yani No. 48 Telp/Fax. (0332) 421286</p><p style="font-size: 10px; font-style: italic; margin: 0;">Email: smknbws2@yahoo.com Website: www.smkn2bondowoso.sch.id</p><h2 style="font-size: 14px; font-weight: bold; text-transform: uppercase; margin-top: 2px;">BONDOWOSO</h2></div>',
+                'kop_font_size' => '12',
+                'kop_font_family' => 'Times New Roman'
             ];
 
             foreach ($new_settings as $key => $val) {

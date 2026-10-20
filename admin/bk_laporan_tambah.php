@@ -173,7 +173,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['simpan_rpl'])) {
                 tujuan_konseling=?, tahapan_konseling=?, jumlah_pertemuan=?, durasi_pertemuan=?, media_sumber=?,
                 pihak_dilibatkan=?, rumusan_masalah=?, masalah_analisis=?, pendekatan_teknik=?,
                 langkah_kegiatan_json=?, rencana_evaluasi_json=? WHERE id=?");
-            mysqli_stmt_bind_param($stmt, "siiisiss" . "s" . "s" . "s" . "s" . "s" . "s" . "s" . "s" . "s" . "s" . "s" . "s" . "s" . "s" . "s" . "s" . "i",
+            mysqli_stmt_bind_param($stmt, "siiisissssssssssssssssssi",
                 $tanggal, $siswa_id, $guru_id, $kelas_id, $kode_konseli, $pertemuan_ke, $waktu, $tempat,
                 $topik, $ringkasan, $tindak_lanjut, $status, $deskripsi_kasus,
                 $tujuan_konseling, $tahapan_konseling, $jumlah_pertemuan, $durasi_pertemuan, $media_sumber,
@@ -194,7 +194,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['simpan_rpl'])) {
                 pihak_dilibatkan, rumusan_masalah, masalah_analisis, pendekatan_teknik,
                 langkah_kegiatan_json, rencana_evaluasi_json
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            mysqli_stmt_bind_param($stmt, "ssiiisiss" . "s" . "s" . "s" . "s" . "s" . "s" . "s" . "s" . "s" . "s" . "s" . "s" . "s" . "s" . "s" . "s",
+            mysqli_stmt_bind_param($stmt, "ssiiisissssssssssssssssss",
                 $tanggal, $jenis_bimbingan, $siswa_id, $guru_id, $kelas_id, $kode_konseli, $pertemuan_ke, $waktu, $tempat,
                 $topik, $ringkasan, $tindak_lanjut, $status, $deskripsi_kasus,
                 $tujuan_konseling, $tahapan_konseling, $jumlah_pertemuan, $durasi_pertemuan, $media_sumber,
