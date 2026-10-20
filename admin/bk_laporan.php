@@ -375,13 +375,13 @@ require_once __DIR__ . '/../includes/header.php';
 <!-- Modal Add / Edit -->
 <div id="modalOverlay" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] hidden transition-opacity duration-300 opacity-0" onclick="closeAllModals()"></div>
 
-<div id="addModal" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] sm:w-full max-w-2xl bg-white rounded-3xl shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0 overflow-hidden">
-    <div class="bg-indigo-600 px-6 py-5 text-white font-bold italic text-lg sticky top-0 z-10 flex justify-between items-center">
+<div id="addModal" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[94vw] sm:w-full max-w-2xl bg-white rounded-3xl shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0 overflow-hidden max-h-[90vh] flex flex-col">
+    <div class="bg-indigo-600 px-6 py-5 text-white font-bold italic text-lg sticky top-0 z-10 flex justify-between items-center flex-shrink-0">
         <span id="modal_title">Tambah Laporan Bimbingan Konseling</span>
         <button type="button" onclick="closeModal('addModal')" class="text-white/80 hover:text-white text-lg"><i class="fa fa-times"></i></button>
     </div>
 
-    <form action="" method="POST" class="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+    <form action="" method="POST" class="p-6 space-y-4 overflow-y-auto flex-1">
         <input type="hidden" name="csrf_token" value="<?= get_csrf_token() ?>">
         <input type="hidden" name="laporan_id" id="laporan_id" value="0">
 
@@ -393,9 +393,11 @@ require_once __DIR__ . '/../includes/header.php';
 
             <div>
                 <label class="block text-xs font-bold text-slate-700 mb-1">Jenis Bimbingan</label>
-                <select name="jenis_bimbingan" id="jenis_bimbingan" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 font-bold text-slate-700 text-xs">
+                <select name="jenis_bimbingan" id="jenis_bimbingan" required onchange="toggleFieldKunjunganRumah()" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 font-bold text-slate-700 text-xs">
                     <option value="Individu">Individu</option>
                     <option value="Kelompok">Kelompok</option>
+                    <option value="Kunjungan Rumah">Kunjungan Rumah</option>
+                    <option value="Konferensi Kasus">Konferensi Kasus</option>
                 </select>
             </div>
         </div>
@@ -499,6 +501,18 @@ function closeAllModals() {
     });
 }
 
+function toggleFieldKunjunganRumah() {
+    const jb = document.getElementById('jenis_bimbingan').value;
+    const fkr = document.getElementById('field_kunjungan_rumah');
+    if (fkr) {
+        if (jb === 'Kunjungan Rumah') {
+            fkr.classList.remove('hidden');
+        } else {
+            fkr.classList.add('hidden');
+        }
+    }
+}
+
 function openAddModalKunjunganRumah() {
     document.getElementById('modal_title').textContent = 'Tambah Laporan Kunjungan Rumah';
     document.getElementById('laporan_id').value = 0;
@@ -512,6 +526,8 @@ function openAddModalKunjunganRumah() {
     document.getElementById('ringkasan_pembahasan').value = '';
     document.getElementById('tindak_lanjut').value = '';
     document.getElementById('status').value = 'Proses';
+
+    toggleFieldKunjunganRumah();
 
     const btn = document.getElementById('submit_btn');
     btn.name = 'tambah_laporan';
@@ -534,6 +550,8 @@ function editLaporan(item) {
     document.getElementById('ringkasan_pembahasan').value = item.ringkasan_pembahasan;
     document.getElementById('tindak_lanjut').value = item.tindak_lanjut || '';
     document.getElementById('status').value = item.status;
+
+    toggleFieldKunjunganRumah();
 
     const btn = document.getElementById('submit_btn');
     btn.name = 'edit_laporan';
