@@ -90,7 +90,21 @@ if ($is_ajax) {
                     'pendekatan_teknik' => "TEXT DEFAULT NULL AFTER masalah_analisis",
                     'langkah_kegiatan_json' => "LONGTEXT DEFAULT NULL AFTER pendekatan_teknik",
                     'rencana_evaluasi_json' => "LONGTEXT DEFAULT NULL AFTER langkah_kegiatan_json",
-                    'hasil_dicapai' => "TEXT DEFAULT NULL AFTER rencana_evaluasi_json"
+                    'hasil_dicapai' => "TEXT DEFAULT NULL AFTER rencana_evaluasi_json",
+                    'siswa_ids_json' => "LONGTEXT DEFAULT NULL AFTER hasil_dicapai",
+                    'kompetensi_layanan' => "VARCHAR(255) DEFAULT 'Layanan Responsif' AFTER siswa_ids_json",
+                    'bidang_layanan' => "VARCHAR(255) DEFAULT 'Pribadi' AFTER kompetensi_layanan",
+                    'fungsi_layanan' => "VARCHAR(255) DEFAULT 'Pencegahan dan pengentasan' AFTER bidang_layanan",
+                    'tujuan_umum' => "TEXT DEFAULT NULL AFTER fungsi_layanan",
+                    'tujuan_khusus' => "TEXT DEFAULT NULL AFTER tujuan_umum",
+                    'sasaran_layanan' => "VARCHAR(255) DEFAULT NULL AFTER tujuan_khusus",
+                    'materi_layanan' => "TEXT DEFAULT NULL AFTER sasaran_layanan",
+                    'sumber_layanan' => "VARCHAR(255) DEFAULT 'Media Online' AFTER materi_layanan",
+                    'metode_teknik' => "VARCHAR(255) DEFAULT 'Art Therapy' AFTER sumber_layanan",
+                    'media_alat' => "VARCHAR(255) DEFAULT 'HP / Komputer / Laptop /LCD' AFTER metode_teknik",
+                    'pelaksanaan_json' => "LONGTEXT DEFAULT NULL AFTER media_alat",
+                    'evaluasi_proses' => "TEXT DEFAULT NULL AFTER pelaksanaan_json",
+                    'evaluasi_hasil' => "TEXT DEFAULT NULL AFTER evaluasi_proses"
                 ]
             ];
 

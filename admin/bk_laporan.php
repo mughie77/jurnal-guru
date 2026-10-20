@@ -114,11 +114,11 @@ if ($role === 'guru') {
 
 $where_sql = implode(' AND ', $where_clauses);
 
-$pagin = get_pagination_data($conn, "bk_laporan bl JOIN siswa s ON bl.siswa_id = s.id LEFT JOIN kelas k ON bl.kelas_id = k.id LEFT JOIN guru g ON bl.guru_id = g.id LEFT JOIN users u ON g.user_id = u.id", 15, "WHERE " . $where_sql);
+$pagin = get_pagination_data($conn, "bk_laporan bl LEFT JOIN siswa s ON bl.siswa_id = s.id LEFT JOIN kelas k ON bl.kelas_id = k.id LEFT JOIN guru g ON bl.guru_id = g.id LEFT JOIN users u ON g.user_id = u.id", 15, "WHERE " . $where_sql);
 
 $query = "SELECT bl.*, s.nama_siswa, s.nis, k.nama_kelas, u.nama_lengkap as nama_guru
           FROM bk_laporan bl
-          JOIN siswa s ON bl.siswa_id = s.id
+          LEFT JOIN siswa s ON bl.siswa_id = s.id
           LEFT JOIN kelas k ON bl.kelas_id = k.id
           LEFT JOIN guru g ON bl.guru_id = g.id
           LEFT JOIN users u ON g.user_id = u.id
@@ -155,9 +155,15 @@ require_once __DIR__ . '/../includes/header.php';
         <a href="<?= BASE_URL ?>guru/bk_index.php" class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2.5 rounded-xl font-bold text-xs flex items-center shadow-md">
             <i class="fa fa-arrow-left mr-2"></i> Kembali ke Layanan BK
         </a>
-        <a href="<?= BASE_URL ?>admin/bk_laporan_tambah.php" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-indigo-100 transition-all flex items-center text-xs sm:text-sm">
-            <i class="fa fa-plus mr-2"></i> Input RPL Individual BK
-        </a>
+        <?php if ($jenis_filter === 'Kelompok'): ?>
+            <a href="<?= BASE_URL ?>admin/bk_laporan_kelompok_tambah.php" class="bg-teal-600 hover:bg-teal-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-teal-100 transition-all flex items-center text-xs sm:text-sm">
+                <i class="fa fa-users mr-2"></i> Input RPL Kelompok BK
+            </a>
+        <?php else: ?>
+            <a href="<?= BASE_URL ?>admin/bk_laporan_tambah.php" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-indigo-100 transition-all flex items-center text-xs sm:text-sm">
+                <i class="fa fa-plus mr-2"></i> Input RPL Individual BK
+            </a>
+        <?php endif; ?>
     </div>
 </div>
 
@@ -257,13 +263,29 @@ require_once __DIR__ . '/../includes/header.php';
                             <?= date('d M Y', strtotime($r['tanggal'])) ?>
                         </td>
                         <td class="px-6 py-4">
-                            <div class="font-extrabold text-slate-800 text-sm flex items-center gap-1.5 flex-wrap">
-                                <?php if (!empty($r['kode_konseli'])): ?>
-                                    <span class="px-2 py-0.5 rounded bg-slate-800 text-amber-300 font-mono text-[10px] tracking-wider"><?= htmlspecialchars($r['kode_konseli']) ?></span>
-                                <?php endif; ?>
-                                <span><?= htmlspecialchars($r['nama_siswa']) ?></span>
-                            </div>
-                            <div class="text-[10px] text-slate-400 font-mono mt-0.5">NIS: <?= htmlspecialchars($r['nis']) ?> | Kelas <?= htmlspecialchars($r['nama_kelas'] ?? '-') ?></div>
+                            <?php
+                            if ($r['jenis_bimbingan'] === 'Kelompok') {
+                                $arr_ids = json_decode($r['siswa_ids_json'] ?? '[]', true) ?: [];
+                                $jml_siswa = count($arr_ids);
+                                ?>
+                                <div class="font-extrabold text-slate-800 text-sm flex items-center gap-1.5 flex-wrap">
+                                    <span class="px-2 py-0.5 rounded bg-teal-100 text-teal-800 font-bold text-[10px]">Bimbingan Kelompok</span>
+                                    <span><?= $jml_siswa ?> Siswa Anggota</span>
+                                </div>
+                                <div class="text-[10px] text-slate-400 font-mono mt-0.5">Kelas <?= htmlspecialchars($r['nama_kelas'] ?? 'Campuran') ?></div>
+                                <?php
+                            } else {
+                                ?>
+                                <div class="font-extrabold text-slate-800 text-sm flex items-center gap-1.5 flex-wrap">
+                                    <?php if (!empty($r['kode_konseli'])): ?>
+                                        <span class="px-2 py-0.5 rounded bg-slate-800 text-amber-300 font-mono text-[10px] tracking-wider"><?= htmlspecialchars($r['kode_konseli']) ?></span>
+                                    <?php endif; ?>
+                                    <span><?= htmlspecialchars($r['nama_siswa'] ?? 'Siswa') ?></span>
+                                </div>
+                                <div class="text-[10px] text-slate-400 font-mono mt-0.5">NIS: <?= htmlspecialchars($r['nis'] ?? '-') ?> | Kelas <?= htmlspecialchars($r['nama_kelas'] ?? '-') ?></div>
+                                <?php
+                            }
+                            ?>
                         </td>
                         <td class="px-6 py-4">
                             <span class="px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-100 block w-fit mb-1">
@@ -281,19 +303,29 @@ require_once __DIR__ . '/../includes/header.php';
                         </td>
                         <td class="px-6 py-4 text-center">
                             <div class="flex items-center justify-center gap-1.5">
-                                <?php if ($jenis_filter === 'Individu' && $sub_tab === 'laporan'): ?>
-                                    <button onclick="printLaporanKonselingModal(<?= $r['id'] ?>, '<?= htmlspecialchars(addslashes($r['nama_siswa'])) ?>', '<?= htmlspecialchars(addslashes($r['kode_konseli'] ?? '')) ?>')" class="px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white transition-all font-bold text-xs flex items-center gap-1.5 shadow-sm" title="Cetak Laporan Konseling Individu">
-                                        <i class="fa fa-print text-xs"></i> Cetak Laporan
-                                    </button>
-                                <?php else: ?>
-                                    <button onclick="printOptionModal(<?= $r['id'] ?>, '<?= htmlspecialchars(addslashes($r['nama_siswa'])) ?>', '<?= htmlspecialchars(addslashes($r['kode_konseli'] ?? '')) ?>')" class="w-8 h-8 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-800 hover:text-white transition-all flex items-center justify-center shadow-sm" title="Cetak Dokumen RPL BK">
+                                <?php if ($r['jenis_bimbingan'] === 'Kelompok'): ?>
+                                    <button onclick="printOptionKelompokModal(<?= $r['id'] ?>)" class="w-8 h-8 rounded-xl bg-teal-50 text-teal-600 hover:bg-teal-700 hover:text-white transition-all flex items-center justify-center shadow-sm" title="Cetak Dokumen RPL BK Kelompok">
                                         <i class="fa fa-print text-xs"></i>
                                     </button>
+                                    <a href="<?= BASE_URL ?>admin/bk_laporan_kelompok_tambah.php?id=<?= $r['id'] ?>" class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all flex items-center justify-center shadow-sm" title="Edit RPL BK Kelompok">
+                                        <i class="fa fa-edit text-xs"></i>
+                                    </a>
+                                <?php else: ?>
+                                    <?php if ($jenis_filter === 'Individu' && $sub_tab === 'laporan'): ?>
+                                        <button onclick="printLaporanKonselingModal(<?= $r['id'] ?>, '<?= htmlspecialchars(addslashes($r['nama_siswa'] ?? '')) ?>', '<?= htmlspecialchars(addslashes($r['kode_konseli'] ?? '')) ?>')" class="px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white transition-all font-bold text-xs flex items-center gap-1.5 shadow-sm" title="Cetak Laporan Konseling Individu">
+                                            <i class="fa fa-print text-xs"></i> Cetak Laporan
+                                        </button>
+                                    <?php else: ?>
+                                        <button onclick="printOptionModal(<?= $r['id'] ?>, '<?= htmlspecialchars(addslashes($r['nama_siswa'] ?? '')) ?>', '<?= htmlspecialchars(addslashes($r['kode_konseli'] ?? '')) ?>')" class="w-8 h-8 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-800 hover:text-white transition-all flex items-center justify-center shadow-sm" title="Cetak Dokumen RPL BK">
+                                            <i class="fa fa-print text-xs"></i>
+                                        </button>
+                                    <?php endif; ?>
+
+                                    <a href="<?= BASE_URL ?>admin/bk_laporan_tambah.php?id=<?= $r['id'] ?>" class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all flex items-center justify-center shadow-sm" title="Edit RPL BK">
+                                        <i class="fa fa-edit text-xs"></i>
+                                    </a>
                                 <?php endif; ?>
 
-                                <a href="<?= BASE_URL ?>admin/bk_laporan_tambah.php?id=<?= $r['id'] ?>" class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all flex items-center justify-center shadow-sm" title="Edit RPL BK">
-                                    <i class="fa fa-edit text-xs"></i>
-                                </a>
                                 <button onclick="confirmDelete(<?= $r['id'] ?>, '<?= get_csrf_token() ?>')" class="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white transition-all flex items-center justify-center shadow-sm" title="Hapus Laporan">
                                     <i class="fa fa-trash text-xs"></i>
                                 </button>
@@ -439,16 +471,52 @@ function editLaporan(item) {
     openModal('addModal');
 }
 
+function printOptionKelompokModal(id) {
+    Swal.fire({
+        title: 'Cetak RPL BK Kelompok',
+        html: `<div class="text-left space-y-3 font-sans">
+            <p class="text-xs text-slate-600 font-medium">Pilih format identitas Guru BK pada dokumen cetakan:</p>
+            <div class="space-y-2 pt-1">
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tipe Identitas Guru BK</label>
+                <div class="grid grid-cols-2 gap-2">
+                    <label class="flex items-center gap-2 cursor-pointer p-2 rounded-xl border border-slate-200 hover:bg-slate-50">
+                        <input type="radio" name="swal_nip_type_kel" value="NIPPPK" checked class="accent-teal-600">
+                        <span class="text-xs font-bold text-slate-700">NIPPPK</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer p-2 rounded-xl border border-slate-200 hover:bg-slate-50">
+                        <input type="radio" name="swal_nip_type_kel" value="NIP" class="accent-teal-600">
+                        <span class="text-xs font-bold text-slate-700">NIP</span>
+                    </label>
+                </div>
+            </div>
+        </div>`,
+        showCancelButton: true,
+        confirmButtonText: '<i class="fa fa-print mr-1"></i> Cetak Document',
+        cancelButtonText: 'Batal',
+        confirmButtonColor: '#0D9488',
+        cancelButtonColor: '#6B7280',
+        preConfirm: () => {
+            const radNip = document.querySelector('input[name="swal_nip_type_kel"]:checked');
+            return radNip ? radNip.value : 'NIPPPK';
+        }
+    }).then((res) => {
+        if (res.isConfirmed) {
+            window.open(`<?= BASE_URL ?>admin/print_bk_laporan_kelompok.php?id=${id}&nip_type=${res.value}`, '_blank');
+        }
+    });
+}
+
 function printOptionModal(id, namaSiswa, kodeKonseli) {
     Swal.fire({
         title: 'Option Cetak RPL BK',
         html: `<div class="text-left space-y-3 font-sans">
-            <p class="text-xs text-slate-600 font-medium">Pilih opsi penyamaran nama siswa pada dokumen cetakan RPL BK:</p>
+            <p class="text-xs text-slate-600 font-medium">Pilih opsi penyamaran nama siswa dan format identitas Guru BK:</p>
             <div class="p-3 bg-slate-50 rounded-2xl border border-slate-100 space-y-1">
                 <div class="text-xs font-bold text-slate-800">Siswa: ${namaSiswa}</div>
                 <div class="text-[11px] font-mono text-amber-600 font-bold">Kode: ${kodeKonseli || '-'}</div>
             </div>
             <div class="space-y-2 pt-1">
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Penyamaran Nama</label>
                 <label class="flex items-center gap-2 cursor-pointer p-2 rounded-xl border border-slate-200 hover:bg-slate-50">
                     <input type="radio" name="swal_samarkan" value="1" checked class="accent-indigo-600">
                     <span class="text-xs font-bold text-slate-700">Samarkan Nama Siswa (Gunakan Kode Konseli)</span>
@@ -458,6 +526,19 @@ function printOptionModal(id, namaSiswa, kodeKonseli) {
                     <span class="text-xs font-bold text-slate-700">Tampilkan Nama Asli Siswa</span>
                 </label>
             </div>
+            <div class="space-y-2 pt-1">
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tipe Identitas Guru BK</label>
+                <div class="grid grid-cols-2 gap-2">
+                    <label class="flex items-center gap-2 cursor-pointer p-2 rounded-xl border border-slate-200 hover:bg-slate-50">
+                        <input type="radio" name="swal_nip_type" value="NIPPPK" checked class="accent-indigo-600">
+                        <span class="text-xs font-bold text-slate-700">NIPPPK</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer p-2 rounded-xl border border-slate-200 hover:bg-slate-50">
+                        <input type="radio" name="swal_nip_type" value="NIP" class="accent-indigo-600">
+                        <span class="text-xs font-bold text-slate-700">NIP</span>
+                    </label>
+                </div>
+            </div>
         </div>`,
         showCancelButton: true,
         confirmButtonText: '<i class="fa fa-print mr-1"></i> Cetak Dokumen',
@@ -465,13 +546,18 @@ function printOptionModal(id, namaSiswa, kodeKonseli) {
         confirmButtonColor: '#4F46E5',
         cancelButtonColor: '#6B7280',
         preConfirm: () => {
-            const rad = document.querySelector('input[name="swal_samarkan"]:checked');
-            return rad ? rad.value : '1';
+            const radSam = document.querySelector('input[name="swal_samarkan"]:checked');
+            const radNip = document.querySelector('input[name="swal_nip_type"]:checked');
+            return {
+                samarkan: radSam ? radSam.value : '1',
+                nip_type: radNip ? radNip.value : 'NIPPPK'
+            };
         }
     }).then((res) => {
         if (res.isConfirmed) {
-            const samarkan = res.value;
-            window.open(`<?= BASE_URL ?>admin/print_bk_laporan.php?id=${id}&samarkan=${samarkan}`, '_blank');
+            const samarkan = res.value.samarkan;
+            const nip_type = res.value.nip_type;
+            window.open(`<?= BASE_URL ?>admin/print_bk_laporan.php?id=${id}&samarkan=${samarkan}&nip_type=${nip_type}`, '_blank');
         }
     });
 }
@@ -480,12 +566,13 @@ function printLaporanKonselingModal(id, namaSiswa, kodeKonseli) {
     Swal.fire({
         title: 'Cetak Laporan Konseling Individu',
         html: `<div class="text-left space-y-3 font-sans">
-            <p class="text-xs text-slate-600 font-medium">Pilih opsi penyamaran nama siswa pada Laporan Pelaksanaan Layanan Konseling Individual:</p>
+            <p class="text-xs text-slate-600 font-medium">Pilih opsi penyamaran nama siswa dan format identitas Guru BK:</p>
             <div class="p-3 bg-slate-50 rounded-2xl border border-slate-100 space-y-1">
                 <div class="text-xs font-bold text-slate-800">Siswa: ${namaSiswa}</div>
                 <div class="text-[11px] font-mono text-amber-600 font-bold">Kode: ${kodeKonseli || '-'}</div>
             </div>
             <div class="space-y-2 pt-1">
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Penyamaran Nama</label>
                 <label class="flex items-center gap-2 cursor-pointer p-2 rounded-xl border border-slate-200 hover:bg-slate-50">
                     <input type="radio" name="swal_samarkan_lap" value="1" checked class="accent-indigo-600">
                     <span class="text-xs font-bold text-slate-700">Samarkan Nama Siswa (Gunakan Kode Konseli)</span>
@@ -495,6 +582,19 @@ function printLaporanKonselingModal(id, namaSiswa, kodeKonseli) {
                     <span class="text-xs font-bold text-slate-700">Tampilkan Nama Asli Siswa</span>
                 </label>
             </div>
+            <div class="space-y-2 pt-1">
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tipe Identitas Guru BK</label>
+                <div class="grid grid-cols-2 gap-2">
+                    <label class="flex items-center gap-2 cursor-pointer p-2 rounded-xl border border-slate-200 hover:bg-slate-50">
+                        <input type="radio" name="swal_nip_type_lap" value="NIPPPK" checked class="accent-indigo-600">
+                        <span class="text-xs font-bold text-slate-700">NIPPPK</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer p-2 rounded-xl border border-slate-200 hover:bg-slate-50">
+                        <input type="radio" name="swal_nip_type_lap" value="NIP" class="accent-indigo-600">
+                        <span class="text-xs font-bold text-slate-700">NIP</span>
+                    </label>
+                </div>
+            </div>
         </div>`,
         showCancelButton: true,
         confirmButtonText: '<i class="fa fa-print mr-1"></i> Cetak Laporan',
@@ -502,13 +602,18 @@ function printLaporanKonselingModal(id, namaSiswa, kodeKonseli) {
         confirmButtonColor: '#059669',
         cancelButtonColor: '#6B7280',
         preConfirm: () => {
-            const rad = document.querySelector('input[name="swal_samarkan_lap"]:checked');
-            return rad ? rad.value : '1';
+            const radSam = document.querySelector('input[name="swal_samarkan_lap"]:checked');
+            const radNip = document.querySelector('input[name="swal_nip_type_lap"]:checked');
+            return {
+                samarkan: radSam ? radSam.value : '1',
+                nip_type: radNip ? radNip.value : 'NIPPPK'
+            };
         }
     }).then((res) => {
         if (res.isConfirmed) {
-            const samarkan = res.value;
-            window.open(`<?= BASE_URL ?>admin/print_laporan_konseling_individu.php?id=${id}&samarkan=${samarkan}`, '_blank');
+            const samarkan = res.value.samarkan;
+            const nip_type = res.value.nip_type;
+            window.open(`<?= BASE_URL ?>admin/print_laporan_konseling_individu.php?id=${id}&samarkan=${samarkan}&nip_type=${nip_type}`, '_blank');
         }
     });
 }

@@ -6,6 +6,7 @@ authorize_role(['admin', 'waka', 'guru', 'guru_bk']);
 
 $id = (int)($_GET['id'] ?? 0);
 $samarkan = isset($_GET['samarkan']) ? ($_GET['samarkan'] == '1') : true;
+$nip_type = isset($_GET['nip_type']) && in_array(strtoupper($_GET['nip_type']), ['NIP', 'NIPPPK']) ? strtoupper($_GET['nip_type']) : 'NIPPPK';
 
 if ($id <= 0) die("ID Laporan tidak valid.");
 
@@ -86,8 +87,11 @@ $tahun_pelajaran = ($m_num >= 7) ? $year_num . '-' . ($year_num + 1) : ($year_nu
             <span class="text-[11px] text-slate-500 font-mono">Status Penyamaran Nama: <strong><?= $samarkan ? 'AKTIF (Kode Konseli)' : 'NONAKTIF (Nama Asli)' ?></strong></span>
         </div>
         <div class="flex items-center gap-2">
-            <a href="<?= BASE_URL ?>admin/print_laporan_konseling_individu.php?id=<?= $id ?>&samarkan=<?= $samarkan ? '0' : '1' ?>" class="px-3 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs rounded-xl transition-all">
+            <a href="<?= BASE_URL ?>admin/print_laporan_konseling_individu.php?id=<?= $id ?>&samarkan=<?= $samarkan ? '0' : '1' ?>&nip_type=<?= $nip_type ?>" class="px-3 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs rounded-xl transition-all">
                 Ganti ke <?= $samarkan ? 'Nama Asli' : 'Kode Konseli' ?>
+            </a>
+            <a href="<?= BASE_URL ?>admin/print_laporan_konseling_individu.php?id=<?= $id ?>&samarkan=<?= $samarkan ? '1' : '0' ?>&nip_type=<?= $nip_type === 'NIPPPK' ? 'NIP' : 'NIPPPK' ?>" class="px-3 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs rounded-xl transition-all">
+                Format ID: <?= $nip_type === 'NIPPPK' ? 'Ganti ke NIP' : 'Ganti ke NIPPPK' ?>
             </a>
             <button onclick="window.print()" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-2">
                 <i class="fa fa-print"></i> Cetak Laporan
@@ -174,9 +178,8 @@ $tahun_pelajaran = ($m_num >= 7) ? $year_num . '-' . ($year_num + 1) : ($year_nu
     <!-- Signatures -->
     <div class="mt-16 text-xs">
         <div class="grid grid-cols-2 gap-8 text-left">
-            <div class="space-y-16">
+            <div class="flex flex-col justify-between h-40">
                 <div>
-                    <p>&nbsp;</p>
                     <p>Mengetahui</p>
                     <p>Kepala <?= htmlspecialchars($nama_sekolah) ?></p>
                 </div>
@@ -186,14 +189,14 @@ $tahun_pelajaran = ($m_num >= 7) ? $year_num . '-' . ($year_num + 1) : ($year_nu
                 </div>
             </div>
 
-            <div class="space-y-16 pl-8">
+            <div class="flex flex-col justify-between h-40 pl-8">
                 <div>
                     <p><?= htmlspecialchars($signature_date) ?></p>
                     <p>Guru BK</p>
                 </div>
                 <div>
                     <p class="font-bold underline uppercase"><?= htmlspecialchars($data['nama_guru'] ?? 'Laili Anggraini, S.Pd') ?></p>
-                    <p>NIP/NIPPPK. <?= htmlspecialchars($data['nip_guru'] ?? '-') ?></p>
+                    <p><?= htmlspecialchars($nip_type) ?>. <?= htmlspecialchars($data['nip_guru'] ?? '-') ?></p>
                 </div>
             </div>
         </div>

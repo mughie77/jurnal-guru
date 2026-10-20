@@ -6,6 +6,7 @@ authorize_role(['admin', 'waka', 'guru', 'guru_bk']);
 
 $id = (int)($_GET['id'] ?? 0);
 $samarkan = isset($_GET['samarkan']) ? ($_GET['samarkan'] == '1') : true;
+$nip_type = isset($_GET['nip_type']) && in_array(strtoupper($_GET['nip_type']), ['NIP', 'NIPPPK']) ? strtoupper($_GET['nip_type']) : 'NIPPPK';
 
 if ($id <= 0) die("ID Laporan tidak valid.");
 
@@ -222,11 +223,11 @@ $tahun_pelajaran = ($m_num >= 7) ? date('Y', $time_stamp) . ' – ' . (date('Y',
 
         <!-- Tanda Tangan Guru BK -->
         <div class="mt-12 pt-4 flex justify-end text-xs">
-            <div class="text-left w-64 space-y-16">
+            <div class="text-left w-64 flex flex-col justify-between h-36">
                 <p>Guru BK,</p>
                 <div>
                     <p class="font-bold underline uppercase"><?= htmlspecialchars($data['nama_guru'] ?? 'Laili Anggraini, S.Pd') ?></p>
-                    <p class="text-xs">NIP/NIPPPK. <?= htmlspecialchars($data['nip_guru'] ?? '-') ?></p>
+                    <p class="text-xs"><?= htmlspecialchars($nip_type) ?>. <?= htmlspecialchars($data['nip_guru'] ?? '-') ?></p>
                 </div>
             </div>
         </div>
