@@ -163,9 +163,9 @@ require_once __DIR__ . '/../includes/header.php';
                 <i class="fa fa-users mr-2"></i> Input RPL Kelompok BK
             </a>
         <?php elseif ($jenis_filter === 'Kunjungan Rumah'): ?>
-            <button onclick="openAddModalKunjunganRumah()" class="bg-amber-600 hover:bg-amber-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-amber-100 transition-all flex items-center text-xs sm:text-sm">
+            <a href="<?= BASE_URL ?>admin/bk_laporan_kunjungan_tambah.php" class="bg-amber-600 hover:bg-amber-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-amber-100 transition-all flex items-center text-xs sm:text-sm">
                 <i class="fa fa-plus mr-2"></i> Tambah Laporan Kunjungan Rumah
-            </button>
+            </a>
         <?php else: ?>
             <a href="<?= BASE_URL ?>admin/bk_laporan_tambah.php" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-indigo-100 transition-all flex items-center text-xs sm:text-sm">
                 <i class="fa fa-plus mr-2"></i> Input RPL Individual BK
@@ -337,9 +337,9 @@ require_once __DIR__ . '/../includes/header.php';
                                     <button onclick="printLaporanKunjunganRumahModal(<?= $r['id'] ?>, '<?= htmlspecialchars(addslashes($r['nama_siswa'] ?? '')) ?>', '<?= htmlspecialchars(addslashes($r['kode_konseli'] ?? '')) ?>')" class="px-3 py-1.5 rounded-xl bg-amber-50 text-amber-700 hover:bg-amber-600 hover:text-white transition-all font-bold text-xs flex items-center gap-1.5 shadow-sm" title="Cetak Laporan Kunjungan Rumah">
                                         <i class="fa fa-print text-xs"></i> Cetak Laporan
                                     </button>
-                                    <button onclick='editLaporan(<?= json_encode($r) ?>)' class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all flex items-center justify-center shadow-sm" title="Edit Laporan Kunjungan Rumah">
+                                    <a href="<?= BASE_URL ?>admin/bk_laporan_kunjungan_tambah.php?id=<?= $r['id'] ?>" class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all flex items-center justify-center shadow-sm" title="Edit Laporan Kunjungan Rumah">
                                         <i class="fa fa-edit text-xs"></i>
-                                    </button>
+                                    </a>
                                 <?php else: ?>
                                     <?php if ($jenis_filter === 'Individu' && $sub_tab === 'laporan'): ?>
                                         <button onclick="printLaporanKonselingModal(<?= $r['id'] ?>, '<?= htmlspecialchars(addslashes($r['nama_siswa'] ?? '')) ?>', '<?= htmlspecialchars(addslashes($r['kode_konseli'] ?? '')) ?>')" class="px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white transition-all font-bold text-xs flex items-center gap-1.5 shadow-sm" title="Cetak Laporan Konseling Individu">
