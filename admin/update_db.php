@@ -70,6 +70,7 @@ if ($is_ajax) {
                     'jam_mulai' => "TIME DEFAULT NULL AFTER jam_ke"
                 ],
                 'bk_laporan' => [
+                    'jenis_bimbingan' => "VARCHAR(100) NOT NULL DEFAULT 'Individu' AFTER tanggal",
                     'kode_konseli' => "VARCHAR(50) DEFAULT NULL AFTER siswa_id",
                     'pertemuan_ke' => "INT(11) DEFAULT 1 AFTER status",
                     'waktu' => "VARCHAR(100) DEFAULT '45 menit' AFTER pertemuan_ke",
@@ -520,7 +521,7 @@ if ($is_ajax) {
             $create_bk_lap = "CREATE TABLE IF NOT EXISTS `bk_laporan` (
                 `id` int(11) NOT NULL AUTO_INCREMENT,
                 `tanggal` date NOT NULL,
-                `jenis_bimbingan` enum('Individu','Kelompok') NOT NULL DEFAULT 'Individu',
+                `jenis_bimbingan` enum('Individu','Kelompok','Kunjungan Rumah','Konferensi Kasus') NOT NULL DEFAULT 'Individu',
                 `siswa_id` int(11) NOT NULL,
                 `guru_id` int(11) NOT NULL,
                 `kelas_id` int(11) NOT NULL,
