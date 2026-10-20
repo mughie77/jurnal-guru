@@ -12,7 +12,7 @@ if ($id <= 0) die("ID Laporan BK Kelompok tidak valid.");
 
 // Query report & counselor
 $query = "SELECT bl.*, k.nama_kelas,
-                 g.nama_guru, g.nip_guru, g.gelar_guru,
+                 g.nip as nip_guru,
                  u.nama_lengkap as nama_user_guru
           FROM bk_laporan bl
           LEFT JOIN kelas k ON bl.kelas_id = k.id
@@ -55,7 +55,7 @@ $nama_ks = $settings['nama_kepsek'] ?? 'Deni Setyo Purnomo, S.Pd., M.M.';
 $nip_ks = $settings['nip_kepsek'] ?? '19820512 200903 1 005';
 $nama_sekolah = $settings['nama_sekolah'] ?? 'SMK PERTIWI KUNINGAN';
 
-$nama_guru = !empty($r['nama_guru']) ? $r['nama_guru'] : (!empty($r['nama_user_guru']) ? $r['nama_user_guru'] : 'Guru BK');
+$nama_guru = !empty($r['nama_user_guru']) ? $r['nama_user_guru'] : 'Guru BK';
 $nip_guru = !empty($r['nip_guru']) ? $r['nip_guru'] : '-';
 
 // Format Hari & Tanggal

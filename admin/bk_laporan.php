@@ -177,6 +177,16 @@ require_once __DIR__ . '/../includes/header.php';
         <i class="fa fa-file-signature"></i> 2. Laporan Konseling Individu
     </a>
 </div>
+<?php elseif ($jenis_filter === 'Kelompok'): ?>
+<!-- Sub Tabs Navigation for Kelompok -->
+<div class="flex items-center gap-2 mb-6 border-b border-slate-200 pb-2">
+    <a href="bk_laporan.php?jenis=Kelompok&tab=rpl" class="px-5 py-2.5 rounded-2xl font-black text-xs transition-all flex items-center gap-2 <?= $sub_tab === 'rpl' ? 'bg-teal-600 text-white shadow-lg shadow-teal-100' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200' ?>">
+        <i class="fa fa-file-invoice"></i> 1. RPL Bimbingan Kelompok
+    </a>
+    <a href="bk_laporan.php?jenis=Kelompok&tab=laporan" class="px-5 py-2.5 rounded-2xl font-black text-xs transition-all flex items-center gap-2 <?= $sub_tab === 'laporan' ? 'bg-teal-600 text-white shadow-lg shadow-teal-100' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200' ?>">
+        <i class="fa fa-file-signature"></i> 2. Laporan Bimbingan Kelompok
+    </a>
+</div>
 <?php endif; ?>
 
 <?php if ($message): ?>
@@ -304,9 +314,15 @@ require_once __DIR__ . '/../includes/header.php';
                         <td class="px-6 py-4 text-center">
                             <div class="flex items-center justify-center gap-1.5">
                                 <?php if ($r['jenis_bimbingan'] === 'Kelompok'): ?>
-                                    <button onclick="printOptionKelompokModal(<?= $r['id'] ?>)" class="w-8 h-8 rounded-xl bg-teal-50 text-teal-600 hover:bg-teal-700 hover:text-white transition-all flex items-center justify-center shadow-sm" title="Cetak Dokumen RPL BK Kelompok">
-                                        <i class="fa fa-print text-xs"></i>
-                                    </button>
+                                    <?php if ($jenis_filter === 'Kelompok' && $sub_tab === 'laporan'): ?>
+                                        <button onclick="printLaporanBimkelModal(<?= $r['id'] ?>)" class="px-3 py-1.5 rounded-xl bg-teal-50 text-teal-700 hover:bg-teal-600 hover:text-white transition-all font-bold text-xs flex items-center gap-1.5 shadow-sm" title="Cetak Laporan Bimbingan Kelompok">
+                                            <i class="fa fa-print text-xs"></i> Cetak Laporan
+                                        </button>
+                                    <?php else: ?>
+                                        <button onclick="printOptionKelompokModal(<?= $r['id'] ?>)" class="w-8 h-8 rounded-xl bg-teal-50 text-teal-600 hover:bg-teal-700 hover:text-white transition-all flex items-center justify-center shadow-sm" title="Cetak Dokumen RPL BK Kelompok">
+                                            <i class="fa fa-print text-xs"></i>
+                                        </button>
+                                    <?php endif; ?>
                                     <a href="<?= BASE_URL ?>admin/bk_laporan_kelompok_tambah.php?id=<?= $r['id'] ?>" class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all flex items-center justify-center shadow-sm" title="Edit RPL BK Kelompok">
                                         <i class="fa fa-edit text-xs"></i>
                                     </a>
@@ -502,6 +518,41 @@ function printOptionKelompokModal(id) {
     }).then((res) => {
         if (res.isConfirmed) {
             window.open(`<?= BASE_URL ?>admin/print_bk_laporan_kelompok.php?id=${id}&nip_type=${res.value}`, '_blank');
+        }
+    });
+}
+
+function printLaporanBimkelModal(id) {
+    Swal.fire({
+        title: 'Cetak Laporan Bimbingan Kelompok',
+        html: `<div class="text-left space-y-3 font-sans">
+            <p class="text-xs text-slate-600 font-medium">Pilih format identitas Guru BK pada Laporan Pelaksanaan Bimbingan Kelompok:</p>
+            <div class="space-y-2 pt-1">
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tipe Identitas Guru BK</label>
+                <div class="grid grid-cols-2 gap-2">
+                    <label class="flex items-center gap-2 cursor-pointer p-2 rounded-xl border border-slate-200 hover:bg-slate-50">
+                        <input type="radio" name="swal_nip_type_lap_kel" value="NIPPPK" checked class="accent-teal-600">
+                        <span class="text-xs font-bold text-slate-700">NIPPPK</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer p-2 rounded-xl border border-slate-200 hover:bg-slate-50">
+                        <input type="radio" name="swal_nip_type_lap_kel" value="NIP" class="accent-teal-600">
+                        <span class="text-xs font-bold text-slate-700">NIP</span>
+                    </label>
+                </div>
+            </div>
+        </div>`,
+        showCancelButton: true,
+        confirmButtonText: '<i class="fa fa-print mr-1"></i> Cetak Laporan',
+        cancelButtonText: 'Batal',
+        confirmButtonColor: '#0D9488',
+        cancelButtonColor: '#6B7280',
+        preConfirm: () => {
+            const radNip = document.querySelector('input[name="swal_nip_type_lap_kel"]:checked');
+            return radNip ? radNip.value : 'NIPPPK';
+        }
+    }).then((res) => {
+        if (res.isConfirmed) {
+            window.open(`<?= BASE_URL ?>admin/print_laporan_bimbingan_kelompok.php?id=${id}&nip_type=${res.value}`, '_blank');
         }
     });
 }
