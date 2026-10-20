@@ -173,13 +173,10 @@ $tahun_pelajaran = ($m_num >= 7) ? $year_num . '-' . ($year_num + 1) : ($year_nu
 
     <!-- Signatures -->
     <div class="mt-16 text-xs">
-        <div class="flex justify-end mb-4 pr-4">
-            <p><?= htmlspecialchars($signature_date) ?></p>
-        </div>
-
         <div class="grid grid-cols-2 gap-8 text-left">
             <div class="space-y-16">
                 <div>
+                    <p>&nbsp;</p>
                     <p>Mengetahui</p>
                     <p>Kepala <?= htmlspecialchars($nama_sekolah) ?></p>
                 </div>
@@ -191,12 +188,12 @@ $tahun_pelajaran = ($m_num >= 7) ? $year_num . '-' . ($year_num + 1) : ($year_nu
 
             <div class="space-y-16 pl-8">
                 <div>
-                    <p>&nbsp;</p>
+                    <p><?= htmlspecialchars($signature_date) ?></p>
                     <p>Guru BK</p>
                 </div>
                 <div>
                     <p class="font-bold underline uppercase"><?= htmlspecialchars($data['nama_guru'] ?? 'Laili Anggraini, S.Pd') ?></p>
-                    <p>NIPPPK. <?= htmlspecialchars($data['nip_guru'] ?? '-') ?></p>
+                    <p>NIP/NIPPPK. <?= htmlspecialchars($data['nip_guru'] ?? '-') ?></p>
                 </div>
             </div>
         </div>
