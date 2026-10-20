@@ -58,6 +58,15 @@ while ($row = mysqli_fetch_assoc($q_settings)) {
 $nama_ks = $settings['nama_kepsek'] ?? 'Deni Setyo Purnomo, S.Pd., M.M.';
 $nip_ks = $settings['nip_kepsek'] ?? '19820512 200903 1 005';
 $nama_sekolah = $settings['nama_sekolah'] ?? 'SMK PERTIWI KUNINGAN';
+$alamat_sekolah = $settings['alamat_sekolah'] ?? 'Jalan Jend. A. Yani No. 48';
+$email_sekolah = $settings['email_sekolah'] ?? '';
+$web_sekolah = $settings['web_sekolah'] ?? '';
+
+$kop_html = $settings['kop_sekolah_html'] ?? '';
+$kop_font_family = $settings['kop_font_family'] ?? 'Times New Roman';
+$kop_font_size = $settings['kop_font_size'] ?? '12';
+$logo_kiri = $settings['logo_kiri'] ?? '';
+$logo_kanan = $settings['logo_kanan'] ?? '';
 
 $nama_guru = !empty($r['nama_user_guru']) ? $r['nama_user_guru'] : 'Guru BK';
 $nip_guru = !empty($r['nip_guru']) ? $r['nip_guru'] : '-';
@@ -158,6 +167,35 @@ $kelas_display = !empty($r['nama_kelas']) ? $r['nama_kelas'] : 'Lintas Kelas / C
 
 <!-- PAGE 1: RPL BIMBINGAN KELOMPOK -->
 <div class="page-sheet">
+    <!-- Dynamic Kop Surat -->
+    <div class="border-b-4 border-black pb-3 mb-6 flex items-center justify-between gap-4 font-sans">
+        <?php if (!empty($logo_kiri)): ?>
+            <div class="w-20 flex-shrink-0 text-center">
+                <img src="<?= BASE_URL ?>uploads/<?= htmlspecialchars($logo_kiri) ?>" class="max-h-20 max-w-full inline-block">
+            </div>
+        <?php endif; ?>
+
+        <div class="flex-1 text-center font-serif">
+            <?php if (!empty($kop_html)): ?>
+                <?= $kop_html ?>
+            <?php else: ?>
+                <h3 class="text-sm font-bold uppercase tracking-wide">PEMERINTAH PROVINSI JAWA TIMUR</h3>
+                <h3 class="text-sm font-bold uppercase tracking-wide">DINAS PENDIDIKAN</h3>
+                <h2 class="text-base font-bold uppercase tracking-wide"><?= htmlspecialchars($nama_sekolah) ?></h2>
+                <p class="text-xs font-normal"><?= htmlspecialchars($alamat_sekolah) ?></p>
+                <?php if ($email_sekolah || $web_sekolah): ?>
+                    <p class="text-[11px] italic">Email: <?= htmlspecialchars($email_sekolah) ?> Website: <?= htmlspecialchars($web_sekolah) ?></p>
+                <?php endif; ?>
+            <?php endif; ?>
+        </div>
+
+        <?php if (!empty($logo_kanan)): ?>
+            <div class="w-20 flex-shrink-0 text-center">
+                <img src="<?= BASE_URL ?>uploads/<?= htmlspecialchars($logo_kanan) ?>" class="max-h-20 max-w-full inline-block">
+            </div>
+        <?php endif; ?>
+    </div>
+
     <!-- Header Document -->
     <div class="text-center font-bold uppercase mb-6 leading-tight">
         <div class="text-base tracking-wide">RENCANA PELAKSANAAN LAYANAN (RPL)</div>
@@ -296,7 +334,7 @@ $kelas_display = !empty($r['nama_kelas']) ? $r['nama_kelas'] : 'Lintas Kelas / C
         <div class="w-5/12 text-center flex flex-col justify-between h-40">
             <div>
                 Mengetahui,<br>
-                Kepala Sekolah
+                Kepala <?= htmlspecialchars($nama_sekolah) ?>
             </div>
             <div>
                 <div class="font-bold underline uppercase"><?= htmlspecialchars($nama_ks) ?></div>
