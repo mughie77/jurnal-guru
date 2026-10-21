@@ -76,12 +76,13 @@ if ($role == 'admin') {
     echo nav_link('admin/index.php', 'fa fa-tachometer-alt', 'Beranda', $current_page == 'index.php' && strpos($_SERVER['PHP_SELF'], '/admin/') !== false);
 
     // Group 1: Data Master
-    $master_active = in_array($current_page, ['users.php', 'guru.php', 'mapel.php', 'tahun_pelajaran.php', 'kategori_perangkat.php']);
+    $master_active = in_array($current_page, ['users.php', 'guru.php', 'mapel.php', 'tahun_pelajaran.php', 'kategori_perangkat.php', 'pengumuman.php']);
     $master_links = sub_nav_link('admin/users.php', 'Manajemen User', $current_page == 'users.php') .
                     sub_nav_link('admin/guru.php', 'Data Guru', $current_page == 'guru.php') .
                     sub_nav_link('admin/mapel.php', 'Mata Pelajaran', $current_page == 'mapel.php') .
                     sub_nav_link('admin/tahun_pelajaran.php', 'Tahun Pelajaran', $current_page == 'tahun_pelajaran.php') .
-                    sub_nav_link('admin/kategori_perangkat.php', 'Kategori Perangkat', $current_page == 'kategori_perangkat.php');
+                    sub_nav_link('admin/kategori_perangkat.php', 'Kategori Perangkat', $current_page == 'kategori_perangkat.php') .
+                    sub_nav_link('admin/pengumuman.php', 'Pengumuman', $current_page == 'pengumuman.php');
     echo sidebar_section('Data Master', 'fa fa-database', $master_active, $master_links);
 
     // Group 2: Data Akademik
@@ -95,6 +96,12 @@ if ($role == 'admin') {
                       sub_nav_link('admin/naik_kelas.php', 'Kenaikan Kelas', $current_page == 'naik_kelas.php');
     echo sidebar_section('Data Akademik', 'fa fa-graduation-cap', $akademik_active, $akademik_links);
 
+    // Group 2.5: PKL
+    $pkl_active = in_array($current_page, ['pkl_lokasi.php', 'pkl_mapping.php']);
+    $pkl_links = sub_nav_link('admin/pkl_lokasi.php', 'Lokasi PKL', $current_page == 'pkl_lokasi.php') .
+                 sub_nav_link('admin/pkl_mapping.php', 'Mapping PKL', $current_page == 'pkl_mapping.php');
+    echo sidebar_section('PKL', 'fa fa-briefcase', $pkl_active, $pkl_links);
+
     // Group 3: Monitor (New!)
     $monitor_active = in_array($current_page, ['peta_kelas.php', 'peta_sebar_jurnal.php', 'rekap_mood.php']);
     $monitor_links = sub_nav_link('admin/peta_kelas.php', 'Peta Status Kelas', $current_page == 'peta_kelas.php') .
@@ -103,8 +110,9 @@ if ($role == 'admin') {
     echo sidebar_section('Monitor', 'fa fa-desktop', $monitor_active, $monitor_links);
 
     // Group 4: Laporan & Rekap
-    $laporan_active = in_array($current_page, ['jurnal.php', 'rekap_absensi.php', 'rekap_persiswa.php', 'rekap_gps.php', 'rekap_izin.php', 'rekap_kritik.php', 'rekap_pengaduan.php', 'rekap_berkas.php', 'perangkat.php', 'rekap_tugas_guru.php']);
+    $laporan_active = in_array($current_page, ['jurnal.php', 'rekap_absensi.php', 'rekap_persiswa.php', 'rekap_gps.php', 'rekap_izin.php', 'rekap_kritik.php', 'rekap_pengaduan.php', 'rekap_berkas.php', 'perangkat.php', 'rekap_tugas_guru.php', 'rekap_buku_kejadian.php']);
     $laporan_links = sub_nav_link('admin/jurnal.php', 'Jurnal Mengajar', $current_page == 'jurnal.php') .
+                     sub_nav_link('admin/rekap_buku_kejadian.php', 'Buku Kejadian', $current_page == 'rekap_buku_kejadian.php') .
                      sub_nav_link('admin/rekap_tugas_guru.php', 'Tugas Guru Tidak Masuk', $current_page == 'rekap_tugas_guru.php') .
                      sub_nav_link('admin/rekap_absensi.php', 'Absensi Jurnal', $current_page == 'rekap_absensi.php') .
                      sub_nav_link('admin/rekap_persiswa.php', 'Kehadiran Siswa', $current_page == 'rekap_persiswa.php') .
@@ -126,10 +134,11 @@ if ($role == 'admin') {
     echo nav_link('waka/index.php', 'fa fa-tachometer-alt', 'Beranda', $current_page == 'index.php' && strpos($_SERVER['PHP_SELF'], '/waka/') !== false);
 
     // Group 1: Data Master (Waka)
-    $master_active = in_array($current_page, ['guru.php', 'mapel.php', 'kategori_perangkat.php']);
+    $master_active = in_array($current_page, ['guru.php', 'mapel.php', 'kategori_perangkat.php', 'pengumuman.php']);
     $master_links = sub_nav_link('waka/guru.php', 'Data Guru', $current_page == 'guru.php') .
                     sub_nav_link('waka/mapel.php', 'Mata Pelajaran', $current_page == 'mapel.php') .
-                    sub_nav_link('admin/kategori_perangkat.php', 'Kategori Perangkat', $current_page == 'kategori_perangkat.php');
+                    sub_nav_link('admin/kategori_perangkat.php', 'Kategori Perangkat', $current_page == 'kategori_perangkat.php') .
+                    sub_nav_link('admin/pengumuman.php', 'Pengumuman', $current_page == 'pengumuman.php');
     echo sidebar_section('Data Master', 'fa fa-database', $master_active, $master_links);
 
     // Group 2: Data Akademik (Waka)
@@ -140,6 +149,12 @@ if ($role == 'admin') {
                       sub_nav_link('admin/alumni.php', 'Data Alumni', $current_page == 'alumni.php');
     echo sidebar_section('Data Akademik', 'fa fa-graduation-cap', $akademik_active, $akademik_links);
 
+    // Group 2.5: PKL (Waka)
+    $pkl_active = in_array($current_page, ['pkl_lokasi.php', 'pkl_mapping.php']);
+    $pkl_links = sub_nav_link('admin/pkl_lokasi.php', 'Lokasi PKL', $current_page == 'pkl_lokasi.php') .
+                 sub_nav_link('admin/pkl_mapping.php', 'Mapping PKL', $current_page == 'pkl_mapping.php');
+    echo sidebar_section('PKL', 'fa fa-briefcase', $pkl_active, $pkl_links);
+
     // Group 3: Monitor (Waka - New!)
     $monitor_active = in_array($current_page, ['peta_kelas.php', 'peta_sebar_jurnal.php', 'rekap_mood.php']);
     $monitor_links = sub_nav_link('waka/peta_kelas.php', 'Peta Status Kelas', $current_page == 'peta_kelas.php') .
@@ -148,8 +163,9 @@ if ($role == 'admin') {
     echo sidebar_section('Monitor', 'fa fa-desktop', $monitor_active, $monitor_links);
 
     // Group 4: Laporan & Rekap (Waka)
-    $laporan_active = in_array($current_page, ['jurnal.php', 'rekap_absensi.php', 'rekap_persiswa.php', 'rekap_gps.php', 'rekap_izin.php', 'rekap_kritik.php', 'rekap_pengaduan.php', 'rekap_berkas.php', 'perangkat.php', 'rekap_tugas_guru.php']);
+    $laporan_active = in_array($current_page, ['jurnal.php', 'rekap_absensi.php', 'rekap_persiswa.php', 'rekap_gps.php', 'rekap_izin.php', 'rekap_kritik.php', 'rekap_pengaduan.php', 'rekap_berkas.php', 'perangkat.php', 'rekap_tugas_guru.php', 'rekap_buku_kejadian.php']);
     $laporan_links = sub_nav_link('waka/jurnal.php', 'Jurnal Mengajar', $current_page == 'jurnal.php') .
+                     sub_nav_link('waka/rekap_buku_kejadian.php', 'Buku Kejadian', $current_page == 'rekap_buku_kejadian.php') .
                      sub_nav_link('waka/rekap_tugas_guru.php', 'Tugas Guru Tidak Masuk', $current_page == 'rekap_tugas_guru.php') .
                      sub_nav_link('admin/rekap_absensi.php', 'Absensi Jurnal', $current_page == 'rekap_absensi.php') .
                      sub_nav_link('admin/rekap_persiswa.php', 'Kehadiran Siswa', $current_page == 'rekap_persiswa.php') .
@@ -160,6 +176,29 @@ if ($role == 'admin') {
                      sub_nav_link('admin/rekap_berkas.php', 'Berkas Siswa', $current_page == 'rekap_berkas.php') .
                      sub_nav_link('admin/perangkat.php', 'Data Perangkat', $current_page == 'perangkat.php');
     echo sidebar_section('Laporan & Rekap', 'fa fa-chart-bar', $laporan_active, $laporan_links);
+} elseif ($role == 'guru') {
+    echo nav_link('guru/index.php', 'fa fa-tachometer-alt', 'Beranda', $current_page == 'index.php' && strpos($_SERVER['PHP_SELF'], '/guru/') !== false);
+
+    // Guru Group
+    $guru_active = in_array($current_page, ['isi_absensi.php', 'isi_jurnal.php', 'rekap_absen.php', 'riwayat.php', 'perangkat.php', 'tugas_tidak_masuk.php', 'rekap_buku_kejadian.php']);
+    $guru_links = sub_nav_link('guru/isi_absensi.php', 'Isi Jurnal & Absensi', $current_page == 'isi_absensi.php' || $current_page == 'isi_jurnal.php') .
+                  sub_nav_link('guru/rekap_absen.php', 'Laporan Kehadiran', $current_page == 'rekap_absen.php') .
+                  sub_nav_link('guru/rekap_buku_kejadian.php', 'Buku Kejadian', $current_page == 'rekap_buku_kejadian.php') .
+                  sub_nav_link('guru/riwayat.php', 'Riwayat Jurnal', $current_page == 'riwayat.php') .
+                  sub_nav_link('guru/tugas_tidak_masuk.php', 'Tugas Guru', $current_page == 'tugas_tidak_masuk.php') .
+                  sub_nav_link('guru/perangkat.php', 'Perangkat Pembelajaran', $current_page == 'perangkat.php');
+    echo sidebar_section('Akademik', 'fa fa-graduation-cap', $guru_active, $guru_links);
+
+} elseif ($role == 'dudi') {
+    echo nav_link('dudi/index.php', 'fa fa-tachometer-alt', 'Beranda DU/DI', $current_page == 'index.php' && strpos($_SERVER['PHP_SELF'], '/dudi/') !== false);
+
+    // DU/DI Menu Group
+    $dudi_active = in_array($current_page, ['index.php', 'jurnal.php', 'siswa.php', 'nilai.php']);
+    $dudi_links = sub_nav_link('dudi/index.php', 'Dashboard DU/DI', $current_page == 'index.php') .
+                 sub_nav_link('dudi/jurnal.php', 'Jurnal PKL Murid', $current_page == 'jurnal.php') .
+                 sub_nav_link('dudi/siswa.php', 'Siswa Murid', $current_page == 'siswa.php') .
+                 sub_nav_link('dudi/nilai.php', 'Nilai Murid', $current_page == 'nilai.php');
+    echo sidebar_section('Menu DU/DI', 'fa fa-briefcase', $dudi_active, $dudi_links);
 }
 
 echo "<div class='pt-8 mt-8 border-t border-slate-800/50'>";

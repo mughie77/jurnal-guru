@@ -26,6 +26,9 @@ switch ($role) {
     case 'guru':
         header('Location: ' . BASE_URL . 'guru/');
         break;
+    case 'dudi':
+        header('Location: ' . BASE_URL . 'dudi/');
+        break;
     case 'siswa':
         header('Location: ' . BASE_URL . 'siswa/');
         break;

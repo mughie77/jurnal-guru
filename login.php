@@ -30,15 +30,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         mysqli_stmt_execute($stmt);
         $result = mysqli_stmt_get_result($stmt);
 
+        $lifetime = 30 * 24 * 60 * 60; // 30 hari persistent login
         if ($user = mysqli_fetch_assoc($result)) {
             if (password_verify($password, $user['password'])) {
-                if (isset($_POST['remember_me'])) {
-                    $lifetime = 30 * 24 * 60 * 60;
-                    ini_set('session.gc_maxlifetime', $lifetime);
-                    session_set_cookie_params($lifetime, '/');
-                    session_regenerate_id(true);
-                    $_SESSION['remember_me'] = true;
-                }
+                session_regenerate_id(true);
+                $_SESSION['remember_me'] = true;
                 $_SESSION['user_id'] = $user['id'];
                 $_SESSION['nama_lengkap'] = $user['nama_lengkap'];
                 $_SESSION['username'] = $user['username'];
@@ -57,6 +53,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
             if ($siswa = mysqli_fetch_assoc($res_s)) {
                 if (!empty($siswa['nisn']) && $password === $siswa['nisn']) {
+                    session_regenerate_id(true);
+                    $_SESSION['remember_me'] = true;
                     $_SESSION['user_id'] = $siswa['id'];
                     $_SESSION['nama_lengkap'] = $siswa['nama_siswa'];
                     $_SESSION['username'] = $siswa['nisn'];

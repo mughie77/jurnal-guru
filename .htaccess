@@ -6,19 +6,19 @@ RewriteCond %{REQUEST_FILENAME} -f [OR]
 RewriteCond %{REQUEST_FILENAME} -d
 RewriteRule ^ - [L]
 
-# 1. Hilangkan .php pada address bar (Internal Rewrite)
-# Memungkinkan akses /login untuk login.php
+# 1. Hilangkan ekstensi .php pada URL (Internal Rewrite dengan Query String)
+# Memungkinkan akses clean URL seperti /login, /admin/pengaturan, /guru/isi_absensi
 RewriteCond %{REQUEST_FILENAME}.php -f
-RewriteRule ^(.*?)/?$ $1.php [L]
+RewriteRule ^(.*?)/?$ $1.php [L,QSA]
 
-# 2. Redirect dari .php ke non-php (External Redirect)
-# Agar lebih rapi, hanya jika dipanggil langsung lewat browser
+# 2. Redirect otomatis dari .php ke Clean URL (External Redirect)
+# Hanya untuk request GET/HEAD dari browser agar tidak mengganggu POST/AJAX form request
+RewriteCond %{REQUEST_METHOD} !POST
 RewriteCond %{THE_REQUEST} ^[A-Z]{3,}\s/+(.+)\.php[\s?] [NC]
-RewriteRule ^ /%1 [R=301,L]
+RewriteRule ^ %1 [R=301,L]
 
-# 3. Error Documents
-# PENTING: GANTI "/jurnal/" jika folder aplikasi Anda berbeda.
-ErrorDocument 403 /jurnal/error/403.php
-ErrorDocument 404 /jurnal/error/404.php
-ErrorDocument 500 /jurnal/error/500.php
-ErrorDocument 503 /jurnal/error/503.php
+# 3. Error Documents (Path Relatif agar kompatibel di root domain maupun sub-folder)
+ErrorDocument 403 error/403.php
+ErrorDocument 404 error/404.php
+ErrorDocument 500 error/500.php
+ErrorDocument 503 error/503.php
