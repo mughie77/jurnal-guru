@@ -114,8 +114,8 @@ require_once __DIR__ . '/../includes/header.php';
 </div>
 
 <!-- Modal Pointing Lokasi GPS -->
-<div id="modalOverlay" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] hidden transition-opacity duration-300 opacity-0" onclick="closeModal('pointingModal')"></div>
-<div id="pointingModal" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] sm:w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white rounded-3xl shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0">
+<div id="modalOverlay" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[200] hidden transition-opacity duration-300 opacity-0" onclick="closeModal('pointingModal')"></div>
+<div id="pointingModal" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[94vw] sm:w-full max-w-2xl max-h-[80vh] sm:max-h-[85vh] bg-white rounded-3xl shadow-2xl z-[210] hidden transition-all duration-300 scale-95 opacity-0 flex flex-col overflow-hidden">
     <div class="bg-indigo-600 px-6 sm:px-8 py-5 text-white flex justify-between items-center sticky top-0 z-10">
         <h3 class="text-xl font-black italic">Point Lokasi GPS tempat PKL</h3>
         <button type="button" onclick="closeModal('pointingModal')" class="text-white/80 hover:text-white text-lg"><i class="fa fa-times"></i></button>

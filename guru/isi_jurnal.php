@@ -298,10 +298,10 @@ require_once __DIR__ . '/../includes/header.php';
 </div>
 
 <!-- Modal Buku Kejadian Overlay -->
-<div id="bkModalOverlay" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] hidden transition-opacity duration-300 opacity-0" onclick="closeBukuKejadianModal()"></div>
+<div id="bkModalOverlay" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[200] hidden transition-opacity duration-300 opacity-0" onclick="closeBukuKejadianModal()"></div>
 
 <!-- Modal Form Buku Kejadian -->
-<div id="bkModal" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[94vw] sm:w-full max-w-xl max-h-[85vh] overflow-y-auto bg-white rounded-2xl sm:rounded-3xl shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0">
+<div id="bkModal" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[94vw] sm:w-full max-w-xl max-h-[80vh] sm:max-h-[85vh] bg-white rounded-2xl sm:rounded-3xl shadow-2xl z-[210] hidden transition-all duration-300 scale-95 opacity-0 flex flex-col overflow-hidden">
     <div class="bg-amber-500 px-4 sm:px-6 py-4 text-white flex justify-between items-center sticky top-0 z-10 rounded-t-2xl sm:rounded-t-3xl shadow-md">
         <div>
             <h3 class="text-base sm:text-lg font-black italic">Buku Kejadian Kelas</h3>

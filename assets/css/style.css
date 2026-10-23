@@ -46,3 +46,8 @@ body {
 #sidebar::-webkit-scrollbar-thumb:hover {
     background: #475569;
 }
+
+/* Ensure SweetAlert2 popups are always displayed on top of floating navigation menus and headers */
+.swal2-container {
+    z-index: 99999 !important;
+}

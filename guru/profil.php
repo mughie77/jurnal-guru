@@ -179,10 +179,10 @@ require_once __DIR__ . '/../includes/header.php';
     </div>
 </div>
 
-<div id="modalOverlay" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] hidden transition-opacity duration-300 opacity-0" onclick="closeAllModals()"></div>
+<div id="modalOverlay" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[200] hidden transition-opacity duration-300 opacity-0" onclick="closeAllModals()"></div>
 
 <!-- Modal Edit Profil -->
-<div id="editProfilModal" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] max-w-lg bg-white rounded-[32px] sm:rounded-[40px] shadow-2xl z-[70] hidden transition-all duration-300 scale-95 opacity-0 overflow-hidden">
+<div id="editProfilModal" class="modal-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[94vw] max-w-lg max-h-[80vh] sm:max-h-[85vh] bg-white rounded-[32px] sm:rounded-[40px] shadow-2xl z-[210] hidden transition-all duration-300 scale-95 opacity-0 flex flex-col overflow-hidden">
     <div class="bg-slate-900 px-6 py-5 sm:px-8 sm:py-6 text-white flex items-center justify-between">
         <h3 class="text-lg sm:text-xl font-black italic tracking-widest uppercase">Edit Profil Guru</h3>
         <button onclick="closeModal('editProfilModal')" class="text-white/50 hover:text-white transition-colors"><i class="fa fa-times text-xl"></i></button>

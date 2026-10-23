@@ -5,7 +5,7 @@
 
     <?php if (isset($_SESSION['role']) && ($_SESSION['role'] == 'guru' || $_SESSION['role'] == 'siswa' || $_SESSION['role'] == 'dudi')): ?>
         <!-- Persistent Footer Menu -->
-        <div class="fixed bottom-0 left-0 right-0 z-[100] lg:px-8 pb-4">
+        <div class="fixed bottom-0 left-0 right-0 z-40 lg:px-8 pb-4">
             <div class="max-w-xl mx-auto glass shadow-2xl rounded-2xl border border-slate-200/50 p-2 flex items-center justify-around translate-y-0 transition-transform duration-500">
 
                 <?php if ($_SESSION['role'] == 'guru'): ?>
