@@ -86,14 +86,28 @@ if (!empty($base_url_config)) {
     // Deteksi URL dasar secara otomatis
     $protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443) || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https')) ? "https://" : "http://";
     $domainName = $_SERVER['HTTP_HOST'] ?? 'localhost';
-    $scriptName = $_SERVER['SCRIPT_NAME'];
+    $scriptName = $_SERVER['SCRIPT_NAME'] ?? $_SERVER['PHP_SELF'] ?? '';
+
+    // Normalisasi separator path
+    $scriptName = str_replace('\\', '/', $scriptName);
+
+    // Hapus document root fisik jika ada di scriptName (misal C:/xampp/htdocs/...)
+    if (!empty($_SERVER['DOCUMENT_ROOT'])) {
+        $doc_root = str_replace('\\', '/', $_SERVER['DOCUMENT_ROOT']);
+        if (!empty($doc_root) && strpos($scriptName, $doc_root) === 0) {
+            $scriptName = substr($scriptName, strlen($doc_root));
+        }
+    }
+
+    // Hapus huruf drive Windows jika ada (misal C:)
+    $scriptName = preg_replace('/^[A-Za-z]:/', '', $scriptName);
 
     // Cari path root aplikasi (naik dari folder core jika perlu)
     $app_root_path = str_replace(['/admin', '/guru', '/waka', '/api', '/siswa', '/dudi', '/error'], '/', dirname($scriptName));
 
-    // Normalisasi path agar selalu diakhiri dengan satu slash
-    $app_root_path = str_replace('\\', '/', $app_root_path);
-    $app_root_path = rtrim($app_root_path, '/') . '/';
+    // Normalisasi path agar selalu diawali dan diakhiri dengan slash
+    $app_root_path = '/' . ltrim(rtrim($app_root_path, '/'), '/') . '/';
+    $app_root_path = str_replace('//', '/', $app_root_path);
 
     define('BASE_URL', $protocol . $domainName . $app_root_path);
 }

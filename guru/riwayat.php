@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/pagination.php';
 
 authorize_role(['guru', 'admin']);
 $page_title = "Riwayat Jurnal Saya";
@@ -43,12 +44,15 @@ if (!empty($tgl_selesai)) {
     $where_clause .= " AND jurnal.tanggal <= '$tgl_selesai_escaped'";
 }
 
-$sql = "SELECT jurnal.*, mp.nama_mapel, k.nama_kelas
+$pagin = get_pagination_data($conn, "jurnal JOIN mata_pelajaran mp ON jurnal.mapel_id = mp.id JOIN kelas k ON jurnal.kelas_id = k.id", 15, "WHERE " . $where_clause);
+
+$sql = "SELECT jurnal.id, jurnal.tanggal, jurnal.jam_ke, jurnal.materi, jurnal.keterangan, jurnal.jml_hadir, jurnal.jml_alfa, mp.nama_mapel, k.nama_kelas
         FROM jurnal
         JOIN mata_pelajaran mp ON jurnal.mapel_id = mp.id
         JOIN kelas k ON jurnal.kelas_id = k.id
         WHERE $where_clause
-        ORDER BY jurnal.tanggal DESC, jurnal.created_at DESC";
+        ORDER BY jurnal.tanggal DESC, jurnal.created_at DESC
+        LIMIT {$pagin['limit']} OFFSET {$pagin['offset']}";
 $result = mysqli_query($conn, $sql);
 
 require_once __DIR__ . '/../includes/header.php';
@@ -147,10 +151,15 @@ require_once __DIR__ . '/../includes/header.php';
                 </thead>
                 <tbody class="divide-y divide-slate-50">
                     <?php if(mysqli_num_rows($result) > 0): ?>
-                        <?php while ($row = mysqli_fetch_assoc($result)): ?>
-                        <tr class="hover:bg-slate-50/50 transition-colors">
+                        <?php while ($row = mysqli_fetch_assoc($result)):
+                            $is_tugas_guru = (strpos($row['materi'], '[Tugas Guru]') !== false || strpos($row['keterangan'], 'Tugas Guru') !== false);
+                        ?>
+                        <tr class="<?= $is_tugas_guru ? 'bg-amber-50/40 hover:bg-amber-50/70' : 'hover:bg-slate-50/50' ?> transition-colors">
                             <td class="px-6 py-4 text-sm font-bold text-slate-700 whitespace-nowrap"><?= date('d/m/Y', strtotime($row['tanggal'])) ?></td>
                             <td class="px-6 py-4">
+                                <?php if ($is_tugas_guru): ?>
+                                    <span class="px-2 py-0.5 rounded bg-amber-500 text-white font-black text-[9px] uppercase tracking-wider block w-fit mb-1"><i class="fa fa-tasks"></i> Tugas Guru</span>
+                                <?php endif; ?>
                                 <span class="text-sm font-semibold text-indigo-600"><?= htmlspecialchars($row['nama_mapel']) ?></span>
                                 <div class="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Jam: <?= htmlspecialchars($row['jam_ke']) ?></div>
                             </td>
@@ -188,6 +197,8 @@ require_once __DIR__ . '/../includes/header.php';
             </table>
         </div>
     </div>
+
+    <?= render_pagination($pagin['page'], $pagin['total_pages'], $_GET) ?>
 </div>
 
 <script>

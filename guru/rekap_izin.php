@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/pagination.php';
 
 authorize_role(['guru']);
 
@@ -52,17 +53,25 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action_verifikasi'])) 
     }
 }
 
+// Search Logic
+$search = mysqli_real_escape_string($conn, $_GET['search'] ?? '');
+$where_clauses = ["sk.kelas_id = $kelas_id", "sk.tahun_pelajaran_id = $active_tahun_id", "ah.status IN ('Izin', 'Sakit')"];
+if (!empty($search)) {
+    $where_clauses[] = "(s.nama_siswa LIKE '%$search%' OR s.nis LIKE '%$search%' OR ah.keterangan LIKE '%$search%')";
+}
+$where_sql = " WHERE " . implode(" AND ", $where_clauses);
+
+$pagin = get_pagination_data($conn, "absensi_harian ah JOIN siswa s ON ah.siswa_id = s.id JOIN siswa_kelas sk ON s.id = sk.siswa_id", 15, $where_sql);
+
 // Retrieve Permits for the homeroom class
 $query = "SELECT ah.*, s.nama_siswa, s.nis, s.nisn
           FROM absensi_harian ah
           JOIN siswa s ON ah.siswa_id = s.id
           JOIN siswa_kelas sk ON s.id = sk.siswa_id
-          WHERE sk.kelas_id = ? AND sk.tahun_pelajaran_id = ? AND ah.status IN ('Izin', 'Sakit')
-          ORDER BY ah.tanggal DESC, ah.waktu_masuk DESC";
-$stmt = mysqli_prepare($conn, $query);
-mysqli_stmt_bind_param($stmt, "ii", $kelas_id, $active_tahun_id);
-mysqli_stmt_execute($stmt);
-$permits = mysqli_stmt_get_result($stmt);
+          $where_sql
+          ORDER BY ah.tanggal DESC, ah.waktu_masuk DESC
+          LIMIT {$pagin['limit']} OFFSET {$pagin['offset']}";
+$permits = mysqli_query($conn, $query);
 
 $page_title = "Siswa Izin - " . $nama_kelas;
 require_once __DIR__ . '/../includes/header.php';
@@ -87,8 +96,31 @@ require_once __DIR__ . '/../includes/header.php';
             </a>
         </div>
 
+        <!-- Search Bar -->
+        <div class="mb-8 lux-card p-4 bg-white border border-slate-100">
+            <form action="" method="GET" class="flex flex-col sm:flex-row items-center gap-3">
+                <div class="relative flex-1 w-full">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
+                        <i class="fa fa-search"></i>
+                    </div>
+                    <input type="text" name="search" value="<?= htmlspecialchars($search) ?>" placeholder="Cari berdasarkan nama, NIS, atau keterangan..."
+                           class="w-full pl-11 pr-4 py-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-4 focus:ring-indigo-50 font-bold text-slate-700 text-xs shadow-sm">
+                </div>
+                <div class="flex items-center gap-2 w-full sm:w-auto">
+                    <button type="submit" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow-md shadow-indigo-100 transition-all flex-1 sm:flex-none">
+                        Cari
+                    </button>
+                    <?php if (!empty($search)): ?>
+                        <a href="rekap_izin.php" class="px-4 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-600 font-bold rounded-xl text-xs transition-all flex-1 sm:flex-none text-center">
+                            Reset
+                        </a>
+                    <?php endif; ?>
+                </div>
+            </form>
+        </div>
+
         <!-- List -->
-        <div class="lux-card overflow-hidden border-none shadow-xl bg-white">
+        <div class="lux-card overflow-hidden border-none shadow-xl bg-white mb-6">
             <div class="p-6 border-b border-slate-50">
                 <h3 class="font-black text-slate-800 italic uppercase tracking-widest text-sm">Daftar Pengajuan Izin & Sakit</h3>
             </div>
@@ -130,7 +162,6 @@ require_once __DIR__ . '/../includes/header.php';
                                     <td class="px-6 py-4 max-w-xs">
                                         <div class="text-xs text-slate-700 italic leading-relaxed line-clamp-2"><?= htmlspecialchars($p['keterangan']) ?></div>
                                         <?php
-                                        // Try to parse GPS coordinates from keterangan
                                         if (preg_match('/GPS:\s*(-?\d+\.\d+),\s*(-?\d+\.\d+)/', $p['keterangan'], $coords)):
                                             $lat = $coords[1];
                                             $lng = $coords[2];
@@ -196,6 +227,8 @@ require_once __DIR__ . '/../includes/header.php';
                 </table>
             </div>
         </div>
+
+        <?= render_pagination($pagin['page'], $pagin['total_pages'], $_GET) ?>
     </div>
 </div>
 

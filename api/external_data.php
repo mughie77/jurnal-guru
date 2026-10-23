@@ -8,13 +8,13 @@ require_once __DIR__ . '/../config/database.php';
 $res = mysqli_query($conn, "SELECT nilai_setting FROM pengaturan WHERE nama_setting = 'external_api_key'");
 $expected_key = '';
 if ($row = mysqli_fetch_assoc($res)) {
-    $expected_key = $row['nilai_setting'];
+    $expected_key = trim($row['nilai_setting'] ?? '');
 }
 if (empty($expected_key)) {
     $expected_key = 'CAKRA_SECURE_API_KEY_2026'; // Fallback
 }
 
-$provided_key = $_SERVER['HTTP_X_API_KEY'] ?? $_GET['api_key'] ?? '';
+$provided_key = trim($_SERVER['HTTP_X_API_KEY'] ?? $_GET['api_key'] ?? '');
 
 if (empty($provided_key) || $provided_key !== $expected_key) {
     http_response_code(401);

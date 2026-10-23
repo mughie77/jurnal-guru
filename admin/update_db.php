@@ -52,10 +52,64 @@ if ($is_ajax) {
                 ],
                 'jurnal' => [
                     'latitude' => "VARCHAR(50) DEFAULT NULL AFTER keterangan",
-                    'longitude' => "VARCHAR(50) DEFAULT NULL AFTER latitude"
+                    'longitude' => "VARCHAR(50) DEFAULT NULL AFTER latitude",
+                    'jadwal_id' => "INT(11) DEFAULT NULL AFTER longitude"
                 ],
                 'kelas' => [
                     'jadwal_pdf' => "VARCHAR(255) DEFAULT NULL AFTER wali_kelas_id"
+                ],
+                'tugas_kelas' => [
+                    'mapel_id' => "INT(11) DEFAULT NULL AFTER kelas_id",
+                    'jadwal_id' => "INT(11) DEFAULT NULL AFTER mapel_id",
+                    'jam_ke' => "VARCHAR(50) DEFAULT NULL AFTER jadwal_id",
+                    'file_lampiran' => "VARCHAR(255) DEFAULT NULL AFTER keterangan_tugas",
+                    'latitude' => "VARCHAR(50) DEFAULT NULL AFTER file_lampiran",
+                    'longitude' => "VARCHAR(50) DEFAULT NULL AFTER latitude",
+                    'status_selesai' => "TINYINT(1) DEFAULT 0 AFTER longitude"
+                ],
+                'jadwal_pelajaran' => [
+                    'tahun_pelajaran_id' => "INT(11) DEFAULT NULL AFTER mapel_id",
+                    'jam_mulai' => "TIME DEFAULT NULL AFTER jam_ke"
+                ],
+                'konsultasi_pesan' => [
+                    'dibaca' => "TINYINT(1) DEFAULT 0 AFTER lampiran_foto"
+                ],
+                'bk_laporan' => [
+                    'jenis_bimbingan' => "VARCHAR(100) NOT NULL DEFAULT 'Individu' AFTER tanggal",
+                    'kode_konseli' => "VARCHAR(50) DEFAULT NULL AFTER siswa_id",
+                    'pertemuan_ke' => "INT(11) DEFAULT 1 AFTER status",
+                    'waktu' => "VARCHAR(100) DEFAULT '45 menit' AFTER pertemuan_ke",
+                    'tempat' => "VARCHAR(100) DEFAULT 'Ruang BK' AFTER waktu",
+                    'deskripsi_kasus' => "TEXT DEFAULT NULL AFTER tempat",
+                    'tujuan_konseling' => "TEXT DEFAULT NULL AFTER deskripsi_kasus",
+                    'tahapan_konseling' => "TEXT DEFAULT NULL AFTER tujuan_konseling",
+                    'jumlah_pertemuan' => "VARCHAR(50) DEFAULT '1 kali pertemuan' AFTER tahapan_konseling",
+                    'durasi_pertemuan' => "VARCHAR(50) DEFAULT '45 menit' AFTER jumlah_pertemuan",
+                    'media_sumber' => "VARCHAR(255) DEFAULT '-' AFTER durasi_pertemuan",
+                    'pihak_dilibatkan' => "VARCHAR(255) DEFAULT 'Wali Kelas' AFTER media_sumber",
+                    'rumusan_masalah' => "TEXT DEFAULT NULL AFTER pihak_dilibatkan",
+                    'masalah_analisis' => "TEXT DEFAULT NULL AFTER rumusan_masalah",
+                    'pendekatan_teknik' => "TEXT DEFAULT NULL AFTER masalah_analisis",
+                    'langkah_kegiatan_json' => "LONGTEXT DEFAULT NULL AFTER pendekatan_teknik",
+                    'rencana_evaluasi_json' => "LONGTEXT DEFAULT NULL AFTER langkah_kegiatan_json",
+                    'hasil_dicapai' => "TEXT DEFAULT NULL AFTER rencana_evaluasi_json",
+                    'siswa_ids_json' => "LONGTEXT DEFAULT NULL AFTER hasil_dicapai",
+                    'kompetensi_layanan' => "VARCHAR(255) DEFAULT 'Layanan Responsif' AFTER siswa_ids_json",
+                    'bidang_layanan' => "VARCHAR(255) DEFAULT 'Pribadi' AFTER kompetensi_layanan",
+                    'fungsi_layanan' => "VARCHAR(255) DEFAULT 'Pencegahan dan pengentasan' AFTER bidang_layanan",
+                    'tujuan_umum' => "TEXT DEFAULT NULL AFTER fungsi_layanan",
+                    'tujuan_khusus' => "TEXT DEFAULT NULL AFTER tujuan_umum",
+                    'sasaran_layanan' => "VARCHAR(255) DEFAULT NULL AFTER tujuan_khusus",
+                    'materi_layanan' => "TEXT DEFAULT NULL AFTER sasaran_layanan",
+                    'sumber_layanan' => "VARCHAR(255) DEFAULT 'Media Online' AFTER materi_layanan",
+                    'metode_teknik' => "VARCHAR(255) DEFAULT 'Art Therapy' AFTER sumber_layanan",
+                    'media_alat' => "VARCHAR(255) DEFAULT 'HP / Komputer / Laptop /LCD' AFTER metode_teknik",
+                    'pelaksanaan_json' => "LONGTEXT DEFAULT NULL AFTER media_alat",
+                    'evaluasi_proses' => "TEXT DEFAULT NULL AFTER pelaksanaan_json",
+                    'evaluasi_hasil' => "TEXT DEFAULT NULL AFTER evaluasi_proses",
+                    'alamat_kunjungan' => "TEXT DEFAULT NULL AFTER evaluasi_hasil",
+                    'anggota_keluarga' => "VARCHAR(255) DEFAULT 'Orang Tua' AFTER alamat_kunjungan",
+                    'catatan_khusus' => "TEXT DEFAULT NULL AFTER anggota_keluarga"
                 ]
             ];
 
@@ -100,7 +154,13 @@ if ($is_ajax) {
                 'school_lng' => '113.8217',
                 'radius_absen' => '30',
                 'siswa_gps_absen' => 'nonaktif',
-                'pilih_tanggal_jurnal' => 'nonaktif'
+                'pilih_tanggal_jurnal' => 'nonaktif',
+                'external_api_key' => 'CAKRA_SECURE_API_KEY_2026',
+                'nama_kepsek' => 'Drs. H. M. Yasin, M.Pd.',
+                'nip_kepsek' => '19680512 199403 1 008',
+                'kop_sekolah_html' => '<div style="text-align: center;"><h3 style="font-size: 14px; font-weight: bold; text-transform: uppercase; margin: 0;">PEMERINTAH PROVINSI JAWA TIMUR</h3><h3 style="font-size: 14px; font-weight: bold; text-transform: uppercase; margin: 0;">DINAS PENDIDIKAN</h3><h2 style="font-size: 16px; font-weight: bold; text-transform: uppercase; margin: 2px 0;">SEKOLAH MENENGAH KEJURUAN NEGERI 2 BONDOWOSO</h2><p style="font-size: 11px; margin: 0;">Jalan Jend. Ahmad Yani No. 48 Telp/Fax. (0332) 421286</p><p style="font-size: 10px; font-style: italic; margin: 0;">Email: smknbws2@yahoo.com Website: www.smkn2bondowoso.sch.id</p><h2 style="font-size: 14px; font-weight: bold; text-transform: uppercase; margin-top: 2px;">BONDOWOSO</h2></div>',
+                'kop_font_size' => '12',
+                'kop_font_family' => 'Times New Roman'
             ];
 
             foreach ($new_settings as $key => $val) {
@@ -218,6 +278,7 @@ if ($is_ajax) {
                 `pengirim_role` varchar(50) NOT NULL,
                 `pesan` text NOT NULL,
                 `lampiran_foto` varchar(255) DEFAULT NULL,
+                `dibaca` tinyint(1) DEFAULT 0,
                 `created_at` timestamp NULL DEFAULT current_timestamp(),
                 PRIMARY KEY (`id`),
                 KEY `konsultasi_id` (`konsultasi_id`)
@@ -456,6 +517,206 @@ if ($is_ajax) {
                 $logs[] = ['status' => 'success', 'msg' => "Table <b>buku_kejadian</b> created successfully"];
             } else {
                 $logs[] = ['status' => 'error', 'msg' => "Failed creating <b>buku_kejadian</b>: " . mysqli_error($conn)];
+            }
+
+            // Create jadwal_pelajaran table
+            $create_jp = "CREATE TABLE IF NOT EXISTS `jadwal_pelajaran` (
+                `id` int(11) NOT NULL AUTO_INCREMENT,
+                `kelas_id` int(11) NOT NULL,
+                `hari` enum('Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu') NOT NULL,
+                `guru_id` int(11) NOT NULL,
+                `mapel_id` int(11) NOT NULL,
+                `tahun_pelajaran_id` int(11) DEFAULT NULL,
+                `jam_ke` varchar(50) NOT NULL,
+                `jam_mulai` time DEFAULT NULL,
+                `created_at` timestamp NULL DEFAULT current_timestamp(),
+                PRIMARY KEY (`id`),
+                KEY `kelas_id` (`kelas_id`),
+                KEY `guru_id` (`guru_id`),
+                KEY `mapel_id` (`mapel_id`),
+                KEY `tahun_pelajaran_id` (`tahun_pelajaran_id`),
+                CONSTRAINT `jadwal_pelajaran_ibfk_1` FOREIGN KEY (`kelas_id`) REFERENCES `kelas` (`id`) ON DELETE CASCADE,
+                CONSTRAINT `jadwal_pelajaran_ibfk_2` FOREIGN KEY (`guru_id`) REFERENCES `guru` (`id`) ON DELETE CASCADE,
+                CONSTRAINT `jadwal_pelajaran_ibfk_3` FOREIGN KEY (`mapel_id`) REFERENCES `mata_pelajaran` (`id`) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
+
+            if (mysqli_query($conn, $create_jp)) {
+                $logs[] = ['status' => 'success', 'msg' => "Table <b>jadwal_pelajaran</b> created successfully"];
+            } else {
+                $logs[] = ['status' => 'error', 'msg' => "Failed creating <b>jadwal_pelajaran</b>: " . mysqli_error($conn)];
+            }
+
+            // Create BK Laporan table
+            $create_bk_lap = "CREATE TABLE IF NOT EXISTS `bk_laporan` (
+                `id` int(11) NOT NULL AUTO_INCREMENT,
+                `tanggal` date NOT NULL,
+                `jenis_bimbingan` enum('Individu','Kelompok','Kunjungan Rumah','Konferensi Kasus') NOT NULL DEFAULT 'Individu',
+                `siswa_id` int(11) NOT NULL,
+                `guru_id` int(11) NOT NULL,
+                `kelas_id` int(11) NOT NULL,
+                `topik_permasalahan` text NOT NULL,
+                `ringkasan_pembahasan` text NOT NULL,
+                `tindak_lanjut` text DEFAULT NULL,
+                `status` enum('Proses','Selesai','Rujukan') NOT NULL DEFAULT 'Proses',
+                `created_at` timestamp NULL DEFAULT current_timestamp(),
+                PRIMARY KEY (`id`),
+                KEY `siswa_id` (`siswa_id`),
+                KEY `guru_id` (`guru_id`),
+                KEY `kelas_id` (`kelas_id`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
+
+            if (mysqli_query($conn, $create_bk_lap)) {
+                $logs[] = ['status' => 'success', 'msg' => "Table <b>bk_laporan</b> created successfully"];
+            } else {
+                $logs[] = ['status' => 'error', 'msg' => "Failed creating <b>bk_laporan</b>: " . mysqli_error($conn)];
+            }
+
+            // Ensure jenis_bimbingan in bk_laporan supports Kunjungan Rumah & Konferensi Kasus (modify ENUM/VARCHAR)
+            try {
+                mysqli_query($conn, "ALTER TABLE `bk_laporan` MODIFY COLUMN `jenis_bimbingan` VARCHAR(100) NOT NULL DEFAULT 'Individu'");
+                $logs[] = ['status' => 'success', 'msg' => "Updated <b>jenis_bimbingan</b> column in <b>bk_laporan</b> to VARCHAR(100)"];
+            } catch (Throwable $e) {
+                $logs[] = ['status' => 'error', 'msg' => "Failed modifying jenis_bimbingan: " . htmlspecialchars($e->getMessage())];
+            }
+
+            // Create BK Master Pelanggaran table
+            $create_bk_mp = "CREATE TABLE IF NOT EXISTS `bk_master_pelanggaran` (
+                `id` int(11) NOT NULL AUTO_INCREMENT,
+                `kode` varchar(50) DEFAULT NULL,
+                `nama_pelanggaran` varchar(255) NOT NULL,
+                `tipe` enum('Pelanggaran','Apresiasi') NOT NULL DEFAULT 'Pelanggaran',
+                `poin` int(11) NOT NULL DEFAULT 10,
+                `kategori` varchar(100) DEFAULT 'Sedang',
+                `created_at` timestamp NULL DEFAULT current_timestamp(),
+                PRIMARY KEY (`id`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
+
+            if (mysqli_query($conn, $create_bk_mp)) {
+                $logs[] = ['status' => 'success', 'msg' => "Table <b>bk_master_pelanggaran</b> created successfully"];
+                // Seed initial rules
+                $defaults_p = [
+                    ['P01', 'Terlambat Masuk Sekolah', 'Pelanggaran', 5, 'Ringan'],
+                    ['P02', 'Membawa / Menggunakan HP Saat Pelajaran Tanpa Izin', 'Pelanggaran', 10, 'Ringan'],
+                    ['P03', 'Atribut Seragam Tidak Lengkap', 'Pelanggaran', 5, 'Ringan'],
+                    ['P04', 'Membolos / Meninggalkan Jam Pelajaran', 'Pelanggaran', 20, 'Sedang'],
+                    ['P05', 'Merokok / Vaping di Lingkungan Sekolah', 'Pelanggaran', 50, 'Berat'],
+                    ['P06', 'Tawuran / Perkelahian', 'Pelanggaran', 100, 'Sangat Berat'],
+                    ['A01', 'Juara 1 Lomba Akademik / Non-Akademik', 'Apresiasi', 25, 'Prestasi'],
+                    ['A02', 'Menjadi Petugas Upacara Bendera / Pengurus OSIS', 'Apresiasi', 10, 'Penghargaan'],
+                    ['A03', 'Membantu Penanganan Kedisiplinan Sekolah', 'Apresiasi', 15, 'Penghargaan']
+                ];
+                foreach ($defaults_p as $dp) {
+                    $kode = mysqli_real_escape_string($conn, $dp[0]);
+                    $nama = mysqli_real_escape_string($conn, $dp[1]);
+                    $tipe = $dp[2];
+                    $poin = (int)$dp[3];
+                    $kat = mysqli_real_escape_string($conn, $dp[4]);
+                    mysqli_query($conn, "INSERT IGNORE INTO bk_master_pelanggaran (kode, nama_pelanggaran, tipe, poin, kategori) VALUES ('$kode', '$nama', '$tipe', $poin, '$kat')");
+                }
+            } else {
+                $logs[] = ['status' => 'error', 'msg' => "Failed creating <b>bk_master_pelanggaran</b>: " . mysqli_error($conn)];
+            }
+
+            // Create BK Pelanggaran Siswa table
+            $create_bk_ps = "CREATE TABLE IF NOT EXISTS `bk_pelanggaran_siswa` (
+                `id` int(11) NOT NULL AUTO_INCREMENT,
+                `siswa_id` int(11) NOT NULL,
+                `master_id` int(11) DEFAULT NULL,
+                `guru_id` int(11) NOT NULL,
+                `tanggal` date NOT NULL,
+                `nama_kejadian` varchar(255) NOT NULL,
+                `tipe` enum('Pelanggaran','Apresiasi') NOT NULL DEFAULT 'Pelanggaran',
+                `poin` int(11) NOT NULL DEFAULT 10,
+                `catatan` text DEFAULT NULL,
+                `created_at` timestamp NULL DEFAULT current_timestamp(),
+                PRIMARY KEY (`id`),
+                KEY `siswa_id` (`siswa_id`),
+                KEY `guru_id` (`guru_id`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
+
+            if (mysqli_query($conn, $create_bk_ps)) {
+                $logs[] = ['status' => 'success', 'msg' => "Table <b>bk_pelanggaran_siswa</b> created successfully"];
+            } else {
+                $logs[] = ['status' => 'error', 'msg' => "Failed creating <b>bk_pelanggaran_siswa</b>: " . mysqli_error($conn)];
+            }
+
+            // Create BK Sosiogram Sesi table
+            $create_bk_ss = "CREATE TABLE IF NOT EXISTS `bk_sosiogram_sesi` (
+                `id` int(11) NOT NULL AUTO_INCREMENT,
+                `kelas_id` int(11) NOT NULL,
+                `tahun_pelajaran_id` int(11) DEFAULT NULL,
+                `judul` varchar(255) NOT NULL,
+                `tanggal` date NOT NULL,
+                `keterangan` text DEFAULT NULL,
+                `created_at` timestamp NULL DEFAULT current_timestamp(),
+                PRIMARY KEY (`id`),
+                KEY `kelas_id` (`kelas_id`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
+
+            if (mysqli_query($conn, $create_bk_ss)) {
+                $logs[] = ['status' => 'success', 'msg' => "Table <b>bk_sosiogram_sesi</b> created successfully"];
+            } else {
+                $logs[] = ['status' => 'error', 'msg' => "Failed creating <b>bk_sosiogram_sesi</b>: " . mysqli_error($conn)];
+            }
+
+            // Create BK Sosiogram Pilihan table
+            $create_bk_sp = "CREATE TABLE IF NOT EXISTS `bk_sosiogram_pilihan` (
+                `id` int(11) NOT NULL AUTO_INCREMENT,
+                `sesi_id` int(11) NOT NULL,
+                `pemilih_siswa_id` int(11) NOT NULL,
+                `dipilih_siswa_id` int(11) NOT NULL,
+                `urutan` int(11) NOT NULL DEFAULT 1,
+                `alasan` text DEFAULT NULL,
+                `created_at` timestamp NULL DEFAULT current_timestamp(),
+                PRIMARY KEY (`id`),
+                KEY `sesi_id` (`sesi_id`),
+                KEY `pemilih_siswa_id` (`pemilih_siswa_id`),
+                KEY `dipilih_siswa_id` (`dipilih_siswa_id`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
+
+            if (mysqli_query($conn, $create_bk_sp)) {
+                $logs[] = ['status' => 'success', 'msg' => "Table <b>bk_sosiogram_pilihan</b> created successfully"];
+            } else {
+                $logs[] = ['status' => 'error', 'msg' => "Failed creating <b>bk_sosiogram_pilihan</b>: " . mysqli_error($conn)];
+            }
+
+            // --- Database Query Performance Indexes Migration ---
+            $index_definitions = [
+                'jurnal' => ['tanggal', 'kelas_id', 'guru_id', 'mapel_id', 'tahun_pelajaran_id'],
+                'absensi_jurnal' => ['jurnal_id', 'siswa_id', 'status'],
+                'absensi_harian' => ['siswa_id', 'tanggal', 'status_verifikasi'],
+                'siswa_kelas' => ['siswa_id', 'kelas_id', 'tahun_pelajaran_id'],
+                'tugas_kelas' => ['guru_id', 'kelas_id', 'tanggal'],
+                'buku_kejadian' => ['tanggal', 'guru_id', 'kelas_id', 'mapel_id'],
+                'bk_laporan' => ['tanggal', 'siswa_id', 'guru_id', 'kelas_id'],
+                'bk_pelanggaran_siswa' => ['tanggal', 'siswa_id', 'guru_id', 'tipe'],
+                'jadwal_pelajaran' => ['kelas_id', 'guru_id', 'hari', 'tahun_pelajaran_id'],
+                'pengaduan' => ['siswa_id', 'tanggal'],
+                'kritik_saran' => ['user_id', 'role', 'tanggal']
+            ];
+
+            foreach ($index_definitions as $idx_table => $idx_columns) {
+                try {
+                    $chk_t = mysqli_query($conn, "SHOW TABLES LIKE '$idx_table'");
+                    if ($chk_t && mysqli_num_rows($chk_t) > 0) {
+                        foreach ($idx_columns as $col) {
+                            $idx_name = "idx_{$idx_table}_{$col}";
+                            $chk_i = mysqli_query($conn, "SHOW INDEX FROM `$idx_table` WHERE Key_name = '$idx_name'");
+                            if ($chk_i && mysqli_num_rows($chk_i) == 0) {
+                                // Check if column exists
+                                $chk_col = mysqli_query($conn, "SHOW COLUMNS FROM `$idx_table` LIKE '$col'");
+                                if ($chk_col && mysqli_num_rows($chk_col) > 0) {
+                                    $add_idx = mysqli_query($conn, "ALTER TABLE `$idx_table` ADD INDEX `$idx_name` (`$col`)");
+                                    if ($add_idx) {
+                                        $logs[] = ['status' => 'success', 'msg' => "Added index <b>$idx_name</b> on <b>$idx_table</b>"];
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } catch (Throwable $e) {
+                    $logs[] = ['status' => 'error', 'msg' => "Error creating index on <b>$idx_table</b>: " . htmlspecialchars($e->getMessage())];
+                }
             }
 
             foreach ($logs as $log) {

@@ -89,6 +89,37 @@ function get_bk_info() {
     return null;
 }
 
+if (!function_exists('generate_unique_kode_konseli')) {
+    function generate_unique_kode_konseli($conn, $siswa_id = 0) {
+        $thn = date('Y');
+        if ($siswa_id > 0) {
+            $pad_id = str_pad($siswa_id, 4, '0', STR_PAD_LEFT);
+            $base_code = "KS.{$thn}.{$pad_id}";
+        } else {
+            $rand = rand(1000, 9999);
+            $base_code = "KS.{$thn}.{$rand}";
+        }
+
+        $check_code = $base_code;
+        $counter = 1;
+        while (true) {
+            $stmt = mysqli_prepare($conn, "SELECT id FROM bk_laporan WHERE kode_konseli = ? LIMIT 1");
+            if ($stmt) {
+                mysqli_stmt_bind_param($stmt, "s", $check_code);
+                mysqli_stmt_execute($stmt);
+                $res = mysqli_stmt_get_result($stmt);
+                if ($res && mysqli_num_rows($res) > 0) {
+                    $check_code = $base_code . "-" . $counter;
+                    $counter++;
+                    continue;
+                }
+            }
+            break;
+        }
+        return $check_code;
+    }
+}
+
 // Role Authorization
 function authorize_role(array $allowed_roles) {
     $role = $_SESSION['role'] ?? '';
