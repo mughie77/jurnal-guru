@@ -35,22 +35,32 @@ if (mysqli_num_rows($q_piket) > 0) {
 
 // Inspect columns in tugas_kelas for backwards compatibility
 $has_mapel = false;
+$has_jadwal = false;
+$has_jam_ke = false;
 $has_lat_lng = false;
 $chk_cols = mysqli_query($conn, "SHOW COLUMNS FROM tugas_kelas");
 if ($chk_cols) {
     while ($c = mysqli_fetch_assoc($chk_cols)) {
         if ($c['Field'] === 'mapel_id') $has_mapel = true;
+        if ($c['Field'] === 'jadwal_id') $has_jadwal = true;
+        if ($c['Field'] === 'jam_ke') $has_jam_ke = true;
         if ($c['Field'] === 'latitude') $has_lat_lng = true;
     }
 }
+
+// Get active academic year ID
+$q_tp = mysqli_query($conn, "SELECT id FROM tahun_pelajaran WHERE status = 'aktif' LIMIT 1");
+$active_tahun_id = ($r_tp = mysqli_fetch_assoc($q_tp)) ? (int)$r_tp['id'] : 0;
 
 // Handle Task Submission (Pemberian Tugas)
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['tambah_tugas'])) {
     if (!verify_csrf_token($_POST['csrf_token'] ?? '')) die("CSRF Token Invalid");
 
-    $kelas_id = (int)$_POST['kelas_id'];
+    $kelas_id = (int)($_POST['kelas_id'] ?? 0);
     $mapel_id = (int)($_POST['mapel_id'] ?? 0);
-    $tanggal = $_POST['tanggal'];
+    $jadwal_id = (int)($_POST['jadwal_id'] ?? 0);
+    $jam_ke = trim($_POST['jam_ke'] ?? '1');
+    $tanggal = $_POST['tanggal'] ?? date('Y-m-d');
     $keterangan_tugas = mysqli_real_escape_string($conn, $_POST['keterangan_tugas']);
     $latitude = $_POST['latitude'] ?: null;
     $longitude = $_POST['longitude'] ?: null;
@@ -82,15 +92,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['tambah_tugas'])) {
     }
 
     if ($message_type !== 'error' && $kelas_id > 0 && !empty($tanggal)) {
-        if ($has_mapel && $has_lat_lng) {
+        if ($has_jadwal && $has_jam_ke && $has_mapel && $has_lat_lng) {
+            $stmt = mysqli_prepare($conn, "INSERT INTO tugas_kelas (guru_id, kelas_id, mapel_id, jadwal_id, jam_ke, tanggal, keterangan_tugas, file_lampiran, latitude, longitude) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            mysqli_stmt_bind_param($stmt, "iiiissssss", $guru_id, $kelas_id, $mapel_id, $jadwal_id, $jam_ke, $tanggal, $keterangan_tugas, $file_lampiran, $latitude, $longitude);
+        } else if ($has_mapel && $has_lat_lng) {
             $stmt = mysqli_prepare($conn, "INSERT INTO tugas_kelas (guru_id, kelas_id, mapel_id, tanggal, keterangan_tugas, file_lampiran, latitude, longitude) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
             mysqli_stmt_bind_param($stmt, "iiisssss", $guru_id, $kelas_id, $mapel_id, $tanggal, $keterangan_tugas, $file_lampiran, $latitude, $longitude);
         } else if ($has_mapel && !$has_lat_lng) {
             $stmt = mysqli_prepare($conn, "INSERT INTO tugas_kelas (guru_id, kelas_id, mapel_id, tanggal, keterangan_tugas, file_lampiran) VALUES (?, ?, ?, ?, ?, ?)");
             mysqli_stmt_bind_param($stmt, "iiisss", $guru_id, $kelas_id, $mapel_id, $tanggal, $keterangan_tugas, $file_lampiran);
-        } else if (!$has_mapel && $has_lat_lng) {
-            $stmt = mysqli_prepare($conn, "INSERT INTO tugas_kelas (guru_id, kelas_id, tanggal, keterangan_tugas, file_lampiran, latitude, longitude) VALUES (?, ?, ?, ?, ?, ?, ?)");
-            mysqli_stmt_bind_param($stmt, "iisssss", $guru_id, $kelas_id, $tanggal, $keterangan_tugas, $file_lampiran, $latitude, $longitude);
         } else {
             $stmt = mysqli_prepare($conn, "INSERT INTO tugas_kelas (guru_id, kelas_id, tanggal, keterangan_tugas, file_lampiran) VALUES (?, ?, ?, ?, ?)");
             mysqli_stmt_bind_param($stmt, "iisss", $guru_id, $kelas_id, $tanggal, $keterangan_tugas, $file_lampiran);
@@ -99,6 +109,38 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['tambah_tugas'])) {
         if (mysqli_stmt_execute($stmt)) {
             $message = "Tugas kelas berhasil dikirim!";
             $message_type = "success";
+
+            // Automatically link and populate Journal entry
+            $materi_jurnal = "[Tugas Guru] " . $keterangan_tugas;
+            $ket_jurnal = "Tugas Guru (Guru Tidak Masuk)";
+            $j_id = $jadwal_id > 0 ? $jadwal_id : NULL;
+
+            // Check if journal entry exists for this schedule and date
+            $q_chk_j = "SELECT id FROM jurnal WHERE (jadwal_id = $jadwal_id AND tanggal = '$tanggal') OR (guru_id = $guru_id AND kelas_id = $kelas_id AND mapel_id = $mapel_id AND jam_ke = '$jam_ke' AND tanggal = '$tanggal')";
+            $chk_j = mysqli_query($conn, $q_chk_j);
+            if ($chk_j && mysqli_num_rows($chk_j) == 0) {
+                $stmt_j = mysqli_prepare($conn, "INSERT INTO jurnal (guru_id, mapel_id, kelas_id, tahun_pelajaran_id, tanggal, jam_ke, materi, keterangan, latitude, longitude, jml_hadir, jml_sakit, jml_izin, jml_alfa, jadwal_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, 0, 0, ?)");
+                mysqli_stmt_bind_param($stmt_j, "iiiissssssi", $guru_id, $mapel_id, $kelas_id, $active_tahun_id, $tanggal, $jam_ke, $materi_jurnal, $ket_jurnal, $latitude, $longitude, $j_id);
+                mysqli_stmt_execute($stmt_j);
+                $inserted_jurnal_id = mysqli_insert_id($conn);
+
+                // Auto populate students attendance into absensi_jurnal as 'H'
+                if ($inserted_jurnal_id > 0) {
+                    $q_students = mysqli_query($conn, "SELECT s.id FROM siswa s JOIN siswa_kelas sk ON s.id = sk.siswa_id JOIN tahun_pelajaran tp ON sk.tahun_pelajaran_id = tp.id WHERE sk.kelas_id = $kelas_id AND tp.status = 'aktif'");
+                    if ($q_students && mysqli_num_rows($q_students) > 0) {
+                        $stmt_aj = mysqli_prepare($conn, "INSERT INTO absensi_jurnal (jurnal_id, siswa_id, status) VALUES (?, ?, 'H')");
+                        $cnt_hadir = 0;
+                        while ($st_row = mysqli_fetch_assoc($q_students)) {
+                            $st_id = (int)$st_row['id'];
+                            mysqli_stmt_bind_param($stmt_aj, "ii", $inserted_jurnal_id, $st_id);
+                            mysqli_stmt_execute($stmt_aj);
+                            $cnt_hadir++;
+                        }
+                        // Update total count
+                        mysqli_query($conn, "UPDATE jurnal SET jml_hadir = $cnt_hadir WHERE id = $inserted_jurnal_id");
+                    }
+                }
+            }
         } else {
             $message = "Gagal mengirim tugas: " . mysqli_error($conn);
             $message_type = "error";
@@ -156,6 +198,21 @@ $res_my = mysqli_query($conn, "SELECT tk.*, k.nama_kelas $mapel_select
                                ORDER BY tk.tanggal DESC, tk.created_at DESC");
 while ($row = mysqli_fetch_assoc($res_my)) {
     $my_tasks[] = $row;
+}
+
+// Fetch all schedules for this teacher
+$schedules_all = [];
+$q_sch = mysqli_query($conn, "SELECT jp.*, k.nama_kelas, mp.nama_mapel, mp.kode_mapel
+                              FROM jadwal_pelajaran jp
+                              JOIN kelas k ON jp.kelas_id = k.id
+                              JOIN mata_pelajaran mp ON jp.mapel_id = mp.id
+                              JOIN tahun_pelajaran tp ON jp.tahun_pelajaran_id = tp.id AND tp.status = 'aktif'
+                              WHERE jp.guru_id = $guru_id
+                              ORDER BY FIELD(jp.hari, 'Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu'), jp.jam_ke ASC");
+if ($q_sch) {
+    while ($s_row = mysqli_fetch_assoc($q_sch)) {
+        $schedules_all[] = $s_row;
+    }
 }
 
 // Fetch tasks for Guru Piket today
@@ -360,10 +417,27 @@ require_once __DIR__ . '/../includes/header.php';
         <input type="hidden" name="latitude" id="task-lat">
         <input type="hidden" name="longitude" id="task-lng">
 
+        <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">
+                Pilih Jadwal Mengajar / Hari Absen <span class="text-rose-500">*</span>
+            </label>
+            <select name="jadwal_id" id="jadwal_select" onchange="onSelectJadwalTugas(this)" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 bg-white font-bold text-slate-700 text-xs">
+                <option value="0" data-kelas="0" data-mapel="0" data-jam="1">-- Pilih Jadwal Mengajar Anda --</option>
+                <?php foreach ($schedules_all as $sch): ?>
+                    <option value="<?= $sch['id'] ?>" data-hari="<?= htmlspecialchars($sch['hari']) ?>" data-kelas="<?= $sch['kelas_id'] ?>" data-mapel="<?= $sch['mapel_id'] ?>" data-jam="<?= htmlspecialchars($sch['jam_ke']) ?>">
+                        [<?= htmlspecialchars($sch['hari']) ?>] <?= htmlspecialchars($sch['nama_kelas']) ?> - <?= htmlspecialchars($sch['nama_mapel']) ?> (Jam Ke: <?= htmlspecialchars($sch['jam_ke']) ?>)
+                    </option>
+                <?php endforeach; ?>
+            </select>
+            <p class="text-[10px] text-indigo-600 font-medium mt-1 italic"><i class="fa fa-info-circle"></i> Memilih jadwal mengajar akan otomatis menghubungkan tugas ini dengan Jurnal Mengajar Anda.</p>
+        </div>
+
+        <input type="hidden" name="jam_ke" id="input_jam_ke" value="1">
+
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1">Pilih Kelas</label>
-                <select name="kelas_id" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 bg-white font-bold text-slate-700 text-sm">
+                <label class="block text-xs font-bold text-slate-700 mb-1">Kelas Target</label>
+                <select name="kelas_id" id="select_kelas_id" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 bg-white font-bold text-slate-700 text-sm">
                     <option value="">-- Pilih Kelas --</option>
                     <?php mysqli_data_seek($classes_list, 0); while ($row = mysqli_fetch_assoc($classes_list)): ?>
                         <option value="<?= $row['id'] ?>"><?= htmlspecialchars($row['nama_kelas']) ?></option>
@@ -372,7 +446,7 @@ require_once __DIR__ . '/../includes/header.php';
             </div>
             <div>
                 <label class="block text-xs font-bold text-slate-700 mb-1">Mata Pelajaran</label>
-                <select name="mapel_id" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 bg-white font-bold text-slate-700 text-sm">
+                <select name="mapel_id" id="select_mapel_id" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 bg-white font-bold text-slate-700 text-sm">
                     <option value="">-- Pilih Mapel --</option>
                     <?php mysqli_data_seek($mapels_list, 0); while ($row_m = mysqli_fetch_assoc($mapels_list)): ?>
                         <option value="<?= $row_m['id'] ?>"><?= htmlspecialchars($row_m['nama_mapel']) ?> (<?= htmlspecialchars($row_m['kode_mapel']) ?>)</option>
@@ -431,6 +505,25 @@ function closeAllModals() {
     document.querySelectorAll('.modal-content').forEach(m => {
         if (!m.classList.contains('hidden')) closeModal(m.id);
     });
+}
+
+function onSelectJadwalTugas(sel) {
+    const opt = sel.options[sel.selectedIndex];
+    if (!opt) return;
+
+    const kelasId = opt.getAttribute('data-kelas');
+    const mapelId = opt.getAttribute('data-mapel');
+    const jamKe = opt.getAttribute('data-jam');
+
+    if (kelasId && kelasId !== '0') {
+        document.getElementById('select_kelas_id').value = kelasId;
+    }
+    if (mapelId && mapelId !== '0') {
+        document.getElementById('select_mapel_id').value = mapelId;
+    }
+    if (jamKe) {
+        document.getElementById('input_jam_ke').value = jamKe;
+    }
 }
 
 document.addEventListener('DOMContentLoaded', function() {

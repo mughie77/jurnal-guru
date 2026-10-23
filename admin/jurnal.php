@@ -118,8 +118,10 @@ require_once __DIR__ . '/../includes/header.php';
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-50">
-                <?php while ($row = mysqli_fetch_assoc($result)): ?>
-                <tr class="hover:bg-slate-50/50 transition-colors">
+                <?php while ($row = mysqli_fetch_assoc($result)):
+                    $is_tugas_guru = (strpos($row['materi'], '[Tugas Guru]') !== false || strpos($row['keterangan'], 'Tugas Guru') !== false);
+                ?>
+                <tr class="<?= $is_tugas_guru ? 'bg-amber-50/40 hover:bg-amber-50/70' : 'hover:bg-slate-50/50' ?> transition-colors">
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="flex items-center gap-2">
                             <span class="text-sm font-medium text-slate-700"><?= date('d M Y', strtotime($row['tanggal'])) ?></span>
@@ -132,6 +134,9 @@ require_once __DIR__ . '/../includes/header.php';
                         <div class="text-[10px] text-slate-400 font-bold" title="Waktu Submit Jurnal">Submit: <?= date('d/m/Y H:i', strtotime($row['created_at'])) ?> WIB</div>
                     </td>
                     <td class="px-6 py-4">
+                        <?php if ($is_tugas_guru): ?>
+                            <span class="px-2 py-0.5 rounded bg-amber-500 text-white font-black text-[9px] uppercase tracking-wider block w-fit mb-1"><i class="fa fa-tasks"></i> Tugas Guru</span>
+                        <?php endif; ?>
                         <div class="font-bold text-slate-800"><?= htmlspecialchars($row['nama_lengkap']) ?></div>
                         <div class="text-xs text-indigo-500 font-bold tracking-tight"><?= htmlspecialchars($row['nama_mapel']) ?></div>
                     </td>
