@@ -109,7 +109,9 @@ if ($is_ajax) {
                     'evaluasi_hasil' => "TEXT DEFAULT NULL AFTER evaluasi_proses",
                     'alamat_kunjungan' => "TEXT DEFAULT NULL AFTER evaluasi_hasil",
                     'anggota_keluarga' => "VARCHAR(255) DEFAULT 'Orang Tua' AFTER alamat_kunjungan",
-                    'catatan_khusus' => "TEXT DEFAULT NULL AFTER anggota_keluarga"
+                    'catatan_khusus' => "TEXT DEFAULT NULL AFTER anggota_keluarga",
+                    'urun_pendapat' => "TEXT DEFAULT NULL AFTER catatan_khusus",
+                    'keputusan_kasus' => "TEXT DEFAULT NULL AFTER urun_pendapat"
                 ]
             ];
 
