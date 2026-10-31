@@ -165,7 +165,9 @@ $gurus = mysqli_query($conn, "SELECT g.id, u.nama_lengkap FROM guru g JOIN users
 require_once __DIR__ . '/../includes/header.php';
 ?>
 
-<div class="flex items-center justify-between mb-8">
+<div class="max-w-5xl mx-auto pb-28 sm:pb-24">
+
+<div class="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
     <div>
         <h1 class="text-2xl sm:text-3xl font-black text-slate-800 tracking-tight italic">
             <?= $is_edit ? 'Edit Rencana Konferensi Kasus' : 'Input Rencana Pelaksanaan Konferensi Kasus' ?>
@@ -285,15 +287,17 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
         <?php endif; ?>
 
-        <div class="flex justify-between pt-6 border-t border-slate-100">
-            <a href="<?= BASE_URL . ($role === 'guru' ? 'guru/' : 'admin/') ?>bk_laporan.php?jenis=Konferensi+Kasus" class="px-6 py-3 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-2xl text-xs flex items-center">
+        <div class="flex flex-col-reverse sm:flex-row sm:items-center justify-between pt-6 border-t border-slate-100 gap-3">
+            <a href="<?= BASE_URL . ($role === 'guru' ? 'guru/' : 'admin/') ?>bk_laporan.php?jenis=Konferensi+Kasus" class="w-full sm:w-auto justify-center px-6 py-3.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-2xl text-xs flex items-center">
                 <i class="fa fa-arrow-left mr-2"></i> Batal
             </a>
-            <button type="submit" name="simpan_konferensi_kasus" class="px-8 py-3.5 bg-purple-600 hover:bg-purple-700 text-white font-black rounded-2xl text-xs shadow-xl shadow-purple-100 flex items-center">
+            <button type="submit" name="simpan_konferensi_kasus" class="w-full sm:w-auto justify-center px-8 py-3.5 bg-purple-600 hover:bg-purple-700 text-white font-black rounded-2xl text-xs shadow-xl shadow-purple-100 flex items-center">
                 <i class="fa fa-save mr-2"></i> Simpan Konferensi Kasus
             </button>
         </div>
     </form>
+</div>
+
 </div>
 
 <script>
