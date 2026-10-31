@@ -115,36 +115,32 @@ $keputusan_display = !empty($data['keputusan_kasus']) ? $data['keputusan_kasus']
 
     <!-- HALAMAN DOKUMEN -->
     <div class="space-y-4">
-        <!-- Kop Surat -->
-        <?php if (!empty($kop_html)): ?>
-            <div class="mb-4">
-                <?= $kop_html ?>
-            </div>
-        <?php else: ?>
-            <div class="border-b-4 border-black pb-3 mb-4 flex items-center justify-between gap-4">
-                <?php if (!empty($logo_kiri)): ?>
-                    <div class="w-20 flex-shrink-0 text-center">
-                        <img src="<?= BASE_URL . ltrim($logo_kiri, '/') ?>" alt="Logo Kiri" class="max-h-20 max-w-full mx-auto object-contain">
-                    </div>
-                <?php endif; ?>
-                <div class="flex-1 text-center">
-                    <p class="font-bold text-base tracking-wide uppercase">PEMERINTAH PROVINSI JAWA TIMUR</p>
-                    <p class="font-bold text-base tracking-wide uppercase">DINAS PENDIDIKAN</p>
-                    <p class="font-bold text-lg tracking-wider uppercase"><?= htmlspecialchars($nama_sekolah) ?></p>
-                    <p class="text-xs mt-0.5"><?= htmlspecialchars($alamat_sekolah) ?></p>
-                    <p class="text-xs">Email: <?= htmlspecialchars($email_sekolah) ?> Website: <?= htmlspecialchars($web_sekolah) ?></p>
-                    <div class="flex justify-between items-center text-xs font-bold mt-1 px-4">
-                        <span class="uppercase"><?= htmlspecialchars($sets['kota_sekolah'] ?? 'BONDOWOSO') ?></span>
-                        <span><?= htmlspecialchars($sets['kode_pos'] ?? '68214') ?></span>
-                    </div>
+        <!-- Dynamic Kop Surat Sesuai Sistem -->
+        <div class="border-b-4 border-black pb-3 mb-4 flex items-center justify-between gap-4">
+            <?php if (!empty($logo_kiri)): ?>
+                <div class="w-20 flex-shrink-0 text-center">
+                    <img src="<?= BASE_URL ?>uploads/<?= htmlspecialchars($logo_kiri) ?>" class="max-h-20 max-w-full inline-block">
                 </div>
-                <?php if (!empty($logo_kanan)): ?>
-                    <div class="w-20 flex-shrink-0 text-center">
-                        <img src="<?= BASE_URL . ltrim($logo_kanan, '/') ?>" alt="Logo Kanan" class="max-h-20 max-w-full mx-auto object-contain">
-                    </div>
+            <?php endif; ?>
+
+            <div class="flex-1 text-center">
+                <?php if (!empty($kop_html)): ?>
+                    <?= $kop_html ?>
+                <?php else: ?>
+                    <h3 class="text-sm font-bold uppercase tracking-wide">PEMERINTAH PROVINSI JAWA TIMUR</h3>
+                    <h3 class="text-sm font-bold uppercase tracking-wide">DINAS PENDIDIKAN</h3>
+                    <h2 class="text-base font-bold uppercase tracking-wide"><?= htmlspecialchars($nama_sekolah) ?></h2>
+                    <p class="text-xs font-normal"><?= htmlspecialchars($alamat_sekolah) ?></p>
+                    <p class="text-[11px] italic">Email: <?= htmlspecialchars($email_sekolah) ?> Website: <?= htmlspecialchars($web_sekolah) ?></p>
                 <?php endif; ?>
             </div>
-        <?php endif; ?>
+
+            <?php if (!empty($logo_kanan)): ?>
+                <div class="w-20 flex-shrink-0 text-center">
+                    <img src="<?= BASE_URL ?>uploads/<?= htmlspecialchars($logo_kanan) ?>" class="max-h-20 max-w-full inline-block">
+                </div>
+            <?php endif; ?>
+        </div>
 
         <!-- Title Header -->
         <div class="text-center font-bold mb-6">
@@ -210,11 +206,11 @@ $keputusan_display = !empty($data['keputusan_kasus']) ? $data['keputusan_kasus']
 
         <!-- Signature Block -->
         <div class="mt-12 pt-4 flex justify-between items-start text-xs leading-normal">
-            <!-- Left: Headmaster / Plh. Kepala Sekolah -->
-            <div class="w-5/12 text-left flex flex-col justify-between h-36">
+            <!-- Left: Headmaster -->
+            <div class="w-5/12 text-center flex flex-col justify-between h-36">
                 <div>
-                    Mengetahui :<br><br>
-                    Plh. Kepala Sekolah,
+                    Mengetahui<br>
+                    Kepala <?= htmlspecialchars($nama_sekolah) ?>
                 </div>
                 <div>
                     <div class="font-bold underline uppercase"><?= htmlspecialchars($nama_ks) ?></div>
@@ -223,10 +219,10 @@ $keputusan_display = !empty($data['keputusan_kasus']) ? $data['keputusan_kasus']
             </div>
 
             <!-- Right: Counselor / Guru BK -->
-            <div class="w-5/12 text-left flex flex-col justify-between h-36 pl-8">
+            <div class="w-5/12 text-center flex flex-col justify-between h-36">
                 <div>
                     <?= htmlspecialchars($sets['kota_sekolah'] ?? 'Bondowoso') ?>, <?= $formatted_date_short ?><br><br>
-                    Guru BK/ Konselor
+                    Guru BK / Konselor
                 </div>
                 <div>
                     <div class="font-bold underline uppercase"><?= htmlspecialchars($nama_guru) ?></div>
