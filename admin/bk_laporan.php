@@ -166,6 +166,10 @@ require_once __DIR__ . '/../includes/header.php';
             <a href="<?= BASE_URL ?>admin/bk_laporan_kunjungan_tambah.php" class="bg-amber-600 hover:bg-amber-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-amber-100 transition-all flex items-center text-xs sm:text-sm">
                 <i class="fa fa-plus mr-2"></i> Tambah Laporan Kunjungan Rumah
             </a>
+        <?php elseif ($jenis_filter === 'Konferensi Kasus'): ?>
+            <a href="<?= BASE_URL ?>admin/bk_laporan_konferensi_tambah.php" class="bg-purple-600 hover:bg-purple-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-purple-100 transition-all flex items-center text-xs sm:text-sm">
+                <i class="fa fa-plus mr-2"></i> Input KONFERENSI KASUS
+            </a>
         <?php else: ?>
             <a href="<?= BASE_URL ?>admin/bk_laporan_tambah.php" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-indigo-100 transition-all flex items-center text-xs sm:text-sm">
                 <i class="fa fa-plus mr-2"></i> Input RPL Individual BK
@@ -338,6 +342,13 @@ require_once __DIR__ . '/../includes/header.php';
                                         <i class="fa fa-print text-xs"></i> Cetak Laporan
                                     </button>
                                     <a href="<?= BASE_URL ?>admin/bk_laporan_kunjungan_tambah.php?id=<?= $r['id'] ?>" class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all flex items-center justify-center shadow-sm" title="Edit Laporan Kunjungan Rumah">
+                                        <i class="fa fa-edit text-xs"></i>
+                                    </a>
+                                <?php elseif ($r['jenis_bimbingan'] === 'Konferensi Kasus'): ?>
+                                    <button onclick="printOptionKonferensiModal(<?= $r['id'] ?>, '<?= htmlspecialchars(addslashes($r['nama_siswa'] ?? '')) ?>', '<?= htmlspecialchars(addslashes($r['kode_konseli'] ?? '')) ?>')" class="px-3 py-1.5 rounded-xl bg-purple-50 text-purple-700 hover:bg-purple-600 hover:text-white transition-all font-bold text-xs flex items-center gap-1.5 shadow-sm" title="Cetak Rencana Konferensi Kasus">
+                                        <i class="fa fa-print text-xs"></i> Cetak Dokumen
+                                    </button>
+                                    <a href="<?= BASE_URL ?>admin/bk_laporan_konferensi_tambah.php?id=<?= $r['id'] ?>" class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all flex items-center justify-center shadow-sm" title="Edit Konferensi Kasus">
                                         <i class="fa fa-edit text-xs"></i>
                                     </a>
                                 <?php else: ?>
@@ -612,6 +623,62 @@ function printLaporanKunjunganRumahModal(id, namaSiswa, kodeKonseli) {
             const samarkan = res.value.samarkan;
             const nip_type = res.value.nip_type;
             window.open(`<?= BASE_URL ?>admin/print_laporan_kunjungan_rumah.php?id=${id}&samarkan=${samarkan}&nip_type=${nip_type}`, '_blank');
+        }
+    });
+}
+
+function printOptionKonferensiModal(id, namaSiswa, kodeKonseli) {
+    Swal.fire({
+        title: 'Cetak Konferensi Kasus',
+        html: `<div class="text-left space-y-3 font-sans">
+            <p class="text-xs text-slate-600 font-medium">Pilih opsi penyamaran nama siswa dan format identitas Guru BK:</p>
+            <div class="p-3 bg-purple-50/50 rounded-2xl border border-purple-100 space-y-1">
+                <div class="text-xs font-bold text-slate-800">Siswa: ${namaSiswa}</div>
+                <div class="text-[11px] font-mono text-purple-600 font-bold">Kode: ${kodeKonseli || '-'}</div>
+            </div>
+            <div class="space-y-2 pt-1">
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Penyamaran Nama</label>
+                <label class="flex items-center gap-2 cursor-pointer p-2 rounded-xl border border-slate-200 hover:bg-slate-50">
+                    <input type="radio" name="swal_samarkan_kk" value="1" checked class="accent-purple-600">
+                    <span class="text-xs font-bold text-slate-700">Samarkan Nama Siswa (Gunakan Kode Konseli)</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer p-2 rounded-xl border border-slate-200 hover:bg-slate-50">
+                    <input type="radio" name="swal_samarkan_kk" value="0" class="accent-purple-600">
+                    <span class="text-xs font-bold text-slate-700">Tampilkan Nama Asli Siswa</span>
+                </label>
+            </div>
+            <div class="space-y-2 pt-1">
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tipe Identitas Guru BK</label>
+                <div class="grid grid-cols-2 gap-2">
+                    <label class="flex items-center gap-2 cursor-pointer p-2 rounded-xl border border-slate-200 hover:bg-slate-50">
+                        <input type="radio" name="swal_nip_type_kk" value="NIPPPK" checked class="accent-purple-600">
+                        <span class="text-xs font-bold text-slate-700">NIPPPK</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer p-2 rounded-xl border border-slate-200 hover:bg-slate-50">
+                        <input type="radio" name="swal_nip_type_kk" value="NIP" class="accent-purple-600">
+                        <span class="text-xs font-bold text-slate-700">NIP</span>
+                    </label>
+                </div>
+            </div>
+        </div>`,
+        showCancelButton: true,
+        confirmButtonText: '<i class="fa fa-print mr-1"></i> Cetak Dokumen',
+        cancelButtonText: 'Batal',
+        confirmButtonColor: '#9333EA',
+        cancelButtonColor: '#6B7280',
+        preConfirm: () => {
+            const radSam = document.querySelector('input[name="swal_samarkan_kk"]:checked');
+            const radNip = document.querySelector('input[name="swal_nip_type_kk"]:checked');
+            return {
+                samarkan: radSam ? radSam.value : '1',
+                nip_type: radNip ? radNip.value : 'NIPPPK'
+            };
+        }
+    }).then((res) => {
+        if (res.isConfirmed) {
+            const samarkan = res.value.samarkan;
+            const nip_type = res.value.nip_type;
+            window.open(`<?= BASE_URL ?>admin/print_laporan_konferensi_kasus.php?id=${id}&samarkan=${samarkan}&nip_type=${nip_type}`, '_blank');
         }
     });
 }
